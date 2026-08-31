@@ -1,0 +1,97 @@
+"use client";
+
+import { useState } from "react";
+
+import { reels } from "./data";
+import { homeArticles, type BlogArticle } from "./blog-data";
+import { getBlogToneClasses } from "./styles";
+import { ActionButton, SectionTitle } from "./ui";
+
+export function VideoReelsSection() {
+  const [activeReel, setActiveReel] = useState<number | null>(null);
+
+  return (
+    <section className="min-h-0 bg-page px-4 py-[22px] pb-[18px] lg:min-h-[669px] lg:rounded-[28px] lg:p-7" aria-labelledby="reels-title">
+      <div className="flex flex-col gap-3 lg:min-h-[58px] lg:flex-row lg:items-center lg:justify-between lg:gap-6">
+        <SectionTitle
+          id="reels-title"
+          eyebrow="VIDEO REELS"
+          title="Stories from the businesses we support."
+          description="Optional video stories that make the work feel human."
+          className="max-w-none"
+          size="compact"
+        />
+        <span className="inline-flex h-[30px] w-max items-center rounded-[15px] border border-warm bg-[#f5ede3] px-3 text-[10px] font-semibold text-[#63615c]">OPTIONAL REELS</span>
+      </div>
+      <div className="mt-4 flex min-h-[480px] gap-4 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x snap-proximity lg:mt-5 lg:min-h-[535px]">
+        {reels.map((reel, index) => {
+          const selected = activeReel === index;
+
+          return (
+            <article className={`group relative min-h-[480px] min-w-[min(306px,calc(100vw-56px))] basis-[min(306px,calc(100vw-56px))] snap-start overflow-hidden rounded-3xl border ${selected ? "border-white/90 -translate-y-1" : "border-white/35"} bg-[#293a40] transition-transform duration-200 lg:min-h-[535px] lg:min-w-[306px] lg:basis-[306px] hover:-translate-y-1`.trim()} key={reel.title}>
+              <img className={`absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-[1.04] ${selected ? "scale-[1.04]" : ""}`.trim()} src={reel.image} alt="" />
+              <div className="absolute inset-x-0 bottom-0 flex min-h-24 flex-col justify-end gap-1.5 bg-gradient-to-b from-transparent to-[rgba(18,20,33,0.88)] px-5 pb-[18px] pt-[54px] text-[#ffebd7] drop-shadow-[0_1px_12px_rgba(18,20,33,0.32)]">
+                <h3 className="max-w-[250px] text-[16px] font-bold leading-5 tracking-[-0.2px]">{reel.title}</h3>
+                <p className="text-[10px] leading-[13px]">{reel.meta}</p>
+              </div>
+              <button
+                className="absolute left-1/2 top-1/2 z-10 grid size-[240px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-0 bg-transparent transition-transform duration-200 hover:scale-[1.04] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2"
+                type="button"
+                aria-label={`${selected ? "Pause" : "Play"} ${reel.title}`}
+                aria-pressed={selected}
+                onClick={() => setActiveReel((current) => (current === index ? null : index))}
+              >
+                <img className="absolute inset-0 size-full" src="/figma/play-overlay.svg" alt="" aria-hidden="true" />
+                <span className="relative z-10 size-[58px] rounded-full bg-[rgba(252,251,250,0.96)] shadow-play" aria-hidden="true" />
+                <span className="absolute left-1/2 top-1/2 z-20 h-0 w-0 -translate-y-1/2 translate-x-[-34%] border-y-[12px] border-y-transparent border-l-[18px] border-l-[#17151c]" aria-hidden="true" />
+              </button>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function ArticleVisual({ article }: { article: BlogArticle }) {
+  const tone = getBlogToneClasses(article.coverTone);
+
+  return (
+    <div className={`relative h-[190px] overflow-hidden rounded-t-[22px] ${tone.text} ${tone.surface}`.trim()}>
+      <img className="absolute -right-[116px] -top-[62px] block size-[260px]" src="/figma/blog-orbit-a.svg" alt="" aria-hidden="true" />
+      <img className="absolute bottom-[-2px] left-6 block size-[118px]" src="/figma/blog-orbit-b.svg" alt="" aria-hidden="true" />
+      <span className={`absolute left-[22px] top-5 inline-flex min-h-6 items-center rounded-xl bg-white px-2.5 text-[9px] font-[750] tracking-[0.6px] ${tone.text}`.trim()}>{article.media === "video" ? "VIDEO PLACEHOLDER" : "IMAGE PLACEHOLDER"}</span>
+      {article.media === "video" ? (
+        <span className="absolute left-1/2 top-1/2 grid size-[68px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white text-[19px] text-navy" aria-hidden="true">▶</span>
+      ) : (
+        <strong className={`absolute left-1/2 top-1/2 w-full -translate-x-1/2 -translate-y-1/2 text-center text-[11px] font-[750] tracking-[1.4px] ${tone.text}`.trim()}>VISUAL PLACEHOLDER</strong>
+      )}
+    </div>
+  );
+}
+
+export function BlogSection() {
+  return (
+    <section className="bg-page px-5 py-7 pb-[26px] lg:rounded-[28px] lg:px-[42px] lg:py-[38px] lg:pb-10" id="journal" aria-labelledby="journal-title">
+      <div className="flex flex-col gap-[18px] lg:flex-row lg:items-start lg:justify-between lg:gap-6">
+        <SectionTitle
+          id="journal-title"
+          eyebrow="FROM THE JOURNAL"
+          title="Small insights for big decisions."
+          description="Straightforward guidance on registration, tax and growth."
+        />
+        <ActionButton href="/blog" variant="light" className="w-max min-w-[190px] lg:mt-1">View all articles</ActionButton>
+      </div>
+      <div className="mt-7 grid grid-cols-1 gap-3.5 lg:mt-[42px] lg:grid-cols-3 lg:gap-6">
+        {homeArticles.map((article) => (
+          <article className="min-h-[430px] overflow-hidden rounded-[22px] border border-border bg-white" key={article.title}>
+            <ArticleVisual article={article} />
+            <p className="px-[23px] pt-6 text-[10px] font-bold leading-[13px] tracking-[0.45px] text-muted">{article.date} <span className="px-[5px]">|</span> {article.category.toUpperCase()}</p>
+            <h3 className="min-h-[58px] px-[23px] pt-4 text-[20px] font-bold leading-[26px] tracking-[-0.2px] text-ink">{article.title}</h3>
+            <ActionButton href={`/blog/${article.slug}`} variant="soft" className="ml-[23px] mt-6 w-[136px] min-h-[38px]">Read more</ActionButton>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
