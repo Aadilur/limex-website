@@ -30,3 +30,77 @@ model Post {
 
   @@index([authorId])
 }
+
+model MenuSection {
+  id             String      @id @default(cuid())
+  key            String      @unique
+  label          String
+  href           String
+  menuEyebrow    String?
+  menuTitle      String?
+  menuDescription String?
+  spotlightBadge String?
+  spotlightTitle String?
+  spotlightDescription String?
+  spotlightCtaLabel String?
+  spotlightCtaHref String?
+  tone           String      @default("green")
+  sortOrder      Int         @default(0)
+  isVisible      Boolean     @default(true)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  groups         MenuGroup[]
+
+  @@index([sortOrder])
+}
+
+model MenuGroup {
+  id          String      @id @default(cuid())
+  sectionId   String
+  key         String
+  label       String
+  railLabel   String
+  description String
+  sortOrder   Int         @default(0)
+  isVisible   Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  section     MenuSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  items       MenuItem[]
+
+  @@unique([sectionId, key])
+  @@index([sectionId, sortOrder])
+}
+
+model MenuItem {
+  id          String      @id @default(cuid())
+  groupId     String
+  label       String
+  description String
+  href        String
+  marker      String
+  icon        String      @default("briefcase")
+  sortOrder   Int         @default(0)
+  isVisible   Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  group       MenuGroup   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  links       MenuLink[]
+
+  @@unique([groupId, label])
+  @@index([groupId, sortOrder])
+}
+
+model MenuLink {
+  id        String   @id @default(cuid())
+  itemId    String
+  label     String
+  href      String
+  sortOrder Int      @default(0)
+  isVisible Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  item      MenuItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@index([itemId, sortOrder])
+}

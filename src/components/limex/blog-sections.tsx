@@ -56,7 +56,7 @@ function BlogCover({ article, variant = "card" }: { article: BlogArticle; varian
         ? "size-20 rounded-[16px]"
         : variant === "related"
           ? "h-[156px] rounded-t-[22px]"
-          : "h-[200px] rounded-t-[22px]";
+        : "h-[180px] rounded-t-[22px] lg:h-[200px]";
   const paperClass = isThumb
     ? "left-8 top-[31px] h-[42px] w-[34px] rounded-[8px]"
     : isHero
@@ -93,11 +93,11 @@ function BlogCover({ article, variant = "card" }: { article: BlogArticle; varian
 function BlogArticleCard({ article }: { article: BlogArticle }) {
   return (
     <a
-      className="group flex min-h-[430px] flex-col overflow-hidden rounded-card border border-[#e5e0d6] bg-white transition-transform duration-200 hover:-translate-y-1 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3 lg:min-h-[470px]"
+      className="group flex min-h-[400px] flex-col overflow-hidden rounded-card border border-[#e5e0d6] bg-white transition-transform duration-200 hover:-translate-y-1 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3 lg:min-h-[430px]"
       href={`/blog/${article.slug}`}
     >
       <BlogCover article={article} />
-      <div className="flex min-h-0 flex-1 flex-col items-start gap-cluster-sm overflow-hidden px-card-pad pb-5 pt-cluster-lg">
+      <div className="flex min-h-0 flex-1 flex-col items-start gap-cluster-xs overflow-hidden px-card-pad-sm pb-4 pt-cluster lg:gap-cluster-sm lg:px-card-pad lg:pb-5 lg:pt-cluster-lg">
         <p className="text-overline text-pink">{categoryLabel(article.category)} <span className="px-1">·</span> {article.date}</p>
         <h3 className="font-brand text-subheading text-ink">{article.title}</h3>
         <p className="text-body-sm text-muted">{article.summary}</p>
@@ -159,11 +159,11 @@ export function BlogIndexContent() {
         <div className="mt-section-y flex flex-col gap-section-gap lg:flex-row lg:items-start lg:justify-between lg:gap-section-gap-lg">
           <div className="max-w-[730px]">
             <p className="text-label text-pink">INSIGHTS &amp; GUIDES</p>
-            <h1 className="mt-cluster-sm max-w-[730px] font-brand text-page-title text-ink">Practical guidance for growing with confidence</h1>
+            <h1 className="mt-cluster-sm max-w-[730px] font-brand text-page-title text-ink max-lg:text-page-title-mobile">Practical guidance for growing with confidence</h1>
             <p className="mt-cluster max-w-[670px] text-body-lg text-muted">Clear, useful articles on registration, tax, compliance and building your business.</p>
             <p className="mt-cluster text-body-sm font-text text-ink">New guides added every week</p>
           </div>
-          <div className="w-full rounded-nav bg-white p-card-pad lg:max-w-[440px]">
+          <div className="w-full rounded-nav bg-white p-card-pad-sm lg:max-w-[440px] lg:p-card-pad">
             <p className="mb-cluster text-label text-pink">SEARCH THE JOURNAL</p>
             <BlogSearchField id="blog-hero-search" value={query} onChange={(event) => setQuery(event.target.value)} />
           </div>
@@ -173,7 +173,7 @@ export function BlogIndexContent() {
       <section className="bg-page px-page-gutter py-section-y lg:px-page-gutter-lg lg:py-10" aria-labelledby="featured-guide-title">
         <div className="flex items-center justify-between gap-5">
           <h2 className="font-brand text-section-title text-ink" id="featured-guide-title">Featured guide</h2>
-          <a className="text-right text-body-sm font-semibold text-pink transition-colors hover:text-ink" href="#latest">View all posts <span aria-hidden="true">↗</span></a>
+          <a className="shrink-0 whitespace-nowrap text-right text-body-sm font-semibold text-pink transition-colors hover:text-ink" href="#latest">View all posts <span aria-hidden="true">↗</span></a>
         </div>
         <a
           className="group mt-6 grid gap-6 rounded-[22px] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3 lg:grid-cols-[minmax(0,500px)_minmax(0,1fr)] lg:items-center lg:gap-8"
@@ -276,7 +276,7 @@ export function BlogDetailContent({ article }: { article: BlogArticle }) {
         </div>
         <div className="mt-section-gap-xl max-w-[960px]">
           <p className="text-meta font-semibold text-pink">{categoryLabel(article.category)} <span className="px-1">·</span> {article.readTime}</p>
-          <h1 className="mt-section-gap-lg max-w-[950px] font-brand text-page-title text-ink" id="article-title">{article.title}</h1>
+          <h1 className="mt-section-gap-lg max-w-[950px] font-brand text-page-title text-ink max-lg:text-page-title-mobile" id="article-title">{article.title}</h1>
           <p className="mt-section-gap-lg max-w-[760px] text-body-lg text-muted">{article.summary}</p>
         </div>
         <div className="mt-section-y flex flex-wrap items-center justify-between gap-cluster border-b border-[#e5e3e5] pb-card-pad text-body-sm text-muted">

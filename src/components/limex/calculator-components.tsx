@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 
-import { ActionButton } from "./ui";
+import { ActionButton, WaveLabel } from "./ui";
 
 const moneyFormatter = new Intl.NumberFormat("en-BD", {
   maximumFractionDigits: 0,
@@ -36,7 +36,7 @@ function CalculatorHeading({
     <div className="flex flex-col gap-cluster-sm">
       <div className="flex flex-wrap items-center justify-between gap-cluster-sm">
         <p className="text-overline text-pink">{eyebrow}</p>
-        {chip ? <span className="rounded-pill border border-border bg-white px-3 py-1.5 text-overline text-muted">{chip}</span> : null}
+        {chip ? <WaveLabel className="text-muted">{chip}</WaveLabel> : null}
       </div>
       <h2 className="max-w-[620px] font-brand text-section-title text-[#171a26]">{title}</h2>
       <p className="max-w-[620px] text-body-xs text-[#6b7487]">{description}</p>
@@ -188,7 +188,7 @@ export function LimitedCompanyCostCalculator() {
       <div className="grid gap-section-gap bg-[#f9f8f5] px-page-gutter py-section-y sm:px-8 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.75fr)] lg:items-stretch lg:px-12 lg:py-9">
         <div className="flex flex-col justify-center gap-cluster-sm">
           <p className="text-overline text-[#c74d63]">BUSINESSBOX / LIMITED COMPANY</p>
-          <h2 className="max-w-[820px] font-brand text-page-title font-semibold text-[#1a1a1a]" id="limited-company-title">Calculate your limited company registration cost</h2>
+          <h2 className="max-w-[820px] font-brand text-page-title font-semibold text-[#1a1a1a] max-lg:text-page-title-mobile" id="limited-company-title">Calculate your limited company registration cost</h2>
           <p className="max-w-[700px] text-body-xs text-[#6e6b66]">Set your capital, location, and optional services to get a clear estimate before you apply.</p>
           <p className="text-micro font-medium text-[#6e6b66]">Government fee, documentation charge, Trade License, and add-ons shown separately.</p>
         </div>

@@ -26,12 +26,12 @@ export function HeroSection() {
 
       <div className="absolute left-5 right-5 top-hero-rule-top h-px bg-[rgba(219,209,189,0.65)] lg:left-[42px] lg:right-[42px] lg:top-hero-rule-top-lg" aria-hidden="true" />
 
-      <div className="relative z-[1] px-5 pt-hero-content-top text-center max-[560px]:pt-hero-content-top-sm lg:absolute lg:left-1/2 lg:top-[201px] lg:w-[min(930px,calc(100%-48px))] lg:-translate-x-1/2 lg:px-0 lg:pt-0">
+      <div className="relative z-[1] px-5 pt-hero-content-top text-center max-[560px]:pt-hero-content-top-sm lg:absolute lg:left-1/2 lg:top-hero-content-top-lg lg:w-[min(930px,calc(100%-48px))] lg:-translate-x-1/2 lg:px-0 lg:pt-0">
         <p className="mx-auto max-w-[500px] text-overline text-[#52545c] lg:max-w-none lg:text-kicker">
           BUSINESS REGISTRATION <span>·</span> <strong className="text-[#de4d73]">TRADEMARK</strong> <span>·</span> LICENSE <span>·</span>{" "}
           <strong className="text-[#de4d73]">VAT</strong> <span>·</span> STARTUP <span>·</span> <strong className="text-[#de4d73]">TAX</strong>
         </p>
-        <h1 className="my-5 flex flex-col font-brand text-hero text-ink max-[560px]:text-hero-mobile lg:my-hero-title-gap lg:mb-[22px]" id="hero-title">
+        <h1 className="my-5 flex flex-col font-brand text-hero-mobile text-ink sm:text-hero-tablet wide:text-hero lg:my-hero-title-gap lg:mb-[22px]" id="hero-title">
           <span className="text-[#de4d73]">Fastest Processing</span>
           <em className="font-normal not-italic text-[#576378] underline decoration-wavy decoration-[1px] underline-offset-[5px]">Guaranteed</em>
         </h1>
@@ -56,9 +56,6 @@ export function HeroSection() {
         <div className="flex max-w-none flex-col gap-[14px] lg:max-w-[360px]">
           <p className="text-micro font-bold text-[#78787d]">ONE PLACE FOR THE IMPORTANT WORK</p>
           <p className="text-body font-text text-ink">From starting a company to protecting your brand, get clear guidance at every step.</p>
-          <a className="text-body-xs font-bold text-ink transition-colors hover:text-pink" href="#services">
-            View all services <span className="ml-[5px] text-pink" aria-hidden="true">↗</span>
-          </a>
         </div>
         <p className="pb-1 text-center text-meta text-[#52545c] max-[900px]:hidden">Clear process. Practical support. No unnecessary complexity.</p>
         <a className="flex items-center justify-start gap-nav text-ink lg:justify-end" href="#contact">

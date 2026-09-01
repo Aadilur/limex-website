@@ -57,6 +57,7 @@ npm run dev
 Open:
 
 - Frontend: http://localhost:3000
+- Admin login: http://localhost:3000/admin/login
 - Backend health: http://localhost:4000/api/health
 - Readiness check: http://localhost:4000/api/health/ready
 - Users endpoint: http://localhost:4000/api/users
@@ -68,6 +69,10 @@ npm run typecheck
 npm run prisma:studio
 npm run prisma:migrate -- --name add_feature
 ~~~
+
+The admin workspace is at `/admin` after signing in. The Services & menu module manages the four primary mega-menu areas, categories, service URLs, optional sub-links, visibility, and service icons. Menu records live in Prisma; run `npm run prisma:deploy` and `npm run db:seed` after applying the menu migration in a database environment.
+
+Set `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and a long random `ADMIN_SESSION_SECRET` in deployment environments. The admin session is an HTTP-only, signed cookie and is shared by the frontend and API through the same gateway origin.
 
 ## Railway deployment
 

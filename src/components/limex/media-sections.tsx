@@ -1,14 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { reels } from "./data";
-import { homeArticles, type BlogArticle } from "./blog-data";
-import { getBlogToneClasses } from "./styles";
-import { ActionButton, SectionTitle } from "./ui";
+import { homeArticles, type BlogArticle, type BlogTone } from "./blog-data";
+import { ActionButton, SectionTitle, WaveLabel } from "./ui";
+
+const blogVisuals: Record<BlogTone, { surface: string; text: string; glow: string }> = {
+  mint: { surface: "bg-[#eef3ee]", text: "text-[#6b806f]", glow: "bg-[#dce9df]" },
+  violet: { surface: "bg-[#f1eff5]", text: "text-[#766e84]", glow: "bg-[#e5dfed]" },
+  peach: { surface: "bg-[#f6efeb]", text: "text-[#92796b]", glow: "bg-[#edddd4]" },
+};
 
 export function VideoReelsSection() {
   const [activeReel, setActiveReel] = useState<number | null>(null);
+  const reelsViewportRef = useRef<HTMLDivElement>(null);
+
+  const scrollReels = (direction: "previous" | "next") => {
+    reelsViewportRef.current?.scrollBy({ left: direction === "next" ? 330 : -330, behavior: "smooth" });
+  };
 
   return (
     <section className="min-h-0 bg-page px-card-pad-sm py-reels-y pb-reels-bottom lg:min-h-[669px] lg:rounded-panel lg:p-section-y" aria-labelledby="reels-title">
@@ -21,9 +31,31 @@ export function VideoReelsSection() {
           className="max-w-none"
           size="compact"
         />
-        <span className="inline-flex h-[30px] w-max items-center rounded-pill border border-warm bg-[#f5ede3] px-3 text-micro font-semibold text-[#63615c]">OPTIONAL REELS</span>
+        <div className="flex flex-wrap items-center gap-cluster-sm">
+          <WaveLabel className="text-[#63615c]">OPTIONAL REELS</WaveLabel>
+          <div className="hidden items-center gap-cluster-xs wide:flex" aria-label="Business stories controls">
+            <button
+              className="grid size-[42px] place-items-center rounded-full border border-warm bg-white text-[18px] font-semibold leading-none text-ink transition-colors hover:border-pink hover:text-pink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2"
+              type="button"
+              aria-label="Show previous business story"
+              aria-controls="stories-carousel"
+              onClick={() => scrollReels("previous")}
+            >
+              <span aria-hidden="true">←</span>
+            </button>
+            <button
+              className="grid size-[42px] place-items-center rounded-full border border-warm bg-white text-[18px] font-semibold leading-none text-ink transition-colors hover:border-pink hover:text-pink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2"
+              type="button"
+              aria-label="Show next business story"
+              aria-controls="stories-carousel"
+              onClick={() => scrollReels("next")}
+            >
+              <span aria-hidden="true">→</span>
+            </button>
+          </div>
+        </div>
       </div>
-      <div className="mt-cluster flex min-h-[480px] gap-card-gap overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x snap-proximity lg:mt-5 lg:min-h-[535px]">
+      <div ref={reelsViewportRef} className="mt-cluster flex min-h-[480px] gap-card-gap overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x snap-proximity lg:mt-5 lg:min-h-[535px]" id="stories-carousel">
         {reels.map((reel, index) => {
           const selected = activeReel === index;
 
@@ -54,18 +86,18 @@ export function VideoReelsSection() {
 }
 
 function ArticleVisual({ article }: { article: BlogArticle }) {
-  const tone = getBlogToneClasses(article.coverTone);
+  const tone = blogVisuals[article.coverTone];
 
   return (
     <div className={`relative h-[190px] overflow-hidden rounded-t-[22px] ${tone.text} ${tone.surface}`.trim()}>
-      <img className="absolute -right-[116px] -top-[62px] block size-[260px]" src="/figma/blog-orbit-a.svg" alt="" aria-hidden="true" />
-      <img className="absolute bottom-[-2px] left-6 block size-[118px]" src="/figma/blog-orbit-b.svg" alt="" aria-hidden="true" />
-      <span className={`absolute left-[22px] top-5 inline-flex min-h-6 items-center rounded-control bg-white px-2.5 text-overline ${tone.text}`.trim()}>{article.media === "video" ? "VIDEO PLACEHOLDER" : "IMAGE PLACEHOLDER"}</span>
+      <div className={`pointer-events-none absolute -right-14 -top-16 size-48 rounded-full opacity-60 blur-2xl ${tone.glow}`.trim()} aria-hidden="true" />
+      <img className="absolute -right-[116px] -top-[62px] block size-[260px] opacity-60" src="/figma/blog-orbit-a.svg" alt="" aria-hidden="true" />
+      <img className="absolute bottom-[-2px] left-6 block size-[118px] opacity-60" src="/figma/blog-orbit-b.svg" alt="" aria-hidden="true" />
+      <WaveLabel className={`absolute left-[22px] top-5 ${tone.text}`.trim()}>{article.media === "video" ? "VIDEO" : "GUIDE"}</WaveLabel>
+      <span className={`absolute bottom-5 right-6 font-brand text-section-title opacity-50 ${tone.text}`.trim()} aria-hidden="true">{article.coverNumber}</span>
       {article.media === "video" ? (
-        <span className="absolute left-1/2 top-1/2 grid size-[68px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white text-subheading text-navy" aria-hidden="true">▶</span>
-      ) : (
-        <strong className={`absolute left-1/2 top-1/2 w-full -translate-x-1/2 -translate-y-1/2 text-center text-overline ${tone.text}`.trim()}>VISUAL PLACEHOLDER</strong>
-      )}
+        <span className="absolute left-1/2 top-1/2 grid size-[60px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-white/80 bg-white/75 text-body-sm text-ink shadow-[0_10px_24px_rgba(49,42,35,0.08)]" aria-hidden="true">▶</span>
+      ) : null}
     </div>
   );
 }
@@ -78,17 +110,21 @@ export function BlogSection() {
           id="journal-title"
           eyebrow="FROM THE JOURNAL"
           title="Small insights for big decisions."
-          description="Straightforward guidance on registration, tax and growth."
+          description="Clear guidance for the decisions ahead."
         />
-        <ActionButton href="/blog" variant="light" className="w-max min-w-[190px] lg:mt-1">View all articles</ActionButton>
+        <ActionButton href="/blog" variant="light" className="w-max min-w-[164px] lg:mt-1">All articles</ActionButton>
       </div>
       <div className="mt-section-y grid grid-cols-1 gap-cluster-sm lg:mt-section-y-xl lg:grid-cols-3 lg:gap-cluster-lg">
         {homeArticles.map((article) => (
-          <article className="min-h-[430px] overflow-hidden rounded-[22px] border border-border bg-white" key={article.title}>
+          <article className="group flex min-h-[410px] flex-col overflow-hidden rounded-[26px] border border-[#ded9d0] bg-[#faf9f6] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(49,42,35,0.07)]" key={article.title}>
             <ArticleVisual article={article} />
-            <p className="px-card-pad pt-6 text-overline text-muted">{article.date} <span className="px-cluster-xs">|</span> {article.category.toUpperCase()}</p>
-            <h3 className="min-h-[58px] px-card-pad pt-4 font-brand text-subheading text-ink">{article.title}</h3>
-            <ActionButton href={`/blog/${article.slug}`} variant="soft" className="ml-card-pad mt-section-gap-lg w-[136px] min-h-[38px]">Read more</ActionButton>
+            <div className="flex flex-1 flex-col p-card-pad">
+              <p className="text-overline text-[#958b80]">{article.date} <span className="px-cluster-xs">·</span> {article.readTime}</p>
+              <h3 className="mt-cluster-lg font-brand text-subheading text-ink">{article.title}</h3>
+              <a className="mt-auto inline-flex w-max items-center gap-cluster-sm border-b border-[#9d948a] pb-1 pt-section-gap-lg text-meta font-semibold text-ink transition-colors hover:border-ink hover:text-[#5e554d] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3" href={`/blog/${article.slug}`}>
+                Read article <span aria-hidden="true">↗</span>
+              </a>
+            </div>
           </article>
         ))}
       </div>

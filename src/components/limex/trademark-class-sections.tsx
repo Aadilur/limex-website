@@ -32,7 +32,7 @@ export function TrademarkHero() {
     <section className="grid gap-section-gap-lg bg-page py-cluster-sm lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center lg:gap-section-gap-xl lg:py-cluster" aria-labelledby="trademark-page-title">
       <div className="min-w-0">
         <p className="text-overline text-[#c74d63]">Trademark class finder</p>
-        <h1 className="mt-cluster max-w-[760px] font-brand text-page-title text-ink" id="trademark-page-title">
+        <h1 className="mt-cluster max-w-[760px] font-brand text-page-title text-ink max-lg:text-page-title-mobile" id="trademark-page-title">
           Find the right class
           <span className="block">for your brand.</span>
         </h1>

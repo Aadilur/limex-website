@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-
 import { processSteps } from "./data";
 import { clientTextClasses } from "./styles";
 import { ActionButton, SectionTitle } from "./ui";
@@ -55,29 +53,35 @@ function ClientMark({ client }: { client: (typeof clientMarks)[number] }) {
   );
 }
 
-export function TrustedClientsSection() {
-  const [offset, setOffset] = useState(0);
-  const visibleClients = [...clientMarks.slice(offset), ...clientMarks.slice(0, offset)];
+function ClientLogoSet({ duplicate = false }: { duplicate?: boolean }) {
+  return (
+    <div
+      className={`flex shrink-0 gap-cluster-lg pr-cluster-lg motion-reduce:w-full motion-reduce:flex-wrap motion-reduce:justify-center motion-reduce:pr-0 ${duplicate ? "motion-reduce:hidden" : ""}`.trim()}
+      aria-hidden={duplicate ? "true" : undefined}
+    >
+      {clientMarks.map((client) => (
+        <div className={`flex h-12 w-[145px] shrink-0 items-center gap-cluster-sm overflow-hidden whitespace-nowrap text-body-sm font-display wide:text-card-title ${clientTextClasses[client.name] ?? "text-ink"}`.trim()} key={`${duplicate ? "copy" : "original"}-${client.name}`}>
+          <ClientMark client={client} />
+          <span>{client.name}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
+export function TrustedClientsSection() {
   return (
     <section className="relative min-h-[160px] bg-page px-page-gutter pb-cluster pt-section-y lg:rounded-panel lg:px-page-gutter-lg lg:pb-cluster lg:pt-6" aria-labelledby="clients-title">
       <h2 className="text-center text-subheading font-brand uppercase tracking-eyebrow text-[#2b5e8c]" id="clients-title">OUR CLIENTS</h2>
-      <div className="mt-section-gap-lg flex gap-cluster-lg overflow-x-auto px-0.5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:mt-section-y lg:grid lg:grid-cols-6 lg:gap-cluster-sm lg:overflow-visible lg:pr-[58px]">
-        {visibleClients.map((client) => (
-          <div className={`flex h-12 min-w-[145px] shrink-0 items-center gap-cluster-sm overflow-hidden whitespace-nowrap text-body-sm font-display wide:text-card-title lg:min-w-0 ${clientTextClasses[client.name] ?? "text-ink"}`.trim()} key={client.name}>
-            <ClientMark client={client} />
-            <span>{client.name}</span>
-          </div>
-        ))}
+      <div className="relative mt-section-gap-lg overflow-hidden px-0.5 pb-1 lg:mt-section-y" aria-label="Our clients">
+        <div className="flex w-max motion-safe:animate-client-marquee motion-reduce:w-full motion-reduce:animate-none [will-change:transform]">
+          <ClientLogoSet />
+          <ClientLogoSet duplicate />
+          <ClientLogoSet duplicate />
+        </div>
+        <span className="pointer-events-none absolute inset-y-0 left-0 z-[1] w-8 bg-gradient-to-r from-page to-transparent" aria-hidden="true" />
+        <span className="pointer-events-none absolute inset-y-0 right-0 z-[1] w-8 bg-gradient-to-l from-page to-transparent" aria-hidden="true" />
       </div>
-      <button
-        className="absolute bottom-4 right-5 grid size-[38px] place-items-center rounded-full border border-[#e3e0de] bg-white text-icon-sm text-[#121f2e] transition-transform duration-200 hover:translate-x-0.5 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2 lg:bottom-[18px] lg:right-[42px] lg:size-12 lg:text-body-lg"
-        type="button"
-        aria-label="Show the next client logos"
-        onClick={() => setOffset((current) => (current + 1) % clientMarks.length)}
-      >
-        →
-      </button>
     </section>
   );
 }
@@ -91,19 +95,20 @@ export function TrustMetricsSection() {
   ];
 
   return (
-    <section className="grid min-h-[180px] grid-cols-1 gap-cluster-lg border-t border-[#e0e0e3] bg-page px-page-gutter py-card-pad-sm lg:min-h-[112px] lg:grid-cols-[1.3fr_2.7fr] lg:gap-0 lg:px-page-gutter-xl lg:py-0" aria-label="Trust metrics">
-      <div className="flex flex-col gap-cluster-xs">
-        <strong className="text-body-xs text-[#121729]">Trusted support for growing businesses</strong>
-        <span className="text-meta text-[#616b7d]">Clear guidance, transparent scope and helpful next steps.</span>
+    <section className="grid min-h-0 grid-cols-1 gap-section-gap-lg border-t border-[#e0e0e3] bg-page px-page-gutter py-section-y lg:min-h-[132px] lg:grid-cols-[1.3fr_2.7fr] lg:items-center lg:gap-0 lg:px-page-gutter-xl lg:py-0" aria-labelledby="trust-metrics-title">
+      <div className="relative flex max-w-[360px] flex-col gap-cluster-xs border-l-2 border-pink pl-cluster-lg">
+        <p className="text-overline text-pink">THE LIMEX STANDARD</p>
+        <strong className="text-body-sm font-semibold text-[#121729]" id="trust-metrics-title">Trusted support for growing businesses</strong>
+        <span className="text-body-xs text-[#616b7d]">Clear guidance, transparent scope and helpful next steps.</span>
       </div>
-      <div className="grid grid-cols-2 gap-y-[18px] lg:grid-cols-4 lg:gap-y-0">
+      <dl className="grid grid-cols-2 lg:grid-cols-4">
         {metrics.map(([value, label], index) => (
-          <div className={`min-h-[52px] border-l border-[#e0e0e3] px-2 lg:px-[33px] ${index % 2 === 0 ? "border-l-0" : ""} ${index === 0 ? "lg:border-l-0" : "lg:border-l"}`.trim()} key={value}>
-            <strong className="block text-card-title text-[#121729]">{value}</strong>
-            <span className="text-micro text-[#616b7d]">{label}</span>
+          <div className={`flex min-h-[72px] flex-col border-t border-[#e0e0e3] pt-cluster ${index % 2 === 1 ? "border-l pl-cluster-lg" : ""} ${index >= 2 ? "pt-cluster-lg" : ""} lg:min-h-0 lg:border-t-0 lg:px-[33px] lg:py-0 ${index === 0 ? "lg:border-l-0 lg:pl-0" : "lg:border-l"}`.trim()} key={value}>
+            <dt className="order-2 mt-1 text-micro text-[#616b7d]">{label}</dt>
+            <dd className="order-1 font-brand text-subheading text-[#121729]">{value}</dd>
           </div>
         ))}
-      </div>
+      </dl>
     </section>
   );
 }

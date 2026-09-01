@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { reels } from "./data";
 import { getToneClasses } from "./styles";
-import { ActionButton, SectionTitle } from "./ui";
+import { ActionButton, SectionTitle, WaveLabel } from "./ui";
 
 const approachPoints = [
   "Listen before we advise.",
@@ -60,7 +60,7 @@ export function AboutHero() {
     <section className="grid gap-section-gap-lg lg:grid-cols-[minmax(0,1.42fr)_minmax(340px,0.92fr)] lg:items-stretch lg:gap-section-gap" aria-labelledby="about-title">
       <div className="flex min-h-[260px] flex-col items-start justify-center">
         <p className="text-label text-pink">ABOUT US</p>
-        <h1 className="mt-cluster-sm max-w-[760px] font-brand text-page-title text-ink" id="about-title">
+        <h1 className="mt-cluster-sm max-w-[760px] font-brand text-page-title text-ink max-lg:text-page-title-mobile" id="about-title">
           Clear advice for important business decisions.
         </h1>
         <p className="mt-cluster max-w-[650px] text-body-sm text-muted">
@@ -146,7 +146,7 @@ export function AboutTeamSection() {
           className="max-w-[680px]"
           size="compact"
         />
-        <span className="inline-flex h-[30px] w-max shrink-0 items-center rounded-pill border border-warm bg-[#f5ede3] px-3 text-overline text-muted">Profile placeholders</span>
+        <WaveLabel className="shrink-0 text-muted">Profile placeholders</WaveLabel>
       </div>
       <div className="mt-section-gap-lg grid gap-cluster-sm lg:grid-cols-3">
         {teamMembers.map((member) => <TeamMemberCard key={member.name} member={member} />)}
@@ -196,7 +196,7 @@ export function AboutReelsSection() {
           className="max-w-none"
           size="compact"
         />
-        <span className="inline-flex h-[30px] w-max items-center rounded-pill border border-warm bg-[#f5ede3] px-3 text-overline text-muted">Optional reels</span>
+        <WaveLabel className="text-muted">Optional reels</WaveLabel>
       </div>
       <div className="mt-section-gap-lg flex min-h-0 snap-x snap-proximity gap-card-gap overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {reels.map((reel, index) => (

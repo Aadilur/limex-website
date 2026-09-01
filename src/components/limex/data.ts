@@ -9,6 +9,7 @@ export type MegaMenuItem = {
   description: string;
   href: string;
   marker: string;
+  icon?: ServiceIconName;
   children?: MegaMenuChild[];
 };
 
@@ -31,6 +32,7 @@ export type MegaMenuSpotlight = {
 export type MegaMenuTone = "green" | "violet" | "teal" | "orange";
 
 export type NavItem = {
+  key?: string;
   label: string;
   href: string;
   active?: boolean;
@@ -54,9 +56,9 @@ const agreementBuilderUrl = "https://aideed.daptari.com/deeds";
 const startupAndLicensing: MegaMenuGroup[] = [
   {
     key: "company-formation",
-    label: "COMPANY FORMATION",
+    label: "COMPANY SETUP",
     railLabel: "Company setup",
-    description: "Choose the right legal structure before you launch.",
+    description: "Choose the right legal structure and license before you launch.",
     items: [
       {
         label: "Company Formation",
@@ -74,14 +76,6 @@ const startupAndLicensing: MegaMenuGroup[] = [
           { label: "Forging Company Formation", href: "#contact" },
         ],
       },
-    ],
-  },
-  {
-    key: "licenses-and-permissions",
-    label: "LICENSES & PERMISSIONS",
-    railLabel: "Licenses",
-    description: "Get the permits and registrations your operation needs.",
-    items: [
       {
         label: "Trade License",
         description: "Apply, renew or update your license.",
@@ -94,6 +88,14 @@ const startupAndLicensing: MegaMenuGroup[] = [
           { label: "Trade License Cancel", href: tradeLicenseUrl },
         ],
       },
+    ],
+  },
+  {
+    key: "tax-and-trade",
+    label: "TAX, TRADE & CLEARANCES",
+    railLabel: "Tax & clearances",
+    description: "Put your tax records, trading permissions and clearances in place.",
+    items: [
       {
         label: "VAT / BIN Registration",
         description: "Register and recover your BIN.",
@@ -116,6 +118,18 @@ const startupAndLicensing: MegaMenuGroup[] = [
       },
       { label: "Import License", description: "Get your import permission in place.", href: "#contact", marker: "05" },
       { label: "Export License", description: "Prepare for international trade.", href: "#contact", marker: "06" },
+      { label: "Factory License", description: "Complete the requirements for your facility.", href: "#contact", marker: "08" },
+      { label: "Fire License", description: "Move forward with fire safety clearance.", href: fireLicenseUrl, marker: "09" },
+      { label: "BSTI Permission", description: "Meet Bangladesh Standards requirements.", href: "#contact", marker: "10" },
+      { label: "Environment Clearance", description: "Plan the right environmental approval.", href: "#contact", marker: "11" },
+    ],
+  },
+  {
+    key: "specialist-support-and-launch",
+    label: "SPECIALIST SUPPORT & LAUNCH",
+    railLabel: "Specialist support",
+    description: "Build credibility, access networks and launch with confidence.",
+    items: [
       {
         label: "Association Membership",
         description: "Join the right industry and business networks.",
@@ -128,18 +142,6 @@ const startupAndLicensing: MegaMenuGroup[] = [
           { label: "Others Membership", href: "#contact" },
         ],
       },
-      { label: "Factory License", description: "Complete the requirements for your facility.", href: "#contact", marker: "08" },
-      { label: "Fire License", description: "Move forward with fire safety clearance.", href: fireLicenseUrl, marker: "09" },
-      { label: "BSTI Permission", description: "Meet Bangladesh Standards requirements.", href: "#contact", marker: "10" },
-      { label: "Environment Clearance", description: "Plan the right environmental approval.", href: "#contact", marker: "11" },
-    ],
-  },
-  {
-    key: "membership-and-launch",
-    label: "SPECIALIST SUPPORT & LAUNCH",
-    railLabel: "Specialist support",
-    description: "Build credibility, access networks and launch with confidence.",
-    items: [
       { label: "DBID Certificate", description: "Digital business identification.", href: "#contact", marker: "12" },
       { label: "Travel Agency License", description: "Prepare and submit your travel agency application.", href: "#contact", marker: "13" },
       { label: "BIDA Registration", description: "Support for foreign investment setup.", href: "#contact", marker: "14" },
@@ -384,124 +386,123 @@ export const serviceFilters = [
   "Startup",
   "Tax & compliance",
   "Trademark",
-  "Advisory",
+  "Business tools",
 ] as const;
 
 export type ServiceFilter = (typeof serviceFilters)[number];
 
+export type ServiceIconName =
+  | "building"
+  | "license"
+  | "receipt-tax"
+  | "tax"
+  | "file-upload"
+  | "file-download"
+  | "users-group"
+  | "factory"
+  | "shield-check"
+  | "certificate-2"
+  | "leaf"
+  | "plane"
+  | "world"
+  | "file-check"
+  | "package"
+  | "trademark"
+  | "copyright"
+  | "lightbulb"
+  | "report-money"
+  | "contract"
+  | "calculator"
+  | "language"
+  | "checklist"
+  | "briefcase";
+
 export type Service = {
   number: string;
-  label: string;
   title: string;
   description: string;
   action: string;
+  href: string;
+  icon: ServiceIconName;
   color: string;
   surface: string;
   filters: ServiceFilter[];
 };
 
-export const services: Service[] = [
-  {
-    number: "02",
-    label: "FUNDRAISING",
-    title: "Capital and Investors",
-    description: "Connect with angel investors and venture capitalists to secure funding.",
-    action: "Learn more",
-    color: "#2e6b4f",
-    surface: "#d6ebde",
-    filters: ["Advisory"],
-  },
-  {
-    number: "03",
-    label: "MARKET RESEARCH",
-    title: "Industry Analysis",
-    description: "Gather insights on competitors and customer preferences.",
-    action: "Get insights",
-    color: "#5c4aa6",
-    surface: "#dedbfa",
-    filters: ["Advisory", "Startup"],
-  },
-  {
-    number: "04",
-    label: "PRODUCT DEVELOPMENT",
-    title: "Design and Prototyping",
-    description: "Create product designs and build working prototypes.",
-    action: "Develop product",
-    color: "#b83652",
-    surface: "#fcdbe0",
-    filters: ["Startup", "Advisory"],
-  },
-  {
-    number: "05",
-    label: "BRANDING",
-    title: "Identity and Promotion",
-    description: "Establish brand identity with logos, slogans, and marketing materials.",
-    action: "Build brand",
-    color: "#9e5726",
-    surface: "#fae5cc",
-    filters: ["Trademark", "Startup"],
-  },
-  {
-    number: "06",
-    label: "SALES STRATEGY",
-    title: "Channels and Tactics",
-    description: "Develop effective sales channels and outreach campaigns.",
-    action: "Boost sales",
-    color: "#1f6e70",
-    surface: "#d1edeb",
-    filters: ["Advisory"],
-  },
-  {
-    number: "07",
-    label: "LEGAL COMPLIANCE",
-    title: "Regulations and Policies",
-    description: "Ensure business meets all legal and regulatory requirements.",
-    action: "Check compliance",
-    color: "#2e6b4f",
-    surface: "#d6ebde",
-    filters: ["Tax & compliance"],
-  },
-  {
-    number: "08",
-    label: "TALENT ACQUISITION",
-    title: "Hiring and Management",
-    description: "Attract and retain skilled professionals for your team.",
-    action: "Find talent",
-    color: "#5c4aa6",
-    surface: "#dedbfa",
-    filters: ["Startup", "Advisory"],
-  },
-  {
-    number: "09",
-    label: "FINANCIAL PLANNING",
-    title: "Budgeting and Forecasting",
-    description: "Plan budgets and project future revenues and expenses.",
-    action: "Plan finances",
-    color: "#b83652",
-    surface: "#fcdbe0",
-    filters: ["Tax & compliance", "Advisory"],
-  },
-  {
-    number: "10",
-    label: "CUSTOMER SUPPORT",
-    title: "Service and Feedback",
-    description: "Build a support system to engage and retain customers.",
-    action: "Enhance support",
-    color: "#9e5726",
-    surface: "#fae5cc",
-    filters: ["Advisory"],
-  },
-  {
-    number: "11",
-    label: "SCALING UP",
-    title: "Expansion Strategies",
-    description: "Prepare for growth through new markets and partnerships.",
-    action: "Scale business",
-    color: "#1f6e70",
-    surface: "#d1edeb",
-    filters: ["Startup", "Advisory"],
-  },
-];
+const serviceFilterByNavLabel: Record<string, Exclude<ServiceFilter, "All services">> = {
+  "Startup & Licensing": "Startup",
+  "IP & Trademark": "Trademark",
+  "Compliance & Documentation": "Tax & compliance",
+  "Business Tools": "Business tools",
+};
+
+const serviceToneByFilter: Record<Exclude<ServiceFilter, "All services">, { color: string; surface: string }> = {
+  Startup: { color: "#2e6b4f", surface: "#d6ebde" },
+  "Tax & compliance": { color: "#5c4aa6", surface: "#dedbfa" },
+  Trademark: { color: "#b83652", surface: "#fcdbe0" },
+  "Business tools": { color: "#1f6e70", surface: "#d1edeb" },
+};
+
+const serviceIconByLabel: Partial<Record<string, ServiceIconName>> = {
+  "Company Formation": "building",
+  "Trade License": "license",
+  "VAT / BIN Registration": "receipt-tax",
+  "TIN / TAX Registration": "tax",
+  "Import License": "file-upload",
+  "Export License": "file-download",
+  "Association Membership": "users-group",
+  "Factory License": "factory",
+  "Fire License": "shield-check",
+  "BSTI Permission": "certificate-2",
+  "Environment Clearance": "leaf",
+  "DBID Certificate": "certificate-2",
+  "Travel Agency License": "plane",
+  "BIDA Registration": "world",
+  "e-GP Registration": "file-check",
+  "Startup Business Package": "package",
+  Trademark: "trademark",
+  "Copyright Registration": "copyright",
+  "Patent Registration": "lightbulb",
+  "Income Tax": "tax",
+  VAT: "receipt-tax",
+  "CA Audit Service": "report-money",
+  "CA Assets Valuation": "report-money",
+  "Project Proposal": "contract",
+  "Accounts Service": "calculator",
+  "HR and Payroll Service": "users-group",
+  Affidavits: "certificate-2",
+  Translation: "language",
+  "RJSC Compliance": "checklist",
+  "Fee Calculator": "calculator",
+  "Business Agreement Builder": "contract",
+};
+
+export function createServicesFromNavigation(navigationItems: NavItem[]): Service[] {
+  return navigationItems.flatMap((navItem) => {
+    const filter = serviceFilterByNavLabel[navItem.label];
+    if (!filter) return [];
+
+    const tone = serviceToneByFilter[filter];
+
+    return (navItem.megaGroups ?? []).flatMap((group) =>
+      group.items
+        .map((item) => ({
+          number: item.marker,
+          title: item.label,
+          description: item.description,
+          action: "Learn more",
+          href: item.href,
+          icon: item.icon ?? serviceIconByLabel[item.label] ?? "briefcase",
+          color: tone.color,
+          surface: tone.surface,
+          filters: [filter],
+        }))
+        .sort((left, right) => Number(left.number) - Number(right.number)),
+    );
+  });
+}
+
+export const services: Service[] = createServicesFromNavigation(navigation);
 
 export const processSteps = [
   {
@@ -530,7 +531,7 @@ export const packages = [
   {
     tag: "STARTUP",
     title: "Company setup",
-    description: "A practical start for a new business.",
+    description: "For a new business.",
     price: "From BDT ৳ 5,000",
     features: ["Company registration", "Trade license support", "TIN guidance"],
     color: "#29634d",
@@ -539,7 +540,7 @@ export const packages = [
   {
     tag: "COMPLIANCE",
     title: "Compliance care",
-    description: "Stay current without the paperwork.",
+    description: "For ongoing compliance.",
     price: "From BDT ৳ 4,500",
     features: ["VAT return support", "Income tax filing", "Annual compliance"],
     color: "#594094",
@@ -548,7 +549,7 @@ export const packages = [
   {
     tag: "BRAND PROTECTION",
     title: "Trademark support",
-    description: "Protect the name you are building.",
+    description: "For protecting your brand.",
     price: "From BDT ৳ 6,000",
     features: ["Trademark search", "Filing assistance", "Status follow-up"],
     color: "#9e3347",
@@ -589,7 +590,7 @@ export const tools = [
     mark: "VAT",
     tag: "QUICK ESTIMATE",
     title: "VAT calculator",
-    description: "Get a quick view of VAT due before you file or quote.",
+    description: "Estimate VAT before you file or quote.",
     rows: [
       ["Sales amount", "BDT 0.00"],
       ["VAT rate", "15%"],
@@ -603,7 +604,7 @@ export const tools = [
     mark: "TAX",
     tag: "PLAN AHEAD",
     title: "Income tax estimator",
-    description: "Understand your estimated tax and plan the next step with clarity.",
+    description: "Estimate tax and plan ahead.",
     rows: [
       ["Annual income", "BDT 0.00"],
       ["Tax year", "2026"],
@@ -617,7 +618,7 @@ export const tools = [
     mark: "DOC",
     tag: "BUILD A DOCUMENT",
     title: "Deed builder",
-    description: "Create a structured first draft with guided fields and export options.",
+    description: "Create a guided first draft.",
     rows: [
       ["Document type", "Select deed"],
       ["Output", "PDF ready"],
@@ -632,23 +633,23 @@ export const tools = [
 export const faqs = [
   {
     question: "What do I need to get started?",
-    answer: "Usually, a short description of your goal, your basic business details and any documents you already have is enough for a first conversation.",
+    answer: "Share your goal, basic business details and any documents you already have.",
   },
   {
     question: "How long does a service usually take?",
-    answer: "Timing depends on the service and the authority involved. We will share a clear expected timeline before any work begins.",
+    answer: "It depends on the service and authority. We share a clear timeline before work begins.",
   },
   {
     question: "Can I get a custom package for my needs?",
-    answer: "Yes. We can bundle services, add tools or scope a tailored package around the stage and priorities of your business.",
+    answer: "Yes. We can combine services and tailor the scope to your priorities.",
   },
   {
     question: "Can I track my request after submitting it?",
-    answer: "Yes. You will receive progress updates and a direct point of contact for any follow-up questions along the way.",
+    answer: "Yes. We send progress updates and provide a direct point of contact.",
   },
   {
     question: "Can I speak with an advisor before I decide?",
-    answer: "Absolutely. A short introductory conversation is a good way to make sure you are choosing the right next step.",
+    answer: "Absolutely. A short introduction helps confirm the right next step.",
   },
 ];
 

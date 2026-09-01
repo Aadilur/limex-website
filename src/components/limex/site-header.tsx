@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { navigation, type NavItem } from "./data";
 import { MegaMenuPanel, MobileMegaMenuContent } from "./mega-menu";
 import { LogoLockup } from "./ui";
+import { getPublicMenu } from "@/lib/menu-api";
 
 function slugify(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-");
@@ -86,9 +87,37 @@ function MobileNavGroup({ item, onNavigate }: { item: NavItem; onNavigate: () =>
 
 export function SiteHeader() {
   const pathname = usePathname();
+  const [menuNavigation, setMenuNavigation] = useState<NavItem[]>(navigation);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const headerRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void getPublicMenu()
+      .then((managedItems) => {
+        if (cancelled) return;
+
+        const managedByKey = new Map(managedItems.map((item) => [item.key ?? slugify(item.label), item]));
+        const staticManagedKeys = new Set(navigation.filter((item) => item.megaGroups).map((item) => slugify(item.label)));
+        const mergedNavigation = navigation.flatMap((item) => {
+          if (!item.megaGroups) return [item];
+
+          const managedItem = managedByKey.get(slugify(item.label));
+          return managedItem ? [managedItem] : [];
+        });
+        const newManagedItems = managedItems.filter((item) => !staticManagedKeys.has(item.key ?? slugify(item.label)));
+        setMenuNavigation([...mergedNavigation.filter((item) => item.label === "Home"), ...mergedNavigation.filter((item) => item.megaGroups), ...newManagedItems, ...mergedNavigation.filter((item) => !item.megaGroups && item.label !== "Home")]);
+      })
+      .catch(() => {
+        // Keep the bundled navigation available when the API is unavailable.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const closeOnOutsideClick = (event: PointerEvent) => {
@@ -116,7 +145,7 @@ export function SiteHeader() {
   }, [mobileOpen]);
 
   const closeMobileMenu = () => setMobileOpen(false);
-  const openMenuItem = navigation.find((item) => item.label === openMenu && item.megaGroups);
+  const openMenuItem = menuNavigation.find((item) => item.label === openMenu && item.megaGroups);
   const activeNavLabel = pathname === "/about"
     ? "About us"
     : pathname.startsWith("/blog")
@@ -129,14 +158,14 @@ export function SiteHeader() {
         ? "Startup & Licensing"
       : pathname.startsWith("/business-tools")
         ? "Business Tools"
-      : navigation.find((item) => item.active)?.label;
+      : menuNavigation.find((item) => item.active)?.label;
   const homeHref = pathname === "/" ? "#top" : "/";
   const contactHref = resolveLocalHref("#contact", pathname);
 
   return (
     <header className="relative z-20" ref={headerRef}>
       <div
-        className="absolute left-page-gutter-lg right-page-gutter-lg top-nav-top hidden min-h-nav-shell items-center gap-cluster-sm rounded-nav border border-[rgba(224,222,227,0.86)] bg-paper/80 px-cluster py-cluster shadow-nav backdrop-blur-[14px] lg:flex xl:gap-cluster-lg xl:px-4 wide:gap-cluster-xl wide:px-5"
+        className="absolute left-page-gutter-lg right-page-gutter-lg top-nav-top hidden min-h-nav-shell items-center gap-cluster-sm rounded-nav border border-[rgba(224,222,227,0.86)] bg-paper/80 px-cluster py-cluster shadow-nav backdrop-blur-[14px] wide:flex wide:gap-cluster-xl wide:px-5"
         onMouseLeave={() => setOpenMenu(null)}
         onBlur={(event) => {
           if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpenMenu(null);
@@ -144,7 +173,7 @@ export function SiteHeader() {
       >
         <LogoLockup href={homeHref} className="w-[130px] min-w-[130px] xl:w-[155px] xl:min-w-[155px] wide:w-[178px] wide:min-w-[178px]" />
         <nav className="min-w-0 flex flex-1 items-center gap-0.5 xl:gap-1 wide:gap-3.5" aria-label="Primary navigation">
-          {navigation.map((item) =>
+          {menuNavigation.map((item) =>
             item.megaGroups ? (
               <DesktopNavTrigger
                 key={item.label}
@@ -186,7 +215,7 @@ export function SiteHeader() {
         </a>
       </div>
 
-      <div className="absolute left-mobile-gutter right-mobile-gutter top-nav-top-mobile flex min-h-nav-mobile-shell items-center justify-between rounded-nav border border-[rgba(224,222,227,0.86)] bg-paper/85 px-4 py-cluster shadow-nav backdrop-blur-[14px] lg:hidden">
+      <div className="absolute left-mobile-gutter right-mobile-gutter top-nav-top-mobile flex min-h-nav-mobile-shell items-center justify-between rounded-nav border border-[rgba(224,222,227,0.86)] bg-paper/85 px-4 py-cluster shadow-nav backdrop-blur-[14px] wide:hidden">
         <LogoLockup href={homeHref} className="w-auto min-w-0" />
         <button
           className="relative grid size-[42px] place-items-center rounded-full border-0 bg-[#14131c] text-white transition-transform duration-200 hover:scale-105 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3"
@@ -204,7 +233,7 @@ export function SiteHeader() {
       </div>
 
       {mobileOpen ? (
-        <div className="fixed inset-0 z-50 block lg:hidden" id="mobile-navigation">
+        <div className="fixed inset-0 z-50 block wide:hidden" id="mobile-navigation">
           <button className="absolute inset-0 h-full w-full border-0 bg-[rgba(18,20,33,0.44)]" type="button" aria-label="Close menu" onClick={closeMobileMenu} />
           <aside className="absolute bottom-cluster-sm right-cluster-sm top-cluster-sm flex w-[min(390px,calc(100%-24px))] flex-col overflow-y-auto rounded-drawer bg-paper p-drawer-pad shadow-drawer animate-menu-in" aria-label="Mobile navigation">
             <div className="flex items-center justify-between border-b border-border pb-cluster text-label uppercase text-muted">
@@ -214,7 +243,7 @@ export function SiteHeader() {
               </button>
             </div>
             <nav className="flex flex-col py-cluster-xs">
-              {navigation.map((item) =>
+              {menuNavigation.map((item) =>
                 item.megaGroups ? (
                   <MobileNavGroup key={item.label} item={item} onNavigate={closeMobileMenu} />
                 ) : (

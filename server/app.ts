@@ -4,6 +4,12 @@ import Fastify from "fastify";
 import { ZodError } from "zod";
 
 import { env } from "./config/env.js";
+import { AdminAuthService } from "./modules/admin/application/admin-auth.service.js";
+import { MenuService } from "./modules/admin/application/menu.service.js";
+import { PrismaMenuRepository } from "./modules/admin/infrastructure/prisma-menu.repository.js";
+import { adminAuthRoutes } from "./modules/admin/interface/http/admin-auth.routes.js";
+import { adminMenuRoutes } from "./modules/admin/interface/http/menu.routes.js";
+import { publicMenuRoutes } from "./modules/admin/interface/http/public-menu.routes.js";
 import { HealthService } from "./modules/health/application/health.service.js";
 import { PrismaHealthCheck } from "./modules/health/infrastructure/prisma-health-check.js";
 import { healthRoutes } from "./modules/health/interface/http/health.routes.js";
@@ -23,13 +29,18 @@ export async function buildApp() {
       : env.CORS_ORIGIN.split(",").map((origin) => origin.trim());
 
   await app.register(helmet);
-  await app.register(cors, { origin: corsOrigin });
+  await app.register(cors, { origin: corsOrigin, credentials: true });
 
   const healthService = new HealthService(new PrismaHealthCheck(prisma));
   const userService = new UserService(new PrismaUserRepository(prisma));
+  const adminAuthService = new AdminAuthService();
+  const menuService = new MenuService(new PrismaMenuRepository(prisma));
 
   await app.register(healthRoutes, { service: healthService });
   await app.register(userRoutes, { service: userService });
+  await app.register(adminAuthRoutes, { service: adminAuthService });
+  await app.register(adminMenuRoutes, { service: menuService });
+  await app.register(publicMenuRoutes, { service: menuService });
 
   app.setErrorHandler((error, request, reply) => {
     if (error instanceof ZodError) {

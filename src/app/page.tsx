@@ -8,6 +8,7 @@ import { PackagesSection } from "@/components/limex/packages-section";
 import { ServicesSection } from "@/components/limex/services-section";
 import { SiteFooter } from "@/components/limex/site-footer";
 import { ToolsSection } from "@/components/limex/tools-section";
+import { SectionSeparator } from "@/components/limex/ui";
 
 export default function Home() {
   return (
@@ -22,6 +23,7 @@ export default function Home() {
       <ToolsSection />
       <BlogSection />
       <FaqSection />
+      <SectionSeparator />
       <ContactSection />
       <SiteFooter />
     </main>

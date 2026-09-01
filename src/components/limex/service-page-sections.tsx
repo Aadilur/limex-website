@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import type { ServicePageContent, ServicePriceTier } from "./service-page-data";
-import { ActionButton } from "./ui";
+import { ActionButton, WaveLabel } from "./ui";
 
 export function ServiceHeroSection({ service }: { service: ServicePageContent }) {
   return (
@@ -12,7 +12,7 @@ export function ServiceHeroSection({ service }: { service: ServicePageContent })
       <div className="mt-section-gap-xl grid gap-section-gap lg:grid-cols-[minmax(0,1fr)_minmax(360px,460px)] lg:items-center lg:gap-section-gap-xl">
         <div className="min-w-0">
           <p className="text-overline text-[#de5778]">{service.category}</p>
-          <h1 className="mt-cluster max-w-[690px] font-brand text-page-title text-ink" id="service-page-title">{service.title}</h1>
+          <h1 className="mt-cluster max-w-[690px] font-brand text-page-title text-ink max-lg:text-page-title-mobile" id="service-page-title">{service.title}</h1>
           <p className="mt-cluster max-w-[620px] text-body-lg text-muted">{service.description}</p>
           <ActionButton href="#service-contact" arrow="cta" className="mt-section-gap-lg min-h-button-lg w-[188px] pl-5 text-body-xs">{service.ctaLabel}</ActionButton>
 
@@ -54,7 +54,7 @@ export function ServiceOverviewSection({ service }: { service: ServicePageConten
       <div className="grid gap-section-gap lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.7fr)] lg:gap-section-gap-xl">
         <div className="min-w-0">
           <p className="text-overline text-[#de5778]">{service.overviewEyebrow}</p>
-          <h2 className="mt-cluster max-w-[760px] font-brand text-page-title text-ink" id="service-overview-title">{service.overviewTitle}</h2>
+          <h2 className="mt-cluster max-w-[760px] font-brand text-page-title text-ink max-lg:text-page-title-mobile" id="service-overview-title">{service.overviewTitle}</h2>
           <p className="mt-cluster max-w-[720px] text-body-lg text-muted">{service.overviewDescription}</p>
 
           <article className="mt-section-gap-lg rounded-nav border border-[#e0dee3] bg-white px-card-pad py-card-pad lg:px-section-y lg:py-section-y">
@@ -86,7 +86,7 @@ export function ServiceOverviewSection({ service }: { service: ServicePageConten
 function PriceCard({ tier }: { tier: ServicePriceTier }) {
   return (
     <article className={`relative flex min-h-[292px] flex-col rounded-nav border bg-white p-card-pad ${tier.featured ? "border-[#de4d73]" : "border-[#e0dee3]"}`.trim()}>
-      {tier.featured ? <span className="absolute left-5 top-4 inline-flex min-h-6 items-center rounded-pill bg-[#de4d73] px-3 text-overline text-white">Most popular</span> : null}
+      {tier.featured ? <WaveLabel className="absolute left-5 top-4 text-[#de4d73]">Most popular</WaveLabel> : null}
       <p className={`text-body font-semibold ${tier.featured ? "mt-8 text-[#de4d73]" : "text-muted"}`.trim()}>{tier.name}</p>
       <p className="mt-cluster-sm font-brand text-section-title text-ink">{tier.price}</p>
       <p className="mt-cluster-sm text-body-xs text-muted">{tier.description}</p>
@@ -110,7 +110,7 @@ export function ServicePricingSection({ service }: { service: ServicePageContent
   return (
     <section className="mt-section-gap-xl border-t border-[#e0dee3] bg-page pt-section-y lg:mt-section-gap-xl lg:pt-section-y-xl" id="pricing" aria-labelledby="service-pricing-title">
       <p className="text-overline text-[#de5778]">Optional / pricing</p>
-      <h2 className="mt-cluster font-brand text-page-title text-ink" id="service-pricing-title">Show the right price for this service</h2>
+          <h2 className="mt-cluster font-brand text-page-title text-ink max-lg:text-page-title-mobile" id="service-pricing-title">Show the right price for this service</h2>
       <p className="mt-cluster text-body-lg text-muted">Use a starting price, package cards or a custom quote depending on the scope.</p>
       <div className="mt-section-gap-lg grid gap-cluster lg:grid-cols-3">
         {service.pricing.map((tier) => <PriceCard key={tier.name} tier={tier} />)}
@@ -127,7 +127,7 @@ export function ServiceFaqSection({ service }: { service: ServicePageContent }) 
       <div className="grid gap-section-gap lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-section-gap-xl">
         <div>
           <p className="text-overline text-[#de5778]">Optional / FAQ</p>
-          <h2 className="mt-cluster font-brand text-page-title text-ink" id="service-faq-title">Common questions</h2>
+          <h2 className="mt-cluster font-brand text-page-title text-ink max-lg:text-page-title-mobile" id="service-faq-title">Common questions</h2>
           <p className="mt-cluster max-w-[560px] text-body-lg text-muted">A few clear answers before you choose the next step.</p>
           <p className="mt-section-gap-xl text-overline text-[#de5778]">Content control</p>
           <p className="mt-cluster-sm max-w-[460px] text-body-xs text-muted">Questions can be added, removed and reordered as the service grows.</p>
@@ -148,7 +148,9 @@ export function ServiceFaqSection({ service }: { service: ServicePageContent }) 
                   onClick={() => setOpenIndex(isOpen ? null : index)}
                 >
                   <span>{faq.question}</span>
-                  <span className={`inline-grid size-8 shrink-0 place-items-center rounded-full text-icon font-normal transition-transform duration-200 ${isOpen ? "bg-[#fce0e3] text-pink rotate-45" : "bg-soft text-muted"}`.trim()} aria-hidden="true">+</span>
+                  <span className={`inline-grid size-8 shrink-0 place-items-center rounded-full text-icon font-normal ${isOpen ? "bg-[#fce0e3] text-pink" : "bg-soft text-muted"}`.trim()} aria-hidden="true">
+                    <span className={`transition-transform duration-200 ${isOpen ? "rotate-45" : ""}`.trim()}>+</span>
+                  </span>
                 </button>
                 <div className={`grid overflow-hidden text-body-xs text-muted transition-[grid-template-rows,padding] duration-[220ms] ${isOpen ? "grid-rows-[1fr] pb-4" : "grid-rows-[0fr]"}`.trim()} id={answerId} role="region">
                   <div className="min-h-0 overflow-hidden"><p>{faq.answer}</p></div>
@@ -167,7 +169,7 @@ export function ServiceContactSection({ service }: { service: ServicePageContent
     <section className="mt-section-gap-xl flex flex-col gap-section-gap-lg rounded-nav bg-navy px-card-pad py-section-y text-white lg:mt-section-gap-xl lg:flex-row lg:items-center lg:justify-between lg:px-8 lg:py-section-y-xl" id="service-contact" aria-labelledby="service-contact-title">
       <div>
         <p className="text-overline text-[#fac7cc]">Ready when you are</p>
-        <h2 className="mt-cluster max-w-[760px] font-brand text-page-title" id="service-contact-title">Need help choosing the right option?</h2>
+        <h2 className="mt-cluster max-w-[760px] font-brand text-page-title max-lg:text-page-title-mobile" id="service-contact-title">Need help choosing the right option?</h2>
         <p className="mt-cluster max-w-[680px] text-body-sm text-[#c7cfe0]">A short conversation is enough to recommend the right path for {service.title.toLowerCase()}.</p>
       </div>
       <ActionButton href="/#contact" variant="white" arrow="text" className="min-h-button-lg w-[218px] shrink-0 justify-center text-body-xs">Talk to an advisor</ActionButton>

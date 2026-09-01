@@ -2,7 +2,7 @@ import { LimitedCompanyCostCalculator, TaxCalculator, VatCalculator } from "./ca
 import { pageContentClass, pageLayoutClass, pageShellClass } from "./layout";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
-import { ActionButton } from "./ui";
+import { ActionButton, WaveLabel } from "./ui";
 
 const toolLinks = [
   {
@@ -40,7 +40,7 @@ export function BusinessToolsPage() {
           <div className="grid gap-section-gap-lg rounded-panel border border-[#e3ded4] bg-[#f9f8f5] px-page-gutter py-section-y sm:px-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)] lg:items-end lg:px-10 lg:py-9">
             <div>
               <p className="text-overline text-pink">SMART TOOLS / BANGLADESH</p>
-              <h1 className="mt-cluster max-w-[720px] font-brand text-page-title text-[#171a26]">Make the next business decision easier.</h1>
+              <h1 className="mt-cluster max-w-[720px] font-brand text-page-title text-[#171a26] max-lg:text-page-title-mobile">Make the next business decision easier.</h1>
               <p className="mt-cluster max-w-[640px] text-body-sm text-[#6b7487]">Use practical estimates for company registration, personal income tax and VAT invoices before you take the next step.</p>
               <div className="mt-section-gap-lg flex flex-wrap gap-cluster-sm">
                 <ActionButton href="#limited-company-calculator" className="min-h-button-lg rounded-control px-4 text-button">Start with company cost</ActionButton>
@@ -52,9 +52,9 @@ export function BusinessToolsPage() {
               <h2 className="mt-cluster-sm font-brand text-subheading">Clear inputs. Useful outputs.</h2>
               <p className="mt-cluster-sm text-meta text-[#c7e5e0]">These are planning estimates. Final government charges and filing rules should be confirmed for your case.</p>
               <div className="mt-section-gap-lg flex flex-wrap gap-cluster-sm text-micro font-semibold text-[#173838]">
-                <span className="rounded-pill bg-[#c7e5e0] px-2.5 py-1.5">Live summaries</span>
-                <span className="rounded-pill bg-[#c7e5e0] px-2.5 py-1.5">Responsive forms</span>
-                <span className="rounded-pill bg-[#c7e5e0] px-2.5 py-1.5">Bangladesh-focused</span>
+                <WaveLabel className="text-[#c7e5e0]">Live summaries</WaveLabel>
+                <WaveLabel className="text-[#c7e5e0]">Responsive forms</WaveLabel>
+                <WaveLabel className="text-[#c7e5e0]">Bangladesh-focused</WaveLabel>
               </div>
             </aside>
           </div>

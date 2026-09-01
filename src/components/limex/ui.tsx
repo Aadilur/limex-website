@@ -72,6 +72,31 @@ export function TextLink({ children, href = "#contact" }: { children: ReactNode;
   );
 }
 
+export function WaveLabel({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return (
+    <span className={`inline-flex w-max ${className}`.trim()}>
+      <span className="relative inline-flex pb-1.5 text-overline">
+        <span>{children}</span>
+        <svg className="pointer-events-none absolute inset-x-0 bottom-0 h-[8px] w-full overflow-visible" viewBox="0 0 120 8" preserveAspectRatio="none" fill="none" aria-hidden="true">
+          <path d="M1 4C10 1 18 1 27 4S44 7 53 4 70 1 79 4s17 3 26 0 9-2 14 0" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" vectorEffect="non-scaling-stroke" />
+        </svg>
+      </span>
+    </span>
+  );
+}
+
+export function SectionSeparator() {
+  return (
+    <div className="pointer-events-none relative z-10 flex h-0 items-center gap-4 overflow-visible px-page-gutter lg:px-page-gutter-lg" aria-hidden="true">
+      <span className="h-px flex-1 bg-gradient-to-r from-transparent via-[#c8c5bc] to-[#c8c5bc]" />
+      <svg className="h-4 w-[clamp(88px,12vw,136px)] shrink-0 text-[#789382]" viewBox="0 0 136 12" preserveAspectRatio="none" fill="none">
+        <path d="M1 6C12 6 14 1.5 25 1.5S38 6 49 6 62 1.5 73 1.5 86 6 97 6s13-4.5 24-4.5S129 6 135 6" stroke="currentColor" strokeLinecap="round" strokeWidth="1.7" vectorEffect="non-scaling-stroke" />
+      </svg>
+      <span className="h-px flex-1 bg-gradient-to-l from-transparent via-[#c8c5bc] to-[#c8c5bc]" />
+    </div>
+  );
+}
+
 export function SectionTitle({
   eyebrow,
   title,
@@ -87,7 +112,11 @@ export function SectionTitle({
   className?: string;
   size?: "default" | "compact" | "large";
 }) {
-  const titleClass = size === "compact" ? "text-subheading" : size === "large" ? "text-section-title" : "text-heading";
+  const titleClass = size === "compact"
+    ? "text-subheading-mobile lg:text-subheading"
+    : size === "large"
+      ? "text-section-title-mobile lg:text-section-title"
+      : "text-heading-mobile lg:text-heading";
   const eyebrowClass = size === "compact" ? "mb-cluster-xs text-overline" : "mb-cluster-sm text-label";
   const descriptionClass = size === "compact" ? "mt-0 text-body-xs" : "mt-cluster-sm text-body";
 
