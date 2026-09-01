@@ -20,7 +20,7 @@ const actionVariants = {
 };
 
 const actionBase =
-  "inline-flex min-h-[42px] items-center justify-between gap-2.5 rounded-full border px-4 text-[12px] font-[650] leading-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-button focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3";
+  "inline-flex min-h-control items-center justify-between gap-cluster-sm rounded-pill border px-4 text-button font-strong transition-all duration-200 hover:-translate-y-0.5 hover:shadow-button focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3";
 
 export function ActionButton({
   children,
@@ -38,7 +38,7 @@ export function ActionButton({
       <span>{children}</span>
       {arrow !== "none" ? (
         <span
-          className={`inline-flex size-[18px] shrink-0 items-center justify-center text-[15px] leading-none ${
+          className={`inline-flex size-[18px] shrink-0 items-center justify-center text-icon-action ${
             arrow === "cta" ? "size-[26px] bg-[url('/figma/cta-arrow-circle.svg')] bg-contain bg-center bg-no-repeat text-transparent" : ""
           }`.trim()}
           aria-hidden="true"
@@ -66,7 +66,7 @@ export function ActionButton({
 
 export function TextLink({ children, href = "#contact" }: { children: ReactNode; href?: string }) {
   return (
-    <a className="font-[650] transition-colors hover:text-pink" href={href}>
+    <a className="font-strong transition-colors hover:text-pink" href={href}>
       {children} <span className="text-pink" aria-hidden="true">↗</span>
     </a>
   );
@@ -87,9 +87,9 @@ export function SectionTitle({
   className?: string;
   size?: "default" | "compact" | "large";
 }) {
-  const titleClass = size === "compact" ? "text-[19px] leading-6" : size === "large" ? "text-[33px] leading-10" : "text-heading";
-  const eyebrowClass = size === "compact" ? "mb-1 text-[9px] tracking-[0.9px] leading-3" : "mb-2.5 text-label";
-  const descriptionClass = size === "compact" ? "mt-0 text-[11px] leading-[14px]" : "mt-2.5 text-body";
+  const titleClass = size === "compact" ? "text-subheading" : size === "large" ? "text-section-title" : "text-heading";
+  const eyebrowClass = size === "compact" ? "mb-cluster-xs text-overline" : "mb-cluster-sm text-label";
+  const descriptionClass = size === "compact" ? "mt-0 text-body-xs" : "mt-cluster-sm text-body";
 
   return (
     <div className={`max-w-[780px] ${className}`.trim()}>
@@ -107,13 +107,13 @@ export function LogoLockup({ light = false, className = "", href = "#top" }: { l
       href={href}
       aria-label="Limex home"
     >
-      <span className={`text-[18px] font-extrabold leading-[22px] tracking-[0.35px] ${light ? "text-white" : "text-ink"}`.trim()}>LIMEX</span>
+      <span className={`font-brand text-logo font-display ${light ? "text-white" : "text-ink"}`.trim()}>LIMEX</span>
     </a>
   );
 }
 
 export function ExternalArrow() {
-  return <span className="font-[650] text-pink" aria-hidden="true">↗</span>;
+  return <span className="font-strong text-pink" aria-hidden="true">↗</span>;
 }
 
 export function SearchIcon({ className = "size-5" }: { className?: string }) {

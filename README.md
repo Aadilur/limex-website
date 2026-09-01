@@ -1,6 +1,6 @@
 # Limex Website
 
-A clean-architecture starter with a Next.js frontend, a dedicated Fastify backend, Prisma, PostgreSQL, and a Railway-ready single-container runtime.
+A clean-architecture starter with a Next.js frontend, a dedicated Fastify backend, Prisma, MySQL, and a Railway-ready single-container runtime.
 
 ## Architecture
 
@@ -43,7 +43,7 @@ In local development, Next.js also rewrites /api/* to port 4000, so the UI remai
 
 ## Local setup
 
-Requirements: Node.js 20+, npm, and Docker for the local PostgreSQL service.
+Requirements: Node.js 20+, npm, and Docker for the local MySQL service.
 
 ~~~bash
 cp .env.example .env
@@ -71,9 +71,9 @@ npm run prisma:migrate -- --name add_feature
 
 ## Railway deployment
 
-1. Create a Railway project and add a PostgreSQL database.
+1. Create a Railway project and add a MySQL database.
 2. Deploy this repository as a service. railway.toml selects the included Dockerfile.
-3. Set DATABASE_URL to the PostgreSQL service connection string. For a service named Postgres, the Railway reference value is `${{Postgres.DATABASE_URL}}`; replace Postgres if you renamed the database service.
+3. Set DATABASE_URL to the MySQL service connection string, using the format `mysql://USER:PASSWORD@HOST:3306/DATABASE`.
 4. Optionally set CORS_ORIGIN to the public frontend origin. Leave PORT and GATEWAY_PORT unset; Railway supplies PORT automatically.
 5. Deploy. The image runs prisma migrate deploy and then starts all three processes in one container.
 

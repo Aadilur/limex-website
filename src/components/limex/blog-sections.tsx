@@ -30,7 +30,7 @@ function BlogSearchField({
     <label className="relative block w-full">
       <span className="sr-only">Search guides, topics or keywords</span>
       <input
-        className="h-[52px] w-full rounded-[12px] border border-[#e0e0e5] bg-[#f9f8f6] px-[17px] pr-12 text-[14px] leading-5 text-ink outline-none transition-colors placeholder:text-muted focus:border-pink focus:ring-2 focus:ring-pink/15"
+        className="h-button-lg w-full rounded-control border border-[#e0e0e5] bg-[#f9f8f6] px-card-pad-sm pr-12 text-body-sm text-ink outline-none transition-colors placeholder:text-muted focus:border-pink focus:ring-2 focus:ring-pink/15"
         id={id}
         type="search"
         value={value}
@@ -68,8 +68,8 @@ function BlogCover({ article, variant = "card" }: { article: BlogArticle; varian
     <div className={`relative shrink-0 overflow-hidden ${tone.surface} ${coverWidthClass} ${coverClass}`.trim()} aria-hidden="true">
       {isFeatured ? (
         <div className="absolute inset-0 flex flex-col items-center justify-center px-5 text-center">
-          <strong className={`text-[11px] font-bold tracking-[1.35px] ${tone.text}`.trim()}>IMAGE PLACEHOLDER</strong>
-          <span className="mt-2 text-[14px] leading-[22px] text-muted">{article.coverNote}</span>
+          <strong className={`text-overline ${tone.text}`.trim()}>IMAGE PLACEHOLDER</strong>
+          <span className="mt-cluster-sm text-body-sm text-muted">{article.coverNote}</span>
         </div>
       ) : (
         <>
@@ -81,11 +81,11 @@ function BlogCover({ article, variant = "card" }: { article: BlogArticle; varian
             <span className={`absolute ${lineClass} top-[30px] h-0.5 w-[54px] rounded-full bg-muted/45`.trim()} />
             <span className={`absolute ${lineClass} top-10 h-0.5 w-[82px] rounded-full bg-muted/30`.trim()} />
           </span>
-          {!isThumb && !isHero ? <span className={`absolute bottom-6 left-6 text-[10px] font-semibold tracking-[0.9px] ${tone.text}`.trim()}>COVER SLOT</span> : null}
-          {!isThumb ? <strong className={`absolute bottom-2 right-7 text-[40px] font-bold leading-[44px] ${tone.text}`.trim()}>{article.coverNumber}</strong> : null}
+          {!isThumb && !isHero ? <span className={`absolute bottom-6 left-6 text-overline ${tone.text}`.trim()}>COVER SLOT</span> : null}
+          {!isThumb ? <strong className={`absolute bottom-2 right-7 text-page-title ${tone.text}`.trim()}>{article.coverNumber}</strong> : null}
         </>
       )}
-      {isHero ? <span className={`absolute bottom-7 left-7 text-[11px] font-semibold tracking-[1px] ${tone.text}`.trim()}>ARTICLE COVER</span> : null}
+      {isHero ? <span className={`absolute bottom-7 left-7 text-meta ${tone.text}`.trim()}>ARTICLE COVER</span> : null}
     </div>
   );
 }
@@ -93,15 +93,15 @@ function BlogCover({ article, variant = "card" }: { article: BlogArticle; varian
 function BlogArticleCard({ article }: { article: BlogArticle }) {
   return (
     <a
-      className="group flex min-h-[430px] flex-col overflow-hidden rounded-[22px] border border-[#e5e0d6] bg-white transition-transform duration-200 hover:-translate-y-1 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3 lg:min-h-[470px]"
+      className="group flex min-h-[430px] flex-col overflow-hidden rounded-card border border-[#e5e0d6] bg-white transition-transform duration-200 hover:-translate-y-1 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3 lg:min-h-[470px]"
       href={`/blog/${article.slug}`}
     >
       <BlogCover article={article} />
-      <div className="flex min-h-0 flex-1 flex-col items-start gap-2 overflow-hidden px-6 pb-5 pt-[18px]">
-        <p className="text-[10px] font-semibold leading-[14px] tracking-[0.8px] text-pink">{categoryLabel(article.category)} <span className="px-1">·</span> {article.date}</p>
-        <h3 className="text-[20px] font-bold leading-[26px] tracking-[-0.25px] text-ink">{article.title}</h3>
-        <p className="text-[15px] leading-6 text-muted">{article.summary}</p>
-        <span className="mt-auto pt-3 text-[14px] font-semibold text-pink transition-transform duration-200 group-hover:translate-x-0.5">Read more <span aria-hidden="true">↗</span></span>
+      <div className="flex min-h-0 flex-1 flex-col items-start gap-cluster-sm overflow-hidden px-card-pad pb-5 pt-cluster-lg">
+        <p className="text-overline text-pink">{categoryLabel(article.category)} <span className="px-1">·</span> {article.date}</p>
+        <h3 className="font-brand text-subheading text-ink">{article.title}</h3>
+        <p className="text-body-sm text-muted">{article.summary}</p>
+        <span className="mt-auto pt-3 text-body-sm font-semibold text-pink transition-transform duration-200 group-hover:translate-x-0.5">Read more <span aria-hidden="true">↗</span></span>
       </div>
     </a>
   );
@@ -110,15 +110,15 @@ function BlogArticleCard({ article }: { article: BlogArticle }) {
 export function BlogRelatedArticleCard({ article }: { article: BlogArticle }) {
   return (
     <a
-      className="group flex min-h-[320px] flex-col overflow-hidden rounded-[22px] bg-white transition-transform duration-200 hover:-translate-y-1 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3"
+      className="group flex min-h-[320px] flex-col overflow-hidden rounded-card bg-white transition-transform duration-200 hover:-translate-y-1 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3"
       href={`/blog/${article.slug}`}
     >
       <BlogCover article={article} variant="related" />
-      <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-hidden px-6 pb-3 pt-[18px]">
-        <p className="text-[10px] font-semibold leading-[14px] tracking-[0.4px] text-pink">{categoryLabel(article.category)} <span className="px-1">·</span> {article.date}</p>
-        <h3 className="text-[20px] font-bold leading-[26px] text-ink">{article.title}</h3>
-        <p className="text-[14px] leading-[21px] text-muted">{article.summary}</p>
-        <span className="mt-auto text-[13px] font-semibold text-pink">Read more <span aria-hidden="true">↗</span></span>
+      <div className="flex min-h-0 flex-1 flex-col gap-cluster-xs overflow-hidden px-card-pad pb-3 pt-cluster-lg">
+        <p className="text-overline text-pink">{categoryLabel(article.category)} <span className="px-1">·</span> {article.date}</p>
+        <h3 className="font-brand text-subheading text-ink">{article.title}</h3>
+        <p className="text-body-sm text-muted">{article.summary}</p>
+        <span className="mt-auto text-body-xs font-semibold text-pink">Read more <span aria-hidden="true">↗</span></span>
       </div>
     </a>
   );
@@ -132,8 +132,8 @@ function BlogSidebarArticleItem({ article }: { article: BlogArticle }) {
     >
       <BlogCover article={article} variant="thumb" />
       <span className="flex min-w-0 flex-col gap-1 overflow-hidden">
-        <span className="text-[10px] font-semibold leading-[14px] tracking-[0.4px] text-pink">{categoryLabel(article.category)} <span className="px-0.5">·</span> {article.date}</span>
-        <span className="text-[14px] font-semibold leading-5 text-ink transition-colors group-hover:text-pink">{article.title}</span>
+        <span className="text-overline text-pink">{categoryLabel(article.category)} <span className="px-0.5">·</span> {article.date}</span>
+        <span className="text-body-sm font-semibold text-ink transition-colors group-hover:text-pink">{article.title}</span>
       </span>
     </a>
   );
@@ -154,26 +154,26 @@ export function BlogIndexContent() {
 
   return (
     <>
-      <section className="bg-page px-5 pb-7 lg:px-[42px] lg:pb-10" aria-labelledby="blog-page-title">
-        <p className="text-[12px] font-medium leading-[18px] text-muted">Home <span className="px-1">/</span> Blog</p>
-        <div className="mt-7 flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between lg:gap-10">
+      <section className="bg-page px-page-gutter pb-section-y lg:px-page-gutter-lg lg:pb-10" aria-labelledby="blog-page-title">
+        <p className="text-footer font-text text-muted">Home <span className="px-1">/</span> Blog</p>
+        <div className="mt-section-y flex flex-col gap-section-gap lg:flex-row lg:items-start lg:justify-between lg:gap-section-gap-lg">
           <div className="max-w-[730px]">
             <p className="text-label text-pink">INSIGHTS &amp; GUIDES</p>
-            <h1 className="mt-2 max-w-[730px] text-[clamp(42px,4vw,58px)] font-bold leading-[1.05] tracking-[-2.5px] text-ink">Practical guidance for growing with confidence</h1>
-            <p className="mt-4 max-w-[670px] text-[17px] leading-7 text-muted">Clear, useful articles on registration, tax, compliance and building your business.</p>
-            <p className="mt-4 text-[14px] font-medium leading-5 text-ink">New guides added every week</p>
+            <h1 className="mt-cluster-sm max-w-[730px] font-brand text-page-title text-ink">Practical guidance for growing with confidence</h1>
+            <p className="mt-cluster max-w-[670px] text-body-lg text-muted">Clear, useful articles on registration, tax, compliance and building your business.</p>
+            <p className="mt-cluster text-body-sm font-text text-ink">New guides added every week</p>
           </div>
-          <div className="w-full rounded-[24px] bg-white p-6 lg:max-w-[440px]">
-            <p className="mb-4 text-[11px] font-semibold tracking-[1.2px] text-pink">SEARCH THE JOURNAL</p>
+          <div className="w-full rounded-nav bg-white p-card-pad lg:max-w-[440px]">
+            <p className="mb-cluster text-label text-pink">SEARCH THE JOURNAL</p>
             <BlogSearchField id="blog-hero-search" value={query} onChange={(event) => setQuery(event.target.value)} />
           </div>
         </div>
       </section>
 
-      <section className="bg-page px-5 py-7 lg:px-[42px] lg:py-10" aria-labelledby="featured-guide-title">
+      <section className="bg-page px-page-gutter py-section-y lg:px-page-gutter-lg lg:py-10" aria-labelledby="featured-guide-title">
         <div className="flex items-center justify-between gap-5">
-          <h2 className="text-[28px] font-bold leading-9 tracking-[-0.8px] text-ink" id="featured-guide-title">Featured guide</h2>
-          <a className="text-right text-[14px] font-semibold text-pink transition-colors hover:text-ink" href="#latest">View all posts <span aria-hidden="true">↗</span></a>
+          <h2 className="font-brand text-section-title text-ink" id="featured-guide-title">Featured guide</h2>
+          <a className="text-right text-body-sm font-semibold text-pink transition-colors hover:text-ink" href="#latest">View all posts <span aria-hidden="true">↗</span></a>
         </div>
         <a
           className="group mt-6 grid gap-6 rounded-[22px] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3 lg:grid-cols-[minmax(0,500px)_minmax(0,1fr)] lg:items-center lg:gap-8"
@@ -181,10 +181,10 @@ export function BlogIndexContent() {
         >
           <BlogCover article={featuredArticle} variant="featured" />
           <div className="flex min-w-0 flex-col gap-3">
-            <p className="text-[12px] font-semibold tracking-[1.1px] text-pink">{categoryLabel(featuredArticle.category)} <span className="px-1">·</span> {featuredArticle.readTime}</p>
-            <h2 className="text-[clamp(28px,3vw,36px)] font-bold leading-[1.12] tracking-[-1.3px] text-ink">{featuredArticle.title}</h2>
-            <p className="max-w-[630px] text-[17px] leading-7 text-muted">{featuredArticle.summary}</p>
-            <div className="mt-2 flex flex-wrap items-center justify-between gap-3 text-[14px] leading-5">
+            <p className="text-meta font-semibold text-pink">{categoryLabel(featuredArticle.category)} <span className="px-1">·</span> {featuredArticle.readTime}</p>
+            <h2 className="font-brand text-section-title text-ink">{featuredArticle.title}</h2>
+            <p className="max-w-[630px] text-body-lg text-muted">{featuredArticle.summary}</p>
+            <div className="mt-cluster-sm flex flex-wrap items-center justify-between gap-cluster-sm text-body-sm">
               <span className="text-muted">{featuredArticle.date} <span className="px-1">·</span> By {featuredArticle.author}</span>
               <span className="font-semibold text-pink transition-transform duration-200 group-hover:translate-x-0.5">Read the guide <span aria-hidden="true">↗</span></span>
             </div>
@@ -192,11 +192,11 @@ export function BlogIndexContent() {
         </a>
       </section>
 
-      <section className="bg-page px-5 py-7 lg:px-[42px] lg:py-10" id="latest" aria-labelledby="latest-journal-title">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between lg:gap-10">
+      <section className="bg-page px-page-gutter py-section-y lg:px-page-gutter-lg lg:py-10" id="latest" aria-labelledby="latest-journal-title">
+        <div className="flex flex-col gap-section-gap lg:flex-row lg:items-start lg:justify-between lg:gap-section-gap-lg">
           <div>
-            <h2 className="text-[32px] font-bold leading-10 tracking-[-1px] text-ink" id="latest-journal-title">Latest from the journal</h2>
-            <p className="mt-2 text-[17px] leading-[26px] text-muted">Short, practical reads for your next business decision.</p>
+            <h2 className="font-brand text-section-title text-ink" id="latest-journal-title">Latest from the journal</h2>
+            <p className="mt-cluster-sm text-body-lg text-muted">Short, practical reads for your next business decision.</p>
           </div>
           <div className="w-full lg:max-w-[392px]">
             <BlogSearchField id="blog-latest-search" value={query} onChange={(event) => setQuery(event.target.value)} />
@@ -207,7 +207,7 @@ export function BlogIndexContent() {
             const active = activeFilter === filter.value;
             return (
               <button
-                className={`inline-flex h-[34px] shrink-0 items-center rounded-full border px-4 text-[13px] font-medium transition-colors focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2 ${active ? "border-ink bg-ink text-white" : "border-[#e0e0e5] bg-white text-muted hover:border-pink/45 hover:text-ink"}`.trim()}
+                className={`inline-flex h-[34px] shrink-0 items-center rounded-pill border px-4 text-body-xs font-text transition-colors focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2 ${active ? "border-ink bg-ink text-white" : "border-[#e0e0e5] bg-white text-muted hover:border-pink/45 hover:text-ink"}`.trim()}
                 key={filter.value}
                 type="button"
                 aria-pressed={active}
@@ -218,15 +218,15 @@ export function BlogIndexContent() {
             );
           })}
         </div>
-        <p className="mt-5 text-[12px] font-medium text-muted" aria-live="polite">Showing {visibleArticles.length} {visibleArticles.length === 1 ? "guide" : "guides"}</p>
+        <p className="mt-section-gap-lg text-footer font-text text-muted" aria-live="polite">Showing {visibleArticles.length} {visibleArticles.length === 1 ? "guide" : "guides"}</p>
         {visibleArticles.length ? (
           <div className="mt-4 grid grid-cols-1 gap-5 lg:grid-cols-3 lg:gap-8">
             {visibleArticles.map((article) => <BlogArticleCard article={article} key={article.slug} />)}
           </div>
         ) : (
-          <div className="mt-6 rounded-[22px] border border-[#e5e0d6] bg-white px-6 py-10 text-center">
-            <p className="text-[17px] font-semibold text-ink">No guides match that search.</p>
-            <button className="mt-3 text-[14px] font-semibold text-pink hover:text-ink" type="button" onClick={() => { setQuery(""); setActiveFilter("all"); }}>Clear filters</button>
+          <div className="mt-section-gap-lg rounded-card border border-[#e5e0d6] bg-white px-card-pad py-10 text-center">
+            <p className="text-body-lg font-semibold text-ink">No guides match that search.</p>
+            <button className="mt-cluster text-body-sm font-semibold text-pink hover:text-ink" type="button" onClick={() => { setQuery(""); setActiveFilter("all"); }}>Clear filters</button>
           </div>
         )}
       </section>
@@ -235,15 +235,15 @@ export function BlogIndexContent() {
 }
 
 function BlogContentBlockView({ block }: { block: BlogContentBlock }) {
-  if (block.type === "heading") return <h2 className="pt-2 text-[28px] font-bold leading-9 tracking-[-0.8px] text-ink">{block.text}</h2>;
-  if (block.type === "paragraph") return <p className="text-[16px] leading-[26px] text-muted">{block.text}</p>;
+  if (block.type === "heading") return <h2 className="pt-2 font-brand text-section-title text-ink">{block.text}</h2>;
+  if (block.type === "paragraph") return <p className="text-body-lg text-muted">{block.text}</p>;
 
   return (
-    <div className="relative flex gap-4 border-b border-[#e5e3e5] py-4 last:border-b-0">
-      <p className="shrink-0 text-[20px] font-bold leading-7 text-pink">{block.number}</p>
+    <div className="relative flex gap-cluster border-b border-[#e5e3e5] py-4 last:border-b-0">
+      <p className="shrink-0 text-subheading font-bold text-pink">{block.number}</p>
       <div>
-        <h3 className="text-[17px] font-semibold leading-6 text-ink">{block.title}</h3>
-        <p className="mt-1 text-[15px] leading-[23px] text-muted">{block.text}</p>
+        <h3 className="text-body-lg font-semibold text-ink">{block.title}</h3>
+        <p className="mt-1 text-body-sm text-muted">{block.text}</p>
       </div>
     </div>
   );
@@ -269,51 +269,51 @@ export function BlogDetailContent({ article }: { article: BlogArticle }) {
 
   return (
     <>
-      <section className="bg-page px-5 pb-7 lg:px-[42px] lg:pb-10" aria-labelledby="article-title">
-        <div className="flex flex-col items-start gap-3 text-[12px] font-medium leading-[18px] text-muted sm:flex-row sm:items-center sm:justify-between sm:gap-5">
+      <section className="bg-page px-page-gutter pb-section-y lg:px-page-gutter-lg lg:pb-10" aria-labelledby="article-title">
+        <div className="flex flex-col items-start gap-cluster-sm text-footer font-text text-muted sm:flex-row sm:items-center sm:justify-between sm:gap-cluster-lg">
           <p>Home <span className="px-1">/</span> Blog <span className="px-1">/</span> {article.category}</p>
-          <a className="shrink-0 text-[13px] font-semibold text-pink hover:text-ink" href="/blog">← Back to all posts</a>
+          <a className="shrink-0 text-body-xs font-semibold text-pink hover:text-ink" href="/blog">← Back to all posts</a>
         </div>
-        <div className="mt-12 max-w-[960px]">
-          <p className="text-[12px] font-semibold tracking-[1.1px] text-pink">{categoryLabel(article.category)} <span className="px-1">·</span> {article.readTime}</p>
-          <h1 className="mt-5 max-w-[950px] text-[clamp(40px,4.2vw,60px)] font-bold leading-[1.05] tracking-[-2.5px] text-ink" id="article-title">{article.title}</h1>
-          <p className="mt-6 max-w-[760px] text-[18px] leading-7 text-muted">{article.summary}</p>
+        <div className="mt-section-gap-xl max-w-[960px]">
+          <p className="text-meta font-semibold text-pink">{categoryLabel(article.category)} <span className="px-1">·</span> {article.readTime}</p>
+          <h1 className="mt-section-gap-lg max-w-[950px] font-brand text-page-title text-ink" id="article-title">{article.title}</h1>
+          <p className="mt-section-gap-lg max-w-[760px] text-body-lg text-muted">{article.summary}</p>
         </div>
-        <div className="mt-10 flex flex-wrap items-center justify-between gap-4 border-b border-[#e5e3e5] pb-6 text-[14px] leading-5 text-muted">
+        <div className="mt-section-y flex flex-wrap items-center justify-between gap-cluster border-b border-[#e5e3e5] pb-card-pad text-body-sm text-muted">
           <p>{article.date} <span className="px-1">·</span> By {article.author}{article.updatedDate ? ` · Updated ${article.updatedDate}` : ""}</p>
-          <button className="inline-flex min-h-[44px] items-center rounded-full border border-[#e5e0d6] bg-white px-6 text-[13px] font-semibold text-pink transition-colors hover:border-pink/45 hover:text-ink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2" type="button" onClick={handleShare}>
+          <button className="inline-flex min-h-[44px] items-center rounded-pill border border-[#e5e0d6] bg-white px-6 text-body-xs font-semibold text-pink transition-colors hover:border-pink/45 hover:text-ink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2" type="button" onClick={handleShare}>
             {shareState === "copied" ? "Link copied ✓" : "Share this guide ↗"}
           </button>
         </div>
       </section>
 
-      <section className="bg-page px-5 py-7 lg:px-[42px] lg:py-10" aria-labelledby="article-content-label">
-        <p className="text-[12px] font-semibold tracking-[1.1px] text-pink" id="article-content-label">04 <span className="px-1">/</span> ARTICLE CONTENT</p>
-        <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,820px)_336px] lg:gap-11">
+      <section className="bg-page px-page-gutter py-section-y lg:px-page-gutter-lg lg:py-10" aria-labelledby="article-content-label">
+        <p className="text-meta font-semibold text-pink" id="article-content-label">04 <span className="px-1">/</span> ARTICLE CONTENT</p>
+        <div className="mt-section-gap-lg grid gap-section-gap lg:grid-cols-[minmax(0,820px)_336px] lg:gap-section-gap-lg">
           <article className="min-w-0">
             <BlogCover article={article} variant="hero" />
-            <p className="mt-6 text-[20px] leading-8 text-ink">{article.intro}</p>
-            <div className="mt-6 flex gap-4 rounded-[20px] border border-[#e5e0d6] bg-white px-5 py-5">
+            <p className="mt-section-gap-lg text-subheading text-ink">{article.intro}</p>
+            <div className="mt-section-gap-lg flex gap-cluster rounded-panel-mobile border border-[#e5e0d6] bg-white px-card-pad-sm py-card-pad-sm">
               <span className="h-[70px] w-1 shrink-0 rounded-sm bg-pink" aria-hidden="true" />
               <div>
-                <p className="text-[11px] font-semibold tracking-[1.1px] text-pink">AT A GLANCE</p>
-                <p className="mt-2 text-[15px] font-medium leading-[23px] text-ink">{article.atAGlance}</p>
+                <p className="text-meta font-semibold text-pink">AT A GLANCE</p>
+                <p className="mt-cluster-sm text-body-sm font-text text-ink">{article.atAGlance}</p>
               </div>
             </div>
             <div className="mt-5 flex flex-col gap-2">
               {article.blocks.map((block, index) => <BlogContentBlockView block={block} key={`${article.slug}-${block.type}-${index}`} />)}
             </div>
-            <div className="mt-7 rounded-[22px] bg-navy px-6 py-6 text-white">
-              <p className="text-[11px] font-semibold tracking-[1.1px] text-[#f5b8c7]">GET SUPPORT</p>
-              <p className="mt-2 max-w-[620px] text-[20px] font-bold leading-7">Want a clear next step for your business?</p>
-              <ActionButton href="/#contact" variant="white" className="mt-5 min-w-[170px]">Talk to an advisor</ActionButton>
+            <div className="mt-section-y rounded-card bg-navy px-card-pad py-card-pad text-white">
+              <p className="text-meta font-semibold text-[#f5b8c7]">GET SUPPORT</p>
+              <p className="mt-cluster-sm max-w-[620px] font-brand text-subheading">Want a clear next step for your business?</p>
+              <ActionButton href="/#contact" variant="white" className="mt-cluster-lg min-w-[170px]">Talk to an advisor</ActionButton>
             </div>
           </article>
 
-          <aside className="flex min-w-0 flex-col gap-6" aria-label="More from the journal">
-            <div className="rounded-[22px] border border-[#e5e0d6] bg-white px-6 py-6">
-              <h2 className="text-[11px] font-semibold tracking-[1.1px] text-pink">MORE FROM THE JOURNAL</h2>
-              <div className="mt-5 flex flex-col gap-4">
+          <aside className="flex min-w-0 flex-col gap-section-gap" aria-label="More from the journal">
+            <div className="rounded-card border border-[#e5e0d6] bg-white px-card-pad py-card-pad">
+              <h2 className="text-meta font-semibold text-pink">MORE FROM THE JOURNAL</h2>
+              <div className="mt-section-gap-lg flex flex-col gap-cluster">
                 {relatedArticles.map((relatedArticle, index) => (
                   <div key={relatedArticle.slug}>
                     {index ? <div className="mb-4 h-px bg-[#e5e3e5]" /> : null}
@@ -322,26 +322,26 @@ export function BlogDetailContent({ article }: { article: BlogArticle }) {
                 ))}
               </div>
             </div>
-            <div className="rounded-[22px] bg-navy px-6 py-6 text-white">
-              <p className="text-[11px] font-semibold tracking-[1.1px] text-[#f5b8c7]">NEED A HAND?</p>
-              <h2 className="mt-3 text-[20px] font-bold leading-[26px]">Have a question about your next step?</h2>
-              <p className="mt-2 text-[14px] leading-[21px] text-soft-muted">Talk to our team before you move forward.</p>
-              <ActionButton href="/#contact" variant="white" className="mt-5 w-full justify-center" arrow="none">Ask a question</ActionButton>
+            <div className="rounded-card bg-navy px-card-pad py-card-pad text-white">
+              <p className="text-meta font-semibold text-[#f5b8c7]">NEED A HAND?</p>
+              <h2 className="mt-cluster font-brand text-subheading">Have a question about your next step?</h2>
+              <p className="mt-cluster-sm text-body-sm text-soft-muted">Talk to our team before you move forward.</p>
+              <ActionButton href="/#contact" variant="white" className="mt-cluster-lg w-full justify-center" arrow="none">Ask a question</ActionButton>
             </div>
           </aside>
         </div>
       </section>
 
-      <section className="bg-page px-5 py-7 lg:px-[42px] lg:py-10" aria-labelledby="more-practical-reads-title">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+      <section className="bg-page px-page-gutter py-section-y lg:px-page-gutter-lg lg:py-10" aria-labelledby="more-practical-reads-title">
+        <div className="flex flex-col gap-cluster-sm lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-[12px] font-semibold tracking-[1.1px] text-pink">05 <span className="px-1">/</span> MORE TO READ</p>
-            <h2 className="mt-2 text-[32px] font-bold leading-10 tracking-[-1px] text-ink" id="more-practical-reads-title">More practical reads</h2>
-            <p className="mt-2 text-[16px] leading-6 text-muted">Keep exploring the journal for your next business decision.</p>
+            <p className="text-meta font-semibold text-pink">05 <span className="px-1">/</span> MORE TO READ</p>
+            <h2 className="mt-cluster-sm font-brand text-section-title text-ink" id="more-practical-reads-title">More practical reads</h2>
+            <p className="mt-cluster-sm text-body text-muted">Keep exploring the journal for your next business decision.</p>
           </div>
-          <a className="text-[14px] font-semibold text-pink hover:text-ink" href="/blog">View all posts <span aria-hidden="true">↗</span></a>
+          <a className="text-body-sm font-semibold text-pink hover:text-ink" href="/blog">View all posts <span aria-hidden="true">↗</span></a>
         </div>
-        <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-3 lg:gap-8">
+        <div className="mt-section-gap-lg grid grid-cols-1 gap-cluster lg:grid-cols-3 lg:gap-section-gap">
           {relatedArticles.map((relatedArticle) => <BlogRelatedArticleCard article={relatedArticle} key={relatedArticle.slug} />)}
         </div>
       </section>

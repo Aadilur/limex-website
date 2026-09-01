@@ -34,7 +34,7 @@ function DesktopNavTrigger({
   return (
     <div className="relative" onMouseEnter={onOpen}>
       <button
-        className={`relative inline-flex h-[42px] items-center gap-[5px] rounded-[10px] border-0 bg-transparent px-2 py-1 text-[9px] font-[540] leading-4 text-ink whitespace-nowrap transition-colors duration-150 hover:bg-pink/10 hover:text-ink xl:text-[10px] wide:text-[12px] ${
+        className={`relative inline-flex h-control items-center gap-cluster-xs rounded-control border-0 bg-transparent px-2 py-1 text-nav-compact text-ink whitespace-nowrap transition-colors duration-150 hover:bg-pink/10 hover:text-ink xl:text-nav-medium wide:text-nav ${
           isActive ? "bg-pink/10 font-bold text-[#de4d73]" : ""
         }`.trim()}
         type="button"
@@ -63,14 +63,14 @@ function MobileNavGroup({ item, onNavigate }: { item: NavItem; onNavigate: () =>
   return (
     <div>
       <button
-        className="flex min-h-[54px] w-full items-center justify-between gap-[18px] border-0 border-b border-border bg-transparent px-0.5 text-left text-[16px] font-[650] text-ink transition-colors hover:text-pink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2"
+        className="flex min-h-nav-row w-full items-center justify-between gap-nav border-0 border-b border-border bg-transparent px-0.5 text-left text-mobile-nav text-ink transition-colors hover:text-pink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2"
         type="button"
         aria-expanded={open}
         aria-controls={childrenId}
         onClick={() => setOpen((current) => !current)}
       >
         <span>{item.label}</span>
-        <span className={`text-[22px] font-normal leading-none text-pink transition-transform duration-200 ${open ? "rotate-45" : ""}`.trim()} aria-hidden="true">
+        <span className={`text-icon font-normal text-pink transition-transform duration-200 ${open ? "rotate-45" : ""}`.trim()} aria-hidden="true">
           +
         </span>
       </button>
@@ -123,10 +123,12 @@ export function SiteHeader() {
       ? "Blog"
     : pathname.startsWith("/trademark-classes")
       ? "IP & Trademark"
-      : pathname.startsWith("/services/trademark")
-        ? "IP & Trademark"
-        : pathname.startsWith("/services")
-          ? "Startup & Licensing"
+    : pathname.startsWith("/services/trademark")
+      ? "IP & Trademark"
+      : pathname.startsWith("/services")
+        ? "Startup & Licensing"
+      : pathname.startsWith("/business-tools")
+        ? "Business Tools"
       : navigation.find((item) => item.active)?.label;
   const homeHref = pathname === "/" ? "#top" : "/";
   const contactHref = resolveLocalHref("#contact", pathname);
@@ -134,7 +136,7 @@ export function SiteHeader() {
   return (
     <header className="relative z-20" ref={headerRef}>
       <div
-        className="absolute left-[42px] right-[42px] top-4 hidden min-h-[72px] items-center gap-2.5 rounded-[24px] border border-[rgba(224,222,227,0.86)] bg-paper/80 px-3 py-3 shadow-nav backdrop-blur-[14px] lg:flex xl:gap-5 xl:px-4 wide:gap-6 wide:px-5"
+        className="absolute left-page-gutter-lg right-page-gutter-lg top-nav-top hidden min-h-nav-shell items-center gap-cluster-sm rounded-nav border border-[rgba(224,222,227,0.86)] bg-paper/80 px-cluster py-cluster shadow-nav backdrop-blur-[14px] lg:flex xl:gap-cluster-lg xl:px-4 wide:gap-cluster-xl wide:px-5"
         onMouseLeave={() => setOpenMenu(null)}
         onBlur={(event) => {
           if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpenMenu(null);
@@ -155,7 +157,7 @@ export function SiteHeader() {
             ) : (
               <a
                 key={item.label}
-                className={`group relative inline-flex h-[42px] items-center rounded-[10px] px-2 py-1 text-[9px] font-[540] leading-4 whitespace-nowrap transition-colors duration-150 hover:bg-pink/10 xl:text-[10px] wide:text-[12px] ${item.label === activeNavLabel ? "bg-pink/10 font-bold text-[#de4d73]" : "text-ink"}`.trim()}
+            className={`group relative inline-flex h-control items-center rounded-control px-2 py-1 text-nav-compact whitespace-nowrap transition-colors duration-150 hover:bg-pink/10 xl:text-nav-medium wide:text-nav ${item.label === activeNavLabel ? "bg-pink/10 font-bold text-[#de4d73]" : "text-ink"}`.trim()}
                 href={resolveLocalHref(item.href, pathname)}
                 onClick={() => setOpenMenu(null)}
               >
@@ -178,13 +180,13 @@ export function SiteHeader() {
             />
           </>
         ) : null}
-        <a className="inline-flex h-[42px] w-[100px] min-w-[100px] items-center gap-1.5 rounded-[21px] bg-[#14131c] px-2 text-[10px] font-bold text-[#fcfbfa] transition-all duration-200 hover:-translate-y-px hover:shadow-button-dark xl:w-[112px] xl:min-w-[112px] xl:px-2.5 xl:text-[10px] wide:w-[126px] wide:min-w-[126px] wide:gap-2 wide:px-[13px] wide:text-[11.5px]" href={contactHref}>
+        <a className="inline-flex h-control w-[100px] min-w-[100px] items-center gap-cluster-xs rounded-pill bg-[#14131c] px-cluster-sm text-nav-medium font-bold text-[#fcfbfa] transition-all duration-200 hover:-translate-y-px hover:shadow-button-dark xl:w-[112px] xl:min-w-[112px] xl:px-2.5 wide:w-[126px] wide:min-w-[126px] wide:gap-cluster-sm wide:px-cluster wide:text-nav-medium" href={contactHref}>
           <img className="size-5" src="/figma/whatsapp-dot.svg" alt="" aria-hidden="true" />
           <span>Contact us</span>
         </a>
       </div>
 
-      <div className="absolute left-3.5 right-3.5 top-3.5 flex min-h-16 items-center justify-between rounded-[20px] border border-[rgba(224,222,227,0.86)] bg-paper/85 px-4 py-2.5 shadow-nav backdrop-blur-[14px] lg:hidden">
+      <div className="absolute left-mobile-gutter right-mobile-gutter top-nav-top-mobile flex min-h-nav-mobile-shell items-center justify-between rounded-nav border border-[rgba(224,222,227,0.86)] bg-paper/85 px-4 py-cluster shadow-nav backdrop-blur-[14px] lg:hidden">
         <LogoLockup href={homeHref} className="w-auto min-w-0" />
         <button
           className="relative grid size-[42px] place-items-center rounded-full border-0 bg-[#14131c] text-white transition-transform duration-200 hover:scale-105 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3"
@@ -204,21 +206,21 @@ export function SiteHeader() {
       {mobileOpen ? (
         <div className="fixed inset-0 z-50 block lg:hidden" id="mobile-navigation">
           <button className="absolute inset-0 h-full w-full border-0 bg-[rgba(18,20,33,0.44)]" type="button" aria-label="Close menu" onClick={closeMobileMenu} />
-          <aside className="absolute bottom-3 right-3 top-3 flex w-[min(390px,calc(100%-24px))] flex-col overflow-y-auto rounded-[22px] bg-paper p-[18px] shadow-drawer animate-menu-in" aria-label="Mobile navigation">
-            <div className="flex items-center justify-between border-b border-border pb-4 text-[11px] font-bold uppercase tracking-[1.2px] text-muted">
+          <aside className="absolute bottom-cluster-sm right-cluster-sm top-cluster-sm flex w-[min(390px,calc(100%-24px))] flex-col overflow-y-auto rounded-drawer bg-paper p-drawer-pad shadow-drawer animate-menu-in" aria-label="Mobile navigation">
+            <div className="flex items-center justify-between border-b border-border pb-cluster text-label uppercase text-muted">
               <span>Navigate</span>
-              <button className="grid size-[34px] place-items-center rounded-full border-0 bg-[#14131c] text-[24px] leading-none text-white transition-transform hover:scale-105 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2" type="button" onClick={closeMobileMenu} aria-label="Close menu">
+              <button className="grid size-[34px] place-items-center rounded-full border-0 bg-[#14131c] text-icon-lg text-white transition-transform hover:scale-105 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2" type="button" onClick={closeMobileMenu} aria-label="Close menu">
                 ×
               </button>
             </div>
-            <nav className="flex flex-col py-[7px]">
+            <nav className="flex flex-col py-cluster-xs">
               {navigation.map((item) =>
                 item.megaGroups ? (
                   <MobileNavGroup key={item.label} item={item} onNavigate={closeMobileMenu} />
                 ) : (
                   <a
                     key={item.label}
-                    className="flex min-h-[54px] items-center justify-between gap-[18px] border-b border-border px-0.5 text-[16px] font-[650] text-ink transition-colors hover:text-pink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2"
+                    className="flex min-h-nav-row items-center justify-between gap-nav border-b border-border px-0.5 text-mobile-nav text-ink transition-colors hover:text-pink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2"
                     href={resolveLocalHref(item.href, pathname)}
                     onClick={closeMobileMenu}
                   >
@@ -228,7 +230,7 @@ export function SiteHeader() {
                 ),
               )}
             </nav>
-            <a className="mt-auto flex min-h-12 items-center gap-[9px] rounded-3xl bg-[#14131c] px-3.5 text-[13px] font-bold text-white transition-transform hover:-translate-y-px" href={contactHref} onClick={closeMobileMenu}>
+            <a className="mt-auto flex min-h-12 items-center gap-cluster-sm rounded-pill bg-[#14131c] px-3.5 text-body-xs font-bold text-white transition-transform hover:-translate-y-px" href={contactHref} onClick={closeMobileMenu}>
               <img className="size-5" src="/figma/whatsapp-dot.svg" alt="" aria-hidden="true" />
               <span className="flex-1">Contact us</span>
               <span aria-hidden="true">↗</span>

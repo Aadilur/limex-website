@@ -60,18 +60,18 @@ export function TrustedClientsSection() {
   const visibleClients = [...clientMarks.slice(offset), ...clientMarks.slice(0, offset)];
 
   return (
-    <section className="relative min-h-[160px] bg-page px-5 pb-[17px] pt-[23px] lg:rounded-[28px] lg:px-[42px] lg:pb-[18px] lg:pt-6" aria-labelledby="clients-title">
-      <h2 className="text-center text-[20px] font-bold leading-4 tracking-[1.8px] text-[#2b5e8c]" id="clients-title">OUR CLIENTS</h2>
-      <div className="mt-[27px] flex gap-4 overflow-x-auto px-0.5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:mt-[33px] lg:grid lg:grid-cols-6 lg:gap-2.5 lg:overflow-visible lg:pr-[58px]">
+    <section className="relative min-h-[160px] bg-page px-page-gutter pb-cluster pt-section-y lg:rounded-panel lg:px-page-gutter-lg lg:pb-cluster lg:pt-6" aria-labelledby="clients-title">
+      <h2 className="text-center text-subheading font-brand uppercase tracking-eyebrow text-[#2b5e8c]" id="clients-title">OUR CLIENTS</h2>
+      <div className="mt-section-gap-lg flex gap-cluster-lg overflow-x-auto px-0.5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:mt-section-y lg:grid lg:grid-cols-6 lg:gap-cluster-sm lg:overflow-visible lg:pr-[58px]">
         {visibleClients.map((client) => (
-          <div className={`flex h-12 min-w-[145px] shrink-0 items-center gap-2.5 overflow-hidden whitespace-nowrap text-[15px] font-bold tracking-[-0.3px] wide:text-[18px] lg:min-w-0 ${clientTextClasses[client.name] ?? "text-ink"}`.trim()} key={client.name}>
+          <div className={`flex h-12 min-w-[145px] shrink-0 items-center gap-cluster-sm overflow-hidden whitespace-nowrap text-body-sm font-display wide:text-card-title lg:min-w-0 ${clientTextClasses[client.name] ?? "text-ink"}`.trim()} key={client.name}>
             <ClientMark client={client} />
             <span>{client.name}</span>
           </div>
         ))}
       </div>
       <button
-        className="absolute bottom-4 right-5 grid size-[38px] place-items-center rounded-full border border-[#e3e0de] bg-white text-[18px] leading-none text-[#121f2e] transition-transform duration-200 hover:translate-x-0.5 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2 lg:bottom-[18px] lg:right-[42px] lg:size-12 lg:text-[21px]"
+        className="absolute bottom-4 right-5 grid size-[38px] place-items-center rounded-full border border-[#e3e0de] bg-white text-icon-sm text-[#121f2e] transition-transform duration-200 hover:translate-x-0.5 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2 lg:bottom-[18px] lg:right-[42px] lg:size-12 lg:text-body-lg"
         type="button"
         aria-label="Show the next client logos"
         onClick={() => setOffset((current) => (current + 1) % clientMarks.length)}
@@ -91,16 +91,16 @@ export function TrustMetricsSection() {
   ];
 
   return (
-    <section className="grid min-h-[180px] grid-cols-1 gap-5 border-t border-[#e0e0e3] bg-page px-5 py-6 lg:min-h-[112px] lg:grid-cols-[1.3fr_2.7fr] lg:gap-0 lg:px-[72px] lg:py-0" aria-label="Trust metrics">
-      <div className="flex flex-col gap-[7px]">
-        <strong className="text-[13px] leading-[18px] text-[#121729]">Trusted support for growing businesses</strong>
-        <span className="text-[11px] leading-4 text-[#616b7d]">Clear guidance, transparent scope and helpful next steps.</span>
+    <section className="grid min-h-[180px] grid-cols-1 gap-cluster-lg border-t border-[#e0e0e3] bg-page px-page-gutter py-card-pad-sm lg:min-h-[112px] lg:grid-cols-[1.3fr_2.7fr] lg:gap-0 lg:px-page-gutter-xl lg:py-0" aria-label="Trust metrics">
+      <div className="flex flex-col gap-cluster-xs">
+        <strong className="text-body-xs text-[#121729]">Trusted support for growing businesses</strong>
+        <span className="text-meta text-[#616b7d]">Clear guidance, transparent scope and helpful next steps.</span>
       </div>
       <div className="grid grid-cols-2 gap-y-[18px] lg:grid-cols-4 lg:gap-y-0">
         {metrics.map(([value, label], index) => (
           <div className={`min-h-[52px] border-l border-[#e0e0e3] px-2 lg:px-[33px] ${index % 2 === 0 ? "border-l-0" : ""} ${index === 0 ? "lg:border-l-0" : "lg:border-l"}`.trim()} key={value}>
-            <strong className="block text-[15px] leading-6 text-[#121729] lg:text-[17px]">{value}</strong>
-            <span className="text-[10px] leading-4 text-[#616b7d]">{label}</span>
+            <strong className="block text-card-title text-[#121729]">{value}</strong>
+            <span className="text-micro text-[#616b7d]">{label}</span>
           </div>
         ))}
       </div>
@@ -110,35 +110,35 @@ export function TrustMetricsSection() {
 
 export function HowItWorksSection() {
   return (
-    <section className="relative min-h-0 bg-page px-5 py-7 pb-[26px] lg:min-h-[520px] lg:rounded-[28px] lg:px-14 lg:py-[42px] lg:pb-[38px]" id="process" aria-labelledby="process-title">
+    <section className="relative min-h-0 bg-page px-page-gutter py-section-y pb-section-y lg:min-h-[520px] lg:rounded-panel lg:px-section-gutter-lg lg:py-section-y-xl lg:pb-section-y-lg" id="process" aria-labelledby="process-title">
       <SectionTitle
         id="process-title"
         eyebrow="HOW IT WORKS"
         title="From question to completion."
         description="A simple, transparent process that keeps your business moving."
       />
-      <div className="mt-[34px] flex flex-col gap-[26px] lg:mt-[58px] lg:grid lg:grid-cols-[minmax(0,1fr)_236px] lg:gap-[30px]">
-        <div className="relative grid grid-cols-2 gap-x-[18px] gap-y-[30px] lg:grid-cols-4 lg:px-2">
+      <div className="mt-section-gap-xl flex flex-col gap-section-gap-lg lg:mt-section-gap-xl lg:grid lg:grid-cols-[minmax(0,1fr)_236px] lg:gap-[30px]">
+        <div className="relative grid grid-cols-2 gap-x-[18px] gap-y-section-gap-lg lg:grid-cols-4 lg:px-2">
           <div className="absolute left-6 right-[34px] top-[29px] hidden h-0.5 bg-[#d1ccdb] lg:block" aria-hidden="true" />
           {processSteps.map((step) => (
             <article className="relative z-[1]" key={step.number}>
               <div className="relative mx-auto size-[58px]">
                 <img className="absolute inset-0 size-full" src="/figma/step-circle.svg" alt="" aria-hidden="true" />
-                <span className="absolute inset-0 grid place-items-center text-[12px] font-bold text-pink">{step.number}</span>
+              <span className="absolute inset-0 grid place-items-center text-button font-bold text-pink">{step.number}</span>
               </div>
-              <h3 className="mx-auto mt-4 max-w-[190px] text-[14px] font-bold leading-[18px] text-ink lg:mt-7 lg:text-[15px] lg:leading-5">{step.title}</h3>
-              <p className="mx-auto max-w-[190px] text-[11px] leading-[15px] text-[#575761] lg:text-[12px] lg:leading-[17px]">{step.description}</p>
+              <h3 className="mx-auto mt-4 max-w-[190px] text-body-sm font-bold text-ink lg:mt-7">{step.title}</h3>
+              <p className="mx-auto max-w-[190px] text-meta text-[#575761] lg:text-footer">{step.description}</p>
             </article>
           ))}
         </div>
-        <aside className="min-h-0 rounded-[20px] bg-[#121729] px-6 py-[26px] text-white lg:min-h-[258px]">
-          <p className="text-[10px] font-bold tracking-[0.7px] text-[#a6b8eb]">NEED HELP CHOOSING?</p>
-          <h3 className="mt-5 text-[24px] font-bold leading-7">Talk to an expert.</h3>
-          <p className="my-[27px] text-[12px] leading-[18px] text-[#c4cfe5]">Tell us what you are trying to solve and we will point you in the right direction.</p>
+        <aside className="min-h-0 rounded-card bg-[#121729] px-card-pad py-section-y text-white lg:min-h-[258px]">
+          <p className="text-overline text-[#a6b8eb]">NEED HELP CHOOSING?</p>
+          <h3 className="mt-cluster-lg font-brand text-subheading">Talk to an expert.</h3>
+          <p className="my-section-gap-lg text-body-xs text-[#c4cfe5]">Tell us what you are trying to solve and we will point you in the right direction.</p>
           <ActionButton href="#contact" variant="white" className="w-[178px]">Start a conversation</ActionButton>
         </aside>
       </div>
-      <p className="mt-[26px] text-[12px] leading-4 text-[#575761] lg:mt-8">No confusing steps. No unnecessary paperwork. Just a clear path forward.</p>
+      <p className="mt-section-gap-lg text-footer text-[#575761] lg:mt-section-gap-lg">No confusing steps. No unnecessary paperwork. Just a clear path forward.</p>
     </section>
   );
 }

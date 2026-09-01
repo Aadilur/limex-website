@@ -1,16 +1,17 @@
 services:
   db:
-    image: postgres:16-alpine
-    container_name: limex-postgres
+    image: mysql:8.4
+    container_name: limex-mysql
     restart: unless-stopped
     environment:
-      POSTGRES_DB: limex
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      MYSQL_DATABASE: limex
+      MYSQL_USER: limex
+      MYSQL_PASSWORD: limex
+      MYSQL_ROOT_PASSWORD: root
     ports:
-      - "5432:5432"
+      - "3306:3306"
     volumes:
-      - limex-postgres-data:/var/lib/postgresql/data
+      - limex-mysql-data:/var/lib/mysql
 
 volumes:
-  limex-postgres-data:
+  limex-mysql-data:

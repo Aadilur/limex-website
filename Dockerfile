@@ -12,8 +12,8 @@ RUN npm ci
 COPY . .
 
 # Prisma reads the datasource during schema generation, but does not connect here.
-# Railway's DATABASE_URL replaces this build-only value at runtime.
-RUN DATABASE_URL='postgresql://postgres:postgres@127.0.0.1:5432/limex?schema=public' npm run build
+# The runtime DATABASE_URL replaces this build-only value in deployment.
+RUN DATABASE_URL='mysql://limex:limex@127.0.0.1:3306/limex' npm run build
 
 ENV NODE_ENV=production
 
