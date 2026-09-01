@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 
-import { ActionButton, WaveLabel } from "./ui";
+import { ActionButton } from "./ui";
 
 type ContactValues = {
   name: string;
@@ -30,11 +30,10 @@ export function ContactSection() {
   };
 
   return (
-    <section className="flex min-h-0 flex-col gap-cluster-sm bg-page p-page-gutter lg:grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:gap-cluster-lg lg:rounded-panel lg:px-page-gutter-lg lg:py-section-y-lg" id="contact" aria-labelledby="contact-title">
+    <section className="flex min-h-0 flex-col gap-cluster-sm bg-page px-page-gutter pt-section-gap-xl pb-page-gutter lg:grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:gap-cluster-lg lg:rounded-panel lg:px-page-gutter-lg lg:pt-section-gap-xl lg:pb-section-y-lg" id="contact" aria-labelledby="contact-title">
       <div className="flex min-h-0 flex-col lg:min-h-[480px] lg:py-2">
         <div className="max-w-[400px]">
-          <WaveLabel className="text-[#52705b]">LET&apos;S TALK</WaveLabel>
-          <h2 className="mt-section-gap-lg font-brand text-section-title-mobile text-ink lg:mt-section-gap-lg lg:text-section-title" id="contact-title">Bring us the question. Leave with a plan.</h2>
+          <h2 className="mt-0 font-brand text-section-title-mobile text-ink lg:text-section-title" id="contact-title">Bring us the question. Leave with a plan.</h2>
           <p className="mt-cluster-lg max-w-[388px] text-body-sm text-muted">Tell us what you&apos;re building, fixing or protecting.</p>
         </div>
 

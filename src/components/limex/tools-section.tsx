@@ -1,21 +1,15 @@
 import { tools } from "./data";
-import { ActionButton, SectionTitle, WaveLabel } from "./ui";
+import { ActionButton, SectionTitle } from "./ui";
 
-const toolVisuals: Record<string, { card: string; mark: string; glow: string }> = {
+const toolVisuals: Record<string, { mark: string }> = {
   "VAT calculator": {
-    card: "border-[#d7e0d9] bg-[#f5f8f5]",
-    mark: "border-[#d5e0d8] bg-[#e8f0e9] text-[#607a69]",
-    glow: "bg-[#dce9df]",
+    mark: "border-[#d5e0d8] bg-[#f1f5f1] text-[#607a69]",
   },
   "Income tax estimator": {
-    card: "border-[#dedbe4] bg-[#f7f5f9]",
-    mark: "border-[#dfdbe7] bg-[#ece9f1] text-[#756b82]",
-    glow: "bg-[#e7e1ee]",
+    mark: "border-[#dfdbe7] bg-[#f5f3f7] text-[#756b82]",
   },
   "Deed builder": {
-    card: "border-[#e5dcd5] bg-[#f9f6f3]",
-    mark: "border-[#e4d9cf] bg-[#f0e6dd] text-[#866e5e]",
-    glow: "bg-[#eee0d5]",
+    mark: "border-[#e4d9cf] bg-[#f7f3ef] text-[#866e5e]",
   },
 };
 
@@ -25,7 +19,6 @@ export function ToolsSection() {
       <div className="flex flex-col gap-section-gap lg:flex-row lg:items-center lg:justify-between lg:gap-cluster-lg">
         <SectionTitle
           id="tools-title"
-          eyebrow="SMART TOOLS"
           title="Move faster with practical tools."
           description="Practical tools for quick business decisions."
         />
@@ -36,15 +29,13 @@ export function ToolsSection() {
           const visual = toolVisuals[tool.title] ?? toolVisuals["Deed builder"];
 
           return (
-            <article className={`group relative isolate flex min-h-[324px] flex-col overflow-hidden rounded-[26px] border p-card-pad transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(49,42,35,0.07)] ${visual.card}`.trim()} key={tool.title}>
-              <div className={`pointer-events-none absolute -right-12 -top-14 size-40 rounded-full opacity-60 blur-2xl ${visual.glow}`.trim()} aria-hidden="true" />
-              <div className="relative flex items-center justify-between gap-cluster-sm">
-                <span className={`grid size-11 place-items-center rounded-2xl border text-body-sm font-bold ${visual.mark}`.trim()}>{tool.mark}</span>
-                <WaveLabel className="text-[#958b80]">{tool.tag}</WaveLabel>
+            <article className="group relative flex min-h-[324px] flex-col overflow-hidden rounded-[24px] border border-[#d9d6cf] bg-[#faf9f6] p-card-pad transition-all duration-300 hover:-translate-y-0.5 hover:border-[#cfcac1] hover:shadow-[0_14px_30px_rgba(49,42,35,0.06)]" key={tool.title}>
+              <div className="relative flex items-center gap-cluster-sm">
+                <span className={`grid size-11 place-items-center rounded-[14px] border text-body-sm font-bold ${visual.mark}`.trim()}>{tool.mark}</span>
               </div>
               <h3 className="relative mt-cluster-lg font-brand text-subheading text-ink">{tool.title}</h3>
               <p className="relative mt-cluster-xs min-h-[42px] max-w-[360px] text-body-xs text-muted">{tool.description}</p>
-              <dl className="relative m-0 mt-auto flex flex-col divide-y divide-black/[0.07] border-y border-black/[0.07]">
+              <dl className="relative m-0 mt-auto flex flex-col divide-y divide-[#e9e5de] border-y border-[#e5e1da]">
                 {tool.rows.map(([label, value]) => (
                   <div className="flex min-h-10 items-center justify-between gap-3" key={label}>
                     <dt className="text-meta text-muted">{label}</dt>

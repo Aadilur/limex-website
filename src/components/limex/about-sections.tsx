@@ -192,11 +192,10 @@ export function AboutReelsSection() {
           id="about-reels-title"
           eyebrow="VIDEO REELS"
           title="Stories from the businesses we support."
-          description="Optional video stories that make the work feel human."
+          description="Video stories that make the work feel human."
           className="max-w-none"
           size="compact"
         />
-        <WaveLabel className="text-muted">Optional reels</WaveLabel>
       </div>
       <div className="mt-section-gap-lg flex min-h-0 snap-x snap-proximity gap-card-gap overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {reels.map((reel, index) => (

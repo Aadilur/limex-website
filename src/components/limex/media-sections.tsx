@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 
 import { reels } from "./data";
 import { homeArticles, type BlogArticle, type BlogTone } from "./blog-data";
-import { ActionButton, SectionTitle, WaveLabel } from "./ui";
+import { ActionButton, SectionTitle } from "./ui";
 
 const blogVisuals: Record<BlogTone, { surface: string; text: string; glow: string }> = {
   mint: { surface: "bg-[#eef3ee]", text: "text-[#6b806f]", glow: "bg-[#dce9df]" },
@@ -25,14 +25,12 @@ export function VideoReelsSection() {
       <div className="flex flex-col gap-cluster-sm lg:min-h-[58px] lg:flex-row lg:items-center lg:justify-between lg:gap-cluster-lg">
         <SectionTitle
           id="reels-title"
-          eyebrow="VIDEO REELS"
           title="Stories from the businesses we support."
-          description="Optional video stories that make the work feel human."
+          description="Video stories that make the work feel human."
           className="max-w-none"
           size="compact"
         />
         <div className="flex flex-wrap items-center gap-cluster-sm">
-          <WaveLabel className="text-[#63615c]">OPTIONAL REELS</WaveLabel>
           <div className="hidden items-center gap-cluster-xs wide:flex" aria-label="Business stories controls">
             <button
               className="grid size-[42px] place-items-center rounded-full border border-warm bg-white text-[18px] font-semibold leading-none text-ink transition-colors hover:border-pink hover:text-pink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2"
@@ -93,7 +91,6 @@ function ArticleVisual({ article }: { article: BlogArticle }) {
       <div className={`pointer-events-none absolute -right-14 -top-16 size-48 rounded-full opacity-60 blur-2xl ${tone.glow}`.trim()} aria-hidden="true" />
       <img className="absolute -right-[116px] -top-[62px] block size-[260px] opacity-60" src="/figma/blog-orbit-a.svg" alt="" aria-hidden="true" />
       <img className="absolute bottom-[-2px] left-6 block size-[118px] opacity-60" src="/figma/blog-orbit-b.svg" alt="" aria-hidden="true" />
-      <WaveLabel className={`absolute left-[22px] top-5 ${tone.text}`.trim()}>{article.media === "video" ? "VIDEO" : "GUIDE"}</WaveLabel>
       <span className={`absolute bottom-5 right-6 font-brand text-section-title opacity-50 ${tone.text}`.trim()} aria-hidden="true">{article.coverNumber}</span>
       {article.media === "video" ? (
         <span className="absolute left-1/2 top-1/2 grid size-[60px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-white/80 bg-white/75 text-body-sm text-ink shadow-[0_10px_24px_rgba(49,42,35,0.08)]" aria-hidden="true">▶</span>
@@ -108,7 +105,6 @@ export function BlogSection() {
       <div className="flex flex-col gap-section-gap lg:flex-row lg:items-start lg:justify-between lg:gap-cluster-lg">
         <SectionTitle
           id="journal-title"
-          eyebrow="FROM THE JOURNAL"
           title="Small insights for big decisions."
           description="Clear guidance for the decisions ahead."
         />

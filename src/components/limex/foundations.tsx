@@ -115,35 +115,41 @@ export function TrustMetricsSection() {
 
 export function HowItWorksSection() {
   return (
-    <section className="relative min-h-0 bg-page px-page-gutter py-section-y pb-section-y lg:min-h-[520px] lg:rounded-panel lg:px-section-gutter-lg lg:py-section-y-xl lg:pb-section-y-lg" id="process" aria-labelledby="process-title">
+    <section className="relative min-h-0 bg-page px-4 py-8 pb-8 sm:px-page-gutter sm:py-section-y lg:rounded-panel lg:px-section-gutter-lg lg:py-section-y-xl lg:pb-section-y-lg" id="process" aria-labelledby="process-title">
       <SectionTitle
         id="process-title"
-        eyebrow="HOW IT WORKS"
         title="From question to completion."
         description="A simple, transparent process that keeps your business moving."
       />
-      <div className="mt-section-gap-xl flex flex-col gap-section-gap-lg lg:mt-section-gap-xl lg:grid lg:grid-cols-[minmax(0,1fr)_236px] lg:gap-[30px]">
-        <div className="relative grid grid-cols-2 gap-x-[18px] gap-y-section-gap-lg lg:grid-cols-4 lg:px-2">
-          <div className="absolute left-6 right-[34px] top-[29px] hidden h-0.5 bg-[#d1ccdb] lg:block" aria-hidden="true" />
-          {processSteps.map((step) => (
-            <article className="relative z-[1]" key={step.number}>
-              <div className="relative mx-auto size-[58px]">
-                <img className="absolute inset-0 size-full" src="/figma/step-circle.svg" alt="" aria-hidden="true" />
-              <span className="absolute inset-0 grid place-items-center text-button font-bold text-pink">{step.number}</span>
-              </div>
-              <h3 className="mx-auto mt-4 max-w-[190px] text-body-sm font-bold text-ink lg:mt-7">{step.title}</h3>
-              <p className="mx-auto max-w-[190px] text-meta text-[#575761] lg:text-footer">{step.description}</p>
-            </article>
-          ))}
+      <div className="mt-section-gap-xl grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px] lg:gap-cluster-lg">
+        <div className="relative overflow-hidden rounded-[24px] border border-[#ddd9d1] bg-white/55 p-4 shadow-[0_2px_0_rgba(27,34,30,0.02)] sm:p-5 lg:p-6">
+          <div className="pointer-events-none absolute bottom-[42px] left-[42px] top-[42px] w-px bg-gradient-to-b from-[#e4cfd8] via-[#d7d5df] to-transparent lg:bottom-auto lg:left-[12%] lg:right-[12%] lg:top-[52px] lg:h-px lg:w-auto lg:bg-gradient-to-r lg:from-[#e4cfd8] lg:via-[#d7d5df] lg:to-transparent" aria-hidden="true" />
+          <div className="relative grid gap-6 lg:grid-cols-4 lg:gap-4">
+            {processSteps.map((step) => (
+              <article className="relative z-[1] flex gap-4 lg:flex-col lg:items-center lg:gap-0 lg:text-center" key={step.number}>
+                <div className="relative grid size-[52px] shrink-0 place-items-center lg:size-[56px]">
+                  <img className="absolute inset-0 size-full" src="/figma/step-circle.svg" alt="" aria-hidden="true" />
+                  <span className="relative text-button font-bold text-pink">{step.number}</span>
+                </div>
+                <div className="min-w-0 pt-0.5 lg:mt-6 lg:pt-0">
+                  <h3 className="max-w-[220px] text-body-sm font-bold leading-snug text-ink lg:mx-auto lg:max-w-[170px]">{step.title}</h3>
+                  <p className="mt-1 max-w-[300px] text-body-xs leading-relaxed text-[#575761] lg:mx-auto lg:max-w-[175px] lg:text-meta">{step.description}</p>
+                </div>
+              </article>
+            ))}
+          </div>
         </div>
-        <aside className="min-h-0 rounded-card bg-[#121729] px-card-pad py-section-y text-white lg:min-h-[258px]">
-          <p className="text-overline text-[#a6b8eb]">NEED HELP CHOOSING?</p>
-          <h3 className="mt-cluster-lg font-brand text-subheading">Talk to an expert.</h3>
-          <p className="my-section-gap-lg text-body-xs text-[#c4cfe5]">Tell us what you are trying to solve and we will point you in the right direction.</p>
-          <ActionButton href="#contact" variant="white" className="w-[178px]">Start a conversation</ActionButton>
+        <aside className="relative isolate flex min-h-0 flex-col overflow-hidden rounded-[24px] bg-[#121729] p-5 text-white sm:p-6 lg:min-h-full lg:p-6">
+          <div className="pointer-events-none absolute -right-16 -top-16 size-40 rounded-full border border-white/[0.08]" aria-hidden="true" />
+          <div className="relative flex items-start justify-between gap-3">
+            <p className="text-overline text-[#a6b8eb]">NEED HELP CHOOSING?</p>
+            <span className="grid size-8 shrink-0 place-items-center rounded-full border border-white/[0.14] text-icon-action text-[#c4cfe5]" aria-hidden="true">↗</span>
+          </div>
+          <h3 className="relative mt-cluster-lg font-brand text-subheading">Talk to an expert.</h3>
+          <p className="relative mt-cluster-lg text-body-xs leading-relaxed text-[#c4cfe5]">Tell us what you are trying to solve and we will point you in the right direction.</p>
+          <ActionButton href="#contact" variant="white" className="relative mt-6 min-h-12 w-full sm:w-max lg:mt-auto lg:w-full">Start a conversation</ActionButton>
         </aside>
       </div>
-      <p className="mt-section-gap-lg text-footer text-[#575761] lg:mt-section-gap-lg">No confusing steps. No unnecessary paperwork. Just a clear path forward.</p>
     </section>
   );
 }

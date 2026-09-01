@@ -9,11 +9,10 @@ export function FaqSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section className="flex min-h-0 flex-col gap-section-y bg-page px-page-gutter py-section-y pb-section-y lg:grid lg:grid-cols-[450px_minmax(0,1fr)] lg:gap-section-gap-xl lg:rounded-panel lg:px-page-gutter-lg lg:py-section-y-lg" id="faq" aria-labelledby="faq-title">
+    <section className="flex min-h-0 flex-col gap-section-y bg-page px-page-gutter pt-section-gap-xl pb-section-y lg:grid lg:grid-cols-[450px_minmax(0,1fr)] lg:gap-section-gap-xl lg:rounded-panel lg:px-page-gutter-lg lg:pt-section-gap-xl lg:pb-section-y-lg" id="faq" aria-labelledby="faq-title">
       <div className="flex flex-col items-start lg:justify-center">
         <SectionTitle
           id="faq-title"
-          eyebrow="FAQ"
           title="Make the next step clearer."
           description="The essentials, in plain language."
           className="max-w-[450px]"
