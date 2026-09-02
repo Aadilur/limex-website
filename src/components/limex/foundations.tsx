@@ -71,9 +71,9 @@ function ClientLogoSet({ duplicate = false }: { duplicate?: boolean }) {
 
 export function TrustedClientsSection() {
   return (
-    <section className="relative flex min-w-0 flex-col bg-page px-page-gutter py-3 lg:rounded-panel lg:px-page-gutter-lg lg:py-4" aria-labelledby="clients-title">
-      <div className="flex shrink-0 min-w-0 flex-col gap-cluster-xs">
-        <h2 className="shrink-0 text-center text-body-xs font-display uppercase tracking-eyebrow text-[#2b5e8c]" id="clients-title">OUR CLIENTS</h2>
+    <section className="relative flex min-w-0 flex-col bg-page px-page-gutter py-5 lg:rounded-panel lg:px-page-gutter-lg lg:py-5" aria-labelledby="clients-title">
+      <div className="flex shrink-0 min-w-0 flex-col gap-cluster">
+        <h2 className="shrink-0 text-center font-brand text-heading-mobile font-bold text-[#2b5e8c] lg:text-heading" id="clients-title">OUR CLIENTS</h2>
         <div className="relative flex min-h-0 items-end overflow-hidden px-0.5 pb-1" aria-label="Our clients">
           <div className="flex w-max motion-safe:animate-client-marquee motion-reduce:w-full motion-reduce:animate-none [will-change:transform]">
             <ClientLogoSet />
@@ -97,11 +97,11 @@ export function TrustMetricsSection() {
   ];
 
   return (
-    <section className="border-t border-[#e0e0e3] bg-page px-page-gutter py-1 lg:min-h-[96px] lg:px-page-gutter-xl lg:py-cluster-sm" aria-label="The Limex standard">
+    <section className="mt-clients-to-metrics border-t border-[#e0e0e3] bg-page px-page-gutter py-2 lg:mt-clients-to-metrics-lg lg:min-h-[96px] lg:px-page-gutter-xl lg:py-cluster-sm" aria-label="The Limex standard">
       <h2 className="sr-only">The Limex standard</h2>
-      <dl className="grid grid-cols-2 gap-x-cluster-lg gap-y-1 lg:grid-cols-4 lg:gap-0">
+      <dl className="grid grid-cols-2 gap-x-cluster-lg gap-y-1 text-center lg:grid-cols-4 lg:gap-0">
         {metrics.map(([value, label], index) => (
-          <div className={`flex min-h-[40px] flex-col ${index >= 2 ? "border-t border-[#e0e0e3] pt-1" : ""} ${index % 2 === 1 ? "border-l border-[#e0e0e3] pl-cluster" : ""} lg:min-h-[56px] lg:border-l lg:border-t-0 lg:px-cluster-lg lg:py-0 ${index === 0 ? "lg:border-l-0 lg:pl-0" : ""}`.trim()} key={value}>
+          <div className={`flex min-h-[40px] flex-col items-center justify-center px-2 text-center ${index >= 2 ? "border-t border-[#e0e0e3] pt-2" : ""} ${index % 2 === 1 ? "border-l border-[#e0e0e3]" : ""} lg:min-h-[56px] lg:border-l lg:border-t-0 lg:px-cluster-lg lg:py-0 ${index === 0 ? "lg:border-l-0" : ""}`.trim()} key={value}>
             <dt className="order-2 mt-0 text-micro text-[#616b7d] lg:mt-1">{label}</dt>
             <dd className="order-1 font-brand text-subheading-mobile text-[#121729] lg:text-subheading">{value}</dd>
           </div>
