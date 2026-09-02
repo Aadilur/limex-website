@@ -8,7 +8,7 @@ import { getToneClasses } from "./styles";
 import { ActionButton, SectionTitle } from "./ui";
 import { getPublicMenu } from "@/lib/menu-api";
 
-const MAX_FEATURED_SERVICES = 8;
+const MAX_VISIBLE_SERVICES = 8;
 
 function getLinkProps(href: string) {
   return href.startsWith("http") ? { target: "_blank", rel: "noreferrer" } : {};
@@ -32,8 +32,8 @@ function ServiceCard({
       {...getLinkProps(href)}
     >
       <div className="flex items-start justify-between gap-cluster-sm">
-        <span className={`grid size-11 shrink-0 place-items-center rounded-[14px] ${tone.text} ${tone.surface}`.trim()}>
-          <ServiceIcon name={icon} className="size-[20px]" />
+        <span className={`grid size-10 shrink-0 place-items-center rounded-[12px] border border-white/80 ${tone.text} ${tone.surface}`.trim()}>
+          <ServiceIcon name={icon} className="size-[19px]" />
         </span>
         <span className={`pt-1 text-body-sm transition-transform duration-200 group-hover:translate-x-0.5 ${tone.text}`.trim()} aria-hidden="true">↗</span>
       </div>
@@ -58,7 +58,7 @@ export function ServicesSection() {
       ? availableServices
       : availableServices.filter((service) => service.filters.includes(selectedFilter));
 
-    return matchingServices.slice(0, MAX_FEATURED_SERVICES);
+    return matchingServices.slice(0, MAX_VISIBLE_SERVICES);
   }, [availableServices, selectedFilter]);
 
   useEffect(() => {

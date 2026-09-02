@@ -437,10 +437,10 @@ const serviceFilterByNavLabel: Record<string, Exclude<ServiceFilter, "All servic
 };
 
 const serviceToneByFilter: Record<Exclude<ServiceFilter, "All services">, { color: string; surface: string }> = {
-  Startup: { color: "#2e6b4f", surface: "#d6ebde" },
-  "Tax & compliance": { color: "#5c4aa6", surface: "#dedbfa" },
-  Trademark: { color: "#b83652", surface: "#fcdbe0" },
-  "Business tools": { color: "#1f6e70", surface: "#d1edeb" },
+  Startup: { color: "#2e6b4f", surface: "#edf7f0" },
+  "Tax & compliance": { color: "#5c4aa6", surface: "#f2effb" },
+  Trademark: { color: "#b83652", surface: "#fff0f2" },
+  "Business tools": { color: "#1f6e70", surface: "#edf9f8" },
 };
 
 const serviceIconByLabel: Partial<Record<string, ServiceIconName>> = {

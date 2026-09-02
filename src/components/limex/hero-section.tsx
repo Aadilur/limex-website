@@ -1,4 +1,5 @@
 import { ActionButton } from "./ui";
+import { TopServices } from "./top-services";
 
 export function HeroSection() {
   return (
@@ -36,11 +37,11 @@ export function HeroSection() {
         <p className="mx-auto max-w-[520px] text-body-sm text-[#52545c] lg:max-w-[620px] lg:text-body">
           Company registration, VAT, tax, trademark and compliance support for ambitious businesses.
         </p>
-        <div className="mt-hero-action-gap grid w-full max-w-[338px] grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] gap-3 lg:flex lg:max-w-none lg:items-center lg:justify-center lg:gap-nav lg:mt-hero-action-gap-lg">
-          <ActionButton href="#services" variant="ghost" arrow="text" className="min-h-control w-full min-w-0 gap-1.5 whitespace-nowrap border-[#14131a]/35 px-2.5 text-button text-ink shadow-none hover:border-[#14131a] hover:bg-transparent hover:shadow-none lg:h-button-lg lg:w-[185px] lg:gap-cluster-sm lg:border-[#14131a] lg:bg-[#14131a] lg:px-[22px] lg:text-button lg:text-white lg:shadow-[0_12px_26px_rgba(20,19,26,0.14)] lg:hover:bg-[#25222e] lg:hover:shadow-[0_16px_32px_rgba(20,19,26,0.18)]">
+        <div className="mt-hero-action-gap grid w-full max-w-[338px] grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] gap-3 max-[380px]:grid-cols-1 lg:flex lg:max-w-none lg:items-center lg:justify-center lg:gap-nav lg:mt-hero-action-gap-lg">
+          <ActionButton href="#services" variant="dark" arrow="text" className="min-h-control w-full min-w-0 justify-center gap-2 whitespace-nowrap border-[#14131a] bg-[#14131a] px-3 text-button text-white shadow-[0_10px_22px_rgba(20,19,26,0.12)] hover:border-[#25222e] hover:bg-[#25222e] hover:shadow-[0_14px_28px_rgba(20,19,26,0.16)] lg:h-button-lg lg:w-[185px] lg:gap-cluster-sm lg:px-[22px] lg:shadow-[0_12px_26px_rgba(20,19,26,0.14)] lg:hover:bg-[#25222e] lg:hover:shadow-[0_16px_32px_rgba(20,19,26,0.18)]">
             Explore services
           </ActionButton>
-          <ActionButton href="#contact" variant="ghost-muted" arrow="none" className="min-h-control w-full min-w-0 justify-center whitespace-nowrap px-2.5 text-button shadow-none hover:border-accent hover:bg-transparent hover:shadow-none lg:h-button-lg lg:w-[170px] lg:border-[#c9c0c4] lg:bg-white/85 lg:px-4 lg:text-button lg:shadow-[0_8px_20px_rgba(67,56,65,0.06)] lg:hover:bg-white lg:hover:shadow-[0_12px_24px_rgba(67,56,65,0.1)]">
+          <ActionButton href="#contact" variant="outline" arrow="none" className="min-h-control w-full min-w-0 justify-center whitespace-nowrap border-[#c9c0c4] bg-white/55 px-3 text-button text-ink shadow-none hover:border-accent hover:bg-white/75 hover:shadow-none lg:h-button-lg lg:w-[170px] lg:bg-white/85 lg:px-4 lg:shadow-[0_8px_20px_rgba(67,56,65,0.06)] lg:hover:bg-white lg:hover:shadow-[0_12px_24px_rgba(67,56,65,0.1)]">
             Talk to an expert
           </ActionButton>
         </div>
@@ -50,25 +51,8 @@ export function HeroSection() {
         <span className="whitespace-nowrap text-body font-strong text-[#52545c] [transform:rotate(-90deg)]">Connect with us</span>
       </div>
 
-      <div className="relative z-[1] mx-5 mt-auto mb-hero-lower-bottom-sm grid min-w-0 grid-cols-2 items-end gap-section-gap max-[900px]:flex max-[900px]:justify-end max-[900px]:gap-0 lg:absolute lg:bottom-[12px] lg:left-[78px] lg:right-[78px] lg:mx-0 lg:mb-0 lg:mt-0 lg:grid-cols-3 lg:gap-section-gap-xl">
-        <div className="flex min-w-0 max-w-none flex-col gap-cluster-sm max-[900px]:hidden lg:max-w-[360px]">
-          <p className="text-micro font-bold text-[#78787d]">ONE PLACE FOR THE IMPORTANT WORK</p>
-          <p className="text-body font-text text-ink">From company setup to brand protection, get clear guidance at every step.</p>
-        </div>
-        <p className="min-w-0 pb-1 text-center text-meta text-[#52545c] max-[900px]:hidden">Clear process. Practical support. No unnecessary complexity.</p>
-        <a className="group flex min-w-0 shrink-0 items-center justify-start gap-cluster-sm text-ink transition-all duration-200 hover:-translate-y-0.5 hover:text-[#1b805c] max-[900px]:justify-self-end max-[900px]:gap-2 max-[900px]:rounded-none max-[900px]:border-0 max-[900px]:bg-transparent max-[900px]:px-0 max-[900px]:py-0 max-[900px]:shadow-none max-[900px]:hover:bg-transparent max-[900px]:hover:shadow-none lg:justify-self-end" href="#contact-form" aria-label="Open the contact form">
-          <span className="order-2 flex min-w-0 max-w-[128px] flex-col gap-cluster-sm text-left max-[900px]:max-w-none lg:order-1 lg:items-end lg:text-right">
-            <strong className="whitespace-nowrap text-body-sm font-bold max-[900px]:text-button">Contact us</strong>
-            <span className="text-meta text-[#52545c] max-[900px]:hidden">Start a conversation</span>
-          </span>
-          <span className="relative order-1 block size-[46px] shrink-0 transition-transform duration-200 group-hover:rotate-2 group-hover:scale-[1.04] lg:order-2 lg:size-[68px]">
-            <img className="absolute inset-0 size-full" src="/figma/contact-circle.svg" alt="" aria-hidden="true" />
-            <span className="absolute inset-0 m-auto grid size-6 place-items-center lg:size-[30px]">
-              <img className="absolute inset-0 size-full" src="/figma/contact-dot.svg" alt="" aria-hidden="true" />
-              <span className="relative z-[1] text-icon-action font-bold text-white">↗</span>
-            </span>
-          </span>
-        </a>
+      <div className="relative z-[1] mx-5 mt-auto mb-hero-lower-bottom-sm min-w-0 lg:absolute lg:bottom-[12px] lg:left-[78px] lg:right-[78px] lg:mx-0 lg:mb-0 lg:mt-0">
+        <TopServices />
       </div>
     </section>
   );

@@ -7,10 +7,14 @@ export type ToneClasses = {
 
 const toneClasses: Record<string, ToneClasses> = {
   "#2e6b4f:#d6ebde": { text: "text-[#2e6b4f]", surface: "bg-[#d6ebde]" },
+  "#2e6b4f:#edf7f0": { text: "text-[#2e6b4f]", surface: "bg-[#edf7f0]" },
   "#5c4aa6:#dedbfa": { text: "text-[#5c4aa6]", surface: "bg-[#dedbfa]" },
+  "#5c4aa6:#f2effb": { text: "text-[#5c4aa6]", surface: "bg-[#f2effb]" },
   "#b83652:#fcdbe0": { text: "text-[#b83652]", surface: "bg-[#fcdbe0]" },
+  "#b83652:#fff0f2": { text: "text-[#b83652]", surface: "bg-[#fff0f2]" },
   "#9e5726:#fae5cc": { text: "text-[#9e5726]", surface: "bg-[#fae5cc]" },
   "#1f6e70:#d1edeb": { text: "text-[#1f6e70]", surface: "bg-[#d1edeb]" },
+  "#1f6e70:#edf9f8": { text: "text-[#1f6e70]", surface: "bg-[#edf9f8]" },
   "#29634d:#ccebdb": { text: "text-[#29634d]", surface: "bg-[#ccebdb]" },
   "#594094:#dbd4fa": { text: "text-[#594094]", surface: "bg-[#dbd4fa]" },
   "#9e3347:#fac7cc": { text: "text-[#9e3347]", surface: "bg-[#fac7cc]" },

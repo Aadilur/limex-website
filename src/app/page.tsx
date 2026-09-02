@@ -18,7 +18,7 @@ export default function Home() {
     <main className={homePageLayoutClass}>
       <SiteHeader />
       <HeroSection />
-      <div className="grid min-w-0 grid-cols-1 gap-cluster pt-cluster lg:gap-section-gap-lg lg:pt-2">
+      <div className="grid min-w-0 grid-cols-1 gap-hero-to-clients pt-hero-to-clients lg:gap-section-gap-lg lg:pt-section-gap">
         <TrustedClientsSection />
         <TrustMetricsSection />
         <SectionSeparator label="WHAT WE CAN HELP YOU WITH" className={sectionSeparatorClass} />
