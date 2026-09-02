@@ -107,7 +107,7 @@ const config: Config = {
         "hero-content-top-separated-sm": "52px",
         "hero-content-top-separated-lg": "84px",
         "hero-home": "clamp(548px, calc(100svh - 172px), 720px)",
-        "hero-home-mobile": "clamp(560px, calc(100svh - 284px), 596px)",
+        "hero-home-mobile": "clamp(616px, calc(100svh - 228px), 652px)",
         "hero-clients-band": "max(84px, calc(100svh - 810px))",
         "hero-clients-band-mobile": "max(84px, min(120px, calc(100svh - 760px)))",
         "hero-title-gap": "14px",
