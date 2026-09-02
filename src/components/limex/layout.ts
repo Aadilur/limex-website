@@ -9,4 +9,4 @@ export const homePageLayoutClass =
 export const pageShellClass =
   "relative overflow-visible rounded-panel-mobile bg-page px-page-gutter pb-page-gutter lg:rounded-panel lg:px-page-gutter-lg lg:pb-page-gutter-lg";
 
-export const pageContentClass = "pt-cluster-lg";
+export const pageContentClass = "pt-cluster-lg lg:px-6 xl:px-10";

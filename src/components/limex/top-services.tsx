@@ -57,7 +57,7 @@ function FeaturedServiceLink({ service }: { service: PriorityService }) {
         <span className="block truncate text-body-xs font-semibold leading-tight transition-colors duration-200 group-hover:text-accent lg:text-button">{service.displayTitle}</span>
         <span className="mt-0.5 block min-h-[34px] line-clamp-2 text-micro leading-[1.4] text-muted lg:text-meta lg:leading-[1.4]">{service.description}</span>
       </span>
-      <span className="shrink-0 pr-1 text-icon-action text-[#de4d73] transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden="true">↗</span>
+      <span className="shrink-0 pr-1 text-icon-action text-[#de4d73] transition-transform duration-200 group-hover:translate-x-0.5 lg:hidden" aria-hidden="true">↗</span>
     </a>
   );
 }
