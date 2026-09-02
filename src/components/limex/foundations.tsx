@@ -71,8 +71,7 @@ function ClientLogoSet({ duplicate = false }: { duplicate?: boolean }) {
 
 export function TrustedClientsSection() {
   return (
-    <section className="relative flex min-w-0 min-h-hero-clients-band-mobile flex-col bg-page px-page-gutter pb-4 pt-1 lg:min-h-hero-clients-band lg:rounded-panel lg:px-page-gutter-lg" aria-labelledby="clients-title">
-      <div className="min-h-0 flex-1" aria-hidden="true" />
+    <section className="relative flex min-w-0 flex-col bg-page px-page-gutter py-3 lg:rounded-panel lg:px-page-gutter-lg lg:py-4" aria-labelledby="clients-title">
       <div className="flex shrink-0 min-w-0 flex-col gap-cluster-xs">
         <h2 className="shrink-0 text-center text-body-xs font-display uppercase tracking-eyebrow text-[#2b5e8c]" id="clients-title">OUR CLIENTS</h2>
         <div className="relative flex min-h-0 items-end overflow-hidden px-0.5 pb-1" aria-label="Our clients">

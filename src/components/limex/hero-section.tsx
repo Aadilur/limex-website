@@ -3,7 +3,7 @@ import { TopServices } from "./top-services";
 
 export function HeroSection() {
   return (
-    <section className="relative flex min-h-hero-home-mobile flex-col overflow-hidden rounded-[20px] bg-page lg:min-h-hero-home lg:rounded-[28px]" id="top" aria-labelledby="hero-title">
+    <section className="relative flex min-h-0 flex-col overflow-hidden rounded-[20px] bg-page lg:min-h-hero-home lg:rounded-[28px]" id="top" aria-labelledby="hero-title">
       <div className="pointer-events-none absolute inset-0" aria-hidden="true">
         <img
           className="absolute left-[10%] top-[168px] block size-[360px] animate-hero-float lg:left-[33.4%] lg:top-[142px] lg:size-[441px]"
@@ -51,7 +51,7 @@ export function HeroSection() {
         <span className="whitespace-nowrap text-body font-strong text-[#52545c] [transform:rotate(-90deg)]">Connect with us</span>
       </div>
 
-      <div className="relative z-[1] mx-5 mt-auto mb-hero-lower-bottom-sm min-w-0 lg:absolute lg:bottom-[12px] lg:left-[78px] lg:right-[78px] lg:mx-0 lg:mb-0 lg:mt-0">
+      <div className="relative z-[1] mx-5 mt-hero-lower-gap mb-hero-lower-bottom-sm min-w-0 lg:absolute lg:bottom-[12px] lg:left-[78px] lg:right-[78px] lg:mx-0 lg:mb-0 lg:mt-0">
         <TopServices />
       </div>
     </section>
