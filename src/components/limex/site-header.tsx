@@ -17,6 +17,10 @@ function resolveLocalHref(href: string, pathname: string) {
   return `/${href}`;
 }
 
+function hasMegaMenu(item: NavItem) {
+  return Boolean(item.megaGroups?.some((group) => group.items?.length));
+}
+
 function DesktopNavTrigger({
   item,
   isActive,
@@ -35,8 +39,8 @@ function DesktopNavTrigger({
   return (
     <div className="relative" onMouseEnter={onOpen}>
       <button
-        className={`relative inline-flex h-control items-center gap-cluster-xs rounded-control border-0 bg-transparent px-2 py-1 text-nav-compact text-ink whitespace-nowrap transition-colors duration-150 hover:bg-pink/10 hover:text-ink xl:text-nav-medium wide:text-nav ${
-          isActive ? "bg-pink/10 font-bold text-[#de4d73]" : ""
+        className={`group relative inline-flex h-control items-center gap-cluster-xs rounded-control border-0 bg-transparent px-2 py-1 text-nav-compact whitespace-nowrap transition-colors duration-200 ease-out hover:text-pink xl:text-nav-medium wide:text-nav ${
+          isActive ? "bg-pink/10 font-bold text-[#de4d73]" : "text-ink"
         }`.trim()}
         type="button"
         aria-expanded={isOpen}
@@ -50,21 +54,21 @@ function DesktopNavTrigger({
         }}
       >
         <span>{item.label}</span>
-        <img className="size-3" src={`/figma/${isActive ? "nav-chevron-active" : "nav-chevron"}.svg`} alt="" aria-hidden="true" />
+        <img className="size-3 transition-transform duration-200 ease-out group-hover:translate-x-0.5" src={`/figma/${isActive ? "nav-chevron-active" : "nav-chevron"}.svg`} alt="" aria-hidden="true" />
         {isActive ? <span className="absolute bottom-px left-2 h-0.5 w-5 bg-pink" aria-hidden="true" /> : null}
       </button>
     </div>
   );
 }
 
-function MobileNavGroup({ item, onNavigate }: { item: NavItem; onNavigate: () => void }) {
-  const [open, setOpen] = useState(false);
+function MobileNavGroup({ item, onNavigate, isActive }: { item: NavItem; onNavigate: () => void; isActive: boolean }) {
+  const [open, setOpen] = useState(isActive);
   const childrenId = `mobile-menu-${slugify(item.label)}`;
 
   return (
     <div>
       <button
-        className="flex min-h-nav-row w-full items-center justify-between gap-nav border-0 border-b border-border bg-transparent px-0.5 text-left text-mobile-nav text-ink transition-colors hover:text-pink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2"
+        className={`flex min-h-nav-row w-full items-center justify-between gap-nav rounded-control border-0 border-b border-border px-0.5 text-left text-mobile-nav transition-colors duration-200 ease-out hover:text-pink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2 ${isActive ? "bg-pink/10 font-bold text-[#de4d73]" : "bg-transparent text-ink"}`.trim()}
         type="button"
         aria-expanded={open}
         aria-controls={childrenId}
@@ -85,12 +89,14 @@ function MobileNavGroup({ item, onNavigate }: { item: NavItem; onNavigate: () =>
   );
 }
 
-export function SiteHeader() {
+export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
   const pathname = usePathname();
   const [menuNavigation, setMenuNavigation] = useState<NavItem[]>(navigation);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [isHidden, setIsHidden] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
+  const lastScrollYRef = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -100,15 +106,15 @@ export function SiteHeader() {
         if (cancelled) return;
 
         const managedByKey = new Map(managedItems.map((item) => [item.key ?? slugify(item.label), item]));
-        const staticManagedKeys = new Set(navigation.filter((item) => item.megaGroups).map((item) => slugify(item.label)));
+        const staticManagedKeys = new Set(navigation.filter(hasMegaMenu).map((item) => slugify(item.label)));
         const mergedNavigation = navigation.flatMap((item) => {
-          if (!item.megaGroups) return [item];
+          if (!hasMegaMenu(item)) return [item];
 
           const managedItem = managedByKey.get(slugify(item.label));
           return managedItem ? [managedItem] : [];
         });
         const newManagedItems = managedItems.filter((item) => !staticManagedKeys.has(item.key ?? slugify(item.label)));
-        setMenuNavigation([...mergedNavigation.filter((item) => item.label === "Home"), ...mergedNavigation.filter((item) => item.megaGroups), ...newManagedItems, ...mergedNavigation.filter((item) => !item.megaGroups && item.label !== "Home")]);
+        setMenuNavigation([...mergedNavigation.filter((item) => item.label === "Home"), ...mergedNavigation.filter(hasMegaMenu), ...newManagedItems, ...mergedNavigation.filter((item) => !hasMegaMenu(item) && item.label !== "Home")]);
       })
       .catch(() => {
         // Keep the bundled navigation available when the API is unavailable.
@@ -144,29 +150,59 @@ export function SiteHeader() {
     };
   }, [mobileOpen]);
 
+  useEffect(() => {
+    const revealAtTop = 16;
+    const directionThreshold = 6;
+
+    const handleScroll = () => {
+      const currentScrollY = Math.max(window.scrollY, 0);
+      const previousScrollY = lastScrollYRef.current;
+
+      if (currentScrollY <= revealAtTop) {
+        setIsHidden(false);
+      } else if (currentScrollY > previousScrollY + directionThreshold) {
+        setIsHidden(true);
+        setOpenMenu(null);
+      } else if (currentScrollY < previousScrollY - directionThreshold) {
+        setIsHidden(false);
+      }
+
+      lastScrollYRef.current = currentScrollY;
+    };
+
+    lastScrollYRef.current = Math.max(window.scrollY, 0);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   const closeMobileMenu = () => setMobileOpen(false);
-  const openMenuItem = menuNavigation.find((item) => item.label === openMenu && item.megaGroups);
-  const activeNavLabel = pathname === "/about"
-    ? "About us"
-    : pathname.startsWith("/blog")
-      ? "Blog"
-    : pathname.startsWith("/trademark-classes")
-      ? "IP & Trademark"
-    : pathname.startsWith("/services/trademark")
-      ? "IP & Trademark"
-      : pathname.startsWith("/services")
-        ? "Startup & Licensing"
-      : pathname.startsWith("/business-tools")
-        ? "Business Tools"
-      : menuNavigation.find((item) => item.active)?.label;
+  const openMenuItem = menuNavigation.find((item) => item.label === openMenu && hasMegaMenu(item));
+  const activeNavLabel = pathname === "/"
+    ? "Home"
+    : pathname === "/about" || pathname.startsWith("/about/")
+      ? "About us"
+      : pathname.startsWith("/blog")
+        ? "Blog"
+        : pathname.startsWith("/trademark-classes")
+          ? "IP & Trademark"
+          : pathname.startsWith("/services/trademark")
+            ? "IP & Trademark"
+            : pathname.startsWith("/services")
+              ? "Startup & Licensing"
+              : pathname.startsWith("/business-tools")
+                ? "Business Tools"
+                : menuNavigation.find((item) => item.active)?.label;
   const homeHref = pathname === "/" ? "#top" : "/";
   const contactHref = resolveLocalHref("#contact", pathname);
+  const navMotionClassName = `transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${isHidden && !mobileOpen ? "-translate-y-full opacity-0" : "translate-y-0 opacity-100"}`.trim();
 
   return (
-    <header className="relative z-20" ref={headerRef}>
+    <header
+      className={`sticky top-0 z-40 min-h-[60px] lg:min-h-[68px] ${fullBleed ? "-mx-page-gutter lg:-mx-page-gutter-lg" : ""}`.trim()}
+      ref={headerRef}
+    >
       <div
-        className="absolute left-page-gutter-lg right-page-gutter-lg top-nav-top hidden min-h-nav-shell items-center gap-cluster-sm rounded-nav border border-[rgba(224,222,227,0.86)] bg-paper/80 px-cluster py-cluster shadow-nav backdrop-blur-[14px] wide:flex wide:gap-cluster-xl wide:px-5"
-        onMouseLeave={() => setOpenMenu(null)}
+        className={`relative mx-mobile-gutter hidden min-h-[60px] items-center gap-cluster-sm rounded-nav border border-[rgba(224,222,227,0.86)] bg-page px-cluster py-cluster wide:mx-page-gutter-lg wide:flex wide:min-h-[68px] wide:gap-cluster-xl wide:px-5 ${navMotionClassName}`.trim()}
         onBlur={(event) => {
           if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpenMenu(null);
         }}
@@ -174,7 +210,7 @@ export function SiteHeader() {
         <LogoLockup href={homeHref} className="w-[130px] min-w-[130px] xl:w-[155px] xl:min-w-[155px] wide:w-[178px] wide:min-w-[178px]" />
         <nav className="min-w-0 flex flex-1 items-center gap-0.5 xl:gap-1 wide:gap-3.5" aria-label="Primary navigation">
           {menuNavigation.map((item) =>
-            item.megaGroups ? (
+            hasMegaMenu(item) ? (
               <DesktopNavTrigger
                 key={item.label}
                 item={item}
@@ -186,9 +222,10 @@ export function SiteHeader() {
             ) : (
               <a
                 key={item.label}
-            className={`group relative inline-flex h-control items-center rounded-control px-2 py-1 text-nav-compact whitespace-nowrap transition-colors duration-150 hover:bg-pink/10 xl:text-nav-medium wide:text-nav ${item.label === activeNavLabel ? "bg-pink/10 font-bold text-[#de4d73]" : "text-ink"}`.trim()}
+                className={`group relative inline-flex h-control items-center rounded-control px-2 py-1 text-nav-compact whitespace-nowrap transition-colors duration-200 ease-out hover:text-pink xl:text-nav-medium wide:text-nav ${item.label === activeNavLabel ? "bg-pink/10 font-bold text-[#de4d73]" : "text-ink"}`.trim()}
                 href={resolveLocalHref(item.href, pathname)}
                 onClick={() => setOpenMenu(null)}
+                aria-current={item.label === activeNavLabel ? "page" : undefined}
               >
                 <span>{item.label}</span>
                 <span className={`absolute bottom-px h-0.5 bg-pink transition-colors ${item.label === activeNavLabel ? "left-2 w-5" : "left-2 right-2 bg-transparent group-hover:bg-pink/50"}`.trim()} aria-hidden="true" />
@@ -209,13 +246,16 @@ export function SiteHeader() {
             />
           </>
         ) : null}
-        <a className="inline-flex h-control w-[100px] min-w-[100px] items-center gap-cluster-xs rounded-pill bg-[#14131c] px-cluster-sm text-nav-medium font-bold text-[#fcfbfa] transition-all duration-200 hover:-translate-y-px hover:shadow-button-dark xl:w-[112px] xl:min-w-[112px] xl:px-2.5 wide:w-[126px] wide:min-w-[126px] wide:gap-cluster-sm wide:px-cluster wide:text-nav-medium" href={contactHref}>
-          <img className="size-5" src="/figma/whatsapp-dot.svg" alt="" aria-hidden="true" />
-          <span>Contact us</span>
+        <a className="group inline-flex h-11 w-[136px] min-w-[136px] items-center gap-cluster-xs rounded-pill border border-[#14131c] bg-[#14131c] px-1.5 text-button font-bold text-[#fcfbfa] transition-all duration-200 hover:-translate-y-px hover:border-accent hover:bg-accent hover:shadow-[0_8px_18px_rgba(222,77,115,0.2)] wide:gap-cluster-sm wide:px-1.5" href={contactHref}>
+          <span className="grid size-8 shrink-0 place-items-center rounded-full bg-white/10 transition-colors duration-200 group-hover:bg-white/20">
+            <img className="size-5" src="/figma/whatsapp-dot.svg" alt="" aria-hidden="true" />
+          </span>
+          <span className="min-w-0 flex-1 whitespace-nowrap text-left">Contact us</span>
+          <span className="mr-1 text-icon-action transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden="true">↗</span>
         </a>
       </div>
 
-      <div className="absolute left-mobile-gutter right-mobile-gutter top-nav-top-mobile flex min-h-nav-mobile-shell items-center justify-between rounded-nav border border-[rgba(224,222,227,0.86)] bg-paper/85 px-4 py-cluster shadow-nav backdrop-blur-[14px] wide:hidden">
+      <div className={`relative mx-mobile-gutter flex min-h-[60px] items-center justify-between rounded-nav border border-[rgba(224,222,227,0.86)] bg-page px-4 py-cluster wide:hidden ${navMotionClassName}`.trim()}>
         <LogoLockup href={homeHref} className="w-auto min-w-0" />
         <button
           className="relative grid size-[42px] place-items-center rounded-full border-0 bg-[#14131c] text-white transition-transform duration-200 hover:scale-105 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3"
@@ -244,14 +284,15 @@ export function SiteHeader() {
             </div>
             <nav className="flex flex-col py-cluster-xs">
               {menuNavigation.map((item) =>
-                item.megaGroups ? (
-                  <MobileNavGroup key={item.label} item={item} onNavigate={closeMobileMenu} />
+                hasMegaMenu(item) ? (
+                  <MobileNavGroup key={item.label} item={item} isActive={item.label === activeNavLabel} onNavigate={closeMobileMenu} />
                 ) : (
                   <a
                     key={item.label}
-                    className="flex min-h-nav-row items-center justify-between gap-nav border-b border-border px-0.5 text-mobile-nav text-ink transition-colors hover:text-pink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2"
+                    className={`flex min-h-nav-row items-center justify-between gap-nav rounded-control border-b border-border px-0.5 text-mobile-nav transition-colors duration-200 ease-out hover:text-pink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2 ${item.label === activeNavLabel ? "bg-pink/10 font-bold text-[#de4d73]" : "text-ink"}`.trim()}
                     href={resolveLocalHref(item.href, pathname)}
                     onClick={closeMobileMenu}
+                    aria-current={item.label === activeNavLabel ? "page" : undefined}
                   >
                     <span>{item.label}</span>
                     <span className="text-pink" aria-hidden="true">↗</span>

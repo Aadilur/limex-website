@@ -8,7 +8,7 @@ export function BlogIndexPage() {
   return (
     <main className={pageLayoutClass}>
       <section className={pageShellClass} id="top">
-        <SiteHeader />
+        <SiteHeader fullBleed />
         <div className={pageContentClass}>
           <BlogIndexContent />
         </div>
@@ -22,7 +22,7 @@ export function BlogDetailPage({ article }: { article: BlogArticle }) {
   return (
     <main className={pageLayoutClass}>
       <section className={pageShellClass} id="top">
-        <SiteHeader />
+        <SiteHeader fullBleed />
         <div className={pageContentClass}>
           <BlogDetailContent article={article} />
         </div>

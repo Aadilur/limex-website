@@ -1,9 +1,14 @@
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
+import multipart from "@fastify/multipart";
 import Fastify from "fastify";
 import { ZodError } from "zod";
 
 import { env } from "./config/env.js";
+import { AboutService } from "./modules/about/application/about.service.js";
+import { PrismaAboutReelRepository } from "./modules/about/infrastructure/prisma-about-reel.repository.js";
+import { PrismaAboutRepository } from "./modules/about/infrastructure/prisma-about.repository.js";
+import { aboutRoutes } from "./modules/about/interface/http/about.routes.js";
 import { AdminAuthService } from "./modules/admin/application/admin-auth.service.js";
 import { MenuService } from "./modules/admin/application/menu.service.js";
 import { PrismaMenuRepository } from "./modules/admin/infrastructure/prisma-menu.repository.js";
@@ -30,17 +35,27 @@ export async function buildApp() {
 
   await app.register(helmet);
   await app.register(cors, { origin: corsOrigin, credentials: true });
+  await app.register(multipart, {
+    limits: {
+      files: 1,
+      fileSize: 5 * 1024 * 1024,
+      fields: 8,
+      parts: 10,
+    },
+  });
 
   const healthService = new HealthService(new PrismaHealthCheck(prisma));
   const userService = new UserService(new PrismaUserRepository(prisma));
   const adminAuthService = new AdminAuthService();
   const menuService = new MenuService(new PrismaMenuRepository(prisma));
+  const aboutService = new AboutService(new PrismaAboutRepository(prisma), new PrismaAboutReelRepository(prisma));
 
   await app.register(healthRoutes, { service: healthService });
   await app.register(userRoutes, { service: userService });
   await app.register(adminAuthRoutes, { service: adminAuthService });
   await app.register(adminMenuRoutes, { service: menuService });
   await app.register(publicMenuRoutes, { service: menuService });
+  await app.register(aboutRoutes, { service: aboutService });
 
   app.setErrorHandler((error, request, reply) => {
     if (error instanceof ZodError) {
@@ -48,6 +63,13 @@ export async function buildApp() {
         error: "Validation failed.",
         issues: error.issues,
       });
+    }
+
+    if (error && typeof error === "object" && "statusCode" in error && typeof error.statusCode === "number") {
+      const statusCode = error.statusCode;
+      if (statusCode === 400) return reply.code(400).send({ error: error instanceof Error ? error.message : "The request is invalid." });
+      if (statusCode === 413) return reply.code(413).send({ error: "The image must be 5 MB or smaller." });
+      if (statusCode === 503) return reply.code(503).send({ error: error instanceof Error ? error.message : "Image storage is unavailable." });
     }
 
     request.log.error(error);

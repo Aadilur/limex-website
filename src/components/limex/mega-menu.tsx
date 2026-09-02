@@ -4,29 +4,25 @@ import { usePathname } from "next/navigation";
 import type { MegaMenuChild, MegaMenuItem, MegaMenuTone, NavItem } from "./data";
 import { WaveLabel } from "./ui";
 
-const toneClasses: Record<MegaMenuTone, { accent: string; marker: string; markerHover: string; badge: string }> = {
+const toneClasses: Record<MegaMenuTone, { accent: string; marker: string; badge: string }> = {
   green: {
     accent: "text-[#2e6b4f]",
     marker: "bg-[#d6edde] text-[#2e6b4f]",
-    markerHover: "group-hover:bg-[#c6e5d3]",
     badge: "bg-[#d6edde] text-[#2e6b4f]",
   },
   violet: {
     accent: "text-[#5c4aa6]",
     marker: "bg-[#dedbfa] text-[#5c4aa6]",
-    markerHover: "group-hover:bg-[#d1cdf5]",
     badge: "bg-[#dedbfa] text-[#5c4aa6]",
   },
   teal: {
     accent: "text-[#1f6e70]",
     marker: "bg-[#d1edeb] text-[#1f6e70]",
-    markerHover: "group-hover:bg-[#c3e5e3]",
     badge: "bg-[#d1edeb] text-[#1f6e70]",
   },
   orange: {
     accent: "text-[#9e5726]",
     marker: "bg-[#fae5cc] text-[#9e5726]",
-    markerHover: "group-hover:bg-[#f5d8bd]",
     badge: "bg-[#fae5cc] text-[#9e5726]",
   },
 };
@@ -59,7 +55,7 @@ function ChildLink({ child, onNavigate, pathname }: { child: MegaMenuChild; onNa
 
   return (
     <a
-      className="group flex min-w-0 items-start justify-between gap-cluster-sm rounded-control px-2 py-cluster-xs text-micro font-text text-muted transition-colors hover:bg-soft hover:text-ink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-1"
+      className="group flex min-w-0 items-start justify-between gap-cluster-sm rounded-control px-2 py-cluster-xs text-micro font-text text-muted transition-colors duration-200 ease-out hover:text-pink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-1"
       href={href}
       onClick={onNavigate}
       {...getLinkProps(href)}
@@ -75,16 +71,16 @@ function MegaMenuItemRow({ item, tone, onNavigate, pathname }: { item: MegaMenuI
   const href = resolveLocalHref(item.href, pathname);
 
   return (
-    <div className="mb-cluster-sm break-inside-avoid rounded-control px-1 py-1 transition-colors hover:bg-soft/70">
+    <div className="mb-cluster-sm break-inside-avoid rounded-control px-1 py-1">
       <a
-        className="group flex min-w-0 items-start gap-cluster rounded-control px-cluster-sm py-cluster-xs focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-1"
+        className="group flex min-w-0 items-start gap-cluster rounded-control px-cluster-sm py-cluster-xs text-ink transition-colors duration-200 ease-out hover:text-pink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-1"
         href={href}
         onClick={onNavigate}
         {...getLinkProps(href)}
       >
-        <span className={`mt-0.5 grid size-8 shrink-0 place-items-center rounded-full text-nav-compact font-bold ${palette.marker} ${palette.markerHover}`.trim()}>{item.marker}</span>
+        <span className={`mt-0.5 grid size-8 shrink-0 place-items-center rounded-full text-nav-compact font-bold ${palette.marker}`.trim()}>{item.marker}</span>
         <span className="min-w-0 flex-1">
-          <span className="block break-words text-meta font-bold text-ink">{item.label}</span>
+          <span className="block break-words text-meta font-bold text-ink transition-colors duration-200 ease-out group-hover:text-pink">{item.label}</span>
           <span className="mt-0.5 block break-words text-micro text-muted">{item.description}</span>
         </span>
         <LinkArrow />
@@ -222,8 +218,8 @@ export function MobileMegaMenuContent({ item, onNavigate }: { item: NavItem; onN
           <div className="space-y-1">
             {group.items.map((menuItem) => (
               <div className="rounded-control bg-white/70 px-2.5 py-2" key={menuItem.label}>
-                    <a className="flex min-w-0 items-start justify-between gap-cluster text-body-xs font-bold text-ink" href={resolveLocalHref(menuItem.href, pathname)} onClick={onNavigate} {...getLinkProps(resolveLocalHref(menuItem.href, pathname))}>
-                  <span className="min-w-0 break-words">{menuItem.label}</span>
+                    <a className="group flex min-w-0 items-start justify-between gap-cluster text-body-xs font-bold text-ink transition-colors duration-200 ease-out hover:text-pink" href={resolveLocalHref(menuItem.href, pathname)} onClick={onNavigate} {...getLinkProps(resolveLocalHref(menuItem.href, pathname))}>
+                  <span className="min-w-0 break-words transition-colors duration-200 ease-out group-hover:text-pink">{menuItem.label}</span>
                   <LinkArrow />
                 </a>
                 <p className="mt-0.5 text-micro text-muted">{menuItem.description}</p>

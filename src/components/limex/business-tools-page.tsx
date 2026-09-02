@@ -35,7 +35,7 @@ export function BusinessToolsPage() {
   return (
     <main className={pageLayoutClass}>
       <section className={pageShellClass} id="top">
-        <SiteHeader />
+        <SiteHeader fullBleed />
         <div className={pageContentClass}>
           <div className="grid gap-section-gap-lg rounded-panel border border-[#e3ded4] bg-[#f9f8f5] px-page-gutter py-section-y sm:px-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)] lg:items-end lg:px-10 lg:py-9">
             <div>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import { SmoothScroll } from "@/components/limex/smooth-scroll";
+import "lenis/dist/lenis.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html className="scroll-smooth bg-page" lang="en">
+    <html className="bg-page" lang="en">
       <body className="bg-page font-body text-body text-ink antialiased">
         <SmoothScroll />
         {children}

@@ -7,7 +7,7 @@ export function AboutPage() {
   return (
     <main className={pageLayoutClass}>
       <section className={pageShellClass}>
-        <SiteHeader />
+        <SiteHeader fullBleed />
         <div className={pageContentClass}>
           <AboutHero />
           <AboutTrustStrip />

@@ -60,21 +60,19 @@ export type MenuGroupInput = Partial<Omit<AdminMenuGroup, "id" | "items">> & { s
 export type MenuItemInput = Partial<Omit<AdminMenuItem, "id" | "links">> & { groupId?: string };
 export type MenuLinkInput = Partial<Omit<AdminMenuLink, "id">> & { itemId?: string };
 
-class ApiError extends Error {
+export class ApiError extends Error {
   public constructor(public readonly status: number, message: string) {
     super(message);
     this.name = "ApiError";
   }
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+export async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const isMultipart = typeof FormData !== "undefined" && init?.body instanceof FormData;
   const response = await fetch(path, {
     ...init,
     credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers ?? {}),
-    },
+    headers: isMultipart ? init?.headers : { "Content-Type": "application/json", ...(init?.headers ?? {}) },
   });
 
   const payload = await response.json().catch(() => null) as { data?: T; error?: string } | null;

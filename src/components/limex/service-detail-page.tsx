@@ -8,7 +8,7 @@ export function ServiceDetailPage({ service }: { service: ServicePageContent }) 
   return (
     <main className={pageLayoutClass}>
       <section className={pageShellClass} id="top">
-        <SiteHeader />
+        <SiteHeader fullBleed />
         <div className={pageContentClass}>
           <ServiceHeroSection service={service} />
           <ServiceOverviewSection service={service} />

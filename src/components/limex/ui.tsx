@@ -3,7 +3,7 @@ import type { MouseEventHandler, ReactNode } from "react";
 type ActionButtonProps = {
   children: ReactNode;
   href?: string;
-  variant?: "dark" | "light" | "outline" | "white" | "soft";
+  variant?: "dark" | "light" | "outline" | "white" | "soft" | "ghost" | "ghost-muted";
   className?: string;
   onClick?: MouseEventHandler<HTMLButtonElement>;
   type?: "button" | "submit" | "reset";
@@ -17,6 +17,8 @@ const actionVariants = {
   outline: "border-[#bdb8ad] bg-white/75 text-ink",
   white: "border-white bg-white text-navy",
   soft: "border-transparent bg-soft text-ink",
+  ghost: "border-[#14131a]/35 bg-transparent text-ink",
+  "ghost-muted": "border-[#c9c0c4]/75 bg-transparent text-ink",
 };
 
 const actionBase =
@@ -39,7 +41,7 @@ export function ActionButton({
       {arrow !== "none" ? (
         <span
           className={`inline-flex size-[18px] shrink-0 items-center justify-center text-icon-action ${
-            arrow === "cta" ? "size-[26px] bg-[url('/figma/cta-arrow-circle.svg')] bg-contain bg-center bg-no-repeat text-transparent" : ""
+            arrow === "cta" ? "size-[26px] bg-[url('/figma/cta-arrow-circle.svg')] bg-contain bg-center bg-no-repeat font-bold text-white" : ""
           }`.trim()}
           aria-hidden="true"
         >
