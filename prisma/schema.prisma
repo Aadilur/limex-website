@@ -155,9 +155,11 @@ model DocumentTemplate {
   settings           Json
   fields             Json
   blocks             Json
+  pages              Json?
   publishedSettings  Json?
   publishedFields    Json?
   publishedBlocks    Json?
+  publishedPages     Json?
   status             String    @default("DRAFT") @db.VarChar(16)
   revision           Int       @default(1)
   publishedRevision  Int?

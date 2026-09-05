@@ -2,7 +2,7 @@ import { Prisma, PrismaClient } from "@prisma/client";
 
 import { navigation, services } from "../src/components/limex/data.js";
 import { defaultLandingContent } from "../src/lib/landing-defaults.js";
-import { defaultMouTemplate } from "../src/lib/document-templates.js";
+import { defaultMouTemplate, flattenTemplatePages } from "../src/lib/document-templates.js";
 
 const prisma = new PrismaClient();
 
@@ -80,10 +80,12 @@ async function main() {
       description: defaultMouTemplate.description,
       settings: defaultMouTemplate.settings as unknown as Prisma.InputJsonValue,
       fields: defaultMouTemplate.fields as unknown as Prisma.InputJsonValue,
-      blocks: defaultMouTemplate.blocks as unknown as Prisma.InputJsonValue,
+      blocks: flattenTemplatePages(defaultMouTemplate.pages) as unknown as Prisma.InputJsonValue,
+      pages: defaultMouTemplate.pages as unknown as Prisma.InputJsonValue,
       publishedSettings: defaultMouTemplate.settings as unknown as Prisma.InputJsonValue,
       publishedFields: defaultMouTemplate.fields as unknown as Prisma.InputJsonValue,
-      publishedBlocks: defaultMouTemplate.blocks as unknown as Prisma.InputJsonValue,
+      publishedBlocks: flattenTemplatePages(defaultMouTemplate.pages) as unknown as Prisma.InputJsonValue,
+      publishedPages: defaultMouTemplate.pages as unknown as Prisma.InputJsonValue,
       status: "PUBLISHED",
       revision: 1,
       publishedRevision: 1,

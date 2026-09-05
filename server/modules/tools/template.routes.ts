@@ -3,7 +3,8 @@ import type { FastifyInstance, FastifyReply } from "fastify";
 import { z } from "zod";
 
 import {
-  documentTemplateDraftSchema,
+  flattenTemplatePages,
+  normalizeDocumentTemplateDraft,
   templateSettingsSchema,
   type AdminDocumentTemplate,
   type DocumentTemplateSummary,
@@ -14,8 +15,9 @@ import { prisma } from "../../shared/database/prisma.js";
 
 const idParamsSchema = z.object({ id: z.string().cuid() });
 const slugParamsSchema = z.object({ slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/) });
+const slugAvailabilitySchema = z.object({ slug: z.string().trim().min(1).max(180), excludeId: z.string().cuid().optional() });
 const revisionBodySchema = z.object({ expectedRevision: z.number().int().positive() }).strict();
-const templateBodySchema = z.object({ template: documentTemplateDraftSchema, expectedRevision: z.number().int().positive().optional() }).strict();
+const templateBodySchema = z.object({ template: z.unknown(), expectedRevision: z.number().int().positive().optional() }).strict();
 
 function asJson(value: unknown) {
   return value as Prisma.InputJsonValue;
@@ -56,19 +58,20 @@ function toAdminTemplate(row: {
   settings: unknown;
   fields: unknown;
   blocks: unknown;
+  pages: unknown;
   status: string;
   revision: number;
   publishedRevision: number | null;
   publishedAt: Date | null;
   updatedAt: Date;
 }): AdminDocumentTemplate {
-  const draft = documentTemplateDraftSchema.parse({
+  const draft = normalizeDocumentTemplateDraft({
     title: row.title,
     slug: row.slug,
     description: row.description,
     settings: row.settings,
     fields: row.fields,
-    blocks: row.blocks,
+    ...(row.pages === null || row.pages === undefined ? { blocks: row.blocks } : { pages: row.pages }),
   });
   return { ...toSummary(row), ...draft };
 }
@@ -80,16 +83,17 @@ function toPublicTemplate(row: {
   publishedSettings: unknown;
   publishedFields: unknown;
   publishedBlocks: unknown;
+  publishedPages: unknown;
   publishedAt: Date | null;
 }): PublicDocumentTemplate | null {
   if (!row.publishedAt || row.publishedSettings === null || row.publishedFields === null || row.publishedBlocks === null) return null;
-  const published = documentTemplateDraftSchema.parse({
+  const published = normalizeDocumentTemplateDraft({
     title: row.title,
     slug: row.slug,
     description: row.description,
     settings: row.publishedSettings,
     fields: row.publishedFields,
-    blocks: row.publishedBlocks,
+    ...(row.publishedPages === null || row.publishedPages === undefined ? { blocks: row.publishedBlocks } : { pages: row.publishedPages }),
   });
   return { ...published, publishedAt: row.publishedAt.toISOString() };
 }
@@ -125,6 +129,13 @@ export async function templateRoutes(app: FastifyInstance) {
     return { data: rows.map(toAdminTemplate) };
   });
 
+  app.get("/api/admin/tools/templates/slug-availability", async (request, reply) => {
+    if (!requireAdminSession(request, reply)) return;
+    const { slug, excludeId } = slugAvailabilitySchema.parse(request.query);
+    const existing = await prisma.documentTemplate.findFirst({ where: { slug, ...(excludeId ? { NOT: { id: excludeId } } : {}) }, select: { id: true } });
+    return { data: { slug, available: !existing } };
+  });
+
   app.get("/api/admin/tools/templates/:id", async (request, reply) => {
     if (!requireAdminSession(request, reply)) return;
     const { id } = idParamsSchema.parse(request.params);
@@ -136,7 +147,7 @@ export async function templateRoutes(app: FastifyInstance) {
 
   app.post("/api/admin/tools/templates", async (request, reply) => {
     if (!requireAdminSession(request, reply)) return;
-    const template = documentTemplateDraftSchema.parse(request.body);
+    const template = normalizeDocumentTemplateDraft(request.body);
     try {
       const row = await prisma.documentTemplate.create({
         data: {
@@ -145,7 +156,8 @@ export async function templateRoutes(app: FastifyInstance) {
           description: template.description,
           settings: asJson(template.settings),
           fields: asJson(template.fields),
-          blocks: asJson(template.blocks),
+          blocks: asJson(flattenTemplatePages(template.pages)),
+          pages: asJson(template.pages),
         },
       });
       return reply.code(201).send({ data: toAdminTemplate(row) });
@@ -160,18 +172,20 @@ export async function templateRoutes(app: FastifyInstance) {
     const { id } = idParamsSchema.parse(request.params);
     const input = templateBodySchema.parse(request.body);
     if (input.expectedRevision === undefined) return sendConflict(reply, "Reload the template before saving it.");
+    const template = normalizeDocumentTemplateDraft(input.template);
 
     let result;
     try {
       result = await prisma.documentTemplate.updateMany({
         where: { id, revision: input.expectedRevision },
         data: {
-          title: input.template.title,
-          slug: input.template.slug,
-          description: input.template.description,
-          settings: asJson(input.template.settings),
-          fields: asJson(input.template.fields),
-          blocks: asJson(input.template.blocks),
+          title: template.title,
+          slug: template.slug,
+          description: template.description,
+          settings: asJson(template.settings),
+          fields: asJson(template.fields),
+          blocks: asJson(flattenTemplatePages(template.pages)),
+          pages: asJson(template.pages),
           revision: { increment: 1 },
         },
       });
@@ -193,14 +207,27 @@ export async function templateRoutes(app: FastifyInstance) {
     const current = await findAdminTemplate(id);
     if (!current) return reply.code(404).send({ error: "Template not found." });
     if (current.revision !== expectedRevision) return sendConflict(reply, "This template changed in another session. Reload before publishing.");
+    const currentTemplate = normalizeDocumentTemplateDraft({
+      title: current.title,
+      slug: current.slug,
+      description: current.description,
+      settings: current.settings,
+      fields: current.fields,
+      ...(current.pages === null || current.pages === undefined ? { blocks: current.blocks } : { pages: current.pages }),
+    });
 
     const nextRevision = current.revision + 1;
     const result = await prisma.documentTemplate.updateMany({
       where: { id, revision: expectedRevision },
       data: {
-        publishedSettings: asJson(current.settings),
-        publishedFields: asJson(current.fields),
-        publishedBlocks: asJson(current.blocks),
+        settings: asJson(currentTemplate.settings),
+        fields: asJson(currentTemplate.fields),
+        blocks: asJson(flattenTemplatePages(currentTemplate.pages)),
+        pages: asJson(currentTemplate.pages),
+        publishedSettings: asJson(currentTemplate.settings),
+        publishedFields: asJson(currentTemplate.fields),
+        publishedBlocks: asJson(flattenTemplatePages(currentTemplate.pages)),
+        publishedPages: asJson(currentTemplate.pages),
         status: "PUBLISHED",
         publishedRevision: nextRevision,
         publishedAt: new Date(),

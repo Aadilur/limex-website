@@ -20,6 +20,12 @@ export function getAdminTemplates(): Promise<AdminDocumentTemplate[]> {
   return request<AdminDocumentTemplate[]>("/api/admin/tools/templates", { cache: "no-store" });
 }
 
+export function checkTemplateSlug(slug: string, excludeId?: string): Promise<{ slug: string; available: boolean }> {
+  const query = new URLSearchParams({ slug });
+  if (excludeId) query.set("excludeId", excludeId);
+  return request<{ slug: string; available: boolean }>(`/api/admin/tools/templates/slug-availability?${query.toString()}`, { cache: "no-store" });
+}
+
 export function createAdminTemplate(template: DocumentTemplateDraft): Promise<AdminDocumentTemplate> {
   return request<AdminDocumentTemplate>("/api/admin/tools/templates", {
     method: "POST",
