@@ -6,6 +6,19 @@ export type TemplatePaperSize = (typeof templatePaperSizes)[number];
 export const templateFontSizes = ["small", "body", "subtitle", "title", "large"] as const;
 export type TemplateFontSize = (typeof templateFontSizes)[number];
 
+export const templateFontSizeMetrics = {
+  small: { sizePx: 10, lineHeight: 1.65 },
+  body: { sizePx: 12, lineHeight: 1.75 },
+  subtitle: { sizePx: 16, lineHeight: 1.45 },
+  title: { sizePx: 22, lineHeight: 1.25 },
+  large: { sizePx: 22, lineHeight: 1.25 },
+} as const satisfies Record<TemplateFontSize, { sizePx: number; lineHeight: number }>;
+
+export const templatePaperDimensions = {
+  A4: { widthMm: 210, heightMm: 297 },
+  LEGAL: { widthMm: 216, heightMm: 356 },
+} as const;
+
 export const templateFontFamilies = ["serif", "sans"] as const;
 export type TemplateFontFamily = (typeof templateFontFamilies)[number];
 
