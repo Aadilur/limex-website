@@ -41,9 +41,32 @@ test("tax investment detail fields replace the manual total", () => {
   assert.equal(detailedInput.total, totalInput.total);
   assert.equal(detailedInput.rows.find((row) => row.label === "Qualifying investment considered")?.amount, 150000);
 });
-test("unknown fees remain pending and zero is distinct", () => {
-  const result = calculate("trade-license", { activity: "Software services", governmentFee: "0", signboard: "", extras: "0" });
-  assert.equal(result.rows[0].amount, 0); assert.equal(result.rows[1].amount, null); assert.equal(result.rows[2].amount, null); assert.equal(result.complete, false);
+test("trade licence uses the DNCC/DSCC schedule and itemises related charges", () => {
+  const fields = calculatorFields("trade-license", settings);
+  assert.ok(fields.find((field) => field.key === "signboardType"));
+  assert.ok(fields.find((field) => field.key === "advertisementType"));
+  const dncc = calculate("trade-license", { authority: "Dhaka North City Corporation", businessType: "restaurant-non-ac", signboardType: "Business identification signboard", signboardArea: "6", sourceTax: "0" });
+  assert.equal(dncc.rows.find((row) => row.label.startsWith("Trade licence / renewal fee"))?.amount, 1000);
+  assert.equal(dncc.rows.find((row) => row.label.startsWith("Signboard tax"))?.amount, 480);
+  assert.equal(dncc.rows.find((row) => row.label === "VAT · 15%")?.amount, 222);
+  assert.equal(dncc.rows.find((row) => row.label === "Application form")?.amount, 0);
+  assert.equal(dncc.rows.find((row) => row.label === "Licence book")?.amount, 270);
+  assert.equal(dncc.rows.find((row) => row.label === "Other authority fee")?.amount, 500);
+  const dscc = calculate("trade-license", { authority: "Dhaka South City Corporation", businessType: "restaurant-non-ac", sourceTax: "0" });
+  assert.equal(dscc.rows.find((row) => row.label === "Application form")?.amount, 50);
+  assert.equal(dscc.sourceUrl, settings.tradeLicense.dscc.sourceUrl);
+});
+test("trade licence handles company capital bands, advertising and late renewal", () => {
+  const company = calculate("trade-license", { structure: "Private limited company", paidUpCapital: "10000000", sourceTax: "0" });
+  assert.equal(company.rows.find((row) => row.label.startsWith("Trade licence / renewal fee"))?.amount, 7500);
+  const advertised = calculate("trade-license", { businessType: "restaurant-non-ac", advertisementType: "festoon-banner", advertisementUnits: "2", sourceTax: "0" });
+  assert.equal(advertised.rows.find((row) => row.label.startsWith("Advertisement tax"))?.amount, 1000);
+  const renewal = calculate("trade-license", { application: "Renewal", businessType: "restaurant-non-ac", licenseYears: "1", lateMonths: "1", sourceTax: "0" });
+  assert.equal(renewal.rows.find((row) => row.label.startsWith("Late-renewal surcharge"))?.amount, 100);
+});
+test("unknown trade licence fees remain pending and zero is distinct for other authorities", () => {
+  const result = calculate("trade-license", { authority: "Other city corporation", governmentFee: "0", signboard: "", extras: "0" });
+  assert.equal(result.rows[0].amount, 0); assert.equal(result.rows[1].amount, null); assert.equal(result.rows[2].amount, null); assert.equal(result.rows[3].amount, 0); assert.equal(result.complete, false);
 });
 test("trademark de-duplicates classes and rejects invalid classes", () => {
   const result = calculate("trademark", { brandName: "Limex", classes: "9,35,9", governmentFee: "5000" }); assert.equal(result.rows[0].amount, 10000);

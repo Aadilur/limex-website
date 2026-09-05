@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { requireAdminSession } from "../../shared/auth/admin-session.js";
 import { prisma } from "../../shared/database/prisma.js";
-import { calculateTool, defaultToolsSettings, getTool, toolsSettingsSchema, toolSlugs, validateFields } from "../../../src/lib/business-tools.js";
+import { calculateTool, defaultToolsSettings, getTool, normalizeToolsSettings, toolsSettingsSchema, toolSlugs, validateFields } from "../../../src/lib/business-tools.js";
 import { createDocumentDraft, documentFields } from "../../../src/lib/business-documents.js";
 
 const paramsSchema = z.object({ slug: z.enum(toolSlugs) });
@@ -17,7 +17,7 @@ const requestSchema = z.object({
 
 async function configuration() {
   const row = await prisma.businessToolSettings.upsert({ where: { id: "default" }, update: {}, create: { id: "default", settings: defaultToolsSettings as unknown as Prisma.InputJsonValue } });
-  return { version: row.version, settings: toolsSettingsSchema.parse(row.settings) };
+  return { version: row.version, settings: normalizeToolsSettings(row.settings) };
 }
 function invalid(reply: FastifyReply, error: unknown) {
   if (error instanceof z.ZodError) return reply.code(400).send({ error: error.issues[0]?.message ?? "Check your entries." });

@@ -70,7 +70,7 @@ export function ToolWorkspace({ tool }: { tool: ToolDefinition }) {
     <nav className={styles.breadcrumb} aria-label="Breadcrumb"><Link href="/">Home</Link><span aria-hidden="true">/</span><Link href="/business-tools">Business tools</Link><span aria-hidden="true">/</span><span aria-current="page">{tool.title}</span></nav>
     <header className={styles.workspaceIntro}><h1 className={styles.heading}>{tool.title}{tool.slug === "income-tax" ? " calculator" : ""}</h1><p>{tool.description}</p></header>
     <div className={styles.tabs} aria-label="Tool views"><button type="button" className={styles.tab} aria-pressed={tab === "tool"} onClick={() => setTab("tool")}>{isBuilder ? "Build your document" : "Calculator"}</button><button type="button" className={styles.tab} aria-pressed={tab === "rules"} onClick={() => setTab("rules")}>{isBuilder ? "Before you begin" : "Rules & details"}</button></div>
-    {tab === "rules" ? <ToolRules tool={tool} config={config} year={values.year} /> : <>
+    {tab === "rules" ? <ToolRules tool={tool} config={config} year={values.year} values={values} /> : <>
       {loadError ? <div className={styles.error} role="alert">{loadError}<button className={styles.quiet} onClick={() => setReload((value) => value + 1)} type="button">Try again</button></div> : null}
       {!isBuilder && !config ? <p className={styles.muted} role="status">{loadError ? "The calculator will be available when settings can be loaded." : "Loading published settings…"}</p> : <div className={`${styles.columns} ${!isBuilder ? styles.calculatorColumns : ""}`}>
         <form ref={formRef} className={`${styles.formPanel} scroll-mt-28`} onSubmit={submit}>

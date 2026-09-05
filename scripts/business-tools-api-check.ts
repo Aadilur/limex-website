@@ -18,18 +18,27 @@ try {
   const loaded = await call("/api/tools/config"); assert.equal(loaded.response.status, 200); const config = loaded.payload.data as ToolsConfig;
   assert.equal(config.settings.companyRegistration.nameClearanceFee, 500);
   assert.equal(config.settings.companyRegistration.filingFee, 1200);
+  assert.ok(config.settings.tradeLicense.dncc.tariffRows.length >= 100);
+  assert.ok(config.settings.tradeLicense.dscc.tariffRows.length >= 100);
+  assert.equal(config.settings.tradeLicense.dncc.signboardRates.identificationPerSqFt, 80);
+  assert.equal(config.settings.tradeLicense.dscc.formFee, 50);
   assert.equal((await call("/api/admin/tools/requests")).response.status, 401);
   assert.equal((await call("/api/tools/calculate/vat", "POST", { values: { amount: "-5", rate: "15", mode: "Excluding VAT" } })).response.status, 400);
   for (const tool of businessTools) {
     if (tool.group === "calculator") {
       const fields = calculatorFields(tool.slug, config.settings);
-      const values = { ...initialToolValues(fields), amount: "1000", income: "1200000", capital: "1000000", paidUp: "100000", activity: "QA software services", ceiling: "500000", classes: "9,35", governmentFee: "5000", signboard: "0", tradeFee: "0", extras: "0", brandName: "Limex QA", name1: "Limex QA Limited" };
+      const values = { ...initialToolValues(fields), amount: "1000", income: "1200000", capital: "1000000", paidUp: "100000", paidUpCapital: "1000000", activity: "QA software services", ceiling: "500000", classes: "9,35", governmentFee: "5000", signboard: "0", signboardType: "No signboard / advertisement", advertisementType: "No additional advertisement", sourceTax: "0", arrears: "0", lateMonths: "0", tradeFee: "0", extras: "0", brandName: "Limex QA", name1: "Limex QA Limited" };
       for (const field of fields) if (!values[field.key] && field.kind !== "number") values[field.key] = `QA ${field.label}`;
       const result = await call(`/api/tools/calculate/${tool.slug}`, "POST", { values }); assert.equal(result.response.status, 200, `${tool.slug}: ${JSON.stringify(result.payload)}`); assert.ok(Number.isFinite(result.payload.data.result.total));
       if (tool.slug === "limited-company") {
         const rows = result.payload.data.result.rows as { label: string; amount: number | null }[];
         assert.equal(rows.find((row) => row.label === "RJSC filing fee · 6 documents")?.amount, config.settings.companyRegistration.filingFee);
         assert.equal(rows.find((row) => row.label === "Articles of Association stamp")?.amount, 2000);
+      }
+      if (tool.slug === "trade-license") {
+        const rows = result.payload.data.result.rows as { label: string; amount: number | null }[];
+        assert.equal(rows.find((row) => row.label === "Application form")?.amount, 0);
+        assert.equal(rows.find((row) => row.label === "Licence book")?.amount, 270);
       }
     } else {
       const fields = documentFields(tool.slug); const values = initialToolValues(fields);

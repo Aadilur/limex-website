@@ -7,7 +7,7 @@ Build every calculator and document builder currently listed in the Business Too
 ### Calculators
 
 1. Limited company cost: a focused authorised-capital estimate with RJSC filing, MoA/AoA stamps, name-clearance and Limex professional fees itemised.
-2. Trade licence: local authority, activity and application type; no invented universal government fee.
+2. Trade licence: DNCC and DSCC tariff catalogue, paid-up-capital bands for limited companies, one-to-five-year licence periods, signboard and advertisement tax, VAT, form/book/other charges, source tax, arrears and late-renewal surcharge. Other authorities continue to accept an assessed fee instead of inventing a tariff.
 3. RJSC fees: registration cost planning, distinct from the full company budget.
 4. Personal income tax: assessment year, category, income, rebate, credits, slabs and minimum tax.
 5. VAT: inclusive/exclusive amounts, selected rate and a transparent breakdown.
@@ -36,7 +36,7 @@ Build every calculator and document builder currently listed in the Business Too
 ## Backend and administration
 
 - Server validation and calculation; never trust a client-supplied total.
-- Versioned editable fee/rule settings, sources and effective periods. Company setup has an admin-editable RJSC capital-band and stamp-tier schedule.
+- Versioned editable fee/rule settings, sources and effective periods. Company setup has an admin-editable RJSC capital-band and stamp-tier schedule; trade licence has separate DNCC/DSCC tariff, capital-band, signage, advertising, surcharge and related-charge editors.
 - Admin request inbox with status management; idempotent submissions and basic abuse limits.
 - Do not save a visitor’s document or tax details merely because they use a tool. Save request context only when they explicitly submit it.
 - Additive MySQL migration; preserve current landing-page/admin work and existing content.
@@ -47,6 +47,7 @@ Build every calculator and document builder currently listed in the Business Too
 - Company setup defaults use the current RJSC portal schedule: ৳500/name clearance, ৳1,200 filing, ৳1,000 MoA stamp, capital-tiered AoA stamp and authorised-capital fees. Administrators can publish changes without a code deployment.
 - Some prototype buttons show simulated success and the company name checker fabricates a preliminary availability result. Do not carry those behaviours into production.
 - Use dated official NBR/RJSC/DPDT/CCI&E/local-authority sources. Where no verified tariff is available, support an authority-assessed amount and clearly identify pending fees. Admin can publish confirmed schedules later.
+- The trade-licence seed follows the Dhaka North, Dhaka South and Chattogram column of the official City Corporation Model Tax Schedule, 2016. DNCC and DSCC e-revenue receipts also expose separate licence, signboard, source-tax, VAT, book and other-fee lines; VAT, book and other defaults remain editable planning values because the authority’s final receipt is case-specific.
 - Show exemptions, excluded cases and dated assumptions with each estimate; never imply a final tax return, confirmed appointment or completed government filing.
 
 ## Verification
