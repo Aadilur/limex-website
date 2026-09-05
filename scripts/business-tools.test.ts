@@ -28,6 +28,29 @@ for (const [category, threshold] of Object.entries(settings.taxYears[0].threshol
 test("slabs apply progressively at exact boundaries", () => {
   for (const [income, expected] of [[700000, 30000], [1100000, 90000], [1600000, 190000], [3600000, 690000], [5000000, 1110000]]) assert.equal(calculate("income-tax", { income: String(income), incomeType: "Already-computed taxable income" }).total, expected);
 });
+test("income tax uses the current NBR assessment-year settings", () => {
+  const year = settings.taxYears[0];
+  assert.equal(year.year, "2026-27");
+  assert.deepEqual(year.thresholds, { general: 400000, female: 450000, senior: 450000, disability: 525000, thirdGender: 525000, freedom: 550000, july: 550000 });
+  assert.deepEqual(year.bands, [{ width: 300000, rate: 10 }, { width: 400000, rate: 15 }, { width: 500000, rate: 20 }, { width: 2000000, rate: 25 }, { width: null, rate: 30 }]);
+  assert.equal(year.salaryExemptionCap, 500000);
+  assert.equal(year.rebateInvestmentRate, 10);
+  assert.equal(year.rebateIncomeRate, 3);
+  assert.equal(year.rebateCap, 750000);
+});
+test("employment exemption is the lower of one-third of gross salary and the published cap", () => {
+  const oneThird = calculate("income-tax", { income: "1200000" });
+  assert.equal(oneThird.rows.find((row) => row.label === "Employment income exemption")?.amount, 400000);
+  const capped = calculate("income-tax", { income: "1800000" });
+  assert.equal(capped.rows.find((row) => row.label === "Employment income exemption")?.amount, 500000);
+  const alreadyComputed = calculate("income-tax", { income: "1800000", incomeType: "Already-computed taxable income" });
+  assert.equal(alreadyComputed.rows.find((row) => row.label === "Employment income exemption")?.amount, 0);
+});
+test("private employment income can be combined with other taxable income", () => {
+  const result = calculate("income-tax", { income: "1200000", otherTaxableIncome: "100000" });
+  assert.equal(result.rows.find((row) => row.label === "Other taxable income")?.amount, 100000);
+  assert.equal(result.rows.find((row) => row.label === "Income after exemptions")?.amount, 900000);
+});
 test("salary exemption, investment rebate, credits and minimum apply in order", () => {
   assert.equal(calculate("income-tax", { income: "1200000", investment: "150000", credits: "10000" }).total, 20000);
   const result = calculate("income-tax", { income: "1200000", investment: "150000", credits: "60000" });

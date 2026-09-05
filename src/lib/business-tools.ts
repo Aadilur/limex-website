@@ -27,6 +27,7 @@ export type ToolField = { key: string; label: string; kind?: "number" | "select"
 const options = (...values: string[]) => values.map((label) => ({ label, value: label }));
 export const taxCategoryLabels = { general: "General taxpayer", female: "Female taxpayer", senior: "Age 65 or above", disability: "Person with a disability", thirdGender: "Third-gender taxpayer", freedom: "Gazetted war-wounded freedom fighter", july: "Gazetted injured July warrior" };
 export const taxGuideUrl = "https://nbr.gov.bd/uploads/publications/আয়কর_নির্দেশিকা_২০২৬-২০২৭.pdf";
+export const taxActUrl = "https://nbr.gov.bd/uploads/acts/Income_tax_act_2023.pdf";
 export const feeSources: Record<string, string> = {
   "income-tax": taxGuideUrl, vat: "https://nbr.gov.bd/faq/vat-faq", rjsc: "https://app.roc.gov.bd/psp/fee_calculator",
   "limited-company": "https://app1.roc.gov.bd/psp/RJSC_Fees", "trade-license": "https://objectstorage.ap-dcc-gazipur-1.oraclecloud15.com/n/axvjbnqprylg/b/V2Ministry/o/office-bangladesh/2024/12/3fd15d371e6d410c84ab1d3022364c18.pdf", trademark: "https://dpdt.gov.bd/pages/static-pages/6922e14d933eb65569e2b677", "irc-erc": "https://olm.ccie.gov.bd/",
@@ -442,8 +443,9 @@ export function calculatorFields(slug: ToolSlug, settings: ToolsSettings): ToolF
   if (slug === "income-tax") return [
     { key: "year", label: "Assessment year", kind: "select", options: settings.taxYears.map((year) => ({ value: year.year, label: year.year })), defaultValue: settings.taxYears[0].year },
     { key: "category", label: "Taxpayer category", kind: "select", options: Object.entries(taxCategoryLabels).map(([value, label]) => ({ value, label })), defaultValue: "general" },
-    { key: "incomeType", label: "Income basis", kind: "select", options: options("Private employment salary", "Already-computed taxable income"), defaultValue: "Private employment salary", hint: "Use taxable income for government salary or other income, after its applicable exemptions." },
-    { key: "income", label: "Annual income (৳)", kind: "number", required: true, hint: "Salary includes bonuses and taxable benefits. This estimator covers ordinary slab-rate income only." },
+    { key: "incomeType", label: "Income basis", kind: "select", options: [{ value: "Private employment salary", label: "Gross private employment income" }, { value: "Already-computed taxable income", label: "Already-computed taxable income" }], defaultValue: "Private employment salary", hint: "For private/non-government employment, enter the gross annual salary before the employment exemption. Use the second option for government salary or another amount you have already computed under the applicable rules." },
+    { key: "income", label: "Annual income / gross salary (৳)", kind: "number", required: true, hint: "For gross employment income, include salary, bonuses, taxable allowances and benefits before this calculator applies the exemption. Do not subtract the exemption yourself." },
+    { key: "otherTaxableIncome", label: "Other taxable income (৳)", kind: "number", defaultValue: "0", showWhen: { key: "incomeType", value: "Private employment salary" }, hint: "Optional taxable rent, business, financial-asset or other income after its applicable deductions. Leave special/final-tax income out and have it reviewed separately." },
     { key: "investment", label: "Actual investment total (৳)", kind: "number", defaultValue: "0", hint: "Enter a total, or use the detailed investment fields below. Detailed entries replace this total." },
     { key: "dps", label: "DPS / approved savings (৳)", kind: "number", defaultValue: "0", hint: "Optional qualifying amount after its statutory limit." },
     { key: "securities", label: "Government securities (৳)", kind: "number", defaultValue: "0" },
@@ -572,8 +574,11 @@ export function calculateTool(slug: ToolSlug, input: unknown, settings: ToolsSet
     if (!year) throw new Error("This assessment year is not available.");
     const detailedInvestment = ["dps", "securities", "fund", "stocks", "insurance", "provident"].reduce((sum, key) => sum + n(key), 0);
     const investment = detailedInvestment > 0 ? detailedInvestment : n("investment");
-    const exemption = values.incomeType === "Private employment salary" ? Math.min(n("income") / 3, year.salaryExemptionCap) : 0;
-    const income = Math.max(0, n("income") - exemption);
+    const grossIncome = n("income");
+    const exemption = values.incomeType === "Private employment salary" ? Math.min(grossIncome / 3, year.salaryExemptionCap) : 0;
+    const taxableEmploymentIncome = Math.max(0, grossIncome - exemption);
+    const otherTaxableIncome = values.incomeType === "Private employment salary" ? n("otherTaxableIncome") : 0;
+    const income = round(taxableEmploymentIncome + otherTaxableIncome);
     const threshold = year.thresholds[values.category as keyof typeof year.thresholds] + n("children") * year.childAllowance;
     let remaining = Math.max(0, income - threshold); let cursor = threshold;
     const slabs = year.bands.map((band) => {
@@ -586,7 +591,10 @@ export function calculateTool(slug: ToolSlug, input: unknown, settings: ToolsSet
     const rebate = round(Math.min(grossTax, income * year.rebateIncomeRate / 100, investment * year.rebateInvestmentRate / 100, year.rebateCap));
     const minimum = income > threshold ? (values.newTaxpayer === "Yes" ? year.newTaxpayerMinimum : year.minimumTax) : 0;
     const liability = Math.max(grossTax - rebate, minimum);
-    return { values, result: { title: "Estimated amount to pay", total: round(Math.max(0, liability - n("credits"))), complete: true, year: year.year, rows: [{ label: "Employment income exemption", amount: round(exemption) }, { label: "Income after exemptions", amount: round(income) }, { label: "Your tax-free threshold", amount: threshold }, { label: "Tax at slab rates", amount: grossTax }, { label: "Qualifying investment considered", amount: round(investment) }, { label: "Investment rebate applied", amount: -rebate }, { label: "Minimum tax floor", amount: minimum }, { label: "Liability after rebate / minimum", amount: round(liability) }, { label: "Source tax / TDS credit", amount: -n("credits") }, ...(n("credits") > liability ? [{ label: "Excess credit (subject to review)", amount: round(n("credits") - liability) }] : [])], slabs, sourceUrl: year.sourceUrl, notes: ["For ordinary slab-rate income and on-time filing. Business turnover minimum tax, special/final-tax income, wealth/environmental surcharges and late filing adjustments are excluded. Government salary has different exemptions.", "Only use eligible investment amounts and adjustable credits. Detailed investment entries are combined and take priority over the total investment field. Excess credit is not a guaranteed refund. A nil estimate does not establish that no return is required."] } };
+    const employmentRule = values.incomeType === "Private employment salary"
+      ? `Employment income exemption applied as the lower of one-third of gross employment income and ${money(year.salaryExemptionCap)} for assessment year ${year.year}.`
+      : "No employment exemption was applied because the amount was entered as already-computed taxable income.";
+    return { values, result: { title: "Estimated amount to pay", total: round(Math.max(0, liability - n("credits"))), complete: true, year: year.year, rows: [{ label: "Employment income exemption", amount: round(exemption) }, ...(otherTaxableIncome > 0 ? [{ label: "Other taxable income", amount: round(otherTaxableIncome) }] : []), { label: "Income after exemptions", amount: round(income) }, { label: "Your tax-free threshold", amount: threshold }, { label: "Tax at slab rates", amount: grossTax }, { label: "Qualifying investment considered", amount: round(investment) }, { label: "Investment rebate applied", amount: -rebate }, { label: "Minimum tax floor", amount: minimum }, { label: "Liability after rebate / minimum", amount: round(liability) }, { label: "Source tax / TDS credit", amount: -n("credits") }, ...(n("credits") > liability ? [{ label: "Excess credit (subject to review)", amount: round(n("credits") - liability) }] : [])], slabs, sourceUrl: year.sourceUrl, notes: [employmentRule, "For ordinary slab-rate income and on-time filing. Business turnover minimum tax, special/final-tax income, wealth/environmental surcharges and late filing adjustments are excluded. Government salary has different exemptions.", "Only use eligible investment amounts and adjustable credits. Detailed investment entries are combined and take priority over the total investment field. Excess credit is not a guaranteed refund. A nil estimate does not establish that no return is required."] } };
   }
   if (slug === "limited-company") {
     const schedule = settings.companyRegistration;

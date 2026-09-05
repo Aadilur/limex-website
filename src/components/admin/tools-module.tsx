@@ -11,7 +11,7 @@ type ServiceRequest = { id: string; toolSlug: string; name: string; phone: strin
 const statuses = ["NEW", "CONTACTED", "IN_PROGRESS", "COMPLETED"];
 const labelStatus = (value: string) => value.toLowerCase().replaceAll("_", " ");
 const taxNumbers = [
-  ["salaryExemptionCap", "Salary exemption cap (৳)"], ["rebateInvestmentRate", "Investment rebate rate (%)"], ["rebateIncomeRate", "Income-based rebate limit (%)"], ["rebateCap", "Maximum rebate (৳)"], ["minimumTax", "Minimum tax (৳)"], ["newTaxpayerMinimum", "New taxpayer minimum (৳)"], ["childAllowance", "Allowance per eligible child (৳)"],
+  ["salaryExemptionCap", "Employment exemption cap (৳)"], ["rebateInvestmentRate", "Eligible-investment rebate rate (%)"], ["rebateIncomeRate", "Eligible-income rebate limit (%)"], ["rebateCap", "Maximum rebate (৳)"], ["minimumTax", "Minimum tax (৳)"], ["newTaxpayerMinimum", "New taxpayer minimum (৳)"], ["childAllowance", "Allowance per eligible child (৳)"],
 ] as const;
 const chargeFieldsBySlug = {
   rjsc: [["extras", "Other confirmed charges (৳)"]],
