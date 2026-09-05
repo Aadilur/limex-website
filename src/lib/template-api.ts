@@ -20,6 +20,10 @@ export function getAdminTemplates(): Promise<AdminDocumentTemplate[]> {
   return request<AdminDocumentTemplate[]>("/api/admin/tools/templates", { cache: "no-store" });
 }
 
+export function getAdminTemplatePreview(slug: string): Promise<AdminDocumentTemplate> {
+  return request<AdminDocumentTemplate>(`/api/admin/tools/templates/preview/${encodeURIComponent(slug)}`, { cache: "no-store" });
+}
+
 export function checkTemplateSlug(slug: string, excludeId?: string): Promise<{ slug: string; available: boolean }> {
   const query = new URLSearchParams({ slug });
   if (excludeId) query.set("excludeId", excludeId);

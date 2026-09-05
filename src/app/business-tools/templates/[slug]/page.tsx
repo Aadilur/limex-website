@@ -5,7 +5,7 @@ import { SiteFooter } from "@/components/limex/site-footer";
 import { SiteHeader } from "@/components/limex/site-header";
 import { TemplateWorkspace } from "@/components/limex/template-workspace";
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ preview?: string }> };
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +14,8 @@ export const metadata: Metadata = {
   description: "Complete and print a Limex business document template.",
 };
 
-export default async function DocumentTemplateRoute({ params }: Props) {
+export default async function DocumentTemplateRoute({ params, searchParams }: Props) {
   const { slug } = await params;
-  return <main className={pageLayoutClass}><section className={pageShellClass}><SiteHeader fullBleed /><div className={pageContentClass}><TemplateWorkspace slug={slug} /></div></section><SiteFooter /></main>;
+  const { preview } = await searchParams;
+  return <main className={pageLayoutClass}><section className={pageShellClass}><SiteHeader fullBleed /><div className={pageContentClass}><TemplateWorkspace slug={slug} preview={preview === "1"} /></div></section><SiteFooter /></main>;
 }

@@ -136,6 +136,15 @@ export async function templateRoutes(app: FastifyInstance) {
     return { data: { slug, available: !existing } };
   });
 
+  app.get("/api/admin/tools/templates/preview/:slug", async (request, reply) => {
+    if (!requireAdminSession(request, reply)) return;
+    const { slug } = slugParamsSchema.parse(request.params);
+    const row = await prisma.documentTemplate.findUnique({ where: { slug } });
+    if (!row) return reply.code(404).send({ error: "Template not found." });
+    reply.header("Cache-Control", "no-store");
+    return { data: toAdminTemplate(row) };
+  });
+
   app.get("/api/admin/tools/templates/:id", async (request, reply) => {
     if (!requireAdminSession(request, reply)) return;
     const { id } = idParamsSchema.parse(request.params);
