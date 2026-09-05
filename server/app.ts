@@ -25,6 +25,7 @@ import { UserService } from "./modules/users/application/user.service.js";
 import { PrismaUserRepository } from "./modules/users/infrastructure/prisma-user.repository.js";
 import { userRoutes } from "./modules/users/interface/http/user.routes.js";
 import { prisma } from "./shared/database/prisma.js";
+import { toolsRoutes } from "./modules/tools/tools.routes.js";
 
 export async function buildApp() {
   const app = Fastify({
@@ -61,6 +62,7 @@ export async function buildApp() {
   await app.register(publicMenuRoutes, { service: menuService });
   await app.register(aboutRoutes, { service: aboutService });
   await app.register(landingRoutes, { service: landingService });
+  await app.register(toolsRoutes);
 
   app.setErrorHandler((error, request, reply) => {
     if (error instanceof ZodError) {

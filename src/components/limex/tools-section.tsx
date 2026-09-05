@@ -1,56 +1,29 @@
+import Link from "next/link";
 import { ActionButton, SectionTitle } from "./ui";
 import { defaultLandingContent } from "@/lib/landing-defaults";
 import type { ToolsContent } from "@/lib/landing-types";
+import { businessTools, type ToolDefinition } from "@/lib/business-tools";
+import { ToolCard } from "./tools-directory";
+import styles from "./tools.module.css";
 
-const toolVisuals: Record<string, { mark: string }> = {
-  "VAT calculator": {
-    mark: "border-[#d5e0d8] bg-[#f1f5f1] text-[#607a69]",
-  },
-  "Income tax estimator": {
-    mark: "border-[#dfdbe7] bg-[#f5f3f7] text-[#756b82]",
-  },
-  "Deed builder": {
-    mark: "border-[#e4d9cf] bg-[#f7f3ef] text-[#866e5e]",
-  },
-};
+type HomeTool = ToolDefinition & { href: string; id: string; isVisible?: boolean };
 
 export function ToolsSection({ content = defaultLandingContent.tools }: { content?: ToolsContent }) {
-  return (
-    <section className="bg-page px-page-gutter py-section-y pb-section-y lg:rounded-panel lg:px-page-gutter-lg lg:py-section-y-lg lg:pb-10" id="tools" aria-labelledby="tools-title">
-      <div className="flex flex-col gap-section-gap lg:flex-row lg:items-center lg:justify-between lg:gap-cluster-lg">
-        <SectionTitle
-          id="tools-title"
-          title={content.title}
-          description={content.description}
-        />
-        <ActionButton href={content.ctaHref} variant="light" className="w-max min-w-[170px] lg:mt-1">{content.ctaLabel}</ActionButton>
-      </div>
-      <div className="mt-section-y grid grid-cols-1 gap-cluster-sm lg:mt-section-y-xl lg:grid-cols-3 lg:gap-cluster-lg">
-        {content.items.filter((tool) => tool.isVisible).map((tool) => {
-          const visual = toolVisuals[tool.title] ?? toolVisuals["Deed builder"];
-
-          return (
-            <article className="group relative flex min-h-[324px] flex-col overflow-hidden rounded-[24px] border border-[#d9d6cf] bg-[#faf9f6] p-card-pad transition-all duration-300 hover:-translate-y-0.5 hover:border-[#cfcac1] hover:shadow-[0_14px_30px_rgba(49,42,35,0.06)]" key={tool.title}>
-              <div className="relative flex items-center gap-cluster-sm">
-                <span className={`grid size-11 place-items-center rounded-[14px] border text-body-sm font-bold ${visual.mark}`.trim()}>{tool.mark}</span>
-              </div>
-              <h3 className="relative mt-cluster-lg font-brand text-subheading text-ink">{tool.title}</h3>
-              <p className="relative mt-cluster-xs min-h-[42px] max-w-[360px] text-body-xs text-muted">{tool.description}</p>
-              <dl className="relative m-0 mt-auto flex flex-col divide-y divide-[#e9e5de] border-y border-[#e5e1da]">
-                {tool.rows.map((row) => (
-                  <div className="flex min-h-10 items-center justify-between gap-3" key={row.id}>
-                    <dt className="text-meta text-muted">{row.label}</dt>
-                    <dd className="m-0 text-right text-button font-bold text-ink">{row.value}</dd>
-                  </div>
-                ))}
-              </dl>
-              <a className="relative mt-cluster-lg inline-flex w-max items-center gap-cluster-sm border-b border-[#9d948a] pb-1 text-meta font-semibold text-ink transition-colors hover:border-ink hover:text-[#5e554d] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3" href={tool.href}>
-                {tool.action} <span aria-hidden="true">↗</span>
-              </a>
-            </article>
-          );
-        })}
-      </div>
-    </section>
-  );
+  const seen = new Set<string>();
+  const items = [
+    ...content.items.flatMap((item) => {
+      const definition = businessTools.find((tool) => item.id === `tool-${tool.slug}` || item.href === `/business-tools/${tool.slug}`);
+      if (!definition || seen.has(definition.slug)) return [];
+      seen.add(definition.slug);
+      return [{ ...definition, ...item, slug: definition.slug, group: definition.group, href: item.href?.startsWith("/business-tools/") ? item.href : `/business-tools/${definition.slug}` } as HomeTool];
+    }),
+    ...businessTools.filter((tool) => !seen.has(tool.slug)).map((tool) => ({ ...tool, id: `tool-${tool.slug}`, href: `/business-tools/${tool.slug}`, isVisible: true }) as HomeTool),
+  ].filter((tool) => tool.isVisible !== false);
+  return <section className="bg-page px-page-gutter py-section-y lg:rounded-panel lg:px-page-gutter-lg lg:py-section-y-lg" id="tools" aria-labelledby="tools-title">
+    <div className="flex flex-col gap-section-gap lg:flex-row lg:items-center lg:justify-between"><SectionTitle id="tools-title" title={content.title} description={content.description} /><ActionButton href={content.ctaHref} variant="light" className="w-max">{content.ctaLabel}</ActionButton></div>
+    <div className={styles.sectionTop}><h3 className={styles.groupTitle}>Essential calculators</h3><Link className={styles.textLink} href="/business-tools">All calculators ↗</Link></div>
+    <div className={styles.grid}>{items.filter((tool) => tool.group === "calculator").map((tool) => <ToolCard tool={tool} key={tool.id} />)}</div>
+    <div className={styles.sectionTop}><h3 className={styles.groupTitle}>Document builders</h3></div>
+    <div className={styles.builderGrid}>{items.filter((tool) => tool.group === "builder").map((tool) => <ToolCard tool={tool} builder key={tool.id} />)}</div>
+  </section>;
 }

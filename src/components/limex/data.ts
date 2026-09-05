@@ -51,7 +51,7 @@ const vatRegistrationUrl = "https://jkassociates.com.bd/vat-registration-certifi
 const fireLicenseUrl = "https://segunbagicha.com/service/fire-license/";
 const egpRegistrationUrl = "https://segunbagicha.com/service/egp-registration/";
 const startupPackageUrl = "https://jkassociates.com.bd/startup-packages";
-const agreementBuilderUrl = "https://aideed.daptari.com/deeds";
+const agreementBuilderUrl = "/business-tools";
 
 const startupAndLicensing: MegaMenuGroup[] = [
   {
@@ -275,13 +275,13 @@ const businessTools: MegaMenuGroup[] = [
         href: "/business-tools",
         marker: "01",
         children: [
-          { label: "Limited Company Cost Calculator", href: "/business-tools#limited-company-calculator" },
-          { label: "Trade License Fee Calculator", href: "/business-tools" },
-          { label: "RJSC Fee Calculator", href: "/business-tools" },
-          { label: "TAX Calculator", href: "/business-tools#tax-calculator" },
-          { label: "VAT Calculator", href: "/business-tools#vat-calculator" },
-          { label: "Trademark Calculator", href: "/business-tools" },
-          { label: "IRC/ERC FEE Calculator", href: "/business-tools" },
+          { label: "Limited Company Cost Calculator", href: "/business-tools/limited-company" },
+          { label: "Trade License Fee Calculator", href: "/business-tools/trade-license" },
+          { label: "RJSC Fee Calculator", href: "/business-tools/rjsc" },
+          { label: "TAX Calculator", href: "/business-tools/income-tax" },
+          { label: "VAT Calculator", href: "/business-tools/vat" },
+          { label: "Trademark Calculator", href: "/business-tools/trademark" },
+          { label: "IRC/ERC FEE Calculator", href: "/business-tools/irc-erc" },
         ],
       },
     ],
@@ -298,12 +298,12 @@ const businessTools: MegaMenuGroup[] = [
         href: agreementBuilderUrl,
         marker: "02",
         children: [
-          { label: "Office Rental Deed Agreement Builder (Eng and Bangla)", href: agreementBuilderUrl },
-          { label: "E-Trade License Closed/Cancel Application", href: agreementBuilderUrl },
-          { label: "Partnership Deed Agreement Builder (Eng and Bangla)", href: agreementBuilderUrl },
-          { label: "MOA/AOA Builder", href: agreementBuilderUrl },
-          { label: "MOU Generator", href: agreementBuilderUrl },
-          { label: "Employment Agreement Generator", href: agreementBuilderUrl },
+          { label: "Office Rental Deed Agreement Builder (Eng and Bangla)", href: "/business-tools/rental-deed" },
+          { label: "E-Trade License Closed/Cancel Application", href: "/business-tools/trade-license-cancellation" },
+          { label: "Partnership Deed Agreement Builder (Eng and Bangla)", href: "/business-tools/partnership-deed" },
+          { label: "MOA/AOA Builder", href: "/business-tools/moa-aoa" },
+          { label: "MOU Generator", href: "/business-tools/mou" },
+          { label: "Employment Agreement Generator", href: "/business-tools/employment-agreement" },
         ],
       },
     ],
@@ -582,51 +582,6 @@ export const reels = [
     image: "/figma/reel-5.png",
     title: "A closer look at the work behind each outcome",
     meta: "00:45  |  Core functionalities",
-  },
-];
-
-export const tools = [
-  {
-    mark: "VAT",
-    tag: "QUICK ESTIMATE",
-    title: "VAT calculator",
-    description: "Estimate VAT before you file or quote.",
-    rows: [
-      ["Sales amount", "BDT 0.00"],
-      ["VAT rate", "15%"],
-    ],
-    action: "Open calculator",
-    href: "/business-tools#vat-calculator",
-    color: "#29664f",
-    surface: "#d1ede0",
-  },
-  {
-    mark: "TAX",
-    tag: "PLAN AHEAD",
-    title: "Income tax estimator",
-    description: "Estimate tax and plan ahead.",
-    rows: [
-      ["Annual income", "BDT 0.00"],
-      ["Tax year", "2026"],
-    ],
-    action: "Estimate tax",
-    href: "/business-tools#tax-calculator",
-    color: "#594094",
-    surface: "#e0d9fa",
-  },
-  {
-    mark: "DOC",
-    tag: "BUILD A DOCUMENT",
-    title: "Deed builder",
-    description: "Create a guided first draft.",
-    rows: [
-      ["Document type", "Select deed"],
-      ["Output", "PDF ready"],
-    ],
-    action: "Start building",
-    href: "#contact",
-    color: "#914a2b",
-    surface: "#fae0cc",
   },
 ];
 

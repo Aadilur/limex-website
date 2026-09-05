@@ -10,6 +10,7 @@ const adminNavigation = [
   { label: "Landing", href: "/admin/landing" },
   { label: "Services & menu", href: "/admin/services" },
   { label: "About us", href: "/admin/about" },
+  { label: "Business tools", href: "/admin/tools" },
 ];
 
 function LimexMark() {

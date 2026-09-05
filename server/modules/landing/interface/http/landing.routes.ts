@@ -173,7 +173,7 @@ const toolsSchema = z.object({
     href: hrefSchema,
     color: nonEmptyText(40),
     surface: nonEmptyText(40),
-  })).max(12),
+  })).max(24),
 });
 
 const articlesSchema = z.object({

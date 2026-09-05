@@ -1,5 +1,6 @@
 import { defaultLandingContent } from "./landing-defaults";
 import { ApiError, request } from "./menu-api";
+import { businessTools, toolHref } from "./business-tools";
 import type { LandingContent, LandingSectionKey } from "./landing-types";
 
 export type { LandingContent, LandingSectionKey } from "./landing-types";
@@ -55,6 +56,22 @@ export function isLandingSafetyError(error: unknown) {
 }
 
 export function withLandingFallback(content: Partial<LandingContent> | null | undefined): LandingContent {
+  const sourceTools = content?.tools?.items ?? [];
+  const seen = new Set<string>();
+  const savedTools = sourceTools.flatMap((saved) => {
+    const tool = businessTools.find((candidate) => saved.id === `tool-${candidate.slug}` || saved.href === toolHref(candidate.slug));
+    if (!tool || seen.has(tool.slug)) return [];
+    seen.add(tool.slug);
+    const fallback = defaultLandingContent.tools.items.find((item) => item.id === `tool-${tool.slug}`)!;
+    return [{
+      ...fallback,
+      ...saved,
+      id: `tool-${tool.slug}`,
+      href: saved.href.startsWith("/business-tools/") ? saved.href : toolHref(tool.slug),
+      tag: tool.group,
+    }];
+  });
+  const toolItems = [...savedTools, ...businessTools.filter((tool) => !seen.has(tool.slug)).map((tool) => defaultLandingContent.tools.items.find((item) => item.id === `tool-${tool.slug}`)!)];
   return {
     ...defaultLandingContent,
     ...content,
@@ -65,7 +82,7 @@ export function withLandingFallback(content: Partial<LandingContent> | null | un
     process: { ...defaultLandingContent.process, ...(content?.process ?? {}) },
     testimonials: { ...defaultLandingContent.testimonials, ...(content?.testimonials ?? {}) },
     packages: { ...defaultLandingContent.packages, ...(content?.packages ?? {}) },
-    tools: { ...defaultLandingContent.tools, ...(content?.tools ?? {}) },
+    tools: { ...defaultLandingContent.tools, ...(content?.tools ?? {}), items: toolItems },
     articles: { ...defaultLandingContent.articles, ...(content?.articles ?? {}) },
     faq: { ...defaultLandingContent.faq, ...(content?.faq ?? {}) },
     contact: { ...defaultLandingContent.contact, ...(content?.contact ?? {}) },

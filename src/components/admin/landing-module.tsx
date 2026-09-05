@@ -648,18 +648,16 @@ function PackagesEditor({ content, onChange }: { content: PackagesContent; onCha
 function ToolsEditor({ content, onChange }: { content: ToolsContent; onChange: (patch: Partial<ToolsContent>) => void }) {
   return (
     <div className="space-y-6">
-      <SectionHeader title="Business tools" description="Keep the tool cards short, useful and linked to the right calculator or builder." count={content.items.length} />
+      <SectionHeader title="Business tools" description="Edit and reorder the homepage cards here. The catalogue is kept in sync with every calculator and document builder; fees, rules and requests are managed in Business tools." count={content.items.length} />
+      <a href="/admin/tools" className="inline-block text-[13px] font-semibold text-[#355b45] underline underline-offset-4">Manage fees & requests ↗</a>
       <div className="grid gap-3 sm:grid-cols-2"><Field label="Section title" value={content.title} onChange={(title) => onChange({ title })} /><Field label="CTA label" value={content.ctaLabel} onChange={(ctaLabel) => onChange({ ctaLabel })} /><Field label="CTA link" value={content.ctaHref} onChange={(ctaHref) => onChange({ ctaHref })} /></div>
       <TextAreaField label="Description" value={content.description} onChange={(description) => onChange({ description })} />
       <SortableRows items={content.items} onChange={(items) => onChange({ items })} render={(item) => <div className="grid gap-2.5 sm:grid-cols-2">
-        <Field label="Mark" value={item.mark} onChange={(mark) => onChange({ items: updateById(content.items, item.id, { mark }) })} /><Field label="Tag" value={item.tag} onChange={(tag) => onChange({ items: updateById(content.items, item.id, { tag }) })} />
-        <Field label="Title" value={item.title} onChange={(title) => onChange({ items: updateById(content.items, item.id, { title }) })} /><Field label="Action" value={item.action} onChange={(action) => onChange({ items: updateById(content.items, item.id, { action }) })} />
-        <Field label="Link" value={item.href} onChange={(href) => onChange({ items: updateById(content.items, item.id, { href }) })} /><ColorField label="Accent color" value={item.color} onChange={(color) => onChange({ items: updateById(content.items, item.id, { color }) })} />
+        <Field label="Title" value={item.title} onChange={(title) => onChange({ items: updateById(content.items, item.id, { title }) })} />
+        <Field label="Link" value={item.href} onChange={(href) => onChange({ items: updateById(content.items, item.id, { href }) })} />
         <div className="sm:col-span-2"><TextAreaField label="Description" value={item.description} onChange={(description) => onChange({ items: updateById(content.items, item.id, { description }) })} /></div>
-        <div className="sm:col-span-2"><TextAreaField label="Rows — label | value per line" value={item.rows.map((row) => `${row.label} | ${row.value}`).join("\n")} onChange={(value) => onChange({ items: updateById(content.items, item.id, { rows: value.split("\n").map((line, rowIndex) => { const [label, ...rest] = line.split("|"); return { id: `${item.id}-row-${rowIndex + 1}`, label: (label ?? "").trim(), value: rest.join("|").trim() }; }).filter((row) => row.label && row.value) }) })} /></div>
         <Toggle label="Visible" checked={item.isVisible} onChange={(isVisible) => onChange({ items: updateById(content.items, item.id, { isVisible }) })} />
       </div>} />
-      <AddBar label="Add tool" onAdd={() => onChange({ items: [...content.items, { id: uid("tool"), isVisible: true, mark: "NEW", tag: "QUICK TOOL", title: "New tool", description: "Describe this tool.", rows: [{ id: uid("row"), label: "Input", value: "Ready" }], action: "Open tool", href: "/business-tools", color: "#29634d", surface: "#d1ede0" }] })} />
     </div>
   );
 }

@@ -8,10 +8,10 @@ import {
   processSteps,
   reels,
   services,
-  tools,
   type Service,
 } from "../components/limex/data";
 import type { LandingContent, LandingServiceFilter, LandingServiceItem } from "./landing-types";
+import { businessTools, toolHref } from "./business-tools";
 
 function serviceFilter(service: Service): LandingServiceFilter {
   return service.filters.find((item): item is LandingServiceFilter => item !== "All services") ?? "Startup";
@@ -69,9 +69,9 @@ const footerLinkHref: Record<string, string> = {
   "About us": "/about",
   Blog: "/blog",
   Contact: "/#contact",
-  "VAT calculator": "/business-tools#vat-calculator",
-  "Income tax estimator": "/business-tools#tax-calculator",
-  "Deed builder": "/business-tools",
+  "VAT calculator": "/business-tools/vat",
+  "Income tax estimator": "/business-tools/income-tax",
+  "Deed builder": "/business-tools/rental-deed",
 };
 
 export const defaultLandingContent: LandingContent = {
@@ -162,18 +162,18 @@ export const defaultLandingContent: LandingContent = {
     description: "Practical tools for quick business decisions.",
     ctaLabel: "Explore tools",
     ctaHref: "/business-tools",
-    items: tools.map((tool, index) => ({
-      id: `tool-${index + 1}`,
+    items: businessTools.map((tool) => ({
+      id: `tool-${tool.slug}`,
       isVisible: true,
-      mark: tool.mark,
-      tag: tool.tag,
+      mark: tool.icon,
+      tag: tool.group,
       title: tool.title,
       description: tool.description,
-      rows: tool.rows.map(([label, value], rowIndex) => ({ id: `tool-${index + 1}-row-${rowIndex + 1}`, label, value })),
-      action: tool.action,
-      href: tool.href,
-      color: tool.color,
-      surface: tool.surface,
+      rows: [],
+      action: "Open tool",
+      href: toolHref(tool.slug),
+      color: "#4d6958",
+      surface: "#fbfbf7",
     })),
   },
   articles: {
