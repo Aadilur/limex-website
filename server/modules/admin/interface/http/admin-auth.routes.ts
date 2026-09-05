@@ -7,6 +7,7 @@ import {
   requireAdminSession,
   setAdminSession,
 } from "../../../../shared/auth/admin-session.js";
+import { createRateLimiter } from "../../../../shared/http/rate-limit.js";
 
 const loginSchema = z.object({
   username: z.string().trim().min(1).max(100),
@@ -18,7 +19,10 @@ type AdminAuthRoutesOptions = {
 };
 
 export async function adminAuthRoutes(app: FastifyInstance, options: AdminAuthRoutesOptions) {
-  app.post("/api/admin/auth/login", async (request, reply) => {
+  const loginLimiter = createRateLimiter({ limit: 10, windowMs: 15 * 60_000 });
+
+  app.post("/api/admin/auth/login", { bodyLimit: 10_000 }, async (request, reply) => {
+    if (!loginLimiter(request, reply, "admin-login")) return;
     const input = loginSchema.parse(request.body);
     const token = options.service.authenticate(input.username, input.password);
 

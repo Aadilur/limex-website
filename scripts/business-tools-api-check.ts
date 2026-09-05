@@ -9,7 +9,10 @@ const base = "http://127.0.0.1:3000";
 const prisma = new PrismaClient();
 const submissionId = randomUUID();
 let savedId: string | undefined;
+const contactSubmissionId = randomUUID();
+let contactId: string | undefined;
 let cookie = "";
+const appointmentDate = new Date(Date.now() + 6 * 60 * 60 * 1000 + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 async function call(path: string, method = "GET", body?: unknown, admin = false) {
   const response = await fetch(`${base}${path}`, { method, headers: { "Content-Type": "application/json", ...(admin ? { Cookie: cookie } : {}) }, ...(body !== undefined ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(30000) });
   const payload = await response.json(); return { response, payload };
@@ -55,6 +58,10 @@ try {
   const saved = await call("/api/tools/requests", "POST", requestBody); assert.equal(saved.response.status, 201); savedId = saved.payload.data.reference;
   const retried = await call("/api/tools/requests", "POST", requestBody); assert.equal(retried.response.status, 200); assert.equal(retried.payload.data.reference, savedId);
   const persisted = await prisma.toolServiceRequest.findUnique({ where: { id: savedId } }); assert.ok(persisted); assert.equal((persisted.context as any).result.total, 1150);
+  const contactBody = { submissionId: contactSubmissionId, toolSlug: "contact", requestType: "APPOINTMENT", services: ["Business: Company setup"], name: "Limex QA contact", phone: "00000000000", email: "qa@example.com", preferredDate: appointmentDate, preferredTime: "10:30", message: "Automated contact enquiry; removed immediately after verification.", consent: true, website: "" };
+  const contactSaved = await call("/api/tools/requests", "POST", contactBody); assert.equal(contactSaved.response.status, 201); contactId = contactSaved.payload.data.reference;
+  const persistedContact = await prisma.toolServiceRequest.findUnique({ where: { id: contactId } }); assert.ok(persistedContact); assert.equal(persistedContact.requestType, "APPOINTMENT"); assert.equal(persistedContact.email, "qa@example.com"); assert.equal(persistedContact.preferredDate, appointmentDate);
+  const contactInbox = await call(`/api/admin/tools/requests?source=contact&search=${encodeURIComponent("Limex QA contact")}`, "GET", undefined, true); assert.equal(contactInbox.response.status, 200); assert.ok(contactInbox.payload.data.items.some((item: { id: string }) => item.id === contactId));
   assert.equal((await call(`/api/admin/tools/requests/${savedId}`, "PATCH", { status: "CONTACTED" }, true)).response.status, 200);
   assert.equal((await prisma.toolServiceRequest.findUnique({ where: { id: savedId } }))?.status, "CONTACTED");
   assert.equal((await call("/api/admin/tools/requests", "GET", undefined, true)).response.status, 200);
@@ -64,5 +71,6 @@ try {
   console.log("PASS: all 13 pages, seven calculators, six document endpoints, validation, admin protection, unchanged-settings publication, stale-version rejection, request persistence, idempotent retry and status updates.");
 } finally {
   if (savedId) await prisma.toolServiceRequest.deleteMany({ where: { id: savedId, submissionId, name: "Limex QA disposable check" } });
+  if (contactId) await prisma.toolServiceRequest.deleteMany({ where: { id: contactId, submissionId: contactSubmissionId, name: "Limex QA contact" } });
   await prisma.$disconnect();
 }

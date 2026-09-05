@@ -4,12 +4,13 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 
 import { navigation, type NavItem } from "./data";
 import { ActionButton, CheckIcon, ChevronDownIcon } from "./ui";
-import { getPublicMenu } from "@/lib/menu-api";
+import { getPublicMenu, request } from "@/lib/menu-api";
 import { defaultLandingContent } from "@/lib/landing-defaults";
 import type { ContactContent } from "@/lib/landing-types";
 
 type ContactValues = {
   services: string[];
+  requestType: "CALLBACK" | "APPOINTMENT";
   name: string;
   phone: string;
   email: string;
@@ -23,6 +24,7 @@ type ServiceGroup = { label: string; items: ServiceOption[] };
 
 const initialValues: ContactValues = {
   services: [],
+  requestType: "CALLBACK",
   name: "",
   phone: "",
   email: "",
@@ -144,17 +146,23 @@ export function ContactSection({ content = defaultLandingContent.contact }: { co
   const [values, setValues] = useState<ContactValues>(initialValues);
   const [submitted, setSubmitted] = useState(false);
   const [formError, setFormError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [consent, setConsent] = useState(false);
+  const [reference, setReference] = useState("");
   const [todayInputValue, setTodayInputValue] = useState("");
+  const submission = useRef<{ key: string; fingerprint: string } | null>(null);
   const serviceGroups = useMemo(() => getServiceGroups(menuNavigation), [menuNavigation]);
 
   const updateValue = <Field extends keyof ContactValues>(field: Field, value: ContactValues[Field]) => {
     setSubmitted(false);
+    setReference("");
     setFormError("");
     setValues((current) => ({ ...current, [field]: value }));
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (busy) return;
 
     if (values.services.length === 0) {
       setSubmitted(false);
@@ -174,8 +182,47 @@ export function ContactSection({ content = defaultLandingContent.contact }: { co
       return;
     }
 
+    if (values.requestType === "APPOINTMENT" && (!values.preferredDate || !values.preferredTime)) {
+      setSubmitted(false);
+      setFormError("Choose a preferred date and time for an appointment request.");
+      return;
+    }
+
+    if (!consent) {
+      setSubmitted(false);
+      setFormError("Please agree to let Limex store these details and contact you.");
+      return;
+    }
+
+    const data = new FormData(event.currentTarget);
+    const payload = {
+      toolSlug: "contact",
+      requestType: values.requestType,
+      services: values.services,
+      name: values.name,
+      phone: values.phone,
+      email: values.email,
+      preferredDate: values.preferredDate,
+      preferredTime: values.preferredTime,
+      message: values.message,
+      consent,
+      website: String(data.get("website") ?? ""),
+    };
+    const fingerprint = JSON.stringify(payload);
+    if (!submission.current || submission.current.fingerprint !== fingerprint) submission.current = { key: crypto.randomUUID(), fingerprint };
+
     setFormError("");
-    setSubmitted(true);
+    setBusy(true);
+    try {
+      const saved = await request<{ reference: string }>("/api/tools/requests", { method: "POST", body: JSON.stringify({ ...payload, submissionId: submission.current.key }) });
+      setReference(saved.reference);
+      setSubmitted(true);
+    } catch (error) {
+      setSubmitted(false);
+      setFormError(error instanceof Error ? error.message : "We couldn’t save your request. Please try again.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   useEffect(() => {
@@ -245,6 +292,24 @@ export function ContactSection({ content = defaultLandingContent.contact }: { co
               <input className={`h-12 ${fieldControlClassName}`} autoComplete="name" value={values.name} onChange={(event) => updateValue("name", event.target.value)} placeholder="Your name" required />
             </label>
           </div>
+          <fieldset className="flex min-w-0 flex-col gap-2">
+            <legend className={fieldLabelTextClassName}>How can we help?</legend>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {(["CALLBACK", "APPOINTMENT"] as const).map((type) => (
+                <button
+                  className={`min-h-11 rounded-[12px] border px-3 text-left text-body-xs font-semibold transition-colors ${values.requestType === type ? "border-[#6d806e] bg-[#edf3eb] text-[#294d3f]" : "border-[#c8c6be] bg-page text-[#60635d] hover:border-[#9ca397]"}`.trim()}
+                  type="button"
+                  aria-pressed={values.requestType === type}
+                  onClick={() => updateValue("requestType", type)}
+                  disabled={busy}
+                  key={type}
+                >
+                  {type === "CALLBACK" ? "Request a callback" : "Book an appointment"}
+                </button>
+              ))}
+            </div>
+            <p className="text-micro text-muted">Choose appointment to request a time with our team.</p>
+          </fieldset>
           <div className="grid grid-cols-1 gap-cluster lg:grid-cols-2">
             <label className={fieldLabelClassName}>
               <span className={fieldLabelTextClassName}>Phone / WhatsApp</span>
@@ -259,17 +324,17 @@ export function ContactSection({ content = defaultLandingContent.contact }: { co
           {formError ? <p className="-mt-1 text-body-xs font-semibold text-accent" role="alert">{formError}</p> : null}
           <fieldset className="flex min-w-0 flex-col gap-2">
             <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-              <legend className={fieldLabelTextClassName}>Preferred schedule <span className="font-normal text-muted">(optional)</span></legend>
+              <legend className={fieldLabelTextClassName}>Preferred schedule <span className="font-normal text-muted">{values.requestType === "APPOINTMENT" ? "(required)" : "(optional)"}</span></legend>
               <span className="text-micro text-muted">Dhaka time</span>
             </div>
             <div className="grid grid-cols-1 gap-cluster sm:grid-cols-2">
               <label className="flex min-w-0 flex-col gap-1.5">
                 <span className="text-micro font-semibold text-muted">Date</span>
-                <input className={`h-12 ${fieldControlClassName}`} type="date" min={todayInputValue || undefined} value={values.preferredDate} onChange={(event) => updateValue("preferredDate", event.target.value)} aria-label="Preferred date" />
+                <input className={`h-12 ${fieldControlClassName}`} type="date" min={todayInputValue || undefined} value={values.preferredDate} onChange={(event) => updateValue("preferredDate", event.target.value)} aria-label="Preferred date" required={values.requestType === "APPOINTMENT"} />
               </label>
               <label className="flex min-w-0 flex-col gap-1.5">
                 <span className="text-micro font-semibold text-muted">Time</span>
-                <input className={`h-12 ${fieldControlClassName}`} type="time" min="09:00" max="18:00" step="1800" value={values.preferredTime} onChange={(event) => updateValue("preferredTime", event.target.value)} aria-label="Preferred time" />
+                <input className={`h-12 ${fieldControlClassName}`} type="time" min="09:00" max="18:00" step="1800" value={values.preferredTime} onChange={(event) => updateValue("preferredTime", event.target.value)} aria-label="Preferred time" required={values.requestType === "APPOINTMENT"} />
               </label>
             </div>
             <p className="text-micro leading-relaxed text-muted">{content.scheduleHelper}</p>
@@ -281,11 +346,16 @@ export function ContactSection({ content = defaultLandingContent.contact }: { co
         </div>
 
         <div className="mt-auto pt-section-gap-lg">
-          <button className="group flex h-12 w-full items-center justify-between rounded-[14px] border border-accent bg-accent px-5 text-button font-strong text-white shadow-[0_8px_16px_rgba(222,77,115,0.18)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[#c53f62] hover:bg-[#c53f62] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-3" type="submit">
-            <span>{submitted ? "Message sent" : content.submitLabel}</span>
-            <span className="text-icon-action transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden="true">{submitted ? "✓" : "↗"}</span>
+          <div className="hidden" aria-hidden="true"><label>Website<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
+          <label className="flex items-start gap-2.5 text-micro leading-relaxed text-muted">
+            <input className="mt-0.5 size-4 shrink-0 accent-[#35573f]" type="checkbox" checked={consent} onChange={(event) => { setConsent(event.target.checked); setSubmitted(false); setReference(""); setFormError(""); }} disabled={busy} />
+            <span>I agree that Limex may store these details and contact me about this request.</span>
+          </label>
+          <button className="group mt-4 flex h-12 w-full items-center justify-between rounded-[14px] border border-accent bg-accent px-5 text-button font-strong text-white shadow-[0_8px_16px_rgba(222,77,115,0.18)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[#c53f62] hover:bg-[#c53f62] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-3 disabled:cursor-wait disabled:opacity-65" type="submit" disabled={busy} aria-busy={busy}>
+            <span>{busy ? "Sending…" : submitted ? "Request received" : content.submitLabel}</span>
+            <span className="text-icon-action transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden="true">{busy ? "…" : submitted ? "✓" : "↗"}</span>
           </button>
-          <p className="mt-cluster text-body-xs text-muted/70" aria-live="polite">{submitted ? content.submittedNote : content.privacyNote}</p>
+          <p className="mt-cluster text-body-xs text-muted/70" aria-live="polite">{submitted ? `${content.submittedNote} Reference: ${reference}` : content.privacyNote}</p>
         </div>
       </form>
     </section>

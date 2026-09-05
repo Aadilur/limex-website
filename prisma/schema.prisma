@@ -152,7 +152,11 @@ model ToolServiceRequest {
   submissionId String   @unique @db.VarChar(36)
   toolSlug     String   @db.VarChar(80)
   name         String   @db.VarChar(120)
-  phone        String   @db.VarChar(30)
+  phone        String?  @db.VarChar(30)
+  email        String?  @db.VarChar(200)
+  preferredDate String? @db.VarChar(10)
+  preferredTime String? @db.VarChar(5)
+  requestType  String   @default("CALLBACK") @db.VarChar(24)
   message      String   @db.Text
   context      Json
   status       String   @default("NEW") @db.VarChar(24)
@@ -161,4 +165,6 @@ model ToolServiceRequest {
 
   @@index([status, createdAt])
   @@index([createdAt])
+  @@index([requestType, createdAt])
+  @@index([toolSlug, createdAt])
 }

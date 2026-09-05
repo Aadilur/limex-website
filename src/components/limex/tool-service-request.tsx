@@ -11,7 +11,11 @@ export function ToolServiceRequest({ tool, contextValues }: { tool: ToolDefiniti
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); if (busy) return;
     const data = new FormData(event.currentTarget);
-    const payload = { toolSlug: tool.slug, name: String(data.get("name") ?? ""), phone: String(data.get("phone") ?? ""), message: String(data.get("message") ?? ""), consent: data.get("consent") === "on", website: String(data.get("website") ?? ""), ...(includeContext && contextValues ? { values: contextValues } : {}) };
+    const requestType = data.get("requestType") === "APPOINTMENT" ? "APPOINTMENT" : "CALLBACK";
+    const preferredDate = String(data.get("preferredDate") ?? "");
+    const preferredTime = String(data.get("preferredTime") ?? "");
+    if (requestType === "APPOINTMENT" && (!preferredDate || !preferredTime)) { setError("Choose a preferred date and time for an appointment request."); return; }
+    const payload = { toolSlug: tool.slug, requestType, name: String(data.get("name") ?? ""), phone: String(data.get("phone") ?? ""), email: String(data.get("email") ?? ""), preferredDate, preferredTime, message: String(data.get("message") ?? ""), consent: data.get("consent") === "on", website: String(data.get("website") ?? ""), ...(includeContext && contextValues ? { values: contextValues } : {}) };
     const fingerprint = JSON.stringify(payload);
     if (!submission.current || submission.current.fingerprint !== fingerprint) submission.current = { key: crypto.randomUUID(), fingerprint };
     setBusy(true); setError("");
@@ -19,12 +23,16 @@ export function ToolServiceRequest({ tool, contextValues }: { tool: ToolDefiniti
     catch (err) { setError(err instanceof Error ? err.message : "We couldn’t save your request. Please try again."); }
     finally { setBusy(false); }
   }
-  if (reference) return <div className={styles.success} role="status"><h3>Your request is with Limex.</h3><p>We’ll contact you to confirm the scope and next steps. No appointment or filing has been confirmed yet.</p><p className="break-all">Reference: {reference}</p></div>;
+  if (reference) return <div className={styles.success} role="status"><h3>Your request is with Limex.</h3><p>We’ll contact you to confirm the scope and next steps. An appointment is only confirmed after our team replies.</p><p className="break-all">Reference: {reference}</p></div>;
   return <form className={styles.formPanel} onSubmit={submit}>
     <h3 className={styles.panelTitle}>A little help with {tool.title.toLowerCase()}.</h3><p className={styles.muted}>Leave your details and the Limex team will follow up.</p>
     <div className={styles.fields}>
+      <label className={styles.field}><span className={styles.label}>How can we help?</span><select className={styles.control} name="requestType" defaultValue="CALLBACK" disabled={busy}><option value="CALLBACK">Request a callback</option><option value="APPOINTMENT">Book an appointment</option></select></label>
       <label className={styles.field}><span className={styles.label}>Your name</span><input autoComplete="name" className={styles.control} name="name" required minLength={2} maxLength={120} disabled={busy} /></label>
       <label className={styles.field}><span className={styles.label}>Phone / WhatsApp</span><input type="tel" autoComplete="tel" className={styles.control} name="phone" placeholder="+880 1XXX XXXXXX" required minLength={7} maxLength={25} disabled={busy} /></label>
+      <label className={styles.field}><span className={styles.label}>Email <span className="font-normal text-[#687063]">(optional)</span></span><input type="email" autoComplete="email" className={styles.control} name="email" maxLength={200} disabled={busy} /></label>
+      <label className={styles.field}><span className={styles.label}>Preferred date <span className="font-normal text-[#687063]">(optional)</span></span><input type="date" className={styles.control} name="preferredDate" disabled={busy} /></label>
+      <label className={styles.field}><span className={styles.label}>Preferred time <span className="font-normal text-[#687063]">(optional)</span></span><input type="time" className={styles.control} name="preferredTime" min="09:00" max="18:00" step="1800" disabled={busy} /></label>
       <label className={`${styles.field} ${styles.fieldWide}`}><span className={styles.label}>What would you like help with?</span><textarea className={styles.control} name="message" maxLength={2000} rows={3} disabled={busy} /></label>
     </div>
     <div className="hidden" aria-hidden="true"><label>Website<input name="website" tabIndex={-1} autoComplete="off" /></label></div>

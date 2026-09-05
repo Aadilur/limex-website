@@ -31,13 +31,13 @@ Build every calculator and document builder currently listed in the Business Too
 - Clear field labels, restrained warm neutrals, spacious hierarchy, accessible controls and visible primary actions.
 - Results are readable immediately. Rules, fee sources and limitations live in a secondary tab; calculators do not carry a desktop rules rail.
 - Builders offer structured inputs, preview, text download and print/PDF. Drafts are not represented as government-approved or legally reviewed documents.
-- Optional service requests collect name and phone, retain tool context with consent, and succeed only after backend persistence.
+- Tool and website enquiries collect name, phone/WhatsApp, optional email, callback or appointment intent, preferred Dhaka schedule and consent; they succeed only after backend persistence and use an idempotency key.
 
 ## Backend and administration
 
 - Server validation and calculation; never trust a client-supplied total.
 - Versioned editable fee/rule settings, sources and effective periods. Company setup has an admin-editable RJSC capital-band and stamp-tier schedule; trade licence has separate DNCC/DSCC tariff, capital-band, signage, advertising, surcharge and related-charge editors.
-- Admin request inbox with status management; idempotent submissions and basic abuse limits.
+- Dedicated admin Enquiries & bookings inbox with source/search/status filters, private contact details, schedule visibility and status management. Public writes use bounded rate limits, body limits, strict plain-text validation, honeypots and duplicate-safe submission keys.
 - Do not save a visitor’s document or tax details merely because they use a tool. Save request context only when they explicitly submit it.
 - Additive MySQL migration; preserve current landing-page/admin work and existing content.
 

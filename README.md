@@ -58,9 +58,10 @@ Open:
 
 - Frontend: http://localhost:3000
 - Admin login: http://localhost:3000/admin/login
+- Enquiries & bookings: http://localhost:3000/admin/inquiries
 - Backend health: http://localhost:4000/api/health
 - Readiness check: http://localhost:4000/api/health/ready
-- Users endpoint: http://localhost:4000/api/users
+- Users endpoint (admin session required): http://localhost:4000/api/users
 
 Useful commands:
 
@@ -70,7 +71,9 @@ npm run prisma:studio
 npm run prisma:migrate -- --name add_feature
 ~~~
 
-The admin workspace is at `/admin` after signing in. The Services & menu module manages the four primary mega-menu areas, categories, service URLs, optional sub-links, visibility, and service icons. Menu records live in Prisma; run `npm run prisma:deploy` and `npm run db:seed` after applying the menu migration in a database environment.
+The admin workspace is at `/admin` after signing in. The Enquiries & bookings module collects website contact requests and tool support requests, including appointment intent, preferred Dhaka schedule, contact details, consent, source filters, search and status updates. The Services & menu module manages the four primary mega-menu areas, categories, service URLs, optional sub-links, visibility, and service icons. Menu records live in Prisma; run `npm run prisma:deploy` and `npm run db:seed` after applying the menu migration in a database environment.
+
+Public API mutations have endpoint-specific and process-wide rate limits, bounded body sizes, strict plain-text validation, honeypot checks and idempotent submission keys. The in-memory limiter is appropriate for the current single-container runtime; move its buckets to a shared store before scaling the API horizontally.
 
 Set `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and a long random `ADMIN_SESSION_SECRET` in deployment environments. The admin session is an HTTP-only, signed cookie and is shared by the frontend and API through the same gateway origin.
 
