@@ -147,6 +147,27 @@ model BusinessToolSettings {
   updatedAt DateTime @updatedAt
 }
 
+model DocumentTemplate {
+  id                 String    @id @default(cuid())
+  slug               String    @unique @db.VarChar(180)
+  title              String    @db.VarChar(180)
+  description        String    @db.Text
+  settings           Json
+  fields             Json
+  blocks             Json
+  publishedSettings  Json?
+  publishedFields    Json?
+  publishedBlocks    Json?
+  status             String    @default("DRAFT") @db.VarChar(16)
+  revision           Int       @default(1)
+  publishedRevision  Int?
+  publishedAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([status, updatedAt])
+}
+
 model ToolServiceRequest {
   id           String   @id @default(cuid())
   submissionId String   @unique @db.VarChar(36)

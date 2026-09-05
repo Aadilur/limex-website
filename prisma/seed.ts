@@ -1,7 +1,8 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 
 import { navigation, services } from "../src/components/limex/data.js";
 import { defaultLandingContent } from "../src/lib/landing-defaults.js";
+import { defaultMouTemplate } from "../src/lib/document-templates.js";
 
 const prisma = new PrismaClient();
 
@@ -67,6 +68,26 @@ async function main() {
     create: {
       id: "home",
       content: defaultLandingContent,
+    },
+  });
+
+  await prisma.documentTemplate.upsert({
+    where: { slug: defaultMouTemplate.slug },
+    update: {},
+    create: {
+      slug: defaultMouTemplate.slug,
+      title: defaultMouTemplate.title,
+      description: defaultMouTemplate.description,
+      settings: defaultMouTemplate.settings as unknown as Prisma.InputJsonValue,
+      fields: defaultMouTemplate.fields as unknown as Prisma.InputJsonValue,
+      blocks: defaultMouTemplate.blocks as unknown as Prisma.InputJsonValue,
+      publishedSettings: defaultMouTemplate.settings as unknown as Prisma.InputJsonValue,
+      publishedFields: defaultMouTemplate.fields as unknown as Prisma.InputJsonValue,
+      publishedBlocks: defaultMouTemplate.blocks as unknown as Prisma.InputJsonValue,
+      status: "PUBLISHED",
+      revision: 1,
+      publishedRevision: 1,
+      publishedAt: new Date(),
     },
   });
 

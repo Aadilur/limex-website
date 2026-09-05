@@ -26,6 +26,7 @@ import { PrismaUserRepository } from "./modules/users/infrastructure/prisma-user
 import { userRoutes } from "./modules/users/interface/http/user.routes.js";
 import { prisma } from "./shared/database/prisma.js";
 import { toolsRoutes } from "./modules/tools/tools.routes.js";
+import { templateRoutes } from "./modules/tools/template.routes.js";
 import { createRateLimiter } from "./shared/http/rate-limit.js";
 
 export async function buildApp() {
@@ -76,6 +77,7 @@ export async function buildApp() {
   await app.register(aboutRoutes, { service: aboutService });
   await app.register(landingRoutes, { service: landingService });
   await app.register(toolsRoutes);
+  await app.register(templateRoutes);
 
   app.setErrorHandler((error, request, reply) => {
     if (error instanceof ZodError) {
