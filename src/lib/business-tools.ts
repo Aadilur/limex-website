@@ -127,7 +127,7 @@ export function calculatorFields(slug: ToolSlug, settings: ToolsSettings): ToolF
     return [
       { key: "entity", label: "Entity type", kind: "select", options: options("Private limited company", "One-person company", "Public limited company", "Foreign branch"), defaultValue: "Private limited company" },
       { key: "serviceType", label: "RJSC service", kind: "select", options: options("Company registration", "Name clearance", "Annual return filing", "Director / shareholder change", "Share transfer / allotment", "Registered office change", "Capital increase"), defaultValue: "Company registration" },
-      { key: "capital", label: "Authorised capital (৳)", kind: "number", min: 1, hint: "Required for a company-registration assessment; optional for a name or filing service." },
+      { key: "capital", label: "Authorised capital (৳)", kind: "number", required: true, defaultValue: "1000000", min: 1, hint: "Used for company registration and capital increase; RJSC fees change by capital tier.", showWhen: { key: "serviceType", values: ["Company registration", "Capital increase"] } },
       { key: "companyName", label: "Company / file name (optional)", kind: "text" },
       governmentFee,
       { key: "extras", label: "Other confirmed charges (৳)", kind: "number", defaultValue: fee.chargeDefaults.extras === null || fee.chargeDefaults.extras === undefined ? "" : String(fee.chargeDefaults.extras), hint: "Only add a charge from the RJSC assessment that is not already included." },
@@ -177,6 +177,7 @@ export function validateFields(fields: ToolField[], raw: unknown): ToolValues {
   const values = z.record(z.string().max(5000)).parse(raw);
   const clean: ToolValues = {};
   for (const field of fields) {
+    if (field.showWhen && ("value" in field.showWhen ? values[field.showWhen.key] !== field.showWhen.value : !field.showWhen.values.includes(values[field.showWhen.key]))) continue;
     const value = (values[field.key] ?? field.defaultValue ?? "").trim();
     if ((field.required || field.kind === "select") && !value) throw new Error(`Enter ${field.label.toLowerCase()}.`);
     if (value && field.kind === "number" && (!/^\d+(\.\d+)?$/.test(value) || Number(value) < (field.min ?? 0) || Number(value) > (field.max ?? 1e12) || (field.step === "1" && !Number.isInteger(Number(value))))) throw new Error(`Check ${field.label.toLowerCase()}: enter a valid non-negative number within the allowed range.`);
@@ -249,7 +250,7 @@ export function calculateTool(slug: ToolSlug, input: unknown, settings: ToolsSet
     return { values, result: { title: complete ? "Estimated company setup cost" : "Known company setup costs", total: round(rows.reduce((sum, row) => sum + (row.amount ?? 0), 0)), complete, rows, sourceUrl: schedule.sourceUrl, notes: [schedule.note, "Government rows follow the published RJSC schedule. The Limex professional service fee is editable by an administrator. Final assessment can vary by entity, filing scope and any additional authority charge."] } };
   }
 
-  if (slug === "rjsc" && values.serviceType === "Company registration" && !values.capital) throw new Error("Enter authorised capital for a company-registration assessment.");
+  if (slug === "rjsc" && ["Company registration", "Capital increase"].includes(values.serviceType) && !values.capital) throw new Error("Enter authorised capital for this RJSC assessment.");
   if (slug === "irc-erc" && values.certificate !== "ERC" && !values.ceiling) throw new Error("Enter the annual import ceiling for IRC.");
   if (slug === "irc-erc" && values.certificate === "ERC" && values.businessType === "Import only") throw new Error("Choose export-only or import-and-export for an ERC.");
   if (slug === "irc-erc" && values.certificate !== "ERC" && values.businessType === "Export only") throw new Error("Choose import-only or import-and-export for an IRC.");

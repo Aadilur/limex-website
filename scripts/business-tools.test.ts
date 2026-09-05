@@ -51,6 +51,13 @@ test("trademark de-duplicates classes and rejects invalid classes", () => {
 });
 test("company capital, IRC ceiling and unsupported inputs are validated", () => {
   assert.throws(() => calculate("limited-company", { capital: "0" }));
+  const rjscFields = calculatorFields("rjsc", settings);
+  const capitalField = rjscFields.find((field) => field.key === "capital");
+  assert.equal(capitalField?.label, "Authorised capital (৳)");
+  assert.equal(capitalField?.defaultValue, "1000000");
+  assert.equal(capitalField?.required, true);
+  assert.doesNotThrow(() => calculate("rjsc", { serviceType: "Name clearance", capital: "" }));
+  assert.throws(() => calculate("rjsc", { serviceType: "Capital increase", capital: "" }));
   assert.throws(() => calculate("irc-erc", { certificate: "Commercial IRC" }));
   assert.doesNotThrow(() => calculate("irc-erc", { certificate: "ERC", businessType: "Export only" }));
   assert.throws(() => calculateTool("mou", {}, settings));
