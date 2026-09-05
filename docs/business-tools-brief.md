@@ -6,7 +6,7 @@ Build every calculator and document builder currently listed in the Business Too
 
 ### Calculators
 
-1. Limited company cost: incorporation budget with separately identified government, professional and optional costs.
+1. Limited company cost: a focused authorised-capital estimate with RJSC filing, MoA/AoA stamps, name-clearance and Limex professional fees itemised.
 2. Trade licence: local authority, activity and application type; no invented universal government fee.
 3. RJSC fees: registration cost planning, distinct from the full company budget.
 4. Personal income tax: assessment year, category, income, rebate, credits, slabs and minimum tax.
@@ -29,21 +29,22 @@ Build every calculator and document builder currently listed in the Business Too
 - Separate Calculators and Document Builders. Every tool has a shareable `/business-tools/...` page.
 - Reusable calculator/builder components do not own site navigation and can be hosted in a dialog later. This release uses pages, not duplicate popup flows.
 - Clear field labels, restrained warm neutrals, spacious hierarchy, accessible controls and visible primary actions.
-- Results are readable immediately. Rules, fee sources and limitations live in a secondary tab.
+- Results are readable immediately. Rules, fee sources and limitations live in a secondary tab; calculators do not carry a desktop rules rail.
 - Builders offer structured inputs, preview, text download and print/PDF. Drafts are not represented as government-approved or legally reviewed documents.
 - Optional service requests collect name and phone, retain tool context with consent, and succeed only after backend persistence.
 
 ## Backend and administration
 
 - Server validation and calculation; never trust a client-supplied total.
-- Versioned editable fee/rule settings, sources and effective periods.
+- Versioned editable fee/rule settings, sources and effective periods. Company setup has an admin-editable RJSC capital-band and stamp-tier schedule.
 - Admin request inbox with status management; idempotent submissions and basic abuse limits.
 - Do not save a visitor’s document or tax details merely because they use a tool. Save request context only when they explicitly submit it.
 - Additive MySQL migration; preserve current landing-page/admin work and existing content.
 
 ## Source safety
 
-- The client trade-licence table explicitly contains placeholders. The existing company calculator, Figma and supplied HTML disagree. These are not verified government tariffs.
+- The client trade-licence table explicitly contains placeholders. The existing company calculator, Figma and supplied HTML disagree; the supplied company capital figures are examples, not verified government tariffs.
+- Company setup defaults use the current RJSC portal schedule: ৳500/name clearance, ৳1,200 filing, ৳1,000 MoA stamp, capital-tiered AoA stamp and authorised-capital fees. Administrators can publish changes without a code deployment.
 - Some prototype buttons show simulated success and the company name checker fabricates a preliminary availability result. Do not carry those behaviours into production.
 - Use dated official NBR/RJSC/DPDT/CCI&E/local-authority sources. Where no verified tariff is available, support an authority-assessed amount and clearly identify pending fees. Admin can publish confirmed schedules later.
 - Show exemptions, excluded cases and dated assumptions with each estimate; never imply a final tax return, confirmed appointment or completed government filing.

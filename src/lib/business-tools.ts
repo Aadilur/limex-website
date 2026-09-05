@@ -29,7 +29,7 @@ export const taxCategoryLabels = { general: "General taxpayer", female: "Female 
 export const taxGuideUrl = "https://nbr.gov.bd/uploads/publications/আয়কর_নির্দেশিকা_২০২৬-২০২৭.pdf";
 export const feeSources: Record<string, string> = {
   "income-tax": taxGuideUrl, vat: "https://nbr.gov.bd/faq/vat-faq", rjsc: "https://app.roc.gov.bd/psp/fee_calculator",
-  "limited-company": "https://app.roc.gov.bd/psp/fee_calculator", "trade-license": "https://dncc.gov.bd/", trademark: "https://dpdt.gov.bd/pages/static-pages/6922e14d933eb65569e2b677", "irc-erc": "https://olm.ccie.gov.bd/",
+  "limited-company": "https://app1.roc.gov.bd/psp/RJSC_Fees", "trade-license": "https://dncc.gov.bd/", trademark: "https://dpdt.gov.bd/pages/static-pages/6922e14d933eb65569e2b677", "irc-erc": "https://olm.ccie.gov.bd/",
 };
 const nonNegative = z.number().finite().min(0).max(1e12);
 const nullableFee = nonNegative.nullable();
@@ -47,9 +47,24 @@ export const taxYearSchema = z.object({
   salaryExemptionCap: nonNegative, rebateInvestmentRate: z.number().min(0).max(100), rebateIncomeRate: z.number().min(0).max(100), rebateCap: nonNegative,
   minimumTax: nonNegative, newTaxpayerMinimum: nonNegative, childAllowance: nonNegative, sourceUrl: publicUrl,
 }).strict().refine((value) => value.bands.every((band, i) => (band.width === null) === (i === value.bands.length - 1)), "Only the final tax band must have an unlimited (null) width.");
+const upperBound = nonNegative.positive().nullable();
+const capitalFeeBandSchema = z.object({ upto: upperBound, unit: nonNegative.positive(), feePerUnit: nonNegative }).strict();
+const stampFeeBandSchema = z.object({ upto: upperBound, amount: nonNegative }).strict();
+const orderedBands = <T extends { upto: number | null }>(bands: T[]) => bands.at(-1)?.upto === null && bands.slice(0, -1).every((band, index, finiteBands) => band.upto !== null && (index === 0 || band.upto > (finiteBands[index - 1]?.upto ?? 0)));
+export const companyRegistrationSchema = z.object({
+  nameClearanceFee: nonNegative,
+  filingFee: nonNegative,
+  moaStamp: nonNegative,
+  aoaStampBands: z.array(stampFeeBandSchema).min(1).max(6).refine(orderedBands, "Articles of Association stamp bands must be ordered and end with an unlimited band."),
+  capitalFeeBands: z.array(capitalFeeBandSchema).min(1).max(6).refine(orderedBands, "Authorized capital fee bands must be ordered and end with an unlimited band."),
+  sourceUrl: publicUrl,
+  effectiveDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  note: z.string().max(1000),
+}).strict();
 export const toolsSettingsSchema = z.object({
   taxYears: z.array(taxYearSchema).min(1).max(10).refine((years) => new Set(years.map((year) => year.year)).size === years.length, "Assessment years must be unique."),
   fees: z.object({ "limited-company": feeSettingSchema, rjsc: feeSettingSchema, "trade-license": feeSettingSchema, trademark: feeSettingSchema, "irc-erc": feeSettingSchema }).strict(),
+  companyRegistration: companyRegistrationSchema,
 }).strict();
 export type ToolsSettings = z.infer<typeof toolsSettingsSchema>;
 export type ToolsConfig = { version: number; settings: ToolsSettings };
@@ -57,11 +72,21 @@ const feeSetting = (slug: string, note: string) => ({ governmentFee: null, servi
 export const defaultToolsSettings: ToolsSettings = {
   taxYears: [{ year: "2026-27", thresholds: { general: 400000, female: 450000, senior: 450000, disability: 525000, thirdGender: 525000, freedom: 550000, july: 550000 }, bands: [{ width: 300000, rate: 10 }, { width: 400000, rate: 15 }, { width: 500000, rate: 20 }, { width: 2000000, rate: 25 }, { width: null, rate: 30 }], salaryExemptionCap: 500000, rebateInvestmentRate: 10, rebateIncomeRate: 3, rebateCap: 750000, minimumTax: 5000, newTaxpayerMinimum: 1000, childAllowance: 50000, sourceUrl: taxGuideUrl }],
   fees: {
-    "limited-company": feeSetting("limited-company", "Use the RJSC assessment for your company’s entity type and authorised capital. Trade licence and optional services are separate. No name-availability check is performed."),
+    "limited-company": { ...feeSetting("limited-company", "The Limex support fee is editable by an administrator. Government charges below follow the published RJSC schedule and remain a planning estimate until the authority assesses the filing."), serviceFee: 10000 },
     rjsc: feeSetting("rjsc", "Use the fee assessment from RJSC for the selected entity and capital. Do not count stamp or filing charges twice if already included in the assessment."),
     "trade-license": feeSetting("trade-license", "Licence and signboard charges depend on the authority and business activity. Enter the amounts on your authority’s assessment; blank amounts remain pending, not zero."),
     trademark: feeSetting("trademark", "Fees are per class and filing stage. Search, application, publication and registration are separate stages. This tool does not check trademark availability."),
     "irc-erc": feeSetting("irc-erc", "Use the CCI&E assessment for your registration type, import ceiling and new/renewal application. Chamber membership, bank charges and late fees may be additional."),
+  },
+  companyRegistration: {
+    nameClearanceFee: 500,
+    filingFee: 1200,
+    moaStamp: 1000,
+    aoaStampBands: [{ upto: 1000000, amount: 2000 }, { upto: 30000000, amount: 4000 }, { upto: null, amount: 10000 }],
+    capitalFeeBands: [{ upto: 1000000, unit: 1, feePerUnit: 0 }, { upto: 5000000, unit: 100000, feePerUnit: 80 }, { upto: null, unit: 100000, feePerUnit: 130 }],
+    sourceUrl: feeSources["limited-company"],
+    effectiveDate: "2026-09-05",
+    note: "Reviewed against the current RJSC fee schedule: name clearance is ৳500 per proposed name; filing is ৳1,200; MoA stamp is ৳1,000; AoA stamp is ৳2,000 up to ৳10 lakh, ৳4,000 up to ৳3 crore and ৳10,000 above; authorized-capital fees are nil up to ৳10 lakh, then ৳80 per ৳1 lakh or part up to ৳50 lakh and ৳130 per ৳1 lakh or part above that. Confirm the final assessment before filing.",
   },
 };
 
@@ -90,47 +115,22 @@ export function calculatorFields(slug: ToolSlug, settings: ToolsSettings): ToolF
     { key: "children", label: "Eligible dependent children with disabilities", kind: "number", defaultValue: "0", max: 20, step: "1", hint: "Only one parent or guardian may claim each child’s allowance." },
     { key: "newTaxpayer", label: "Qualifying new taxpayer?", kind: "select", options: options("No", "Yes"), defaultValue: "No" },
   ];
-  if (slug === "limited-company" || slug === "rjsc") {
-    const feeSlug = slug === "limited-company" ? "limited-company" : "rjsc";
-    const fee = settings.fees[feeSlug];
-    const chargeDefault = (key: string, fallback = "") => fee.chargeDefaults[key] === null || fee.chargeDefaults[key] === undefined ? fallback : String(fee.chargeDefaults[key]);
+  if (slug === "limited-company") return [
+    { key: "entity", label: "Company type", kind: "select", options: options("Private limited company", "One-person company (OPC)"), defaultValue: "Private limited company" },
+    { key: "capital", label: "Authorised capital (৳)", kind: "number", required: true, defaultValue: "1000000", min: 1, hint: "The amount registered with RJSC. The statutory fee changes by capital tier." },
+    { key: "nameClearance", label: "Name clearance", kind: "select", options: options("Need name clearance", "Already have name clearance"), defaultValue: "Need name clearance" },
+    { key: "nameOptions", label: "Proposed names", kind: "number", defaultValue: "1", min: 1, max: 3, step: "1", hint: "RJSC charges per proposed name.", showWhen: { key: "nameClearance", value: "Need name clearance" } },
+  ];
+  if (slug === "rjsc") {
+    const fee = settings.fees.rjsc;
     const governmentFee = { ...assessedFee, defaultValue: fee.governmentFee === null ? "" : String(fee.governmentFee) };
     return [
       { key: "entity", label: "Entity type", kind: "select", options: options("Private limited company", "One-person company", "Public limited company", "Foreign branch"), defaultValue: "Private limited company" },
-      { key: "capital", label: "Authorised capital (৳)", kind: "number", required: slug === "limited-company", min: 1, hint: slug === "rjsc" ? "Required for a company-registration assessment; optional for a name or filing service." : "Capital is context for the authority’s assessment, not an added expense." },
-      ...(slug === "limited-company" ? [{ key: "paidUp", label: "Paid-up capital (৳)", kind: "number", required: true, min: 1 } as ToolField] : []),
-      ...(slug === "limited-company" ? [
-        { key: "location", label: "Registration location", kind: "select", options: options("Inside Dhaka city corporation", "Outside Dhaka city corporation"), defaultValue: "Inside Dhaka city corporation", hint: "Used to keep the trade licence estimate tied to the right authority." } as ToolField,
-        { key: "nameClearance", label: "Name clearance", kind: "select", options: options("Need a new name clearance", "Already have name clearance"), defaultValue: "Need a new name clearance" } as ToolField,
-        { key: "nameOptions", label: "Proposed names", kind: "number", defaultValue: "1", min: 1, max: 3, step: "1", hint: "Most applications submit up to three name choices." } as ToolField,
-        { key: "name1", label: "Approved / first preferred name", kind: "text", required: true, hint: "Use the approved name, or your first choice if clearance is still needed." } as ToolField,
-        { key: "name2", label: "Second preferred name (optional)", kind: "text" } as ToolField,
-        { key: "name3", label: "Third preferred name (optional)", kind: "text" } as ToolField,
-        { key: "businessActivity", label: "Primary business activity", kind: "text", hint: "A short description helps an advisor confirm the service scope." } as ToolField,
-        { key: "officeAddress", label: "Registered office address (optional)", kind: "textarea", hint: "Add the proposed Bangladesh office address when available." } as ToolField,
-        { key: "directors", label: "Number of directors", kind: "number", defaultValue: "2", min: 1, max: 100, step: "1" } as ToolField,
-        { key: "shareholders", label: "Number of shareholders", kind: "number", defaultValue: "2", min: 1, max: 100, step: "1" } as ToolField,
-        { key: "directorDetails", label: "Director information (optional)", kind: "textarea", hint: "Names, citizenship and NID / passport readiness for each director." } as ToolField,
-        { key: "shareholdingStructure", label: "Shareholding structure (optional)", kind: "textarea", hint: "For example: 60% / 40% between two shareholders." } as ToolField,
-        { key: "nameClearanceFee", label: "Name clearance charge (৳)", kind: "number", defaultValue: chargeDefault("nameClearanceFee"), hint: "Enter the assessed charge when name clearance is needed.", showWhen: { key: "nameClearance", value: "Need a new name clearance" } } as ToolField,
-      ] : []),
-      ...(slug === "rjsc" ? [
-        { key: "serviceType", label: "RJSC service", kind: "select", options: options("Company registration", "Name clearance", "Annual return filing", "Director / shareholder change", "Share transfer / allotment", "Registered office change", "Capital increase"), defaultValue: "Company registration" } as ToolField,
-        { key: "companyName", label: "Company / file name (optional)", kind: "text" } as ToolField,
-      ] : []),
+      { key: "serviceType", label: "RJSC service", kind: "select", options: options("Company registration", "Name clearance", "Annual return filing", "Director / shareholder change", "Share transfer / allotment", "Registered office change", "Capital increase"), defaultValue: "Company registration" },
+      { key: "capital", label: "Authorised capital (৳)", kind: "number", min: 1, hint: "Required for a company-registration assessment; optional for a name or filing service." },
+      { key: "companyName", label: "Company / file name (optional)", kind: "text" },
       governmentFee,
-      ...(slug === "limited-company" ? [
-        { key: "tradeLicense", label: "Trade licence support", kind: "select", options: options("No", "Yes"), defaultValue: "Yes" } as ToolField,
-        { key: "tradeFee", label: "Trade licence charge (৳)", kind: "number", defaultValue: chargeDefault("tradeFee"), hint: "Enter the local authority assessment when trade licence support is selected.", showWhen: { key: "tradeLicense", value: "Yes" } } as ToolField,
-        { key: "trademark", label: "Trademark support", kind: "select", options: options("No", "Yes"), defaultValue: "No" } as ToolField,
-        { key: "trademarkFee", label: "Trademark charge (৳)", kind: "number", defaultValue: chargeDefault("trademarkFee"), hint: "Enter the assessed filing or support charge when selected.", showWhen: { key: "trademark", value: "Yes" } } as ToolField,
-        { key: "bin", label: "BIN / VAT registration support", kind: "select", options: options("No", "Yes"), defaultValue: "No" } as ToolField,
-        { key: "binFee", label: "BIN / VAT support charge (৳)", kind: "number", defaultValue: chargeDefault("binFee"), hint: "Enter the confirmed charge when selected.", showWhen: { key: "bin", value: "Yes" } } as ToolField,
-        { key: "complianceSupport", label: "Ongoing compliance support", kind: "select", options: options("No ongoing support", "Annual return filing", "Tax return support", "VAT & BIN support", "Full compliance management"), defaultValue: "No ongoing support" } as ToolField,
-        { key: "complianceFee", label: "Compliance support charge (৳)", kind: "number", defaultValue: chargeDefault("complianceFee"), hint: "Enter the confirmed recurring or annual support charge.", showWhen: { key: "complianceSupport", values: ["Annual return filing", "Tax return support", "VAT & BIN support", "Full compliance management"] } } as ToolField,
-        { key: "stampFee", label: "Stamp / filing charges (৳)", kind: "number", defaultValue: chargeDefault("stampFee", "0"), hint: "Use only for confirmed charges not already included in the government assessment." } as ToolField,
-      ] : []),
-      { key: "extras", label: "Other confirmed charges (৳)", kind: "number", defaultValue: chargeDefault("extras", "0"), hint: "Only amounts not already included above." },
+      { key: "extras", label: "Other confirmed charges (৳)", kind: "number", defaultValue: fee.chargeDefaults.extras === null || fee.chargeDefaults.extras === undefined ? "" : String(fee.chargeDefaults.extras), hint: "Only add a charge from the RJSC assessment that is not already included." },
     ];
   }
   if (slug === "trade-license") return [
@@ -188,6 +188,21 @@ export function validateFields(fields: ToolField[], raw: unknown): ToolValues {
 }
 export type CalculationResult = { title: string; total: number; complete: boolean; rows: { label: string; amount: number | null }[]; notes: string[]; sourceUrl: string; year?: string; slabs?: { label: string; rate: number; income: number; tax: number }[] };
 const round = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
+function feeFromBands(value: number, bands: { upto: number | null; unit: number; feePerUnit: number }[]) {
+  let total = 0;
+  let previous = 0;
+  for (const band of bands) {
+    const upper = band.upto ?? Number.POSITIVE_INFINITY;
+    const portion = Math.max(0, Math.min(value, upper) - previous);
+    if (portion > 0) total += Math.ceil(portion / band.unit) * band.feePerUnit;
+    if (value <= upper) break;
+    previous = upper;
+  }
+  return round(total);
+}
+function amountFromBands(value: number, bands: { upto: number | null; amount: number }[]) {
+  return bands.find((band) => band.upto === null || value <= band.upto)?.amount ?? bands.at(-1)?.amount ?? 0;
+}
 export function calculateTool(slug: ToolSlug, input: unknown, settings: ToolsSettings): { values: ToolValues; result: CalculationResult } {
   if (getTool(slug)?.group !== "calculator") throw new Error("Choose a calculator.");
   const values = validateFields(calculatorFields(slug, settings), input);
@@ -218,12 +233,22 @@ export function calculateTool(slug: ToolSlug, input: unknown, settings: ToolsSet
     const liability = Math.max(grossTax - rebate, minimum);
     return { values, result: { title: "Estimated amount to pay", total: round(Math.max(0, liability - n("credits"))), complete: true, year: year.year, rows: [{ label: "Employment income exemption", amount: round(exemption) }, { label: "Income after exemptions", amount: round(income) }, { label: "Your tax-free threshold", amount: threshold }, { label: "Tax at slab rates", amount: grossTax }, { label: "Qualifying investment considered", amount: round(investment) }, { label: "Investment rebate applied", amount: -rebate }, { label: "Minimum tax floor", amount: minimum }, { label: "Liability after rebate / minimum", amount: round(liability) }, { label: "Source tax / TDS credit", amount: -n("credits") }, ...(n("credits") > liability ? [{ label: "Excess credit (subject to review)", amount: round(n("credits") - liability) }] : [])], slabs, sourceUrl: year.sourceUrl, notes: ["For ordinary slab-rate income and on-time filing. Business turnover minimum tax, special/final-tax income, wealth/environmental surcharges and late filing adjustments are excluded. Government salary has different exemptions.", "Only use eligible investment amounts and adjustable credits. Detailed investment entries are combined and take priority over the total investment field. Excess credit is not a guaranteed refund. A nil estimate does not establish that no return is required."] } };
   }
-  if (slug === "limited-company" && n("paidUp") > n("capital")) throw new Error("Paid-up capital cannot exceed authorised capital.");
-  if (slug === "limited-company" && values.nameClearance === "Need a new name clearance") {
-    const nameCount = n("nameOptions") || 1;
-    if (nameCount >= 2 && !values.name2) throw new Error("Add a second preferred company name or choose one proposed name.");
-    if (nameCount >= 3 && !values.name3) throw new Error("Add a third preferred company name or choose fewer proposed names.");
+  if (slug === "limited-company") {
+    const schedule = settings.companyRegistration;
+    const capital = n("capital");
+    const nameCount = values.nameClearance === "Need name clearance" ? n("nameOptions") || 1 : 0;
+    const rows: CalculationResult["rows"] = [
+      { label: "RJSC filing fee · 6 documents", amount: schedule.filingFee },
+      { label: "Memorandum of Association stamp", amount: schedule.moaStamp },
+      { label: "Articles of Association stamp", amount: amountFromBands(capital, schedule.aoaStampBands) },
+      { label: "Authorised share capital fee", amount: feeFromBands(capital, schedule.capitalFeeBands) },
+      ...(nameCount ? [{ label: `Name clearance · ${nameCount} proposed name${nameCount === 1 ? "" : "s"}`, amount: round(nameCount * schedule.nameClearanceFee) }] : []),
+      { label: "Limex professional service", amount: settings.fees["limited-company"].serviceFee },
+    ];
+    const complete = rows.every((row) => row.amount !== null);
+    return { values, result: { title: complete ? "Estimated company setup cost" : "Known company setup costs", total: round(rows.reduce((sum, row) => sum + (row.amount ?? 0), 0)), complete, rows, sourceUrl: schedule.sourceUrl, notes: [schedule.note, "Government rows follow the published RJSC schedule. The Limex professional service fee is editable by an administrator. Final assessment can vary by entity, filing scope and any additional authority charge."] } };
   }
+
   if (slug === "rjsc" && values.serviceType === "Company registration" && !values.capital) throw new Error("Enter authorised capital for a company-registration assessment.");
   if (slug === "irc-erc" && values.certificate !== "ERC" && !values.ceiling) throw new Error("Enter the annual import ceiling for IRC.");
   if (slug === "irc-erc" && values.certificate === "ERC" && values.businessType === "Import only") throw new Error("Choose export-only or import-and-export for an ERC.");
@@ -241,25 +266,15 @@ export function calculateTool(slug: ToolSlug, input: unknown, settings: ToolsSet
   const assessed = hasValue("governmentFee") ? n("governmentFee") : config.governmentFee;
   const primaryLabel = slug === "trademark"
     ? `Government fee · ${values.stage} · ${classes} class${classes > 1 ? "es" : ""}`
-    : slug === "limited-company"
-      ? `RJSC registration · ${values.entity}`
-      : slug === "rjsc"
-        ? `RJSC · ${values.serviceType}${values.entity ? ` · ${values.entity}` : ""}`
-        : slug === "trade-license"
-          ? `Government assessment · ${values.application}`
-          : "Government assessment";
+    : slug === "rjsc"
+      ? `RJSC · ${values.serviceType}${values.entity ? ` · ${values.entity}` : ""}`
+      : slug === "trade-license"
+        ? `Government assessment · ${values.application}`
+        : "Government assessment";
   const rows: CalculationResult["rows"] = [
     { label: primaryLabel, amount: assessed === null ? null : assessed * classes },
     { label: slug === "trademark" ? "Limex support · all selected classes" : "Limex support", amount: config.serviceFee === null ? null : config.serviceFee * classes },
   ];
-  if (slug === "limited-company") {
-    if (values.nameClearance === "Need a new name clearance") rows.push({ label: `Name clearance · ${n("nameOptions") || 1} proposed name${n("nameOptions") === 1 ? "" : "s"}`, amount: amountOrPending("nameClearanceFee") });
-    if (values.tradeLicense === "Yes") rows.push({ label: `Trade licence · ${values.location}`, amount: amountOrPending("tradeFee") });
-    if (values.trademark === "Yes") rows.push({ label: "Trademark support", amount: amountOrPending("trademarkFee") });
-    if (values.bin === "Yes") rows.push({ label: "BIN / VAT registration support", amount: amountOrPending("binFee") });
-    if (values.complianceSupport && values.complianceSupport !== "No ongoing support") rows.push({ label: values.complianceSupport, amount: amountOrPending("complianceFee") });
-    rows.push({ label: "Stamp / filing charges", amount: amountOrPending("stampFee") });
-  }
   if (slug === "trade-license") rows.push({ label: "Signboard charge", amount: amountOrPending("signboard") });
   rows.push({ label: "Other assessed charges", amount: amountOrPending("extras") });
   const complete = rows.every((row) => row.amount !== null);

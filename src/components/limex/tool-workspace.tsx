@@ -73,10 +73,9 @@ export function ToolWorkspace({ tool }: { tool: ToolDefinition }) {
     {tab === "rules" ? <ToolRules tool={tool} config={config} year={values.year} /> : <>
       {loadError ? <div className={styles.error} role="alert">{loadError}<button className={styles.quiet} onClick={() => setReload((value) => value + 1)} type="button">Try again</button></div> : null}
       {!isBuilder && !config ? <p className={styles.muted} role="status">{loadError ? "The calculator will be available when settings can be loaded." : "Loading published settings…"}</p> : <div className={`${styles.columns} ${!isBuilder ? styles.calculatorColumns : ""}`}>
-        {!isBuilder ? <aside className={styles.rulesAside} aria-label="Rules and details"><ToolRules tool={tool} config={config} year={values.year} /></aside> : null}
         <form ref={formRef} className={`${styles.formPanel} scroll-mt-28`} onSubmit={submit}>
-          <h2 className={styles.panelTitle}>{isBuilder ? step === 0 ? "Start with the essentials." : "Make the terms clear." : "Your calculation"}</h2>
-          <p className={styles.muted}>{isBuilder ? "Your entries aren’t saved unless you include them in a service request." : "Amounts in Bangladeshi taka. Update any field to start a new estimate."}</p>
+          <h2 className={styles.panelTitle}>{isBuilder ? step === 0 ? "Start with the essentials." : "Make the terms clear." : tool.slug === "limited-company" ? "Build your setup estimate" : "Your calculation"}</h2>
+          <p className={styles.muted}>{isBuilder ? "Your entries aren’t saved unless you include them in a service request." : tool.slug === "limited-company" ? "Four inputs. A transparent RJSC and Limex cost breakdown." : "Amounts in Bangladeshi taka. Update any field to start a new estimate."}</p>
           {isBuilder ? <div className={styles.stepper}><strong>{step + 1} of 2</strong><span /><span>{step === 0 ? "Parties & details" : "Terms & review"}</span></div> : null}
           <ToolFields fields={visibleFields} values={values} onChange={change} prefix={tool.slug} disabled={busy} />
           {error ? <p className={styles.error} role="alert">{error}</p> : null}

@@ -49,22 +49,23 @@ test("trademark de-duplicates classes and rejects invalid classes", () => {
   const result = calculate("trademark", { brandName: "Limex", classes: "9,35,9", governmentFee: "5000" }); assert.equal(result.rows[0].amount, 10000);
   for (const classes of ["0", "46", "1.5", "9,not-a-class"]) assert.throws(() => calculate("trademark", { brandName: "Limex", classes }));
 });
-test("capital relationship, IRC ceiling and unsupported inputs are validated", () => {
-  assert.throws(() => calculate("limited-company", { capital: "100", paidUp: "101" }));
+test("company capital, IRC ceiling and unsupported inputs are validated", () => {
+  assert.throws(() => calculate("limited-company", { capital: "0" }));
   assert.throws(() => calculate("irc-erc", { certificate: "Commercial IRC" }));
   assert.doesNotThrow(() => calculate("irc-erc", { certificate: "ERC", businessType: "Export only" }));
   assert.throws(() => calculateTool("mou", {}, settings));
 });
-test("company setup keeps selected services and charges itemised", () => {
-  const custom = structuredClone(settings); custom.fees["limited-company"].serviceFee = 10000;
-  const result = calculateTool("limited-company", {
-    ...initialToolValues(calculatorFields("limited-company", custom)), capital: "1000000", paidUp: "100000", governmentFee: "10000",
-    name1: "Limex QA Limited", nameClearanceFee: "100", tradeLicense: "Yes", tradeFee: "5000", trademark: "Yes", trademarkFee: "10000", bin: "Yes", binFee: "4000", stampFee: "2500", extras: "500",
-  }, custom).result;
-  assert.equal(result.total, 42100);
-  assert.ok(result.rows.some((row) => row.label.startsWith("Name clearance")));
-  assert.ok(result.rows.some((row) => row.label === "Trademark support"));
-  assert.ok(result.rows.some((row) => row.label === "BIN / VAT registration support"));
+test("company setup applies the published RJSC schedule", () => {
+  const result = calculate("limited-company", { capital: "1000000", nameClearance: "Need name clearance", nameOptions: "1" });
+  assert.equal(result.total, 14700);
+  assert.equal(result.rows.find((row) => row.label === "RJSC filing fee · 6 documents")?.amount, 1200);
+  assert.equal(result.rows.find((row) => row.label === "Articles of Association stamp")?.amount, 2000);
+  assert.equal(result.rows.find((row) => row.label === "Authorised share capital fee")?.amount, 0);
+  assert.equal(result.rows.find((row) => row.label.startsWith("Name clearance"))?.amount, 500);
+  const nextBand = calculate("limited-company", { capital: "1000001", nameClearance: "Already have name clearance" });
+  assert.equal(nextBand.rows.find((row) => row.label === "Authorised share capital fee")?.amount, 80);
+  assert.equal(nextBand.rows.some((row) => row.label.startsWith("Name clearance")), false);
+  assert.equal(nextBand.rows.find((row) => row.label === "Articles of Association stamp")?.amount, 4000);
 });
 test("admin can change fees and rules with one consistent calculation engine", () => {
   const custom = structuredClone(settings); custom.fees.trademark.serviceFee = 1000;
@@ -78,6 +79,7 @@ test("published settings reject unsafe URLs and invalid band definitions", () =>
   const invalid = structuredClone(settings); invalid.fees.rjsc.sourceUrl = "javascript:alert(1)"; assert.ok(!toolsSettingsSchema.safeParse(invalid).success);
   const bands = structuredClone(settings); bands.taxYears[0].bands[0].width = null; assert.ok(!toolsSettingsSchema.safeParse(bands).success);
   const noDate = structuredClone(settings); noDate.fees.rjsc.governmentFee = 100; assert.ok(!toolsSettingsSchema.safeParse(noDate).success);
+  const unorderedCompanyBands = structuredClone(settings); unorderedCompanyBands.companyRegistration.aoaStampBands[0].upto = 40000000; assert.ok(!toolsSettingsSchema.safeParse(unorderedCompanyBands).success);
 });
 for (const tool of businessTools.filter((tool) => tool.group === "builder")) test(`document ${tool.slug} has a distinct validated template and export`, () => {
   const fields = documentFields(tool.slug); assert.ok(fields.length >= 10); assert.throws(() => validateFields(fields, {}));
