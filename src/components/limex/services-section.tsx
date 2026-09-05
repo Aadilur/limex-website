@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
-import { createServicesFromNavigation, navigation, serviceFilters, type Service, type ServiceFilter } from "./data";
+import { serviceFilters, type ServiceFilter } from "./data";
 import { ServiceIcon } from "./service-icons";
 import { getToneClasses } from "./styles";
 import { ActionButton, SectionTitle } from "./ui";
-import { getPublicMenu } from "@/lib/menu-api";
+import { defaultLandingContent } from "@/lib/landing-defaults";
+import type { LandingServiceItem, ServicesContent } from "@/lib/landing-types";
 
 const MAX_VISIBLE_SERVICES = 8;
 
@@ -14,40 +15,12 @@ function getLinkProps(href: string) {
   return href.startsWith("http") ? { target: "_blank", rel: "noreferrer" } : {};
 }
 
-function selectBalancedServices(availableServices: Service[]): Service[] {
-  const categoryFilters = serviceFilters.filter(
-    (filter): filter is Exclude<ServiceFilter, "All services"> => filter !== "All services",
-  );
-  const visibleServices: Service[] = [];
-
-  for (let round = 0; visibleServices.length < MAX_VISIBLE_SERVICES; round += 1) {
-    let addedService = false;
-
-    for (const filter of categoryFilters) {
-      const service = availableServices.filter((item) => item.filters.includes(filter))[round];
-      if (service) {
-        visibleServices.push(service);
-        addedService = true;
-      }
-
-      if (visibleServices.length === MAX_VISIBLE_SERVICES) break;
-    }
-
-    if (!addedService) break;
-  }
-
-  return visibleServices;
-}
-
-function ServiceCard({
-  title,
-  description,
-  action,
-  href,
-  icon,
-  color,
-  surface,
-}: Service) {
+function ServiceCard({ service }: { service: LandingServiceItem }) {
+  const { title, description, href, icon, color, surface } = {
+    ...service,
+    color: service.filter === "Startup" ? "#2e6b4f" : service.filter === "Tax & compliance" ? "#5c4aa6" : service.filter === "Trademark" ? "#b83652" : "#1f6e70",
+    surface: service.filter === "Startup" ? "#edf7f0" : service.filter === "Tax & compliance" ? "#f2effb" : service.filter === "Trademark" ? "#fff0f2" : "#edf9f8",
+  };
   const tone = getToneClasses(color, surface);
 
   return (
@@ -66,51 +39,34 @@ function ServiceCard({
       <p className="mt-1 min-h-[34px] line-clamp-2 min-w-0 text-micro leading-[1.4] text-[#77736e] lg:mt-1.5 lg:min-h-0 lg:text-body-xs lg:leading-relaxed">{description}</p>
 
       <span className={`mt-auto flex min-h-7 items-center gap-1 pt-1 text-micro font-strong ${tone.text} underline-offset-4 transition-colors group-hover:underline lg:min-h-8 lg:gap-cluster-sm lg:pt-cluster lg:text-button`.trim()}>
-        {action}
+        Learn more
         <span aria-hidden="true">↗</span>
       </span>
     </a>
   );
 }
 
-export function ServicesSection() {
-  const [menuNavigation, setMenuNavigation] = useState(navigation);
+export function ServicesSection({ content = defaultLandingContent.services }: { content?: ServicesContent }) {
   const [selectedFilter, setSelectedFilter] = useState<ServiceFilter>("All services");
-  const availableServices = useMemo(() => createServicesFromNavigation(menuNavigation), [menuNavigation]);
   const filteredServices = useMemo(() => {
-    if (selectedFilter === "All services") return selectBalancedServices(availableServices);
+    const visibleServices = content.items.filter((service) => service.isVisible);
+    if (selectedFilter === "All services") return visibleServices.slice(0, MAX_VISIBLE_SERVICES);
 
-    return availableServices
-      .filter((service) => service.filters.includes(selectedFilter))
+    return visibleServices
+      .filter((service) => service.filter === selectedFilter)
       .slice(0, MAX_VISIBLE_SERVICES);
-  }, [availableServices, selectedFilter]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    void getPublicMenu()
-      .then((managedItems) => {
-        if (!cancelled) setMenuNavigation(managedItems);
-      })
-      .catch(() => {
-        // Keep the bundled service data available when the API is unavailable.
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  }, [content.items, selectedFilter]);
 
   return (
     <section className="scroll-mt-5 bg-page px-4 py-8 pb-8 sm:px-page-gutter sm:py-section-y lg:rounded-panel lg:px-section-gutter-lg lg:py-10 lg:pb-8" id="services" aria-labelledby="services-title">
       <div className="flex flex-col gap-cluster-lg lg:flex-row lg:items-start lg:justify-between lg:gap-cluster-lg">
         <SectionTitle
           id="services-title"
-          title="Start, protect and grow with clarity."
-          description="A focused set of services for the moments that matter most in your business journey."
+          title={content.title}
+          description={content.description}
         />
-        <ActionButton href="/services" variant="light" className="w-full justify-between sm:w-max sm:min-w-[190px] lg:mt-1">
-          View all services
+        <ActionButton href={content.ctaHref} variant="light" className="w-full justify-between sm:w-max sm:min-w-[190px] lg:mt-1">
+          {content.ctaLabel}
         </ActionButton>
       </div>
 
@@ -137,7 +93,7 @@ export function ServicesSection() {
       </div>
 
       <div className="mt-5 grid grid-cols-2 gap-3 lg:mt-cluster lg:grid-cols-4 lg:gap-cluster" aria-live="polite">
-        {filteredServices.map((service) => <ServiceCard key={`${service.filters[0]}-${service.number}-${service.title}`} {...service} />)}
+        {filteredServices.map((service) => <ServiceCard key={service.id} service={service} />)}
       </div>
 
       <div className="mt-4 flex min-h-16 flex-col items-start justify-between gap-4 rounded-[20px] bg-[#14131a] p-4 sm:mt-cluster sm:p-5 lg:flex-row lg:items-center lg:gap-cluster-lg lg:px-4 lg:py-3">

@@ -52,11 +52,11 @@ export function AdminDashboard() {
         <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#f8bec8]">Admin</p>
-            <h1 className="mt-2 font-brand text-[34px] font-bold leading-none tracking-[-0.05em] sm:text-[44px]">Menu control center</h1>
-            <p className="mt-2 text-[13px] text-white/50">Manage the public navigation from one place.</p>
+            <h1 className="mt-2 font-brand text-[34px] font-bold leading-none tracking-[-0.05em] sm:text-[44px]">Content control center</h1>
+            <p className="mt-2 text-[13px] text-white/50">Manage the public Limex experience from one place.</p>
           </div>
-          <a className="inline-flex min-h-11 w-max items-center justify-between gap-5 rounded-full bg-white px-4 text-[12px] font-bold text-[#14131c] transition-transform hover:-translate-y-0.5" href="/admin/services">
-            Edit services <span className="text-[17px] text-[#e44762]" aria-hidden="true">↗</span>
+          <a className="inline-flex min-h-11 w-max items-center justify-between gap-5 rounded-full bg-white px-4 text-[12px] font-bold text-[#14131c] transition-transform hover:-translate-y-0.5" href="/admin/landing">
+            Manage landing <span className="text-[17px] text-[#e44762]" aria-hidden="true">↗</span>
           </a>
         </div>
       </section>
@@ -83,11 +83,12 @@ export function AdminDashboard() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#e44762]">Quick actions</p>
-            <h2 className="mt-1.5 font-brand text-[22px] font-bold tracking-[-0.04em] text-[#14131c]" id="quick-actions-title">Keep the menu current.</h2>
+            <h2 className="mt-1.5 font-brand text-[22px] font-bold tracking-[-0.04em] text-[#14131c]" id="quick-actions-title">Keep the experience current.</h2>
           </div>
           <span className="grid size-10 place-items-center rounded-[12px] bg-[#f3f1ec] text-[16px] text-[#e44762]" aria-hidden="true">✦</span>
         </div>
-        <div className="mt-5 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-5 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+          <a className="flex min-h-12 items-center justify-between rounded-[14px] bg-[#fff0f2] px-4 text-[13px] font-bold text-[#ad3148] transition-colors hover:bg-[#fce0e3]" href="/admin/landing">Manage landing <span aria-hidden="true">↗</span></a>
           <a className="flex min-h-12 items-center justify-between rounded-[14px] bg-[#f8f6f2] px-4 text-[13px] font-bold text-[#3f3c38] transition-colors hover:bg-[#f1ede6]" href="/admin/services">Edit sections and services <span className="text-[#e44762]" aria-hidden="true">↗</span></a>
           <a className="flex min-h-12 items-center justify-between rounded-[14px] bg-[#e9f4ed] px-4 text-[13px] font-bold text-[#29634d] transition-colors hover:bg-[#ddf0e4]" href="/" target="_blank" rel="noreferrer">Preview public menu <span aria-hidden="true">↗</span></a>
           <a className="flex min-h-12 items-center justify-between rounded-[14px] bg-[#f4effa] px-4 text-[13px] font-bold text-[#5c4aa6] transition-colors hover:bg-[#ebe3f6]" href="/admin/about">Manage About us <span aria-hidden="true">↗</span></a>

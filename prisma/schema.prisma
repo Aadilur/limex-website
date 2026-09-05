@@ -132,3 +132,10 @@ model AboutReel {
 
   @@index([sortOrder])
 }
+
+model LandingPage {
+  id        String   @id @default("home")
+  content   Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

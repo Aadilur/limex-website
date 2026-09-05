@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 
 import { navigation, services } from "../src/components/limex/data.js";
+import { defaultLandingContent } from "../src/lib/landing-defaults.js";
 
 const prisma = new PrismaClient();
 
@@ -59,6 +60,15 @@ async function main() {
       });
     }
   }
+
+  await prisma.landingPage.upsert({
+    where: { id: "home" },
+    update: {},
+    create: {
+      id: "home",
+      content: defaultLandingContent,
+    },
+  });
 
   console.log(`Database seeded for ${adminUser.name ?? "Limex"}.`);
 }

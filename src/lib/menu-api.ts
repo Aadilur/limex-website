@@ -69,11 +69,17 @@ export class ApiError extends Error {
 
 export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const isMultipart = typeof FormData !== "undefined" && init?.body instanceof FormData;
-  const response = await fetch(path, {
-    ...init,
-    credentials: "include",
-    headers: isMultipart ? init?.headers : { "Content-Type": "application/json", ...(init?.headers ?? {}) },
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(path, {
+      ...init,
+      credentials: "include",
+      headers: isMultipart ? init?.headers : { "Content-Type": "application/json", ...(init?.headers ?? {}) },
+    });
+  } catch {
+    throw new ApiError(503, "Unable to reach the Limex API. Make sure the backend service is running, then try again.");
+  }
 
   const payload = await response.json().catch(() => null) as { data?: T; error?: string } | null;
   if (!response.ok) throw new ApiError(response.status, payload?.error ?? "Something went wrong.");

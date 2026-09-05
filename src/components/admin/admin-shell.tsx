@@ -7,6 +7,7 @@ import { getAdminSession, logoutAdmin } from "@/lib/menu-api";
 
 const adminNavigation = [
   { label: "Overview", href: "/admin" },
+  { label: "Landing", href: "/admin/landing" },
   { label: "Services & menu", href: "/admin/services" },
   { label: "About us", href: "/admin/about" },
 ];
@@ -40,7 +41,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                 onClick={onNavigate}
               >
                 <span className={`grid size-8 shrink-0 place-items-center rounded-[11px] text-[13px] font-bold ${active ? "bg-[#fce0e3] text-[#e23f5a]" : "bg-white/10 text-white/70 group-hover:bg-white/15"}`.trim()} aria-hidden="true">
-                  {item.label === "Overview" ? "01" : item.label === "Services & menu" ? "02" : "03"}
+                  {String(adminNavigation.findIndex((navigationItem) => navigationItem.href === item.href) + 1).padStart(2, "0")}
                 </span>
                 <span className="min-w-0 truncate text-[14px] font-semibold">{item.label}</span>
               </a>

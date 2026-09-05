@@ -5,7 +5,9 @@ import { randomUUID } from "node:crypto";
 import { env } from "../../config/env.js";
 
 export const MAX_TEAM_IMAGE_BYTES = 5 * 1024 * 1024;
+export const MAX_LANDING_LOGO_BYTES = 5 * 1024 * 1024;
 export const SIGNED_IMAGE_TTL_SECONDS = 60 * 60;
+export const LANDING_LOGO_CACHE_CONTROL = "public, max-age=31536000, immutable";
 
 export const teamImageTypes = {
   "image/jpeg": ".jpg",
@@ -14,6 +16,9 @@ export const teamImageTypes = {
 } as const;
 
 export type TeamImageContentType = keyof typeof teamImageTypes;
+
+export const landingLogoTypes = teamImageTypes;
+export type LandingLogoContentType = keyof typeof landingLogoTypes;
 
 export type ImageUpload = {
   body: Buffer;
@@ -60,11 +65,23 @@ export function isSupportedTeamImageType(value: string): value is TeamImageConte
   return Object.prototype.hasOwnProperty.call(teamImageTypes, value);
 }
 
+export function isSupportedLandingLogoType(value: string): value is LandingLogoContentType {
+  return Object.prototype.hasOwnProperty.call(landingLogoTypes, value);
+}
+
 export function createTeamImageKey(contentType: TeamImageContentType) {
   return `about/team/${randomUUID()}${teamImageTypes[contentType]}`;
 }
 
-export async function uploadStoredObject(key: string, image: ImageUpload) {
+export function createLandingLogoKey(asset: string) {
+  return `landing/logos/${asset}`;
+}
+
+export function createLandingLogoAsset(hash: string, contentType: LandingLogoContentType) {
+  return `${hash}${landingLogoTypes[contentType]}`;
+}
+
+export async function uploadStoredObject(key: string, image: ImageUpload, options?: { cacheControl?: string }) {
   const { config, client } = requireStorage();
 
   await client.send(new PutObjectCommand({
@@ -73,8 +90,29 @@ export async function uploadStoredObject(key: string, image: ImageUpload) {
     Body: image.body,
     ContentType: image.contentType,
     ContentLength: image.body.byteLength,
-    CacheControl: "private, no-store",
+    CacheControl: options?.cacheControl ?? "private, no-store",
   }));
+}
+
+export async function getStoredObject(key: string) {
+  const { config, client } = requireStorage();
+
+  try {
+    const response = await client.send(new GetObjectCommand({ Bucket: config.bucket, Key: key }));
+    if (!response.Body) return null;
+
+    return {
+      body: response.Body,
+      contentType: response.ContentType ?? "application/octet-stream",
+      contentLength: response.ContentLength,
+    };
+  } catch (error) {
+    const details = error && typeof error === "object"
+      ? error as { name?: string; $metadata?: { httpStatusCode?: number } }
+      : {};
+    if (details.name === "NoSuchKey" || details.name === "NotFound" || details.$metadata?.httpStatusCode === 404) return null;
+    throw error;
+  }
 }
 
 export async function signStoredObject(key: string) {

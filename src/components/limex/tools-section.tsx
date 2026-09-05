@@ -1,5 +1,6 @@
-import { tools } from "./data";
 import { ActionButton, SectionTitle } from "./ui";
+import { defaultLandingContent } from "@/lib/landing-defaults";
+import type { ToolsContent } from "@/lib/landing-types";
 
 const toolVisuals: Record<string, { mark: string }> = {
   "VAT calculator": {
@@ -13,19 +14,19 @@ const toolVisuals: Record<string, { mark: string }> = {
   },
 };
 
-export function ToolsSection() {
+export function ToolsSection({ content = defaultLandingContent.tools }: { content?: ToolsContent }) {
   return (
     <section className="bg-page px-page-gutter py-section-y pb-section-y lg:rounded-panel lg:px-page-gutter-lg lg:py-section-y-lg lg:pb-10" id="tools" aria-labelledby="tools-title">
       <div className="flex flex-col gap-section-gap lg:flex-row lg:items-center lg:justify-between lg:gap-cluster-lg">
         <SectionTitle
           id="tools-title"
-          title="Move faster with practical tools."
-          description="Practical tools for quick business decisions."
+          title={content.title}
+          description={content.description}
         />
-        <ActionButton href="/business-tools" variant="light" className="w-max min-w-[170px] lg:mt-1">Explore tools</ActionButton>
+        <ActionButton href={content.ctaHref} variant="light" className="w-max min-w-[170px] lg:mt-1">{content.ctaLabel}</ActionButton>
       </div>
       <div className="mt-section-y grid grid-cols-1 gap-cluster-sm lg:mt-section-y-xl lg:grid-cols-3 lg:gap-cluster-lg">
-        {tools.map((tool) => {
+        {content.items.filter((tool) => tool.isVisible).map((tool) => {
           const visual = toolVisuals[tool.title] ?? toolVisuals["Deed builder"];
 
           return (
@@ -36,10 +37,10 @@ export function ToolsSection() {
               <h3 className="relative mt-cluster-lg font-brand text-subheading text-ink">{tool.title}</h3>
               <p className="relative mt-cluster-xs min-h-[42px] max-w-[360px] text-body-xs text-muted">{tool.description}</p>
               <dl className="relative m-0 mt-auto flex flex-col divide-y divide-[#e9e5de] border-y border-[#e5e1da]">
-                {tool.rows.map(([label, value]) => (
-                  <div className="flex min-h-10 items-center justify-between gap-3" key={label}>
-                    <dt className="text-meta text-muted">{label}</dt>
-                    <dd className="m-0 text-right text-button font-bold text-ink">{value}</dd>
+                {tool.rows.map((row) => (
+                  <div className="flex min-h-10 items-center justify-between gap-3" key={row.id}>
+                    <dt className="text-meta text-muted">{row.label}</dt>
+                    <dd className="m-0 text-right text-button font-bold text-ink">{row.value}</dd>
                   </div>
                 ))}
               </dl>

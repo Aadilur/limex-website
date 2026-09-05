@@ -1,7 +1,6 @@
-import { packages } from "./data";
 import { ActionButton, SectionTitle, WaveLabel } from "./ui";
-
-const featuredPackageTitle = "Company setup";
+import { defaultLandingContent } from "@/lib/landing-defaults";
+import type { PackagesContent } from "@/lib/landing-types";
 
 const packageVisuals: Record<string, { label: string; wave: string; number: string; marker: string }> = {
   "Company setup": {
@@ -34,25 +33,25 @@ function PackageWave({ className = "" }: { className?: string }) {
   );
 }
 
-export function PackagesSection() {
+export function PackagesSection({ content = defaultLandingContent.packages }: { content?: PackagesContent }) {
   return (
     <section className="bg-page px-page-gutter py-section-y pb-section-y lg:rounded-panel lg:px-page-gutter-lg lg:py-section-y-lg lg:pb-10" id="packages" aria-labelledby="packages-title">
       <div className="flex flex-col gap-section-gap lg:flex-row lg:items-start lg:justify-between lg:gap-cluster-lg">
         <SectionTitle
           id="packages-title"
-          title="Choose a clear starting point."
-          description="Simple packages for common needs. Custom support when needed."
+          title={content.title}
+          description={content.description}
         />
         <div className="flex flex-col items-start gap-cluster-sm sm:flex-row sm:items-center lg:shrink-0 lg:pt-1">
-          <strong className="text-body-xs text-ink">Need a tailored plan?</strong>
-          <ActionButton href="#contact" variant="light" className="w-full min-w-0 border-[#cec6bc] bg-[#f8f6f2] sm:w-max">Request custom quote</ActionButton>
+          <strong className="text-body-xs text-ink">{content.customPlanLabel}</strong>
+          <ActionButton href={content.customPlanCtaHref} variant="light" className="w-full min-w-0 border-[#cec6bc] bg-[#f8f6f2] sm:w-max">{content.customPlanCtaLabel}</ActionButton>
         </div>
       </div>
 
       <div className="mt-section-y grid grid-cols-1 gap-cluster-sm lg:mt-section-y-xl lg:grid-cols-3 lg:gap-cluster-lg">
-        {packages.map((item, index) => {
-          const isFeatured = item.title === featuredPackageTitle;
-          const visual = packageVisuals[item.title] ?? packageVisuals[featuredPackageTitle];
+        {content.items.filter((item) => item.isVisible).map((item, index) => {
+          const isFeatured = item.isFeatured;
+          const visual = packageVisuals[item.title] ?? packageVisuals["Company setup"];
 
           return (
             <article className={`group relative flex min-h-[348px] flex-col overflow-hidden rounded-[24px] border border-[#d9d6cf] bg-[#faf9f6] p-card-pad transition-all duration-300 hover:-translate-y-0.5 hover:border-[#cfcac1] hover:shadow-[0_14px_30px_rgba(49,42,35,0.06)] ${isFeatured ? "ring-1 ring-inset ring-[#d8e3da]" : ""}`.trim()} key={item.title}>
@@ -76,8 +75,8 @@ export function PackagesSection() {
                   </li>
                 ))}
               </ul>
-              <a className="relative mt-cluster-lg inline-flex w-max items-center gap-cluster-sm border-b border-[#9d948a] pb-1 text-meta font-semibold text-ink transition-colors hover:border-ink hover:text-[#5e554d] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3" href="#contact">
-                View package <span aria-hidden="true">↗</span>
+              <a className="relative mt-cluster-lg inline-flex w-max items-center gap-cluster-sm border-b border-[#9d948a] pb-1 text-meta font-semibold text-ink transition-colors hover:border-ink hover:text-[#5e554d] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3" href={item.href}>
+                {item.action} <span aria-hidden="true">↗</span>
               </a>
             </article>
           );

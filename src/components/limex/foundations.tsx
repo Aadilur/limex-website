@@ -3,65 +3,20 @@
 import { processSteps } from "./data";
 import { clientTextClasses } from "./styles";
 import { ActionButton, SectionTitle } from "./ui";
+import { defaultLandingContent } from "@/lib/landing-defaults";
+import type { ClientsContent, MetricsContent, ProcessContent } from "@/lib/landing-types";
 
-const clientMarks = [
-  {
-    name: "Northstar",
-    marks: ["/figma/client-northstar-a.svg", "/figma/client-northstar-b.svg"],
-  },
-  {
-    name: "Sage & Co.",
-    marks: ["/figma/client-sage-a.svg", "/figma/client-sage-b.svg"],
-  },
-  { name: "Aster Labs", marks: ["/figma/client-aster.svg"] },
-  { name: "BIZNEST", marks: [] },
-  {
-    name: "Civic",
-    marks: ["/figma/client-civic-a.svg", "/figma/client-civic-b.svg"],
-  },
-  { name: "Morrow", marks: [] },
-];
-
-function ClientMark({ client }: { client: (typeof clientMarks)[number] }) {
-  if (client.name === "BIZNEST") {
-    return <span className="inline-flex size-6 rounded-[6px] bg-[#c79938] p-[7px]"><span className="size-2.5 rounded-[3px] bg-paper" /></span>;
-  }
-
-  if (client.name === "Morrow") {
-    return (
-      <span className="flex h-7 w-7 items-end gap-1">
-        <i className="h-6 w-[5px] rounded-[3px] bg-[#5e578c]" />
-        <i className="h-5 w-[5px] rounded-[3px] bg-[#5e578c]" />
-        <i className="h-4 w-[5px] rounded-[3px] bg-[#5e578c]" />
-      </span>
-    );
-  }
-
-  const imageClasses = client.name === "Northstar"
-    ? ["absolute left-0 top-1 size-6", "absolute left-1.5 top-2.5 size-3"]
-    : client.name === "Sage & Co."
-      ? ["absolute left-px top-1 h-[13px] w-[22px]", "absolute left-[9px] top-[13px] h-[13px] w-[22px]"]
-      : client.name === "Civic"
-        ? ["absolute left-0 top-1 size-6", "absolute left-2 top-3 size-2"]
-        : ["absolute left-0 top-[5px] size-[22px]"];
-
-  return (
-    <span className="relative block size-8 shrink-0">
-      {client.marks.map((mark, index) => <img className={`${imageClasses[index] ?? imageClasses[0]} block`} key={mark} src={mark} alt="" aria-hidden="true" />)}
-      {client.name === "Aster Labs" ? <span className="absolute left-2 top-[3px] h-[30px] w-[6px] rounded-[3px] bg-[#a64a5c]" aria-hidden="true" /> : null}
-    </span>
-  );
-}
-
-function ClientLogoSet({ duplicate = false }: { duplicate?: boolean }) {
+function ClientLogoSet({ logos, duplicate = false }: { logos: ClientsContent["logos"]; duplicate?: boolean }) {
   return (
     <div
       className={`flex shrink-0 gap-cluster-lg pr-cluster-lg motion-reduce:w-full motion-reduce:flex-wrap motion-reduce:justify-center motion-reduce:pr-0 ${duplicate ? "motion-reduce:hidden" : ""}`.trim()}
       aria-hidden={duplicate ? "true" : undefined}
     >
-      {clientMarks.map((client) => (
-        <div className={`flex h-9 w-[128px] shrink-0 items-center gap-cluster-xs overflow-hidden whitespace-nowrap text-body-xs font-display wide:text-body-sm ${clientTextClasses[client.name] ?? "text-ink"}`.trim()} key={`${duplicate ? "copy" : "original"}-${client.name}`}>
-          <ClientMark client={client} />
+      {logos.filter((logo) => logo.isVisible).map((client) => (
+        <div className="flex h-9 w-[128px] shrink-0 items-center gap-cluster-xs overflow-hidden whitespace-nowrap text-body-xs font-display wide:text-body-sm" style={{ color: client.textColor || clientTextClasses[client.name] }} key={`${duplicate ? "copy" : "original"}-${client.id}`}>
+          <span className="grid size-8 shrink-0 place-items-center overflow-hidden">
+            {client.logoUrl ? <img className="max-h-7 max-w-8 object-contain" src={client.logoUrl} alt="" aria-hidden="true" /> : <span className="text-[10px] font-bold tracking-[0.04em]">{client.name.slice(0, 2).toUpperCase()}</span>}
+          </span>
           <span>{client.name}</span>
         </div>
       ))}
@@ -69,16 +24,16 @@ function ClientLogoSet({ duplicate = false }: { duplicate?: boolean }) {
   );
 }
 
-export function TrustedClientsSection() {
+export function TrustedClientsSection({ content = defaultLandingContent.clients }: { content?: ClientsContent }) {
   return (
     <section className="relative flex min-w-0 flex-col bg-page px-page-gutter py-5 lg:rounded-panel lg:px-page-gutter-lg lg:py-5" aria-labelledby="clients-title">
       <div className="flex shrink-0 min-w-0 flex-col gap-cluster">
-        <h2 className="shrink-0 text-center font-brand text-heading-mobile font-bold text-[#2b5e8c] lg:text-heading" id="clients-title">OUR CLIENTS</h2>
+        <h2 className="shrink-0 text-center font-brand text-heading-mobile font-bold text-[#2b5e8c] lg:text-heading" id="clients-title">{content.title}</h2>
         <div className="relative flex min-h-0 items-end overflow-hidden px-0.5 pb-1" aria-label="Our clients">
           <div className="flex w-max motion-safe:animate-client-marquee motion-reduce:w-full motion-reduce:animate-none [will-change:transform]">
-            <ClientLogoSet />
-            <ClientLogoSet duplicate />
-            <ClientLogoSet duplicate />
+            <ClientLogoSet logos={content.logos} />
+            <ClientLogoSet logos={content.logos} duplicate />
+            <ClientLogoSet logos={content.logos} duplicate />
           </div>
           <span className="pointer-events-none absolute inset-y-0 left-0 z-[1] w-8 bg-gradient-to-r from-page to-transparent" aria-hidden="true" />
           <span className="pointer-events-none absolute inset-y-0 right-0 z-[1] w-8 bg-gradient-to-l from-page to-transparent" aria-hidden="true" />
@@ -88,22 +43,17 @@ export function TrustedClientsSection() {
   );
 }
 
-export function TrustMetricsSection() {
-  const metrics = [
-    ["1,200+", "brands assisted"],
-    ["4.9/5", "client satisfaction"],
-    ["7+ years", "practical guidance"],
-    ["24 hrs", "typical response"],
-  ];
+export function TrustMetricsSection({ content = defaultLandingContent.metrics }: { content?: MetricsContent }) {
+  const metrics = content.items.filter((item) => item.isVisible);
 
   return (
     <section className="mt-clients-to-metrics border-t border-[#e0e0e3] bg-page px-page-gutter py-2 lg:mt-clients-to-metrics-lg lg:min-h-[96px] lg:px-page-gutter-xl lg:py-cluster-sm" aria-label="The Limex standard">
-      <h2 className="sr-only">The Limex standard</h2>
+      <h2 className="sr-only">{content.title}</h2>
       <dl className="grid grid-cols-2 gap-x-cluster-lg gap-y-1 text-center lg:grid-cols-4 lg:gap-0">
-        {metrics.map(([value, label], index) => (
-          <div className={`flex min-h-[40px] flex-col items-center justify-center px-2 text-center ${index >= 2 ? "border-t border-[#e0e0e3] pt-2" : ""} ${index % 2 === 1 ? "border-l border-[#e0e0e3]" : ""} lg:min-h-[56px] lg:border-l lg:border-t-0 lg:px-cluster-lg lg:py-0 ${index === 0 ? "lg:border-l-0" : ""}`.trim()} key={value}>
-            <dt className="order-2 mt-0 text-micro text-[#616b7d] lg:mt-1">{label}</dt>
-            <dd className="order-1 font-brand text-subheading-mobile text-[#121729] lg:text-subheading">{value}</dd>
+        {metrics.map((metric, index) => (
+          <div className={`flex min-h-[40px] flex-col items-center justify-center px-2 text-center ${index >= 2 ? "border-t border-[#e0e0e3] pt-2" : ""} ${index % 2 === 1 ? "border-l border-[#e0e0e3]" : ""} lg:min-h-[56px] lg:border-l lg:border-t-0 lg:px-cluster-lg lg:py-0 ${index === 0 ? "lg:border-l-0" : ""}`.trim()} key={metric.id}>
+            <dt className="order-2 mt-0 text-micro text-[#616b7d] lg:mt-1">{metric.label}</dt>
+            <dd className="order-1 font-brand text-subheading-mobile text-[#121729] lg:text-subheading">{metric.value}</dd>
           </div>
         ))}
       </dl>
@@ -111,20 +61,20 @@ export function TrustMetricsSection() {
   );
 }
 
-export function HowItWorksSection() {
+export function HowItWorksSection({ content = defaultLandingContent.process }: { content?: ProcessContent }) {
   return (
     <section className="relative min-h-0 bg-page px-4 py-8 pb-8 sm:px-page-gutter sm:py-section-y lg:rounded-panel lg:px-section-gutter-lg lg:py-section-y-xl lg:pb-section-y-lg" id="process" aria-labelledby="process-title">
       <SectionTitle
         id="process-title"
-        title="From question to completion."
-        description="A simple, transparent process that keeps your business moving."
+        title={content.title}
+        description={content.description}
       />
       <div className="mt-section-gap-xl grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px] lg:gap-cluster-lg">
         <div className="relative overflow-hidden rounded-[24px] border border-[#ddd9d1] bg-white/55 p-4 shadow-[0_2px_0_rgba(27,34,30,0.02)] sm:p-5 lg:p-6">
           <div className="pointer-events-none absolute bottom-[42px] left-[42px] top-[42px] w-px bg-gradient-to-b from-[#e4cfd8] via-[#d7d5df] to-transparent lg:bottom-auto lg:left-[12%] lg:right-[12%] lg:top-[52px] lg:h-px lg:w-auto lg:bg-gradient-to-r lg:from-[#e4cfd8] lg:via-[#d7d5df] lg:to-transparent" aria-hidden="true" />
           <div className="relative grid gap-6 lg:grid-cols-4 lg:gap-4">
-            {processSteps.map((step) => (
-              <article className="relative z-[1] flex gap-4 lg:flex-col lg:items-center lg:gap-0 lg:text-center" key={step.number}>
+            {content.items.filter((step) => step.isVisible).map((step) => (
+              <article className="relative z-[1] flex gap-4 lg:flex-col lg:items-center lg:gap-0 lg:text-center" key={step.id}>
                 <div className="relative grid size-[52px] shrink-0 place-items-center lg:size-[56px]">
                   <img className="absolute inset-0 size-full" src="/figma/step-circle.svg" alt="" aria-hidden="true" />
                   <span className="relative text-button font-bold text-pink">{step.number}</span>
@@ -140,12 +90,12 @@ export function HowItWorksSection() {
         <aside className="relative isolate flex min-h-0 flex-col overflow-hidden rounded-[24px] bg-[#121729] p-5 text-white sm:p-6 lg:min-h-full lg:p-6">
           <div className="pointer-events-none absolute -right-16 -top-16 size-40 rounded-full border border-white/[0.08]" aria-hidden="true" />
           <div className="relative flex items-start justify-between gap-3">
-            <p className="text-overline text-[#a6b8eb]">NEED HELP CHOOSING?</p>
+            <p className="text-overline text-[#a6b8eb]">{content.helperEyebrow}</p>
             <span className="grid size-8 shrink-0 place-items-center rounded-full border border-white/[0.14] text-icon-action text-[#c4cfe5]" aria-hidden="true">↗</span>
           </div>
-          <h3 className="relative mt-cluster-lg font-brand text-subheading">Talk to an expert.</h3>
-          <p className="relative mt-cluster-lg text-body-xs leading-relaxed text-[#c4cfe5]">Tell us what you are trying to solve and we will point you in the right direction.</p>
-          <ActionButton href="#contact" variant="white" className="relative mt-6 min-h-12 w-full sm:w-max lg:mt-auto lg:w-full">Start a conversation</ActionButton>
+          <h3 className="relative mt-cluster-lg font-brand text-subheading">{content.helperTitle}</h3>
+          <p className="relative mt-cluster-lg text-body-xs leading-relaxed text-[#c4cfe5]">{content.helperDescription}</p>
+          <ActionButton href={content.helperCtaHref} variant="white" className="relative mt-6 min-h-12 w-full sm:w-max lg:mt-auto lg:w-full">{content.helperCtaLabel}</ActionButton>
         </aside>
       </div>
     </section>

@@ -6,6 +6,7 @@ import { createServicesFromNavigation, navigation, type NavItem, type Service } 
 import { ServiceIcon } from "./service-icons";
 import { getToneClasses } from "./styles";
 import { getPublicMenu } from "@/lib/menu-api";
+import type { LandingServiceItem } from "@/lib/landing-types";
 
 const priorityServices = [
   { title: "Company Formation", displayTitle: "Company registration" },
@@ -25,6 +26,13 @@ const mobilePriorityServices = [
 
 type PriorityService = Service & { displayTitle: string };
 
+const serviceToneByFilter: Record<LandingServiceItem["filter"], { color: string; surface: string }> = {
+  Startup: { color: "#2e6b4f", surface: "#edf7f0" },
+  "Tax & compliance": { color: "#5c4aa6", surface: "#f2effb" },
+  Trademark: { color: "#b83652", surface: "#fff0f2" },
+  "Business tools": { color: "#1f6e70", surface: "#edf9f8" },
+};
+
 function getLinkProps(href: string) {
   return href.startsWith("http") ? { target: "_blank", rel: "noreferrer" } : {};
 }
@@ -39,6 +47,23 @@ function selectPriorityServices(
     const service = availableServices.find((item) => item.title === title);
     return service ? [{ ...service, displayTitle }] : [];
   });
+}
+
+function toPriorityService(service: LandingServiceItem): PriorityService {
+  const tone = serviceToneByFilter[service.filter];
+
+  return {
+    number: "",
+    title: service.serviceKey,
+    description: service.description,
+    action: "",
+    href: service.href,
+    icon: service.icon,
+    color: tone.color,
+    surface: tone.surface,
+    filters: [service.filter],
+    displayTitle: service.title,
+  };
 }
 
 function FeaturedServiceLink({ service }: { service: PriorityService }) {
@@ -62,12 +87,20 @@ function FeaturedServiceLink({ service }: { service: PriorityService }) {
   );
 }
 
-export function TopServices() {
+export function TopServices({ featuredServices }: { featuredServices?: LandingServiceItem[] }) {
   const [menuNavigation, setMenuNavigation] = useState(navigation);
-  const topServices = useMemo(() => selectPriorityServices(menuNavigation), [menuNavigation]);
-  const mobileServices = useMemo(() => selectPriorityServices(menuNavigation, mobilePriorityServices), [menuNavigation]);
+  const topServices = useMemo(
+    () => featuredServices?.map(toPriorityService) ?? selectPriorityServices(menuNavigation),
+    [featuredServices, menuNavigation],
+  );
+  const mobileServices = useMemo(
+    () => featuredServices?.map(toPriorityService) ?? selectPriorityServices(menuNavigation, mobilePriorityServices),
+    [featuredServices, menuNavigation],
+  );
 
   useEffect(() => {
+    if (featuredServices) return undefined;
+
     let cancelled = false;
 
     void getPublicMenu()
@@ -81,7 +114,7 @@ export function TopServices() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [featuredServices]);
 
   return (
     <>
