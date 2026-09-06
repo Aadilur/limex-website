@@ -26,18 +26,16 @@ function DesktopNavTrigger({
   isActive,
   isOpen,
   onToggle,
-  onOpen,
 }: {
   item: NavItem;
   isActive: boolean;
   isOpen: boolean;
   onToggle: () => void;
-  onOpen: () => void;
 }) {
   const menuId = `mega-menu-${slugify(item.label)}`;
 
   return (
-    <div className="relative" onMouseEnter={onOpen}>
+    <div className="relative">
       <button
         className={`group relative inline-flex h-control items-center gap-cluster-xs rounded-control border-0 bg-transparent px-2 py-1 text-nav-compact whitespace-nowrap transition-colors duration-200 ease-out hover:text-pink xl:text-nav-medium wide:text-nav ${
           isActive ? "bg-pink/10 font-bold text-[#de4d73]" : "text-ink"
@@ -45,13 +43,7 @@ function DesktopNavTrigger({
         type="button"
         aria-expanded={isOpen}
         aria-controls={menuId}
-        onClick={(event) => {
-          if (event.detail === 0) onToggle();
-          else onOpen();
-        }}
-        onFocus={(event) => {
-          if (event.currentTarget.matches(":focus-visible")) onOpen();
-        }}
+        onClick={onToggle}
       >
         <span>{item.label}</span>
         <img className="size-3 transition-transform duration-200 ease-out group-hover:translate-x-0.5" src={`/figma/${isActive ? "nav-chevron-active" : "nav-chevron"}.svg`} alt="" aria-hidden="true" />
@@ -217,7 +209,6 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
                 isActive={item.label === activeNavLabel}
                 isOpen={openMenu === item.label}
                 onToggle={() => setOpenMenu((current) => (current === item.label ? null : item.label))}
-                onOpen={() => setOpenMenu(item.label)}
               />
             ) : (
               <a
@@ -235,7 +226,6 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
         </nav>
         {openMenuItem ? (
           <>
-            <span className="pointer-events-auto absolute left-0 right-0 top-full h-[14px]" aria-hidden="true" />
             <MegaMenuPanel
               key={openMenuItem.label}
               item={openMenuItem}
