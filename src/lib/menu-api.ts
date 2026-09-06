@@ -83,8 +83,11 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
   const payload = await response.json().catch(() => null) as { data?: T; error?: string } | null;
   if (!response.ok) throw new ApiError(response.status, payload?.error ?? "Something went wrong.");
+  if (!payload || !Object.prototype.hasOwnProperty.call(payload, "data")) {
+    throw new ApiError(502, "The API returned an incomplete response. Nothing was changed.");
+  }
 
-  return payload?.data as T;
+  return payload.data as T;
 }
 
 export function isUnauthorizedError(error: unknown) {

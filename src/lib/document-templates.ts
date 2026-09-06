@@ -33,6 +33,22 @@ const keySchema = z.string().trim().regex(/^[a-z][a-z0-9_]{1,63}$/, "Use lowerca
 const textSchema = (max: number) => z.string().trim().min(1).max(max);
 const fontSizeSchema = z.enum(templateFontSizes);
 
+const defaultServiceCta = {
+  enabled: false,
+  href: "",
+  title: "Need help with this service?",
+  description: "See the service details and next steps before completing this document.",
+  linkLabel: "View service page",
+} as const;
+
+const serviceCtaSchema = z.object({
+  enabled: z.boolean().default(false),
+  href: z.string().trim().max(240).refine((value) => !value || /^\/services\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value), "Choose a valid internal service page.").default(""),
+  title: z.string().trim().min(1).max(140).default(defaultServiceCta.title),
+  description: z.string().trim().max(240).default(defaultServiceCta.description),
+  linkLabel: z.string().trim().min(1).max(70).default(defaultServiceCta.linkLabel),
+});
+
 export const templateFieldSchema = z.object({
   id: idSchema,
   key: keySchema,
@@ -89,6 +105,7 @@ export const templateSettingsSchema = z.object({
   showPageNumbers: z.boolean().default(true),
   fontFamily: z.enum(templateFontFamilies).default("serif"),
   defaultFontSize: fontSizeSchema.default("body"),
+  serviceCta: serviceCtaSchema.default(defaultServiceCta),
 });
 
 const documentTemplateBaseSchema = z.object({
@@ -129,6 +146,7 @@ export type TemplateBlock = z.infer<typeof templateBlockSchema>;
 export type TemplatePageSettings = z.infer<typeof templatePageSettingsSchema>;
 export type TemplatePage = z.infer<typeof templatePageSchema>;
 export type TemplateSettings = z.infer<typeof templateSettingsSchema>;
+export type TemplateServiceCta = z.infer<typeof serviceCtaSchema>;
 export type DocumentTemplateDraft = z.infer<typeof documentTemplateDraftSchema>;
 
 export type DocumentTemplateSummary = {
@@ -168,6 +186,7 @@ export const defaultTemplateSettings: TemplateSettings = {
   showPageNumbers: true,
   fontFamily: "serif",
   defaultFontSize: "body",
+  serviceCta: { ...defaultServiceCta },
 };
 
 const defaultMouBlocks: TemplateBlock[] = [

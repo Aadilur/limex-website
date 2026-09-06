@@ -2,11 +2,18 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { businessTools, calculateTool, calculatorFields, defaultToolsSettings, initialToolValues, toolsSettingsSchema, validateFields, type ToolSlug, type ToolValues } from "../src/lib/business-tools.js";
 import { createDocumentDraft, documentFields, documentText } from "../src/lib/business-documents.js";
+import { defaultMouTemplate, documentTemplateDraftSchema, normalizeDocumentTemplateDraft } from "../src/lib/document-templates.js";
 
 const settings = defaultToolsSettings;
 function calculate(slug: ToolSlug, values: ToolValues) { return calculateTool(slug, { ...initialToolValues(calculatorFields(slug, settings)), ...values }, settings).result; }
 test("catalogue contains seven distinct calculators and six builders", () => {
   assert.equal(businessTools.filter((tool) => tool.group === "calculator").length, 7); assert.equal(businessTools.filter((tool) => tool.group === "builder").length, 6); assert.equal(new Set(businessTools.map((tool) => tool.slug)).size, 13);
+});
+test("document templates keep a safe service CTA default and reject external service links", () => {
+  const legacy = normalizeDocumentTemplateDraft({ ...defaultMouTemplate, settings: { ...defaultMouTemplate.settings, serviceCta: undefined } });
+  assert.equal(legacy.settings.serviceCta.enabled, false);
+  assert.equal(legacy.settings.serviceCta.href, "");
+  assert.throws(() => documentTemplateDraftSchema.parse({ ...defaultMouTemplate, settings: { ...defaultMouTemplate.settings, serviceCta: { ...defaultMouTemplate.settings.serviceCta, enabled: true, href: "https://example.com" } } }));
 });
 for (const amount of [0, 0.01, 1, 99.99, 1000, 999999.99]) for (const rate of [0, 5, 7.5, 15, 100]) test(`VAT reconciles amount=${amount} rate=${rate}`, () => {
   for (const mode of ["Including VAT", "Excluding VAT"]) {
