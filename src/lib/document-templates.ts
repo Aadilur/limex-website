@@ -269,3 +269,10 @@ export function resolvePageSettings(template: Pick<DocumentTemplateDraft, "setti
     defaultFontSize: page.settings.defaultFontSize ?? template.settings.defaultFontSize,
   };
 }
+
+export function resolveBlockFontSize(
+  block: Extract<TemplateBlock, { type: "title" | "heading" | "paragraph" | "field" }>,
+  settings: Pick<TemplateSettings, "defaultFontSize">,
+) {
+  return block.fontSize === "body" ? settings.defaultFontSize : block.fontSize;
+}
