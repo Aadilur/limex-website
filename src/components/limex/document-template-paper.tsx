@@ -1,4 +1,13 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import { resolvePageSettings, resolveTemplateText, templateFontSizeMetrics, templatePaperDimensions, type DocumentTemplateDraft, type TemplateBlock, type TemplateValues } from "@/lib/document-templates";
+
+const cssPixelsPerMillimetre = 96 / 25.4;
+
+function millimetresToPixels(value: number) {
+  return value * cssPixelsPerMillimetre;
+}
 
 const alignClass = {
   left: "text-left",
@@ -46,13 +55,45 @@ function RenderPageBlocks({ blocks, template, values, showLabels }: { blocks: Te
 }
 
 export function DocumentTemplatePaper({ template, values = {}, showLabels = true, compact = false }: { template: DocumentTemplateDraft; values?: TemplateValues; showLabels?: boolean; compact?: boolean }) {
-  return <div className={`min-w-0 ${compact ? "space-y-3" : "space-y-4"}`.trim()}>{template.pages.map((page, index) => {
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const pageDimensions = templatePaperDimensions[template.settings.paperSize];
+  const pageWidthPx = millimetresToPixels(pageDimensions.widthMm);
+  const pageHeightPx = millimetresToPixels(pageDimensions.heightMm);
+  const pageGapPx = compact ? 12 : 16;
+  const totalHeightPx = (pageHeightPx * template.pages.length) + (pageGapPx * Math.max(0, template.pages.length - 1));
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    const updateScale = () => {
+      const availableWidth = viewport.clientWidth;
+      if (availableWidth > 0) setScale(Math.min(1, availableWidth / pageWidthPx));
+    };
+
+    updateScale();
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(updateScale);
+    observer?.observe(viewport);
+    window.addEventListener("resize", updateScale);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", updateScale);
+    };
+  }, [pageWidthPx]);
+
+  return <div ref={viewportRef} className="min-w-0 w-full">
+    <div className="relative mx-auto" style={{ width: pageWidthPx * scale, height: totalHeightPx * scale }}>
+      <div className="origin-top-left" style={{ width: pageWidthPx, transform: `scale(${scale})`, transformOrigin: "top left" }}>
+        <div className="grid" style={{ rowGap: `${pageGapPx}px` }}>{template.pages.map((page, index) => {
     const pageSettings = resolvePageSettings(template, page);
-    const pageDimensions = templatePaperDimensions[pageSettings.paperSize];
     const fontFamily = pageSettings.fontFamily === "sans" ? "Arial, Helvetica, sans-serif" : "Georgia, \"Times New Roman\", serif";
-    return <article className="relative mx-auto block w-full max-w-full overflow-hidden bg-white text-[#25221f] shadow-[0_10px_28px_rgba(57,48,41,0.1)] ring-1 ring-[#e1dbd2]" style={{ aspectRatio: `${pageDimensions.widthMm} / ${pageDimensions.heightMm}`, paddingTop: `${pageSettings.marginTop + pageSettings.stampGap}mm`, paddingRight: `${pageSettings.marginRight}mm`, paddingBottom: `${pageSettings.marginBottom}mm`, paddingLeft: `${pageSettings.marginLeft}mm`, fontFamily }} key={page.id} data-template-paper data-page-title={page.title}>
+    return <article className="relative mx-auto block overflow-hidden bg-white text-[#25221f] shadow-[0_10px_28px_rgba(57,48,41,0.1)] ring-1 ring-[#e1dbd2]" style={{ width: pageWidthPx, height: pageHeightPx, aspectRatio: `${pageDimensions.widthMm} / ${pageDimensions.heightMm}`, boxSizing: "border-box", paddingTop: `${pageSettings.marginTop + pageSettings.stampGap}mm`, paddingRight: `${pageSettings.marginRight}mm`, paddingBottom: `${pageSettings.marginBottom}mm`, paddingLeft: `${pageSettings.marginLeft}mm`, fontFamily }} key={page.id} data-template-paper data-page-title={page.title}>
       <div className="h-full min-h-0 overflow-hidden"><div className="min-h-full min-w-0"><RenderPageBlocks blocks={page.blocks} template={template} values={values} showLabels={showLabels} /></div></div>
       {pageSettings.showPageNumbers ? <span className="absolute bottom-3 left-0 right-0 text-center text-[9px] text-[#928980]">{index + 1} / {template.pages.length}</span> : null}
     </article>;
-  })}</div>;
+  })}</div>
+      </div>
+    </div>
+  </div>;
 }

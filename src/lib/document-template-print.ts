@@ -19,7 +19,7 @@ function blockHtml(block: TemplateBlock, template: DocumentTemplateDraft, values
   }
   if (block.type === "field") { const metrics = templateFontSizeMetrics.body; return `<p style="font-size:${metrics.sizePx}px;line-height:${metrics.lineHeight};white-space:pre-wrap;overflow-wrap:anywhere;margin:0 0 12px;">${escapeHtml(values[block.fieldKey]?.trim() || "")}</p>`; }
   if (block.type === "spacer") return `<div style="height:${Math.min(240, Math.max(4, block.height))}px;"></div>`;
-  if (block.type === "signature") return `<div style="margin-top:32px;max-width:280px;border-top:1px solid #2b2927;padding-top:8px;font-size:12px;line-height:1.5;"><div>${escapeHtml(resolveTemplateText(block.label, values, template.fields, false))}</div><div style="color:#69635d;">Signature / stamp</div><div style="color:#69635d;">Date: __________________</div></div>`;
+  if (block.type === "signature") return `<div style="display:grid;row-gap:4px;margin-top:32px;max-width:280px;border-top:1px solid #2b2927;padding-top:8px;font-size:12px;line-height:1.5;"><div>${escapeHtml(resolveTemplateText(block.label, values, template.fields, false))}</div><div style="color:#69635d;">Signature / stamp</div><div style="color:#69635d;">Date: __________________</div></div>`;
   return "";
 }
 
