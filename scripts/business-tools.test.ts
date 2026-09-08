@@ -37,10 +37,13 @@ test("40-page partnership deed templates preserve the source structure and separ
     assert.equal(parsed.settings.marginRight, 25);
     assert.equal(parsed.settings.marginBottom, 38);
     assert.equal(parsed.settings.marginLeft, 25);
+    assert.equal(parsed.settings.fontScale, 100);
     assert.equal(parsed.pages.length, 40);
+    assert.equal(parsed.pages[39]?.settings.stampGap, 0);
+    assert.equal(parsed.pages[39]?.settings.defaultFontSize, "body");
     assert.equal(parsed.fields.length, 44);
     assert.equal(parsed.pages[10]?.blocks.some((block) => block.type === "paragraph" && block.text.includes("{{partner_1_capital}}")), true);
-    assert.equal(parsed.pages[39]?.blocks.some((block) => block.type === "signature"), true);
+    assert.equal(parsed.pages[39]?.blocks.filter((block) => block.type === "signature").length, 7);
   }
   assert.match(defaultPartnershipDeed40BanglaTemplate.title, /[\u0980-\u09ff]/);
   assert.equal(defaultPartnershipDeed40EnglishTemplate.slug, "partnership-deed-40-en");
@@ -68,6 +71,9 @@ test("partnership deed partner slots are conditional, extendable to eight and ke
   assert.equal(parsed.fields.some((field) => field.key === "partner_9_name"), false);
   assert.equal(parsed.fields.find((field) => field.key === "partner_count")?.options.some((option) => option.value === "8"), true);
   assert.equal(parsed.pages.some((page) => page.blocks.some((block) => JSON.stringify(block).includes("partner_8_name"))), true);
+  const finalSignatures = parsed.pages[39]?.blocks.filter((block) => block.type === "signature") ?? [];
+  assert.equal(finalSignatures.filter((block) => JSON.stringify(block).includes("partner_")).length, 8);
+  assert.equal(finalSignatures.filter((block) => JSON.stringify(block).includes("witness_")).length, 3);
 });
 test("partnership deed print output removes inactive partner rows and signatures", () => {
   const values = Object.fromEntries(defaultPartnershipDeed40EnglishTemplate.fields.map((field) => [field.key, field.key === "partner_count" ? "2" : field.key.match(/^partner_([1-8])_name$/)?.[1] ? `Partner ${field.key.match(/^partner_([1-8])_name$/)?.[1]}` : "Sample"]));

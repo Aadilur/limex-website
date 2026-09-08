@@ -1,11 +1,11 @@
-import { isTemplateBlockVisible, isTemplateFieldVisible, resolveBlockFontSize, resolvePageSettings, resolveTemplateText, templateFontSizeMetrics, templatePaperDimensions, type DocumentTemplateDraft, type TemplateBlock, type TemplatePage, type TemplateValues } from "./document-templates";
+import { isTemplateBlockVisible, isTemplateFieldVisible, resolveBlockFontSize, resolvePageSettings, resolveTemplateText, scaledTemplateFontSizeMetrics, templatePaperDimensions, type DocumentTemplateDraft, type TemplateBlock, type TemplatePage, type TemplateValues } from "./document-templates";
 
 function escapeHtml(value: string) {
   return value.replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character] ?? character);
 }
 
-function styleFor(block: Extract<TemplateBlock, { type: "title" | "heading" | "paragraph" | "field" }>, defaultFontSize: ReturnType<typeof resolvePageSettings>["defaultFontSize"]) {
-  const metrics = templateFontSizeMetrics[resolveBlockFontSize(block, { defaultFontSize })];
+function styleFor(block: Extract<TemplateBlock, { type: "title" | "heading" | "paragraph" | "field" }>, defaultFontSize: ReturnType<typeof resolvePageSettings>["defaultFontSize"], fontScale: number) {
+  const metrics = scaledTemplateFontSizeMetrics(resolveBlockFontSize(block, { defaultFontSize }), fontScale);
   return `font-size:${metrics.sizePx}px;line-height:${metrics.lineHeight};text-align:${block.align};font-weight:${block.bold ? 700 : 400};font-style:${block.italic ? "italic" : "normal"};white-space:pre-wrap;overflow-wrap:anywhere;`;
 }
 
@@ -14,14 +14,14 @@ function blockHtml(block: TemplateBlock, template: DocumentTemplateDraft, values
   if (block.type === "title" || block.type === "heading" || block.type === "paragraph") {
     const text = escapeHtml(resolveTemplateText(block.text, values, template.fields, false));
     if (!text.trim()) return "";
-    const style = styleFor(block, defaultFontSize);
+    const style = styleFor(block, defaultFontSize, template.settings.fontScale);
     if (block.type === "title") return `<h1 style="${style}margin:0 0 20px;">${text}</h1>`;
     if (block.type === "heading") return `<h2 style="${style}margin:20px 0 10px;">${text}</h2>`;
     return `<p style="${style}margin:0 0 12px;">${text}</p>`;
   }
-  if (block.type === "field") { const field = template.fields.find((item) => item.key === block.fieldKey); if (field && !isTemplateFieldVisible(field, values)) return ""; const value = values[block.fieldKey]?.trim() || ""; if (!value) return ""; const style = styleFor(block, defaultFontSize); return `<p style="${style}margin:0 0 12px;">${escapeHtml(value)}</p>`; }
+  if (block.type === "field") { const field = template.fields.find((item) => item.key === block.fieldKey); if (field && !isTemplateFieldVisible(field, values)) return ""; const value = values[block.fieldKey]?.trim() || ""; if (!value) return ""; const style = styleFor(block, defaultFontSize, template.settings.fontScale); return `<p style="${style}margin:0 0 12px;">${escapeHtml(value)}</p>`; }
   if (block.type === "spacer") return `<div style="height:${Math.min(240, Math.max(4, block.height))}px;"></div>`;
-  if (block.type === "signature") { const metrics = templateFontSizeMetrics[defaultFontSize]; return `<div style="display:grid;row-gap:4px;margin-top:32px;max-width:280px;border-top:1px solid #2b2927;padding-top:8px;font-size:${metrics.sizePx}px;line-height:${metrics.lineHeight};"><div>${escapeHtml(resolveTemplateText(block.label, values, template.fields, false))}</div><div style="color:#69635d;">Signature / stamp</div><div style="color:#69635d;">Date: __________________</div></div>`; }
+  if (block.type === "signature") { const metrics = scaledTemplateFontSizeMetrics(defaultFontSize, template.settings.fontScale); return `<div style="display:grid;row-gap:2px;margin-top:20px;max-width:280px;border-top:1px solid #2b2927;padding-top:6px;font-size:${metrics.sizePx}px;line-height:${metrics.lineHeight};"><div>${escapeHtml(resolveTemplateText(block.label, values, template.fields, false))}</div><div style="color:#69635d;">Signature / stamp</div><div style="color:#69635d;">Date: __________________</div></div>`; }
   return "";
 }
 

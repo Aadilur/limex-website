@@ -14,6 +14,19 @@ export const templateFontSizeMetrics = {
   large: { sizePx: 22, lineHeight: 1.25 },
 } as const satisfies Record<TemplateFontSize, { sizePx: number; lineHeight: number }>;
 
+export const templateFontScaleMin = 100;
+export const templateFontScaleMax = 120;
+export const templateFontScaleDefault = 100;
+
+export function scaledTemplateFontSizeMetrics(fontSize: TemplateFontSize, fontScale = templateFontScaleDefault) {
+  const safeScale = Math.min(templateFontScaleMax, Math.max(templateFontScaleMin, Number.isFinite(fontScale) ? fontScale : templateFontScaleDefault));
+  const metrics = templateFontSizeMetrics[fontSize];
+  return {
+    sizePx: Math.max(8, Math.round(metrics.sizePx * safeScale / 100)),
+    lineHeight: metrics.lineHeight,
+  };
+}
+
 export const templatePaperDimensions = {
   A4: { widthMm: 210, heightMm: 297 },
   LEGAL: { widthMm: 216, heightMm: 356 },
@@ -120,6 +133,7 @@ export const templateSettingsSchema = z.object({
   showPageNumbers: z.boolean().default(true),
   fontFamily: z.enum(templateFontFamilies).default("serif"),
   defaultFontSize: fontSizeSchema.default("body"),
+  fontScale: z.number().int().min(templateFontScaleMin).max(templateFontScaleMax).default(templateFontScaleDefault),
   serviceCta: serviceCtaSchema.default(defaultServiceCta),
 });
 
@@ -206,6 +220,7 @@ export const defaultTemplateSettings: TemplateSettings = {
   showPageNumbers: true,
   fontFamily: "serif",
   defaultFontSize: "body",
+  fontScale: templateFontScaleDefault,
   serviceCta: { ...defaultServiceCta },
 };
 

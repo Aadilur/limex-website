@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { isTemplateBlockVisible, isTemplateFieldVisible, resolveBlockFontSize, resolvePageSettings, resolveTemplateText, templateFontSizeMetrics, templatePaperDimensions, type DocumentTemplateDraft, type TemplateBlock, type TemplateValues } from "@/lib/document-templates";
+import { isTemplateBlockVisible, isTemplateFieldVisible, resolveBlockFontSize, resolvePageSettings, resolveTemplateText, scaledTemplateFontSizeMetrics, templatePaperDimensions, type DocumentTemplateDraft, type TemplateBlock, type TemplateValues } from "@/lib/document-templates";
 
 const cssPixelsPerMillimetre = 96 / 25.4;
 
@@ -19,8 +19,8 @@ function formattedClass(block: Extract<TemplateBlock, { type: "title" | "heading
   return `${alignClass[block.align]} ${block.bold ? "font-bold" : "font-normal"} ${block.italic ? "italic" : "not-italic"}`.trim();
 }
 
-function formattedStyle(block: Extract<TemplateBlock, { type: "title" | "heading" | "paragraph" | "field" }>, defaultFontSize: ReturnType<typeof resolvePageSettings>["defaultFontSize"]) {
-  const metrics = templateFontSizeMetrics[resolveBlockFontSize(block, { defaultFontSize })];
+function formattedStyle(block: Extract<TemplateBlock, { type: "title" | "heading" | "paragraph" | "field" }>, defaultFontSize: ReturnType<typeof resolvePageSettings>["defaultFontSize"], fontScale: number) {
+  const metrics = scaledTemplateFontSizeMetrics(resolveBlockFontSize(block, { defaultFontSize }), fontScale);
   return { fontSize: `${metrics.sizePx}px`, lineHeight: metrics.lineHeight };
 }
 
@@ -29,9 +29,9 @@ function RenderBlock({ block, template, values, showLabels, defaultFontSize }: {
   if (block.type === "title" || block.type === "heading" || block.type === "paragraph") {
     const text = resolveTemplateText(block.text, values, template.fields, showLabels);
     if (!text.trim()) return null;
-    if (block.type === "title") return <h1 className={`mb-5 ${formattedClass(block)}`} style={formattedStyle(block, defaultFontSize)}>{text}</h1>;
-    if (block.type === "heading") return <h2 className={`mb-2.5 mt-5 ${formattedClass(block)}`} style={formattedStyle(block, defaultFontSize)}>{text}</h2>;
-    return <p className={`mb-3 whitespace-pre-wrap break-words ${formattedClass(block)}`} style={formattedStyle(block, defaultFontSize)}>{text}</p>;
+    if (block.type === "title") return <h1 className={`mb-5 ${formattedClass(block)}`} style={formattedStyle(block, defaultFontSize, template.settings.fontScale)}>{text}</h1>;
+    if (block.type === "heading") return <h2 className={`mb-2.5 mt-5 ${formattedClass(block)}`} style={formattedStyle(block, defaultFontSize, template.settings.fontScale)}>{text}</h2>;
+    return <p className={`mb-3 whitespace-pre-wrap break-words ${formattedClass(block)}`} style={formattedStyle(block, defaultFontSize, template.settings.fontScale)}>{text}</p>;
   }
 
   if (block.type === "field") {
@@ -39,11 +39,11 @@ function RenderBlock({ block, template, values, showLabels, defaultFontSize }: {
     if (field && !isTemplateFieldVisible(field, values)) return null;
     const text = values[block.fieldKey]?.trim() || (showLabels ? `[${field?.label ?? block.fieldKey}]` : "");
     if (!text.trim()) return null;
-    return <p className="mb-3 whitespace-pre-wrap break-words" style={formattedStyle(block, defaultFontSize)}>{text}</p>;
+    return <p className="mb-3 whitespace-pre-wrap break-words" style={formattedStyle(block, defaultFontSize, template.settings.fontScale)}>{text}</p>;
   }
 
   if (block.type === "spacer") return <div aria-hidden="true" style={{ height: `${Math.min(240, Math.max(4, block.height))}px` }} />;
-  if (block.type === "signature") { const metrics = templateFontSizeMetrics[defaultFontSize]; return <div className="mt-8 grid max-w-[280px] gap-1 border-t border-[#2b2927] pt-2" style={{ fontSize: `${metrics.sizePx}px`, lineHeight: metrics.lineHeight }}><span>{resolveTemplateText(block.label, values, template.fields, showLabels)}</span><span className="text-[#69635d]">Signature / stamp</span><span className="text-[#69635d]">Date: __________________</span></div>; }
+  if (block.type === "signature") { const metrics = scaledTemplateFontSizeMetrics(defaultFontSize, template.settings.fontScale); return <div className="mt-5 grid max-w-[280px] gap-0.5 border-t border-[#2b2927] pt-1.5" style={{ fontSize: `${metrics.sizePx}px`, lineHeight: metrics.lineHeight }}><span>{resolveTemplateText(block.label, values, template.fields, showLabels)}</span><span className="text-[#69635d]">Signature / stamp</span><span className="text-[#69635d]">Date: __________________</span></div>; }
   return null;
 }
 

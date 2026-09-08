@@ -110,6 +110,14 @@ function selectField(id: string, key: string, language: Language): TemplateField
   };
 }
 
+function witnessFields(language: Language): TemplateField[] {
+  return [
+    areaField("partnership-witness-1", "witness_1", language, "Witness 1 name and address", "সাক্ষী ১-এর নাম ও ঠিকানা", "Full name and address", "পূর্ণ নাম ও ঠিকানা"),
+    areaField("partnership-witness-2", "witness_2", language, "Witness 2 name and address", "সাক্ষী ২-এর নাম ও ঠিকানা", "Full name and address", "পূর্ণ নাম ও ঠিকানা"),
+    areaField("partnership-witness-3", "witness_3", language, "Witness 3 name and address", "সাক্ষী ৩-এর নাম ও ঠিকানা", "Full name and address", "পূর্ণ নাম ও ঠিকানা"),
+  ];
+}
+
 function partnerCountOptions(language: Language, maxPartners: number, existingOptions: TemplateField["options"] = []) {
   const existingLabels = new Map(existingOptions.map((option) => [option.value, option.label]));
   return Array.from({ length: Math.max(0, maxPartners - partnershipDeedMinPartners + 1) }, (_, index) => {
@@ -190,9 +198,7 @@ function partnershipDeedFields(language: Language): TemplateField[] {
     textField("partnership-meeting-date", "monthly_meeting_date", language, "Monthly meeting date", "মাসিক সভার তারিখ", "30th day of each English month", "প্রতি ইংরেজি মাসের ৩০ তারিখ"),
     numberField("partnership-stamp-value", "stamp_value", language, "Deed stamp value (BDT)", "দলিলের স্ট্যাম্প মূল্য (টাকা)", "4000"),
     textField("partnership-stamp-value-words", "stamp_value_words", language, "Deed stamp value in words", "কথায় দলিলের স্ট্যাম্প মূল্য", "Four thousand taka", "চার হাজার টাকা"),
-    areaField("partnership-witness-1", "witness_1", language, "Witness 1 name and address", "সাক্ষী ১-এর নাম ও ঠিকানা", "Full name and address", "পূর্ণ নাম ও ঠিকানা"),
-    areaField("partnership-witness-2", "witness_2", language, "Witness 2 name and address", "সাক্ষী ২-এর নাম ও ঠিকানা", "Full name and address", "পূর্ণ নাম ও ঠিকানা"),
-    areaField("partnership-witness-3", "witness_3", language, "Witness 3 name and address", "সাক্ষী ৩-এর নাম ও ঠিকানা", "Full name and address", "পূর্ণ নাম ও ঠিকানা"),
+    ...witnessFields(language),
   ];
 
   for (const number of [1, 2, 3, 4]) fields.push(...partnerFieldsForSlot(language, number));
@@ -231,7 +237,10 @@ function partnershipDeedPages(language: Language): TemplatePage[] {
     return {
       id: prefix,
       title: copy(language, englishTitle, banglaTitle),
-      settings: {},
+      // Keep the final execution page usable when the deed has many signers.
+      // The stamp gap is useful on the stamped content pages, but the final
+      // page needs the space for up to eight partners and three witnesses.
+      settings: number === 40 ? { stampGap: 0, marginTop: 20, marginBottom: 20, defaultFontSize: "body" } : {},
       blocks: pageBlocks.map((block, index) => ({ ...block, id: `${prefix}-block-${index}` })),
     };
   };
@@ -477,6 +486,46 @@ function addBlockBefore(blocks: TemplateBlock[], block: TemplateBlock, predicate
   return [...blocks.slice(0, index), block, ...blocks.slice(index)];
 }
 
+function partnerSignatureBlock(language: Language, number: number) {
+  const label = copy(language, `Partner ${number}`, `অংশীদার ${number}`);
+  return signatureBlock(
+    `partnership-partner-${number}-signature`,
+    `${label} — {{partner_${number}_name}}`,
+    partnershipPartnerVisibility(number),
+  );
+}
+
+function ensureFinalSignatureBlocks(pages: TemplatePage[], language: Language, partnerSlots: number[]) {
+  const finalIndex = pages.findIndex((page) => page.id.includes("-page-40"));
+  const targetIndex = finalIndex >= 0 ? finalIndex : pages.length - 1;
+  const finalPage = pages[targetIndex];
+  if (!finalPage) return pages;
+
+  let blocks = [...finalPage.blocks];
+  const existingPartnerNumbers = new Set(blocks.flatMap((block) => block.type === "signature" ? partnerReferences(block) : []));
+  const firstWitnessIndex = blocks.findIndex((block) => block.type === "signature" && /Witness 1|সাক্ষী ১/i.test(block.label));
+  let insertAt = firstWitnessIndex >= 0 ? firstWitnessIndex : blocks.length;
+  for (const number of partnerSlots) {
+    if (existingPartnerNumbers.has(number)) continue;
+    blocks.splice(insertAt, 0, partnerSignatureBlock(language, number));
+    insertAt += 1;
+  }
+
+  for (const number of [1, 2, 3]) {
+    const hasWitnessSignature = blocks.some((block) => block.type === "signature" && new RegExp(`Witness ${number}|সাক্ষী ${number}`, "i").test(block.label));
+    if (!hasWitnessSignature) blocks.push(signatureBlock(`partnership-witness-${number}-signature`, copy(language, `Witness ${number} — {{witness_${number}}}`, `সাক্ষী ${number} — {{witness_${number}}}`)));
+  }
+
+  const finalSettings = {
+    ...finalPage.settings,
+    stampGap: finalPage.settings.stampGap ?? 0,
+    marginTop: finalPage.settings.marginTop ?? 20,
+    marginBottom: finalPage.settings.marginBottom ?? 20,
+    defaultFontSize: finalPage.settings.defaultFontSize ?? "body",
+  };
+  return pages.map((page, index) => index === targetIndex ? { ...page, settings: finalSettings, blocks } : page);
+}
+
 function addPartnerSlotBlocks(pages: TemplatePage[], language: Language, number: number) {
   const label = copy(language, `Partner ${number}`, `অংশীদার ${number}`);
   const particulars = textBlock(
@@ -499,7 +548,7 @@ function addPartnerSlotBlocks(pages: TemplatePage[], language: Language, number:
   );
   const signature = signatureBlock(
     `partnership-partner-${number}-signature`,
-    copy(language, `${label} — {{partner_${number}_name}}`, `${label} — {{partner_${number}_name}}`),
+    `${label} — {{partner_${number}_name}}`,
     partnershipPartnerVisibility(number),
   );
 
@@ -540,14 +589,18 @@ export function upgradePartnershipDeedTemplate(template: DocumentTemplateDraft):
     if (field.key === "partner_count") return { ...field, options: partnerCountOptions(language, maxPartner, field.options) };
     return field;
   });
-  const pages = template.pages.map((page) => ({
+  const pagesWithVisibility = template.pages.map((page) => ({
     ...page,
     blocks: page.blocks.map((block) => {
       const references = partnerReferences(block);
       return references.length === 1 && !block.visibleWhen ? { ...block, visibleWhen: partnershipPartnerVisibility(references[0]) } : block;
     }),
   }));
-  return { ...template, fields, pages };
+  const fieldsWithWitnesses = [...fields];
+  for (const witness of witnessFields(language)) {
+    if (!fieldsWithWitnesses.some((field) => field.key === witness.key)) fieldsWithWitnesses.push(witness);
+  }
+  return { ...template, fields: fieldsWithWitnesses, pages: ensureFinalSignatureBlocks(pagesWithVisibility, language, slots) };
 }
 
 export function addPartnershipPartnerSlot(template: DocumentTemplateDraft): DocumentTemplateDraft {
