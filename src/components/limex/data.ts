@@ -300,8 +300,9 @@ const businessTools: MegaMenuGroup[] = [
         children: [
           { label: "Office Rental Deed - English", href: "/business-tools/templates/office-rental-deed-en" },
           { label: "Office Rental Deed - বাংলা", href: "/business-tools/templates/office-rental-deed-bn" },
+          { label: "40 Page Partnership Deed - English", href: "/business-tools/templates/partnership-deed-40-en" },
+          { label: "40 Page Partnership Deed - বাংলা", href: "/business-tools/templates/partnership-deed-40-bn" },
           { label: "E-Trade License Closed/Cancel Application", href: "/business-tools/trade-license-cancellation" },
-          { label: "Partnership Deed Agreement Builder (Eng and Bangla)", href: "/business-tools/partnership-deed" },
           { label: "MOA/AOA Builder", href: "/business-tools/moa-aoa" },
           { label: "MOU Generator", href: "/business-tools/mou" },
           { label: "Employment Agreement Generator", href: "/business-tools/employment-agreement" },

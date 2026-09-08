@@ -3,6 +3,7 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import { navigation, services } from "../src/components/limex/data.js";
 import { defaultLandingContent } from "../src/lib/landing-defaults.js";
 import { defaultMouTemplate, flattenTemplatePages } from "../src/lib/document-templates.js";
+import { defaultPartnershipDeed40Templates } from "../src/lib/partnership-deed-templates.js";
 import { defaultRentalDeedTemplates } from "../src/lib/rental-deed-templates.js";
 
 const prisma = new PrismaClient();
@@ -72,7 +73,7 @@ async function main() {
     },
   });
 
-  for (const template of [defaultMouTemplate, ...defaultRentalDeedTemplates]) {
+  for (const template of [defaultMouTemplate, ...defaultRentalDeedTemplates, ...defaultPartnershipDeed40Templates]) {
     await prisma.documentTemplate.upsert({
       where: { slug: template.slug },
       update: {},

@@ -3,6 +3,7 @@ import test from "node:test";
 import { businessTools, calculateTool, calculatorFields, defaultToolsSettings, initialToolValues, toolsSettingsSchema, validateFields, type ToolSlug, type ToolValues } from "../src/lib/business-tools.js";
 import { createDocumentDraft, documentFields, documentText } from "../src/lib/business-documents.js";
 import { defaultMouTemplate, documentTemplateDraftSchema, normalizeDocumentTemplateDraft } from "../src/lib/document-templates.js";
+import { defaultPartnershipDeed40BanglaTemplate, defaultPartnershipDeed40EnglishTemplate } from "../src/lib/partnership-deed-templates.js";
 import { defaultRentalDeedBanglaTemplate, defaultRentalDeedEnglishTemplate } from "../src/lib/rental-deed-templates.js";
 
 const settings = defaultToolsSettings;
@@ -26,6 +27,23 @@ test("rental deed templates preserve the supplied long-sheet ratio and separate 
   assert.match(defaultRentalDeedBanglaTemplate.title, /[\u0980-\u09ff]/);
   assert.equal(defaultRentalDeedEnglishTemplate.slug, "office-rental-deed-en");
   assert.equal(defaultRentalDeedBanglaTemplate.slug, "office-rental-deed-bn");
+});
+test("40-page partnership deed templates preserve the source structure and separate languages", () => {
+  for (const template of [defaultPartnershipDeed40EnglishTemplate, defaultPartnershipDeed40BanglaTemplate]) {
+    const parsed = documentTemplateDraftSchema.parse(template);
+    assert.equal(parsed.settings.paperSize, "LEGAL");
+    assert.equal(parsed.settings.marginTop + parsed.settings.stampGap, 112);
+    assert.equal(parsed.settings.marginRight, 25);
+    assert.equal(parsed.settings.marginBottom, 38);
+    assert.equal(parsed.settings.marginLeft, 25);
+    assert.equal(parsed.pages.length, 40);
+    assert.equal(parsed.fields.length, 44);
+    assert.equal(parsed.pages[10]?.blocks.some((block) => block.type === "paragraph" && block.text.includes("{{partner_1_capital}}")), true);
+    assert.equal(parsed.pages[39]?.blocks.some((block) => block.type === "signature"), true);
+  }
+  assert.match(defaultPartnershipDeed40BanglaTemplate.title, /[\u0980-\u09ff]/);
+  assert.equal(defaultPartnershipDeed40EnglishTemplate.slug, "partnership-deed-40-en");
+  assert.equal(defaultPartnershipDeed40BanglaTemplate.slug, "partnership-deed-40-bn");
 });
 for (const amount of [0, 0.01, 1, 99.99, 1000, 999999.99]) for (const rate of [0, 5, 7.5, 15, 100]) test(`VAT reconciles amount=${amount} rate=${rate}`, () => {
   for (const mode of ["Including VAT", "Excluding VAT"]) {
