@@ -168,6 +168,7 @@ model DocumentTemplate {
   updatedAt          DateTime  @updatedAt
 
   @@index([status, updatedAt])
+  @@index([updatedAt])
 }
 
 model ToolServiceRequest {

@@ -19,9 +19,16 @@ function assertAdminTemplate(value: unknown): AdminDocumentTemplate {
   return value as unknown as AdminDocumentTemplate;
 }
 
-function assertAdminTemplateList(value: unknown): AdminDocumentTemplate[] {
+function assertAdminTemplateSummary(value: unknown): DocumentTemplateSummary {
+  if (!isRecord(value) || typeof value.id !== "string" || typeof value.slug !== "string" || typeof value.title !== "string" || typeof value.description !== "string" || typeof value.paperSize !== "string" || (value.status !== "DRAFT" && value.status !== "PUBLISHED") || typeof value.revision !== "number" || (value.publishedRevision !== null && typeof value.publishedRevision !== "number") || (value.publishedAt !== null && typeof value.publishedAt !== "string") || typeof value.updatedAt !== "string") {
+    throw new ApiError(502, "The template list was incomplete. Nothing was changed.");
+  }
+  return value as unknown as DocumentTemplateSummary;
+}
+
+function assertAdminTemplateList(value: unknown): DocumentTemplateSummary[] {
   if (!Array.isArray(value)) throw new ApiError(502, "The template list was incomplete. Nothing was changed.");
-  return value.map(assertAdminTemplate);
+  return value.map(assertAdminTemplateSummary);
 }
 
 export function getPublishedTemplates(): Promise<DocumentTemplateSummary[]> {
@@ -32,8 +39,12 @@ export function getPublishedTemplate(slug: string): Promise<PublicDocumentTempla
   return request<PublicDocumentTemplate>(`/api/tools/templates/${encodeURIComponent(slug)}`, { cache: "no-store" });
 }
 
-export function getAdminTemplates(): Promise<AdminDocumentTemplate[]> {
+export function getAdminTemplates(): Promise<DocumentTemplateSummary[]> {
   return request<unknown>("/api/admin/tools/templates", { cache: "no-store" }).then(assertAdminTemplateList);
+}
+
+export function getAdminTemplate(id: string): Promise<AdminDocumentTemplate> {
+  return request<unknown>(`/api/admin/tools/templates/${encodeURIComponent(id)}`, { cache: "no-store" }).then(assertAdminTemplate);
 }
 
 export function getAdminTemplatePreview(slug: string): Promise<AdminDocumentTemplate> {

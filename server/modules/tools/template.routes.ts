@@ -23,6 +23,19 @@ function asJson(value: unknown) {
   return value as Prisma.InputJsonValue;
 }
 
+const templateSummarySelect = {
+  id: true,
+  slug: true,
+  title: true,
+  description: true,
+  settings: true,
+  status: true,
+  revision: true,
+  publishedRevision: true,
+  publishedAt: true,
+  updatedAt: true,
+} as const;
+
 function toSummary(row: {
   id: string;
   slug: string;
@@ -109,7 +122,11 @@ async function findAdminTemplate(id: string) {
 export async function templateRoutes(app: FastifyInstance) {
   app.get("/api/tools/templates", async (_request, reply) => {
     reply.header("Cache-Control", "no-store");
-    const rows = await prisma.documentTemplate.findMany({ where: { status: "PUBLISHED" }, orderBy: [{ publishedAt: "desc" }, { title: "asc" }] });
+    const rows = await prisma.documentTemplate.findMany({
+      where: { status: "PUBLISHED" },
+      select: templateSummarySelect,
+      orderBy: [{ publishedAt: "desc" }, { title: "asc" }],
+    });
     return { data: rows.map(toSummary) };
   });
 
@@ -125,8 +142,13 @@ export async function templateRoutes(app: FastifyInstance) {
   app.get("/api/admin/tools/templates", async (request, reply) => {
     if (!requireAdminSession(request, reply)) return;
     reply.header("Cache-Control", "no-store");
-    const rows = await prisma.documentTemplate.findMany({ orderBy: { updatedAt: "desc" } });
-    return { data: rows.map(toAdminTemplate) };
+    // The editor list only needs metadata. Loading every draft's JSON page tree
+    // here makes MySQL sort/fetch large values before the admin screen can open.
+    const rows = await prisma.documentTemplate.findMany({
+      select: templateSummarySelect,
+      orderBy: { updatedAt: "desc" },
+    });
+    return { data: rows.map(toSummary) };
   });
 
   app.get("/api/admin/tools/templates/slug-availability", async (request, reply) => {
