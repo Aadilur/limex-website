@@ -2,8 +2,8 @@ import { Prisma, PrismaClient } from "@prisma/client";
 
 import { navigation, services } from "../src/components/limex/data.js";
 import { defaultLandingContent } from "../src/lib/landing-defaults.js";
-import { defaultMouTemplate, flattenTemplatePages } from "../src/lib/document-templates.js";
-import { defaultPartnershipDeed40Templates } from "../src/lib/partnership-deed-templates.js";
+import { defaultMouTemplate, flattenTemplatePages, normalizeDocumentTemplateDraft } from "../src/lib/document-templates.js";
+import { defaultPartnershipDeed40Templates, isPartnershipDeedTemplate, upgradePartnershipDeedTemplate } from "../src/lib/partnership-deed-templates.js";
 import { defaultRentalDeedTemplates } from "../src/lib/rental-deed-templates.js";
 
 const prisma = new PrismaClient();
@@ -74,25 +74,44 @@ async function main() {
   });
 
   for (const template of [defaultMouTemplate, ...defaultRentalDeedTemplates, ...defaultPartnershipDeed40Templates]) {
-    await prisma.documentTemplate.upsert({
-      where: { slug: template.slug },
-      update: {},
-      create: {
-        slug: template.slug,
-        title: template.title,
-        description: template.description,
-        settings: template.settings as unknown as Prisma.InputJsonValue,
-        fields: template.fields as unknown as Prisma.InputJsonValue,
-        blocks: flattenTemplatePages(template.pages) as unknown as Prisma.InputJsonValue,
-        pages: template.pages as unknown as Prisma.InputJsonValue,
-        publishedSettings: template.settings as unknown as Prisma.InputJsonValue,
-        publishedFields: template.fields as unknown as Prisma.InputJsonValue,
-        publishedBlocks: flattenTemplatePages(template.pages) as unknown as Prisma.InputJsonValue,
-        publishedPages: template.pages as unknown as Prisma.InputJsonValue,
-        status: "PUBLISHED",
-        revision: 1,
-        publishedRevision: 1,
-        publishedAt: new Date(),
+    const existing = await prisma.documentTemplate.findUnique({ where: { slug: template.slug } });
+    if (!existing) {
+      await prisma.documentTemplate.create({
+        data: {
+          slug: template.slug,
+          title: template.title,
+          description: template.description,
+          settings: template.settings as unknown as Prisma.InputJsonValue,
+          fields: template.fields as unknown as Prisma.InputJsonValue,
+          blocks: flattenTemplatePages(template.pages) as unknown as Prisma.InputJsonValue,
+          pages: template.pages as unknown as Prisma.InputJsonValue,
+          publishedSettings: template.settings as unknown as Prisma.InputJsonValue,
+          publishedFields: template.fields as unknown as Prisma.InputJsonValue,
+          publishedBlocks: flattenTemplatePages(template.pages) as unknown as Prisma.InputJsonValue,
+          publishedPages: template.pages as unknown as Prisma.InputJsonValue,
+          status: "PUBLISHED",
+          revision: 1,
+          publishedRevision: 1,
+          publishedAt: new Date(),
+        },
+      });
+      continue;
+    }
+
+    if (!isPartnershipDeedTemplate(template)) continue;
+    const current = normalizeDocumentTemplateDraft({ title: existing.title, slug: existing.slug, description: existing.description, settings: existing.settings, fields: existing.fields, pages: existing.pages ?? undefined, blocks: existing.blocks });
+    const upgraded = upgradePartnershipDeedTemplate(current);
+    const draftChanged = JSON.stringify(current.fields) !== JSON.stringify(upgraded.fields) || JSON.stringify(current.pages) !== JSON.stringify(upgraded.pages);
+    const publishedSource = existing.publishedPages ?? existing.publishedBlocks;
+    const published = normalizeDocumentTemplateDraft({ title: existing.title, slug: existing.slug, description: existing.description, settings: existing.publishedSettings ?? existing.settings, fields: existing.publishedFields ?? existing.fields, pages: existing.publishedPages ?? undefined, blocks: publishedSource });
+    const upgradedPublished = upgradePartnershipDeedTemplate(published);
+    const publishedChanged = JSON.stringify(published.fields) !== JSON.stringify(upgradedPublished.fields) || JSON.stringify(published.pages) !== JSON.stringify(upgradedPublished.pages);
+    if (!draftChanged && !publishedChanged) continue;
+    await prisma.documentTemplate.update({
+      where: { id: existing.id },
+      data: {
+        ...(draftChanged ? { fields: upgraded.fields as unknown as Prisma.InputJsonValue, blocks: flattenTemplatePages(upgraded.pages) as unknown as Prisma.InputJsonValue, pages: upgraded.pages as unknown as Prisma.InputJsonValue, revision: { increment: 1 } } : {}),
+        ...(publishedChanged ? { publishedFields: upgradedPublished.fields as unknown as Prisma.InputJsonValue, publishedBlocks: flattenTemplatePages(upgradedPublished.pages) as unknown as Prisma.InputJsonValue, publishedPages: upgradedPublished.pages as unknown as Prisma.InputJsonValue, publishedRevision: existing.publishedRevision === null ? null : { increment: 1 } } : {}),
       },
     });
   }

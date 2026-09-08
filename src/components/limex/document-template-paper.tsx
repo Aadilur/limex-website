@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { resolveBlockFontSize, resolvePageSettings, resolveTemplateText, templateFontSizeMetrics, templatePaperDimensions, type DocumentTemplateDraft, type TemplateBlock, type TemplateValues } from "@/lib/document-templates";
+import { isTemplateBlockVisible, isTemplateFieldVisible, resolveBlockFontSize, resolvePageSettings, resolveTemplateText, templateFontSizeMetrics, templatePaperDimensions, type DocumentTemplateDraft, type TemplateBlock, type TemplateValues } from "@/lib/document-templates";
 
 const cssPixelsPerMillimetre = 96 / 25.4;
 
@@ -25,8 +25,10 @@ function formattedStyle(block: Extract<TemplateBlock, { type: "title" | "heading
 }
 
 function RenderBlock({ block, template, values, showLabels, defaultFontSize }: { block: TemplateBlock; template: DocumentTemplateDraft; values: TemplateValues; showLabels: boolean; defaultFontSize: ReturnType<typeof resolvePageSettings>["defaultFontSize"] }) {
+  if (!isTemplateBlockVisible(block, values)) return null;
   if (block.type === "title" || block.type === "heading" || block.type === "paragraph") {
     const text = resolveTemplateText(block.text, values, template.fields, showLabels);
+    if (!text.trim()) return null;
     if (block.type === "title") return <h1 className={`mb-5 ${formattedClass(block)}`} style={formattedStyle(block, defaultFontSize)}>{text}</h1>;
     if (block.type === "heading") return <h2 className={`mb-2.5 mt-5 ${formattedClass(block)}`} style={formattedStyle(block, defaultFontSize)}>{text}</h2>;
     return <p className={`mb-3 whitespace-pre-wrap break-words ${formattedClass(block)}`} style={formattedStyle(block, defaultFontSize)}>{text}</p>;
@@ -34,7 +36,9 @@ function RenderBlock({ block, template, values, showLabels, defaultFontSize }: {
 
   if (block.type === "field") {
     const field = template.fields.find((item) => item.key === block.fieldKey);
+    if (field && !isTemplateFieldVisible(field, values)) return null;
     const text = values[block.fieldKey]?.trim() || (showLabels ? `[${field?.label ?? block.fieldKey}]` : "");
+    if (!text.trim()) return null;
     return <p className="mb-3 whitespace-pre-wrap break-words" style={formattedStyle(block, defaultFontSize)}>{text}</p>;
   }
 
@@ -45,7 +49,7 @@ function RenderBlock({ block, template, values, showLabels, defaultFontSize }: {
 
 function RenderPageBlocks({ blocks, template, values, showLabels, defaultFontSize }: { blocks: TemplateBlock[]; template: DocumentTemplateDraft; values: TemplateValues; showLabels: boolean; defaultFontSize: ReturnType<typeof resolvePageSettings>["defaultFontSize"] }) {
   const groups: TemplateBlock[][] = [];
-  for (const block of blocks) {
+  for (const block of blocks.filter((item) => isTemplateBlockVisible(item, values))) {
     const last = groups.at(-1);
     if (block.type === "signature" && last?.[0]?.type === "signature") last.push(block);
     else groups.push([block]);

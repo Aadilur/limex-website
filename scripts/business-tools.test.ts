@@ -2,8 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { businessTools, calculateTool, calculatorFields, defaultToolsSettings, initialToolValues, toolsSettingsSchema, validateFields, type ToolSlug, type ToolValues } from "../src/lib/business-tools.js";
 import { createDocumentDraft, documentFields, documentText } from "../src/lib/business-documents.js";
-import { defaultMouTemplate, documentTemplateDraftSchema, normalizeDocumentTemplateDraft } from "../src/lib/document-templates.js";
-import { defaultPartnershipDeed40BanglaTemplate, defaultPartnershipDeed40EnglishTemplate } from "../src/lib/partnership-deed-templates.js";
+import { defaultMouTemplate, documentTemplateDraftSchema, isTemplateFieldVisible, missingTemplateFields, normalizeDocumentTemplateDraft } from "../src/lib/document-templates.js";
+import { renderTemplatePrintHtml } from "../src/lib/document-template-print.js";
+import { addPartnershipPartnerSlot, defaultPartnershipDeed40BanglaTemplate, defaultPartnershipDeed40EnglishTemplate, partnershipDeedMaxPartners } from "../src/lib/partnership-deed-templates.js";
 import { defaultRentalDeedBanglaTemplate, defaultRentalDeedEnglishTemplate } from "../src/lib/rental-deed-templates.js";
 
 const settings = defaultToolsSettings;
@@ -44,6 +45,37 @@ test("40-page partnership deed templates preserve the source structure and separ
   assert.match(defaultPartnershipDeed40BanglaTemplate.title, /[\u0980-\u09ff]/);
   assert.equal(defaultPartnershipDeed40EnglishTemplate.slug, "partnership-deed-40-en");
   assert.equal(defaultPartnershipDeed40BanglaTemplate.slug, "partnership-deed-40-bn");
+});
+test("partnership deed partner slots are conditional, extendable to eight and keep capital optional", () => {
+  const template = defaultPartnershipDeed40EnglishTemplate;
+  const values = { partner_count: "2" };
+  assert.equal(isTemplateFieldVisible(template.fields.find((field) => field.key === "partner_1_name")!, values), true);
+  assert.equal(isTemplateFieldVisible(template.fields.find((field) => field.key === "partner_2_name")!, values), true);
+  assert.equal(isTemplateFieldVisible(template.fields.find((field) => field.key === "partner_3_name")!, values), false);
+  assert.equal(isTemplateFieldVisible(template.fields.find((field) => field.key === "partner_4_name")!, values), false);
+  const missing = missingTemplateFields(template.fields, values).map((field) => field.key);
+  assert.equal(missing.includes("partner_1_profit_share"), true);
+  assert.equal(missing.includes("partner_1_capital"), false);
+  assert.equal(missing.includes("partner_1_capital_words"), false);
+  assert.equal(missing.some((key) => key.startsWith("partner_3_")), false);
+  assert.equal(template.fields.find((field) => field.key === "initial_capital")?.required, false);
+  assert.equal(template.fields.find((field) => field.key === "partner_1_profit_share")?.required, true);
+
+  const expanded = Array.from({ length: 4 }).reduce((current) => addPartnershipPartnerSlot(current), template);
+  const parsed = documentTemplateDraftSchema.parse(expanded);
+  assert.equal(partnershipDeedMaxPartners, 8);
+  assert.equal(parsed.fields.some((field) => field.key === "partner_8_name"), true);
+  assert.equal(parsed.fields.some((field) => field.key === "partner_9_name"), false);
+  assert.equal(parsed.fields.find((field) => field.key === "partner_count")?.options.some((option) => option.value === "8"), true);
+  assert.equal(parsed.pages.some((page) => page.blocks.some((block) => JSON.stringify(block).includes("partner_8_name"))), true);
+});
+test("partnership deed print output removes inactive partner rows and signatures", () => {
+  const values = Object.fromEntries(defaultPartnershipDeed40EnglishTemplate.fields.map((field) => [field.key, field.key === "partner_count" ? "2" : field.key.match(/^partner_([1-8])_name$/)?.[1] ? `Partner ${field.key.match(/^partner_([1-8])_name$/)?.[1]}` : "Sample"]));
+  const html = renderTemplatePrintHtml(defaultPartnershipDeed40EnglishTemplate, values);
+  assert.equal(html.split("class=\"template-page\"").length - 1, 40);
+  assert.equal(html.includes("Partner 3"), false);
+  assert.equal(html.includes("Partner 4"), false);
+  assert.equal(html.includes("Partner 1"), true);
 });
 for (const amount of [0, 0.01, 1, 99.99, 1000, 999999.99]) for (const rate of [0, 5, 7.5, 15, 100]) test(`VAT reconciles amount=${amount} rate=${rate}`, () => {
   for (const mode of ["Including VAT", "Excluding VAT"]) {

@@ -5,9 +5,20 @@ import {
   type TemplateField,
   type TemplatePage,
   type TemplateSettings,
-} from "./document-templates.js";
+  type TemplateVisibilityRule,
+} from "./document-templates";
 
 type Language = "en" | "bn";
+
+export const partnershipDeedMinPartners = 2;
+export const partnershipDeedMaxPartners = 8;
+
+export function partnershipPartnerVisibility(partnerNumber: number): TemplateVisibilityRule {
+  return {
+    fieldKey: "partner_count",
+    values: Array.from({ length: partnershipDeedMaxPartners - partnerNumber + 1 }, (_, index) => String(partnerNumber + index)),
+  };
+}
 
 function copy(language: Language, english: string, bangla: string) {
   return language === "bn" ? bangla : english;
@@ -94,11 +105,30 @@ function selectField(id: string, key: string, language: Language): TemplateField
     label: copy(language, "Number of partners", "অংশীদারের সংখ্যা"),
     type: "select",
     required: true,
-    placeholder: copy(language, "Choose 2, 3 or 4", "২, ৩ অথবা ৪ জন নির্বাচন করুন"),
-    options: language === "bn"
-      ? [{ value: "2", label: "২ জন" }, { value: "3", label: "৩ জন" }, { value: "4", label: "৪ জন" }]
-      : [{ value: "2", label: "2 partners" }, { value: "3", label: "3 partners" }, { value: "4", label: "4 partners" }],
+    placeholder: copy(language, "Choose the number of partners", "অংশীদারের সংখ্যা নির্বাচন করুন"),
+    options: partnerCountOptions(language, 4),
   };
+}
+
+function partnerCountOptions(language: Language, maxPartners: number, existingOptions: TemplateField["options"] = []) {
+  const existingLabels = new Map(existingOptions.map((option) => [option.value, option.label]));
+  return Array.from({ length: Math.max(0, maxPartners - partnershipDeedMinPartners + 1) }, (_, index) => {
+    const number = partnershipDeedMinPartners + index;
+    const banglaNumber = String(number).replace(/[0-9]/g, (digit) => "০১২৩৪৫৬৭৮৯"[Number(digit)] ?? digit);
+    return { value: String(number), label: existingLabels.get(String(number)) ?? copy(language, `${number} partner${number === 1 ? "" : "s"}`, `${banglaNumber} জন`) };
+  });
+}
+
+function partnerFieldsForSlot(language: Language, number: number): TemplateField[] {
+  const visibility = partnershipPartnerVisibility(number);
+  return [
+    { ...textField(`partnership-partner-${number}-name`, `partner_${number}_name`, language, `Partner ${number} name`, `অংশীদার ${number}-এর নাম`, "Full legal name", "পূর্ণ আইনগত নাম"), visibleWhen: visibility },
+    { ...areaField(`partnership-partner-${number}-details`, `partner_${number}_details`, language, `Partner ${number} identity and address`, `অংশীদার ${number}-এর পরিচয় ও ঠিকানা`, "Father or spouse, mother, present and permanent address, NID, TIN, date of birth, religion, occupation and nationality", "পিতা বা স্বামী, মাতা, বর্তমান ও স্থায়ী ঠিকানা, এনআইডি, টিআইএন, জন্মতারিখ, ধর্ম, পেশা ও জাতীয়তা"), visibleWhen: visibility },
+    { ...textField(`partnership-partner-${number}-role`, `partner_${number}_role`, language, `Partner ${number} designation`, `অংশীদার ${number}-এর পদবী`, number === 1 ? "Managing Partner" : "Partner", number === 1 ? "ম্যানেজিং পার্টনার" : "পার্টনার"), visibleWhen: visibility },
+    { ...numberField(`partnership-partner-${number}-capital`, `partner_${number}_capital`, language, `Partner ${number} capital (BDT)`, `অংশীদার ${number}-এর মূলধন (টাকা)`, number <= 2 ? "500000" : "Optional", false), visibleWhen: visibility },
+    { ...textField(`partnership-partner-${number}-capital-words`, `partner_${number}_capital_words`, language, `Partner ${number} capital in words`, `অংশীদার ${number}-এর মূলধন কথায়`, number <= 2 ? "Five hundred thousand taka" : "Optional", number <= 2 ? "পাঁচ লক্ষ টাকা" : "ঐচ্ছিক", false), visibleWhen: visibility },
+    { ...textField(`partnership-partner-${number}-profit-share`, `partner_${number}_profit_share`, language, `Partner ${number} profit/loss share`, `অংশীদার ${number}-এর লাভ-লোকসানের অনুপাত`, number <= 2 ? "50%" : "Agreed percentage", number <= 2 ? "৫০%" : "সম্মত শতাংশ"), visibleWhen: visibility },
+  ];
 }
 
 function textBlock(
@@ -119,8 +149,8 @@ function textBlock(
   };
 }
 
-function signatureBlock(id: string, label: string): TemplateBlock {
-  return { id, type: "signature", label };
+function signatureBlock(id: string, label: string, visibleWhen?: TemplateVisibilityRule): TemplateBlock {
+  return { id, type: "signature", label, ...(visibleWhen ? { visibleWhen } : {}) };
 }
 
 function partnershipDeedSettings(): TemplateSettings {
@@ -153,9 +183,9 @@ function partnershipDeedFields(language: Language): TemplateField[] {
     areaField("partnership-trade-license", "trade_license_holders", language, "Trade licence holder names", "ট্রেড লাইসেন্সধারীদের নাম", "Names of the partner or partners under whose names the trade licence will operate", "যে অংশীদার বা অংশীদারদের নামে ট্রেড লাইসেন্স পরিচালিত হবে তাদের নাম"),
     areaField("partnership-branch-office", "branch_office_details", language, "Branch office arrangement", "শাখা অফিসের ব্যবস্থা", "Optional branch locations or write that branches may be opened by mutual decision", "ঐচ্ছিক শাখার ঠিকানা অথবা পারস্পরিক সিদ্ধান্তে শাখা খোলার বিবরণ", false),
     areaField("partnership-business-activities", "business_activities", language, "Business activities supplied by the client", "ক্লায়েন্ট প্রদত্ত ব্যবসার কার্যক্রম", "Describe the consultancy, services, projects, trading or other lawful activities of the firm", "ফার্মের কনসালটেন্সি, সেবা, প্রকল্প, আমদানি-রপ্তানি বা অন্যান্য বৈধ ব্যবসার কার্যক্রম লিখুন"),
-    numberField("partnership-initial-capital", "initial_capital", language, "Initial capital (BDT)", "প্রাথমিক মূলধন (টাকা)", "1000000"),
-    textField("partnership-initial-capital-words", "initial_capital_words", language, "Initial capital in words", "কথায় প্রাথমিক মূলধন", "One million taka only", "দশ লক্ষ টাকা মাত্র"),
-    numberField("partnership-additional-capital-stamp", "additional_capital_stamp", language, "Additional-capital stamp value (BDT)", "অতিরিক্ত মূলধনের স্ট্যাম্প মূল্য (টাকা)", "300"),
+    numberField("partnership-initial-capital", "initial_capital", language, "Initial capital (BDT)", "প্রাথমিক মূলধন (টাকা)", "Optional", false),
+    textField("partnership-initial-capital-words", "initial_capital_words", language, "Initial capital in words", "কথায় প্রাথমিক মূলধন", "Optional", "ঐচ্ছিক", false),
+    numberField("partnership-additional-capital-stamp", "additional_capital_stamp", language, "Additional-capital stamp value (BDT)", "অতিরিক্ত মূলধনের স্ট্যাম্প মূল্য (টাকা)", "Optional", false),
     areaField("partnership-bank-authority", "bank_authorized_persons", language, "Authorised bank signatories", "ব্যাংক হিসাব পরিচালনার অনুমোদিত ব্যক্তি", "Names of the partner or partners authorised by unanimous decision", "সর্বসম্মত সিদ্ধান্তে ব্যাংক হিসাব পরিচালনার জন্য অনুমোদিত অংশীদারের নাম", false),
     textField("partnership-meeting-date", "monthly_meeting_date", language, "Monthly meeting date", "মাসিক সভার তারিখ", "30th day of each English month", "প্রতি ইংরেজি মাসের ৩০ তারিখ"),
     numberField("partnership-stamp-value", "stamp_value", language, "Deed stamp value (BDT)", "দলিলের স্ট্যাম্প মূল্য (টাকা)", "4000"),
@@ -165,17 +195,7 @@ function partnershipDeedFields(language: Language): TemplateField[] {
     areaField("partnership-witness-3", "witness_3", language, "Witness 3 name and address", "সাক্ষী ৩-এর নাম ও ঠিকানা", "Full name and address", "পূর্ণ নাম ও ঠিকানা"),
   ];
 
-  for (const number of [1, 2, 3, 4]) {
-    const required = number <= 2;
-    fields.push(
-      textField(`partnership-partner-${number}-name`, `partner_${number}_name`, language, `Partner ${number} name`, `অংশীদার ${number}-এর নাম`, "Full legal name", "পূর্ণ আইনগত নাম", required),
-      areaField(`partnership-partner-${number}-details`, `partner_${number}_details`, language, `Partner ${number} identity and address`, `অংশীদার ${number}-এর পরিচয় ও ঠিকানা`, "Father or spouse, mother, present and permanent address, NID, TIN, date of birth, religion, occupation and nationality", "পিতা বা স্বামী, মাতা, বর্তমান ও স্থায়ী ঠিকানা, এনআইডি, টিআইএন, জন্মতারিখ, ধর্ম, পেশা ও জাতীয়তা", required),
-      textField(`partnership-partner-${number}-role`, `partner_${number}_role`, language, `Partner ${number} designation`, `অংশীদার ${number}-এর পদবী`, number === 1 ? "Managing Partner" : "Partner", number === 1 ? "ম্যানেজিং পার্টনার" : "পার্টনার", required),
-      numberField(`partnership-partner-${number}-capital`, `partner_${number}_capital`, language, `Partner ${number} capital (BDT)`, `অংশীদার ${number}-এর মূলধন (টাকা)`, number <= 2 ? "500000" : "0", required),
-      textField(`partnership-partner-${number}-capital-words`, `partner_${number}_capital_words`, language, `Partner ${number} capital in words`, `অংশীদার ${number}-এর মূলধন কথায়`, number <= 2 ? "Five hundred thousand taka" : "Capital amount in words", number <= 2 ? "পাঁচ লক্ষ টাকা" : "মূলধনের পরিমাণ কথায়", required),
-      textField(`partnership-partner-${number}-profit-share`, `partner_${number}_profit_share`, language, `Partner ${number} profit/loss share`, `অংশীদার ${number}-এর লাভ-লোকসানের অনুপাত`, number <= 2 ? "50%" : "Agreed percentage", number <= 2 ? "৫০%" : "সম্মত শতাংশ", required),
-    );
-  }
+  for (const number of [1, 2, 3, 4]) fields.push(...partnerFieldsForSlot(language, number));
 
   return fields;
 }
@@ -267,12 +287,12 @@ function partnershipDeedPages(language: Language): TemplatePage[] {
     ]),
     page(2, "Partner particulars · 1 and 2", "অংশীদারদের পরিচয় · ১ ও ২", [
       textBlock("partner-heading", "heading", copy(language, "Particulars of the partners", "কারবারী অংশীদারদের নাম ও পরিচয়"), { align: "center" }),
-      textBlock("partner-1", "paragraph", `${partnerLabel(1)} — ${partnerName(1)}\n{{partner_1_details}}\n${copy(language, "Designation", "পদবী")}: {{partner_1_role}}`, { bold: false }),
-      textBlock("partner-2", "paragraph", `${partnerLabel(2)} — ${partnerName(2)}\n{{partner_2_details}}\n${copy(language, "Designation", "পদবী")}: {{partner_2_role}}`, { bold: false }),
+      textBlock("partner-1", "paragraph", `${partnerLabel(1)} — ${partnerName(1)}\n{{partner_1_details}}\n${copy(language, "Designation", "পদবী")}: {{partner_1_role}}`, { bold: false, visibleWhen: partnershipPartnerVisibility(1) }),
+      textBlock("partner-2", "paragraph", `${partnerLabel(2)} — ${partnerName(2)}\n{{partner_2_details}}\n${copy(language, "Designation", "পদবী")}: {{partner_2_role}}`, { bold: false, visibleWhen: partnershipPartnerVisibility(2) }),
     ]),
     page(3, "Partner particulars · 3 and 4; recital", "অংশীদারদের পরিচয় · ৩ ও ৪; ভূমিকা", [
-      textBlock("partner-3", "paragraph", `${partnerLabel(3)} — {{partner_3_name}}\n{{partner_3_details}}\n${copy(language, "Designation", "পদবী")}: {{partner_3_role}}`, { bold: false }),
-      textBlock("partner-4", "paragraph", `${partnerLabel(4)} — {{partner_4_name}}\n{{partner_4_details}}\n${copy(language, "Designation", "পদবী")}: {{partner_4_role}}`, { bold: false }),
+      textBlock("partner-3", "paragraph", `${partnerLabel(3)} — {{partner_3_name}}\n{{partner_3_details}}\n${copy(language, "Designation", "পদবী")}: {{partner_3_role}}`, { bold: false, visibleWhen: partnershipPartnerVisibility(3) }),
+      textBlock("partner-4", "paragraph", `${partnerLabel(4)} — {{partner_4_name}}\n{{partner_4_details}}\n${copy(language, "Designation", "পদবী")}: {{partner_4_role}}`, { bold: false, visibleWhen: partnershipPartnerVisibility(4) }),
       textBlock("recital", "paragraph", recital, { bold: false }),
     ]),
     page(4, "Terms and first clause", "শর্তাবলী ও প্রথম ধারা", [
@@ -402,10 +422,10 @@ function partnershipDeedPages(language: Language): TemplatePage[] {
       textBlock("stamp-note", "paragraph", copy(language, "This partnership deed is computer-composed on {{stamp_value}} ({{stamp_value_words}}) taka non-judicial stamp paper in 40 forms, with three witnesses.", "অত্র অংশীদারী চুক্তিপত্র দলিল {{stamp_value}} ({{stamp_value_words}}) টাকার নন-জুডিশিয়াল স্ট্যাম্পে ৪০ (চল্লিশ) ফর্মে কম্পিউটার কম্পোজকৃত এবং সাক্ষী মোট ৩ জন।"), { align: "center", bold: false, fontSize: "body" }),
       textBlock("witness-heading", "heading", copy(language, "Witnesses and partners", "সাক্ষী ও অংশীদারগণ"), { align: "center" }),
       textBlock("witnesses", "paragraph", copy(language, "Witness 1: {{witness_1}}\nWitness 2: {{witness_2}}\nWitness 3: {{witness_3}}", "সাক্ষী ১: {{witness_1}}\nসাক্ষী ২: {{witness_2}}\nসাক্ষী ৩: {{witness_3}}"), { bold: false, fontSize: "body" }),
-      signatureBlock("partner-1-signature", copy(language, `Partner 1 — ${partnerName(1)}`, `অংশীদার ১ — ${partnerName(1)}`)),
-      signatureBlock("partner-2-signature", copy(language, `Partner 2 — ${partnerName(2)}`, `অংশীদার ২ — ${partnerName(2)}`)),
-      signatureBlock("partner-3-signature", copy(language, `Partner 3 — {{partner_3_name}}`, `অংশীদার ৩ — {{partner_3_name}}`)),
-      signatureBlock("partner-4-signature", copy(language, `Partner 4 — {{partner_4_name}}`, `অংশীদার ৪ — {{partner_4_name}}`)),
+      signatureBlock("partner-1-signature", copy(language, `Partner 1 — ${partnerName(1)}`, `অংশীদার ১ — ${partnerName(1)}`), partnershipPartnerVisibility(1)),
+      signatureBlock("partner-2-signature", copy(language, `Partner 2 — ${partnerName(2)}`, `অংশীদার ২ — ${partnerName(2)}`), partnershipPartnerVisibility(2)),
+      signatureBlock("partner-3-signature", copy(language, `Partner 3 — {{partner_3_name}}`, `অংশীদার ৩ — {{partner_3_name}}`), partnershipPartnerVisibility(3)),
+      signatureBlock("partner-4-signature", copy(language, `Partner 4 — {{partner_4_name}}`, `অংশীদার ৪ — {{partner_4_name}}`), partnershipPartnerVisibility(4)),
       signatureBlock("witness-1-signature", copy(language, `Witness 1 — {{witness_1}}`, `সাক্ষী ১ — {{witness_1}}`)),
       signatureBlock("witness-2-signature", copy(language, `Witness 2 — {{witness_2}}`, `সাক্ষী ২ — {{witness_2}}`)),
       signatureBlock("witness-3-signature", copy(language, `Witness 3 — {{witness_3}}`, `সাক্ষী ৩ — {{witness_3}}`)),
@@ -425,6 +445,122 @@ function createPartnershipDeedTemplate(language: Language): DocumentTemplateDraf
     fields: partnershipDeedFields(language),
     pages: partnershipDeedPages(language),
   };
+}
+
+function blockText(block: TemplateBlock) {
+  if (block.type === "title" || block.type === "heading" || block.type === "paragraph") return block.text;
+  if (block.type === "signature") return block.label;
+  return "";
+}
+
+function partnerReferences(block: TemplateBlock) {
+  const references = Array.from(blockText(block).matchAll(/partner_(\d+)_/g), (match) => Number(match[1]));
+  return Array.from(new Set(references));
+}
+
+function partnerSlotNumbers(fields: TemplateField[]) {
+  return Array.from(new Set(fields.flatMap((field) => {
+    const match = /^partner_(\d+)_name$/.exec(field.key);
+    return match ? [Number(match[1])] : [];
+  }))).sort((left, right) => left - right);
+}
+
+export function isPartnershipDeedTemplate(template: Pick<DocumentTemplateDraft, "slug" | "fields">) {
+  return template.slug === "partnership-deed-40-en"
+    || template.slug === "partnership-deed-40-bn"
+    || (template.fields.some((field) => field.key === "partner_count") && template.fields.some((field) => field.key === "partner_1_name"));
+}
+
+function addBlockBefore(blocks: TemplateBlock[], block: TemplateBlock, predicate: (candidate: TemplateBlock) => boolean) {
+  const index = blocks.findIndex(predicate);
+  if (index < 0) return [...blocks, block];
+  return [...blocks.slice(0, index), block, ...blocks.slice(index)];
+}
+
+function addPartnerSlotBlocks(pages: TemplatePage[], language: Language, number: number) {
+  const label = copy(language, `Partner ${number}`, `অংশীদার ${number}`);
+  const particulars = textBlock(
+    `partnership-partner-${number}-particulars`,
+    "paragraph",
+    `${label} — {{partner_${number}_name}}\n{{partner_${number}_details}}\n${copy(language, "Designation", "পদবী")}: {{partner_${number}_role}}`,
+    { bold: false, visibleWhen: partnershipPartnerVisibility(number) },
+  );
+  const capitalRow = textBlock(
+    `partnership-partner-${number}-capital-row`,
+    "paragraph",
+    `${label}: {{partner_${number}_name}} | {{partner_${number}_capital}} ({{partner_${number}_capital_words}}) | {{partner_${number}_profit_share}}`,
+    { bold: false, visibleWhen: partnershipPartnerVisibility(number) },
+  );
+  const designationRow = textBlock(
+    `partnership-partner-${number}-designation-row`,
+    "paragraph",
+    `{{partner_${number}_name}} — {{partner_${number}_role}}`,
+    { bold: false, visibleWhen: partnershipPartnerVisibility(number) },
+  );
+  const signature = signatureBlock(
+    `partnership-partner-${number}-signature`,
+    copy(language, `${label} — {{partner_${number}_name}}`, `${label} — {{partner_${number}_name}}`),
+    partnershipPartnerVisibility(number),
+  );
+
+  return pages.map((page, index) => {
+    if (page.id.includes("-page-3") || (!pages.some((candidate) => candidate.id.includes("-page-3")) && index === 2)) {
+      return { ...page, blocks: addBlockBefore(page.blocks, particulars, (candidate) => /recital|ভূমিকা/i.test(blockText(candidate))) };
+    }
+    if (page.id.includes("-page-11") || (!pages.some((candidate) => candidate.id.includes("-page-11")) && index === 10)) {
+      return { ...page, blocks: addBlockBefore(page.blocks, capitalRow, (candidate) => /Each partner|প্রকাশের আগে/i.test(blockText(candidate))) };
+    }
+    if (page.id.includes("-page-23") || (!pages.some((candidate) => candidate.id.includes("-page-23")) && index === 22)) {
+      return { ...page, blocks: [...page.blocks, designationRow] };
+    }
+    if (page.id.includes("-page-40") || (!pages.some((candidate) => candidate.id.includes("-page-40")) && index === 39)) {
+      return { ...page, blocks: addBlockBefore(page.blocks, signature, (candidate) => candidate.type === "signature" && /Witness 1|সাক্ষী ১/i.test(candidate.label)) };
+    }
+    return page;
+  });
+}
+
+export function upgradePartnershipDeedTemplate(template: DocumentTemplateDraft): DocumentTemplateDraft {
+  if (!isPartnershipDeedTemplate(template)) return template;
+  const language: Language = template.slug.endsWith("-bn") ? "bn" : "en";
+  const slots = partnerSlotNumbers(template.fields);
+  const maxPartner = Math.max(...slots, partnershipDeedMinPartners);
+  const fields = template.fields.map((field) => {
+    const partnerMatch = /^partner_(\d+)_(name|details|role|capital|capital_words|profit_share)$/.exec(field.key);
+    if (partnerMatch) {
+      const number = Number(partnerMatch[1]);
+      const isCapital = partnerMatch[2] === "capital" || partnerMatch[2] === "capital_words";
+      return {
+        ...field,
+        required: field.visibleWhen ? field.required : !isCapital,
+        visibleWhen: field.visibleWhen ?? partnershipPartnerVisibility(number),
+      };
+    }
+    if (["initial_capital", "initial_capital_words", "additional_capital_stamp"].includes(field.key)) return { ...field, required: false };
+    if (field.key === "partner_count") return { ...field, options: partnerCountOptions(language, maxPartner, field.options) };
+    return field;
+  });
+  const pages = template.pages.map((page) => ({
+    ...page,
+    blocks: page.blocks.map((block) => {
+      const references = partnerReferences(block);
+      return references.length === 1 && !block.visibleWhen ? { ...block, visibleWhen: partnershipPartnerVisibility(references[0]) } : block;
+    }),
+  }));
+  return { ...template, fields, pages };
+}
+
+export function addPartnershipPartnerSlot(template: DocumentTemplateDraft): DocumentTemplateDraft {
+  const upgraded = upgradePartnershipDeedTemplate(template);
+  if (!isPartnershipDeedTemplate(upgraded)) return upgraded;
+  const slots = partnerSlotNumbers(upgraded.fields);
+  const nextNumber = (slots.at(-1) ?? partnershipDeedMinPartners - 1) + 1;
+  if (nextNumber > partnershipDeedMaxPartners) return upgraded;
+  const language: Language = upgraded.slug.endsWith("-bn") ? "bn" : "en";
+  const fields = [...upgraded.fields, ...partnerFieldsForSlot(language, nextNumber)].map((field) => field.key === "partner_count"
+    ? { ...field, options: partnerCountOptions(language, nextNumber, field.options) }
+    : field);
+  return { ...upgraded, fields, pages: addPartnerSlotBlocks(upgraded.pages, language, nextNumber) };
 }
 
 export const defaultPartnershipDeed40EnglishTemplate = createPartnershipDeedTemplate("en");

@@ -41,6 +41,11 @@ const keySchema = z.string().trim().regex(/^[a-z][a-z0-9_]{1,63}$/, "Use lowerca
 const textSchema = (max: number) => z.string().trim().min(1).max(max);
 const fontSizeSchema = z.enum(templateFontSizes);
 
+export const templateVisibilityRuleSchema = z.object({
+  fieldKey: keySchema,
+  values: z.array(z.string().trim().min(1).max(240)).min(1).max(40).optional(),
+});
+
 const defaultServiceCta = {
   enabled: false,
   href: "",
@@ -65,6 +70,7 @@ export const templateFieldSchema = z.object({
   required: z.boolean().default(false),
   placeholder: z.string().max(240).default(""),
   options: z.array(z.object({ value: textSchema(120), label: textSchema(160) })).max(30).default([]),
+  visibleWhen: templateVisibilityRuleSchema.optional(),
 });
 
 const formattedBlockSchema = z.object({
@@ -73,6 +79,7 @@ const formattedBlockSchema = z.object({
   bold: z.boolean().default(false),
   italic: z.boolean().default(false),
   fontSize: fontSizeSchema.default("body"),
+  visibleWhen: templateVisibilityRuleSchema.optional(),
 });
 
 export const templateBlockSchema = z.discriminatedUnion("type", [
@@ -80,9 +87,9 @@ export const templateBlockSchema = z.discriminatedUnion("type", [
   formattedBlockSchema.extend({ type: z.literal("heading"), text: textSchema(500) }),
   formattedBlockSchema.extend({ type: z.literal("paragraph"), text: textSchema(5000) }),
   formattedBlockSchema.extend({ type: z.literal("field"), fieldKey: keySchema }),
-  z.object({ id: idSchema, type: z.literal("spacer"), height: z.number().int().min(4).max(240).default(24) }),
-  z.object({ id: idSchema, type: z.literal("pageBreak") }),
-  z.object({ id: idSchema, type: z.literal("signature"), label: textSchema(240) }),
+  z.object({ id: idSchema, type: z.literal("spacer"), height: z.number().int().min(4).max(240).default(24), visibleWhen: templateVisibilityRuleSchema.optional() }),
+  z.object({ id: idSchema, type: z.literal("pageBreak"), visibleWhen: templateVisibilityRuleSchema.optional() }),
+  z.object({ id: idSchema, type: z.literal("signature"), label: textSchema(240), visibleWhen: templateVisibilityRuleSchema.optional() }),
 ]);
 
 export const templatePageSettingsSchema = z.object({
@@ -140,9 +147,13 @@ function addReferenceValidation(value: { fields: TemplateField[]; pages: Templat
     if (seen.has(field.key)) context.addIssue({ code: z.ZodIssueCode.custom, path: ["fields", index, "key"], message: "Field keys must be unique." });
     seen.add(field.key);
   }
+  for (const [index, field] of value.fields.entries()) {
+    if (field.visibleWhen && !seen.has(field.visibleWhen.fieldKey)) context.addIssue({ code: z.ZodIssueCode.custom, path: ["fields", index, "visibleWhen", "fieldKey"], message: "Choose an existing field for this visibility rule." });
+  }
   for (const [pageIndex, page] of value.pages.entries()) {
     for (const [blockIndex, block] of page.blocks.entries()) {
       if (block.type === "field" && !seen.has(block.fieldKey)) context.addIssue({ code: z.ZodIssueCode.custom, path: ["pages", pageIndex, "blocks", blockIndex, "fieldKey"], message: "Choose an existing field for this block." });
+      if (block.visibleWhen && !seen.has(block.visibleWhen.fieldKey)) context.addIssue({ code: z.ZodIssueCode.custom, path: ["pages", pageIndex, "blocks", blockIndex, "visibleWhen", "fieldKey"], message: "Choose an existing field for this visibility rule." });
     }
   }
 }
@@ -150,6 +161,7 @@ function addReferenceValidation(value: { fields: TemplateField[]; pages: Templat
 export const documentTemplateDraftSchema = documentTemplateBaseSchema.superRefine(addReferenceValidation);
 
 export type TemplateField = z.infer<typeof templateFieldSchema>;
+export type TemplateVisibilityRule = z.infer<typeof templateVisibilityRuleSchema>;
 export type TemplateBlock = z.infer<typeof templateBlockSchema>;
 export type TemplatePageSettings = z.infer<typeof templatePageSettingsSchema>;
 export type TemplatePage = z.infer<typeof templatePageSchema>;
@@ -271,7 +283,16 @@ export function createBlankTemplate(): DocumentTemplateDraft {
 }
 
 export function resolveTemplateText(text: string, values: TemplateValues = {}, fields: TemplateField[] = [], showLabels = true) {
-  return text.replace(/\{\{\s*([a-z][a-z0-9_]*)\s*\}\}/gi, (_match, key: string) => {
+  const placeholders = /\{\{\s*([a-z][a-z0-9_]*)\s*\}\}/gi;
+  const isVisible = (key: string) => {
+    const field = fields.find((item) => item.key === key);
+    return !field?.visibleWhen || isTemplateVisibilityMatch(field.visibleWhen, values);
+  };
+  const withoutHiddenLines = text.split("\n").filter((line) => {
+    const keys = Array.from(line.matchAll(placeholders), (match) => match[1]);
+    return !keys.length || keys.some((key) => isVisible(key));
+  }).join("\n");
+  return withoutHiddenLines.replace(placeholders, (_match, key: string) => {
     const value = values[key]?.trim();
     if (value) return value;
     if (!showLabels) return "";
@@ -279,8 +300,21 @@ export function resolveTemplateText(text: string, values: TemplateValues = {}, f
   });
 }
 
+export function isTemplateVisibilityMatch(rule: TemplateVisibilityRule, values: TemplateValues = {}) {
+  const value = values[rule.fieldKey]?.trim() ?? "";
+  return rule.values?.length ? rule.values.includes(value) : Boolean(value);
+}
+
+export function isTemplateFieldVisible(field: TemplateField, values: TemplateValues = {}) {
+  return !field.visibleWhen || isTemplateVisibilityMatch(field.visibleWhen, values);
+}
+
+export function isTemplateBlockVisible(block: TemplateBlock, values: TemplateValues = {}) {
+  return !block.visibleWhen || isTemplateVisibilityMatch(block.visibleWhen, values);
+}
+
 export function missingTemplateFields(fields: TemplateField[], values: TemplateValues) {
-  return fields.filter((field) => field.required && (!values[field.key] || (field.type === "checkbox" && values[field.key] !== "true")));
+  return fields.filter((field) => isTemplateFieldVisible(field, values) && field.required && (!values[field.key] || (field.type === "checkbox" && values[field.key] !== "true")));
 }
 
 export function resolvePageSettings(template: Pick<DocumentTemplateDraft, "settings">, page: Pick<TemplatePage, "settings">) {
