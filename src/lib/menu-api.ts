@@ -69,13 +69,23 @@ export class ApiError extends Error {
 
 export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const isMultipart = typeof FormData !== "undefined" && init?.body instanceof FormData;
+  const hasBody = init?.body !== undefined && init?.body !== null;
+  const headers = new Headers(init?.headers);
+
+  // Fastify rejects an empty request body when Content-Type is JSON. Keep the
+  // JSON header for JSON mutations, but leave bodyless requests (especially
+  // DELETE) without a content type so they can reach the route handler.
+  if (!isMultipart && hasBody && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
   let response: Response;
 
   try {
     response = await fetch(path, {
       ...init,
       credentials: "include",
-      headers: isMultipart ? init?.headers : { "Content-Type": "application/json", ...(init?.headers ?? {}) },
+      headers,
     });
   } catch {
     throw new ApiError(503, "Unable to reach the Limex API. Make sure the backend service is running, then try again.");
