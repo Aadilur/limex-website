@@ -83,6 +83,7 @@ export const templateFieldSchema = z.object({
   required: z.boolean().default(false),
   placeholder: z.string().max(240).default(""),
   options: z.array(z.object({ value: textSchema(120), label: textSchema(160) })).max(30).default([]),
+  defaultValue: z.string().max(240).optional(),
   visibleWhen: templateVisibilityRuleSchema.optional(),
 });
 

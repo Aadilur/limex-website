@@ -178,10 +178,10 @@ function PartnershipSlotsCard({ template, onChange }: { template: DocumentTempla
   const atLimit = count >= partnershipDeedMaxPartners;
   return <section className="rounded-[13px] bg-[#f5faf6] px-3.5 py-3">
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <div className="min-w-0"><p className="text-[13px] font-bold text-[#254d39]">Partner slots</p><p className="mt-0.5 text-[11px] leading-[1.4] text-[#668171]">Users choose the number of partners. Hidden slots never appear in the form or document.</p></div>
+      <div className="min-w-0"><p className="text-[13px] font-bold text-[#254d39]">Partner slots</p><p className="mt-0.5 text-[11px] leading-[1.4] text-[#668171]">Starts at 2 partners and supports up to 8. Unused slots stay hidden in the form and document.</p></div>
       <span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-[#347054]">{count} / {partnershipDeedMaxPartners}</span>
     </div>
-    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-[#dcefe0] pt-3"><p className="text-[11px] font-semibold text-[#668171]">Capital is optional · profit/loss percentage is required.</p><button className="rounded-full bg-[#29634d] px-3.5 py-2 text-[11px] font-bold text-white transition-colors hover:bg-[#245940] disabled:cursor-not-allowed disabled:opacity-45" type="button" disabled={atLimit} onClick={() => onChange(addPartnershipPartnerSlot(template))}>{atLimit ? `Maximum ${partnershipDeedMaxPartners}` : "+ Add partner"}</button></div>
+    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-[#dcefe0] pt-3"><p className="text-[11px] font-semibold text-[#668171]">Capital is optional · profit/loss percentage is required.</p>{atLimit ? <span className="rounded-full bg-white px-3 py-2 text-[11px] font-bold text-[#347054]">All slots ready</span> : <button className="rounded-full bg-[#29634d] px-3.5 py-2 text-[11px] font-bold text-white transition-colors hover:bg-[#245940]" type="button" onClick={() => onChange(addPartnershipPartnerSlot(template))}>Prepare remaining slots</button>}</div>
   </section>;
 }
 
@@ -208,7 +208,7 @@ type BusyAction = "save" | "publish" | "unpublish" | null;
 function Editor({ template, onChange, onSave, onPublish, onUnpublish, busy, busyAction, isNew, isPublished, isDirty, savedSlug, slugStatus, slugBusy, onCheckSlug, serviceOptions, canMutate }: { template: DocumentTemplateDraft; onChange: (template: DocumentTemplateDraft) => void; onSave: () => void; onPublish: () => void; onUnpublish: () => void; busy: boolean; busyAction: BusyAction; isNew: boolean; isPublished: boolean; isDirty: boolean; savedSlug: string; slugStatus: "unchecked" | "checking" | "available" | "taken" | "invalid"; slugBusy: boolean; onCheckSlug: () => void; serviceOptions: ServiceOption[]; canMutate: boolean }) {
   const [activePageId, setActivePageId] = useState(template.pages[0]?.id ?? "");
   const activePage = template.pages.find((page) => page.id === activePageId) ?? template.pages[0];
-  const previewValues = useMemo(() => Object.fromEntries(template.fields.map((field) => [field.key, field.key === "partner_count" ? field.options[field.options.length - 1]?.value ?? "4" : `{{${field.key}}}`])), [template.fields]);
+  const previewValues = useMemo(() => Object.fromEntries(template.fields.map((field) => [field.key, field.defaultValue ?? (field.key === "partner_count" ? field.options[0]?.value ?? "" : `{{${field.key}}}`)])), [template.fields]);
   const statusLabel = isNew ? "Local draft" : isPublished ? (isDirty ? "Live · edits pending" : "Published") : isDirty ? "Unsaved changes" : "Draft saved";
   const statusDescription = isNew ? "Create this draft to unlock its preview URL." : isPublished ? (isDirty ? "Your edits are private until you publish them." : "This version is live on the public page.") : isDirty ? "Changes are local until you save the draft." : "Saved privately. Publish when ready.";
   const statusClass = isNew ? "bg-[#f4eee8] text-[#85796d]" : isPublished && !isDirty ? "bg-[#e5f3e8] text-[#2d7650]" : isPublished ? "bg-[#fff3dc] text-[#94651f]" : isDirty ? "bg-[#fff0f2] text-[#b13c53]" : "bg-[#eef0f3] text-[#626a73]";

@@ -12,6 +12,10 @@ type Language = "en" | "bn";
 
 export const partnershipDeedMinPartners = 2;
 export const partnershipDeedMaxPartners = 8;
+const partnershipPartnerNumbers = Array.from(
+  { length: partnershipDeedMaxPartners },
+  (_, index) => index + 1,
+);
 
 export function partnershipPartnerVisibility(partnerNumber: number): TemplateVisibilityRule {
   return {
@@ -106,7 +110,8 @@ function selectField(id: string, key: string, language: Language): TemplateField
     type: "select",
     required: true,
     placeholder: copy(language, "Choose the number of partners", "অংশীদারের সংখ্যা নির্বাচন করুন"),
-    options: partnerCountOptions(language, 4),
+    options: partnerCountOptions(language, partnershipDeedMaxPartners),
+    defaultValue: String(partnershipDeedMinPartners),
   };
 }
 
@@ -161,6 +166,16 @@ function signatureBlock(id: string, label: string, visibleWhen?: TemplateVisibil
   return { id, type: "signature", label, ...(visibleWhen ? { visibleWhen } : {}) };
 }
 
+function partnerParticularsBlock(language: Language, number: number): TemplateBlock {
+  const label = copy(language, `Partner ${number}`, `অংশীদার ${number}`);
+  return textBlock(
+    `partnership-partner-${number}-particulars`,
+    "paragraph",
+    `${label} — {{partner_${number}_name}}\n{{partner_${number}_details}}\n${copy(language, "Designation", "পদবী")}: {{partner_${number}_role}}`,
+    { bold: false, visibleWhen: partnershipPartnerVisibility(number) },
+  );
+}
+
 function partnershipDeedSettings(): TemplateSettings {
   return {
     ...defaultTemplateSettings,
@@ -201,7 +216,7 @@ function partnershipDeedFields(language: Language): TemplateField[] {
     ...witnessFields(language),
   ];
 
-  for (const number of [1, 2, 3, 4]) fields.push(...partnerFieldsForSlot(language, number));
+  for (const number of partnershipPartnerNumbers) fields.push(...partnerFieldsForSlot(language, number));
 
   return fields;
 }
@@ -275,14 +290,20 @@ function partnershipDeedPages(language: Language): TemplatePage[] {
 
   const capitalSchedule = copy(
     language,
-    `PARTNER | CAPITAL (BDT) | PROFIT / LOSS SHARE\n${partnerLabel(1)}: ${partnerName(1)} | {{partner_1_capital}} ({{partner_1_capital_words}}) | {{partner_1_profit_share}}\n${partnerLabel(2)}: ${partnerName(2)} | {{partner_2_capital}} ({{partner_2_capital_words}}) | {{partner_2_profit_share}}\n${partnerLabel(3)}: {{partner_3_name}} | {{partner_3_capital}} ({{partner_3_capital_words}}) | {{partner_3_profit_share}}\n${partnerLabel(4)}: {{partner_4_name}} | {{partner_4_capital}} ({{partner_4_capital_words}}) | {{partner_4_profit_share}}`,
-    `অংশীদার | মূলধন (টাকা) | লাভ-লোকসানের অনুপাত\n${partnerLabel(1)}: ${partnerName(1)} | {{partner_1_capital}} ({{partner_1_capital_words}}) | {{partner_1_profit_share}}\n${partnerLabel(2)}: ${partnerName(2)} | {{partner_2_capital}} ({{partner_2_capital_words}}) | {{partner_2_profit_share}}\n${partnerLabel(3)}: {{partner_3_name}} | {{partner_3_capital}} ({{partner_3_capital_words}}) | {{partner_3_profit_share}}\n${partnerLabel(4)}: {{partner_4_name}} | {{partner_4_capital}} ({{partner_4_capital_words}}) | {{partner_4_profit_share}}`,
+    [
+      "PARTNER | CAPITAL (BDT) | PROFIT / LOSS SHARE",
+      ...partnershipPartnerNumbers.map((number) => `${partnerLabel(number)}: ${partnerName(number)} | {{partner_${number}_capital}} ({{partner_${number}_capital_words}}) | {{partner_${number}_profit_share}}`),
+    ].join("\n"),
+    [
+      "অংশীদার | মূলধন (টাকা) | লাভ-লোকসানের অনুপাত",
+      ...partnershipPartnerNumbers.map((number) => `${partnerLabel(number)}: ${partnerName(number)} | {{partner_${number}_capital}} ({{partner_${number}_capital_words}}) | {{partner_${number}_profit_share}}`),
+    ].join("\n"),
   );
 
   const designationSchedule = copy(
     language,
-    `DESIGNATIONS\n${partnerName(1)} — {{partner_1_role}}\n${partnerName(2)} — {{partner_2_role}}\n{{partner_3_name}} — {{partner_3_role}}\n{{partner_4_name}} — {{partner_4_role}}`,
-    `পদবী\n${partnerName(1)} — {{partner_1_role}}\n${partnerName(2)} — {{partner_2_role}}\n{{partner_3_name}} — {{partner_3_role}}\n{{partner_4_name}} — {{partner_4_role}}`,
+    ["DESIGNATIONS", ...partnershipPartnerNumbers.map((number) => `${partnerName(number)} — {{partner_${number}_role}}`)].join("\n"),
+    ["পদবী", ...partnershipPartnerNumbers.map((number) => `${partnerName(number)} — {{partner_${number}_role}}`)].join("\n"),
   );
 
   return [
@@ -296,12 +317,11 @@ function partnershipDeedPages(language: Language): TemplatePage[] {
     ]),
     page(2, "Partner particulars · 1 and 2", "অংশীদারদের পরিচয় · ১ ও ২", [
       textBlock("partner-heading", "heading", copy(language, "Particulars of the partners", "কারবারী অংশীদারদের নাম ও পরিচয়"), { align: "center" }),
-      textBlock("partner-1", "paragraph", `${partnerLabel(1)} — ${partnerName(1)}\n{{partner_1_details}}\n${copy(language, "Designation", "পদবী")}: {{partner_1_role}}`, { bold: false, visibleWhen: partnershipPartnerVisibility(1) }),
-      textBlock("partner-2", "paragraph", `${partnerLabel(2)} — ${partnerName(2)}\n{{partner_2_details}}\n${copy(language, "Designation", "পদবী")}: {{partner_2_role}}`, { bold: false, visibleWhen: partnershipPartnerVisibility(2) }),
+      partnerParticularsBlock(language, 1),
+      partnerParticularsBlock(language, 2),
     ]),
-    page(3, "Partner particulars · 3 and 4; recital", "অংশীদারদের পরিচয় · ৩ ও ৪; ভূমিকা", [
-      textBlock("partner-3", "paragraph", `${partnerLabel(3)} — {{partner_3_name}}\n{{partner_3_details}}\n${copy(language, "Designation", "পদবী")}: {{partner_3_role}}`, { bold: false, visibleWhen: partnershipPartnerVisibility(3) }),
-      textBlock("partner-4", "paragraph", `${partnerLabel(4)} — {{partner_4_name}}\n{{partner_4_details}}\n${copy(language, "Designation", "পদবী")}: {{partner_4_role}}`, { bold: false, visibleWhen: partnershipPartnerVisibility(4) }),
+    page(3, "Partner particulars · 3 to 8; recital", "অংশীদারদের পরিচয় · ৩ থেকে ৮; ভূমিকা", [
+      ...partnershipPartnerNumbers.filter((number) => number >= 3).map((number) => partnerParticularsBlock(language, number)),
       textBlock("recital", "paragraph", recital, { bold: false }),
     ]),
     page(4, "Terms and first clause", "শর্তাবলী ও প্রথম ধারা", [
@@ -431,10 +451,11 @@ function partnershipDeedPages(language: Language): TemplatePage[] {
       textBlock("stamp-note", "paragraph", copy(language, "This partnership deed is computer-composed on {{stamp_value}} ({{stamp_value_words}}) taka non-judicial stamp paper in 40 forms, with three witnesses.", "অত্র অংশীদারী চুক্তিপত্র দলিল {{stamp_value}} ({{stamp_value_words}}) টাকার নন-জুডিশিয়াল স্ট্যাম্পে ৪০ (চল্লিশ) ফর্মে কম্পিউটার কম্পোজকৃত এবং সাক্ষী মোট ৩ জন।"), { align: "center", bold: false, fontSize: "body" }),
       textBlock("witness-heading", "heading", copy(language, "Witnesses and partners", "সাক্ষী ও অংশীদারগণ"), { align: "center" }),
       textBlock("witnesses", "paragraph", copy(language, "Witness 1: {{witness_1}}\nWitness 2: {{witness_2}}\nWitness 3: {{witness_3}}", "সাক্ষী ১: {{witness_1}}\nসাক্ষী ২: {{witness_2}}\nসাক্ষী ৩: {{witness_3}}"), { bold: false, fontSize: "body" }),
-      signatureBlock("partner-1-signature", copy(language, `Partner 1 — ${partnerName(1)}`, `অংশীদার ১ — ${partnerName(1)}`), partnershipPartnerVisibility(1)),
-      signatureBlock("partner-2-signature", copy(language, `Partner 2 — ${partnerName(2)}`, `অংশীদার ২ — ${partnerName(2)}`), partnershipPartnerVisibility(2)),
-      signatureBlock("partner-3-signature", copy(language, `Partner 3 — {{partner_3_name}}`, `অংশীদার ৩ — {{partner_3_name}}`), partnershipPartnerVisibility(3)),
-      signatureBlock("partner-4-signature", copy(language, `Partner 4 — {{partner_4_name}}`, `অংশীদার ৪ — {{partner_4_name}}`), partnershipPartnerVisibility(4)),
+      ...partnershipPartnerNumbers.map((number) => signatureBlock(
+        `partner-${number}-signature`,
+        copy(language, `Partner ${number} — ${partnerName(number)}`, `অংশীদার ${number} — ${partnerName(number)}`),
+        partnershipPartnerVisibility(number),
+      )),
       signatureBlock("witness-1-signature", copy(language, `Witness 1 — {{witness_1}}`, `সাক্ষী ১ — {{witness_1}}`)),
       signatureBlock("witness-2-signature", copy(language, `Witness 2 — {{witness_2}}`, `সাক্ষী ২ — {{witness_2}}`)),
       signatureBlock("witness-3-signature", copy(language, `Witness 3 — {{witness_3}}`, `সাক্ষী ৩ — {{witness_3}}`)),
@@ -480,6 +501,68 @@ export function isPartnershipDeedTemplate(template: Pick<DocumentTemplateDraft, 
     || (template.fields.some((field) => field.key === "partner_count") && template.fields.some((field) => field.key === "partner_1_name"));
 }
 
+type PartnershipSlotBlockKind = "particulars" | "capital-row" | "designation-row" | "signature";
+
+function partnershipPageNumber(page: TemplatePage) {
+  const match = /-page-(\d+)$/.exec(page.id);
+  return match ? Number(match[1]) : null;
+}
+
+function partnershipSlotPageNumber(kind: PartnershipSlotBlockKind, partnerNumber: number) {
+  if (kind === "particulars") return partnerNumber <= 2 ? 2 : 3;
+  if (kind === "capital-row") return 11;
+  if (kind === "designation-row") return 23;
+  return 40;
+}
+
+function findPartnershipPageIndex(pages: TemplatePage[], pageNumber: number) {
+  const exactIndex = pages.findIndex((page) => partnershipPageNumber(page) === pageNumber);
+  if (exactIndex >= 0) return exactIndex;
+
+  // Keep compatibility with older/custom templates whose pages use generic
+  // ids. Only fall back by position when no page has a numeric identity.
+  if (pages.some((page) => partnershipPageNumber(page) !== null) || pages.length < pageNumber) return -1;
+  return pageNumber - 1;
+}
+
+function generatedPartnershipSlotBlock(block: TemplateBlock) {
+  const match = /^partnership-partner-(\d+)-(particulars|capital-row|designation-row|signature)$/.exec(block.id);
+  if (!match) return null;
+  return { number: Number(match[1]), kind: match[2] as PartnershipSlotBlockKind };
+}
+
+function cleanMisplacedPartnershipSlotBlocks(pages: TemplatePage[]) {
+  return pages.map((page, pageIndex) => ({
+    ...page,
+    blocks: page.blocks.filter((block) => {
+      const generated = generatedPartnershipSlotBlock(block);
+      if (!generated) return true;
+      const targetIndex = findPartnershipPageIndex(pages, partnershipSlotPageNumber(generated.kind, generated.number));
+      // If the intended page cannot be identified, preserve the block rather
+      // than risk deleting an administrator's content.
+      return targetIndex < 0 || targetIndex === pageIndex;
+    }),
+  }));
+}
+
+function hasWitnessSignature(block: TemplateBlock): block is Extract<TemplateBlock, { type: "signature" }> {
+  return block.type === "signature" && /Witness [123]|সাক্ষী [১২৩]/i.test(block.label);
+}
+
+function hasPartnershipSlotBlock(pages: TemplatePage[], kind: PartnershipSlotBlockKind, partnerNumber: number) {
+  const pageIndex = findPartnershipPageIndex(pages, partnershipSlotPageNumber(kind, partnerNumber));
+  const page = pageIndex >= 0 ? pages[pageIndex] : undefined;
+  if (!page) return false;
+
+  return page.blocks.some((block) => {
+    const text = blockText(block);
+    if (kind === "signature") return block.type === "signature" && text.includes(`{{partner_${partnerNumber}_name}}`);
+    if (kind === "particulars") return text.includes(`{{partner_${partnerNumber}_details}}`) && text.includes(`{{partner_${partnerNumber}_role}}`);
+    if (kind === "capital-row") return text.includes(`{{partner_${partnerNumber}_capital}}`) && text.includes(`{{partner_${partnerNumber}_profit_share}}`);
+    return text.includes(`{{partner_${partnerNumber}_role}}`);
+  });
+}
+
 function addBlockBefore(blocks: TemplateBlock[], block: TemplateBlock, predicate: (candidate: TemplateBlock) => boolean) {
   const index = blocks.findIndex(predicate);
   if (index < 0) return [...blocks, block];
@@ -495,25 +578,43 @@ function partnerSignatureBlock(language: Language, number: number) {
   );
 }
 
-function ensureFinalSignatureBlocks(pages: TemplatePage[], language: Language, partnerSlots: number[]) {
-  const finalIndex = pages.findIndex((page) => page.id.includes("-page-40"));
-  const targetIndex = finalIndex >= 0 ? finalIndex : pages.length - 1;
+function insertPartnershipSlotBlock(
+  pages: TemplatePage[],
+  kind: PartnershipSlotBlockKind,
+  partnerNumber: number,
+  block: TemplateBlock,
+  predicate?: (candidate: TemplateBlock) => boolean,
+) {
+  const targetIndex = findPartnershipPageIndex(pages, partnershipSlotPageNumber(kind, partnerNumber));
+  if (targetIndex < 0) return pages;
+
+  return pages.map((page, index) => {
+    if (index !== targetIndex || page.blocks.some((candidate) => candidate.id === block.id)) return page;
+    return {
+      ...page,
+      blocks: predicate ? addBlockBefore(page.blocks, block, predicate) : [...page.blocks, block],
+    };
+  });
+}
+
+function ensureFinalSignatureBlocks(pages: TemplatePage[], language: Language) {
+  const targetIndex = findPartnershipPageIndex(pages, 40);
   const finalPage = pages[targetIndex];
   if (!finalPage) return pages;
 
   let blocks = [...finalPage.blocks];
   const existingPartnerNumbers = new Set(blocks.flatMap((block) => block.type === "signature" ? partnerReferences(block) : []));
-  const firstWitnessIndex = blocks.findIndex((block) => block.type === "signature" && /Witness 1|সাক্ষী ১/i.test(block.label));
+  const firstWitnessIndex = blocks.findIndex((block) => hasWitnessSignature(block) && /Witness 1|সাক্ষী ১/i.test(block.label));
   let insertAt = firstWitnessIndex >= 0 ? firstWitnessIndex : blocks.length;
-  for (const number of partnerSlots) {
+  for (const number of partnershipPartnerNumbers) {
     if (existingPartnerNumbers.has(number)) continue;
     blocks.splice(insertAt, 0, partnerSignatureBlock(language, number));
     insertAt += 1;
   }
 
   for (const number of [1, 2, 3]) {
-    const hasWitnessSignature = blocks.some((block) => block.type === "signature" && new RegExp(`Witness ${number}|সাক্ষী ${number}`, "i").test(block.label));
-    if (!hasWitnessSignature) blocks.push(signatureBlock(`partnership-witness-${number}-signature`, copy(language, `Witness ${number} — {{witness_${number}}}`, `সাক্ষী ${number} — {{witness_${number}}}`)));
+    const witnessExists = blocks.some((block) => block.type === "signature" && new RegExp(`Witness ${number}|সাক্ষী ${number}`, "i").test(block.label));
+    if (!witnessExists) blocks.push(signatureBlock(`partnership-witness-${number}-signature`, copy(language, `Witness ${number} — {{witness_${number}}}`, `সাক্ষী ${number} — {{witness_${number}}}`)));
   }
 
   const finalSettings = {
@@ -552,55 +653,71 @@ function addPartnerSlotBlocks(pages: TemplatePage[], language: Language, number:
     partnershipPartnerVisibility(number),
   );
 
-  return pages.map((page, index) => {
-    if (page.id.includes("-page-3") || (!pages.some((candidate) => candidate.id.includes("-page-3")) && index === 2)) {
-      return { ...page, blocks: addBlockBefore(page.blocks, particulars, (candidate) => /recital|ভূমিকা/i.test(blockText(candidate))) };
-    }
-    if (page.id.includes("-page-11") || (!pages.some((candidate) => candidate.id.includes("-page-11")) && index === 10)) {
-      return { ...page, blocks: addBlockBefore(page.blocks, capitalRow, (candidate) => /Each partner|প্রকাশের আগে/i.test(blockText(candidate))) };
-    }
-    if (page.id.includes("-page-23") || (!pages.some((candidate) => candidate.id.includes("-page-23")) && index === 22)) {
-      return { ...page, blocks: [...page.blocks, designationRow] };
-    }
-    if (page.id.includes("-page-40") || (!pages.some((candidate) => candidate.id.includes("-page-40")) && index === 39)) {
-      return { ...page, blocks: addBlockBefore(page.blocks, signature, (candidate) => candidate.type === "signature" && /Witness 1|সাক্ষী ১/i.test(candidate.label)) };
-    }
-    return page;
-  });
+  let nextPages = pages;
+  if (!hasPartnershipSlotBlock(nextPages, "particulars", number)) {
+    nextPages = insertPartnershipSlotBlock(nextPages, "particulars", number, particulars, (candidate) => /recital|ভূমিকা/i.test(blockText(candidate)));
+  }
+  if (!hasPartnershipSlotBlock(nextPages, "capital-row", number)) {
+    nextPages = insertPartnershipSlotBlock(nextPages, "capital-row", number, capitalRow, (candidate) => /Each partner|প্রকাশের আগে/i.test(blockText(candidate)));
+  }
+  if (!hasPartnershipSlotBlock(nextPages, "designation-row", number)) {
+    nextPages = insertPartnershipSlotBlock(nextPages, "designation-row", number, designationRow);
+  }
+  if (!hasPartnershipSlotBlock(nextPages, "signature", number)) {
+    nextPages = insertPartnershipSlotBlock(nextPages, "signature", number, signature, (candidate) => hasWitnessSignature(candidate) && /Witness 1|সাক্ষী ১/i.test(candidate.label));
+  }
+  return nextPages;
 }
 
 export function upgradePartnershipDeedTemplate(template: DocumentTemplateDraft): DocumentTemplateDraft {
   if (!isPartnershipDeedTemplate(template)) return template;
   const language: Language = template.slug.endsWith("-bn") ? "bn" : "en";
-  const slots = partnerSlotNumbers(template.fields);
-  const maxPartner = Math.max(...slots, partnershipDeedMinPartners);
-  const fields = template.fields.map((field) => {
+  let fields = template.fields.map((field) => {
     const partnerMatch = /^partner_(\d+)_(name|details|role|capital|capital_words|profit_share)$/.exec(field.key);
     if (partnerMatch) {
       const number = Number(partnerMatch[1]);
       const isCapital = partnerMatch[2] === "capital" || partnerMatch[2] === "capital_words";
       return {
         ...field,
-        required: field.visibleWhen ? field.required : !isCapital,
+        required: isCapital ? false : partnerMatch[2] === "profit_share" ? true : field.required,
         visibleWhen: field.visibleWhen ?? partnershipPartnerVisibility(number),
       };
     }
     if (["initial_capital", "initial_capital_words", "additional_capital_stamp"].includes(field.key)) return { ...field, required: false };
-    if (field.key === "partner_count") return { ...field, options: partnerCountOptions(language, maxPartner, field.options) };
+    if (field.key === "partner_count") return {
+      ...field,
+      options: partnerCountOptions(language, partnershipDeedMaxPartners, field.options),
+      defaultValue: String(partnershipDeedMinPartners),
+    };
     return field;
   });
-  const pagesWithVisibility = template.pages.map((page) => ({
+
+  // Older seeded versions only contained four partner slots. Add the
+  // remaining definitions without replacing any administrator-entered data.
+  for (const number of partnershipPartnerNumbers) {
+    for (const field of partnerFieldsForSlot(language, number)) {
+      if (!fields.some((candidate) => candidate.key === field.key)) fields.push(field);
+    }
+  }
+
+  let pages = template.pages.map((page) => ({
     ...page,
     blocks: page.blocks.map((block) => {
       const references = partnerReferences(block);
       return references.length === 1 && !block.visibleWhen ? { ...block, visibleWhen: partnershipPartnerVisibility(references[0]) } : block;
     }),
   }));
+
+  // Repair blocks produced by the old broad page-id match (page 3 also
+  // matched pages 30–39), then ensure every slot has its intended content.
+  pages = cleanMisplacedPartnershipSlotBlocks(pages);
+  for (const number of partnershipPartnerNumbers) pages = addPartnerSlotBlocks(pages, language, number);
+
   const fieldsWithWitnesses = [...fields];
   for (const witness of witnessFields(language)) {
     if (!fieldsWithWitnesses.some((field) => field.key === witness.key)) fieldsWithWitnesses.push(witness);
   }
-  return { ...template, fields: fieldsWithWitnesses, pages: ensureFinalSignatureBlocks(pagesWithVisibility, language, slots) };
+  return { ...template, fields: fieldsWithWitnesses, pages: ensureFinalSignatureBlocks(pages, language) };
 }
 
 export function addPartnershipPartnerSlot(template: DocumentTemplateDraft): DocumentTemplateDraft {

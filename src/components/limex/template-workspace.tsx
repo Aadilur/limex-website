@@ -33,7 +33,7 @@ export function TemplateWorkspace({ slug, preview = false }: { slug: string; pre
     void load.then((loaded) => {
       if (!active) return;
       setTemplate(loaded);
-      setValues(Object.fromEntries(loaded.fields.map((field) => [field.key, field.type === "checkbox" ? "false" : ""])));
+      setValues(Object.fromEntries(loaded.fields.map((field) => [field.key, field.type === "checkbox" ? "false" : field.defaultValue ?? ""])));
     }).catch((value) => { if (active) setError(value instanceof Error ? value.message : "This template is not available."); }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [preview, slug]);

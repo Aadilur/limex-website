@@ -2,9 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { businessTools, calculateTool, calculatorFields, defaultToolsSettings, initialToolValues, toolsSettingsSchema, validateFields, type ToolSlug, type ToolValues } from "../src/lib/business-tools.js";
 import { createDocumentDraft, documentFields, documentText } from "../src/lib/business-documents.js";
-import { defaultMouTemplate, documentTemplateDraftSchema, isTemplateFieldVisible, missingTemplateFields, normalizeDocumentTemplateDraft } from "../src/lib/document-templates.js";
+import { defaultMouTemplate, documentTemplateDraftSchema, isTemplateFieldVisible, missingTemplateFields, normalizeDocumentTemplateDraft, type TemplateBlock } from "../src/lib/document-templates.js";
 import { renderTemplatePrintHtml } from "../src/lib/document-template-print.js";
-import { addPartnershipPartnerSlot, defaultPartnershipDeed40BanglaTemplate, defaultPartnershipDeed40EnglishTemplate, partnershipDeedMaxPartners } from "../src/lib/partnership-deed-templates.js";
+import { addPartnershipPartnerSlot, defaultPartnershipDeed40BanglaTemplate, defaultPartnershipDeed40EnglishTemplate, partnershipDeedMaxPartners, partnershipPartnerVisibility, upgradePartnershipDeedTemplate } from "../src/lib/partnership-deed-templates.js";
 import { defaultRentalDeedBanglaTemplate, defaultRentalDeedEnglishTemplate } from "../src/lib/rental-deed-templates.js";
 
 const settings = defaultToolsSettings;
@@ -41,9 +41,12 @@ test("40-page partnership deed templates preserve the source structure and separ
     assert.equal(parsed.pages.length, 40);
     assert.equal(parsed.pages[39]?.settings.stampGap, 0);
     assert.equal(parsed.pages[39]?.settings.defaultFontSize, "body");
-    assert.equal(parsed.fields.length, 44);
+    assert.equal(parsed.fields.length, 68);
+    assert.equal(parsed.fields.find((field) => field.key === "partner_count")?.defaultValue, "2");
+    assert.deepEqual(parsed.fields.find((field) => field.key === "partner_count")?.options.map((option) => option.value), ["2", "3", "4", "5", "6", "7", "8"]);
     assert.equal(parsed.pages[10]?.blocks.some((block) => block.type === "paragraph" && block.text.includes("{{partner_1_capital}}")), true);
-    assert.equal(parsed.pages[39]?.blocks.filter((block) => block.type === "signature").length, 7);
+    assert.equal(parsed.pages[39]?.blocks.filter((block) => block.type === "signature").length, 11);
+    assert.deepEqual(parsed.pages.flatMap((page, index) => page.blocks.some((block) => JSON.stringify(block).includes("partner_8_name")) ? [index + 1] : []), [3, 11, 23, 40]);
   }
   assert.match(defaultPartnershipDeed40BanglaTemplate.title, /[\u0980-\u09ff]/);
   assert.equal(defaultPartnershipDeed40EnglishTemplate.slug, "partnership-deed-40-en");
@@ -75,12 +78,28 @@ test("partnership deed partner slots are conditional, extendable to eight and ke
   assert.equal(finalSignatures.filter((block) => JSON.stringify(block).includes("partner_")).length, 8);
   assert.equal(finalSignatures.filter((block) => JSON.stringify(block).includes("witness_")).length, 3);
 });
+test("partnership deed repair removes legacy misplaced partner blocks", () => {
+  const corrupted = structuredClone(defaultPartnershipDeed40EnglishTemplate);
+  const misplaced: TemplateBlock = {
+    id: "partnership-partner-5-particulars",
+    type: "paragraph",
+    text: "Partner 5 — {{partner_5_name}}\n{{partner_5_details}}\nDesignation: {{partner_5_role}}",
+    align: "left",
+    bold: false,
+    italic: false,
+    fontSize: "body",
+    visibleWhen: partnershipPartnerVisibility(5),
+  };
+  corrupted.pages[29]?.blocks.push(misplaced);
+  const repaired = upgradePartnershipDeedTemplate(corrupted);
+  assert.equal(repaired.pages[29]?.blocks.some((block) => block.id === misplaced.id), false);
+  assert.equal(repaired.pages[2]?.blocks.filter((block) => JSON.stringify(block).includes("partner_5_name")).length, 1);
+});
 test("partnership deed print output removes inactive partner rows and signatures", () => {
   const values = Object.fromEntries(defaultPartnershipDeed40EnglishTemplate.fields.map((field) => [field.key, field.key === "partner_count" ? "2" : field.key.match(/^partner_([1-8])_name$/)?.[1] ? `Partner ${field.key.match(/^partner_([1-8])_name$/)?.[1]}` : "Sample"]));
   const html = renderTemplatePrintHtml(defaultPartnershipDeed40EnglishTemplate, values);
   assert.equal(html.split("class=\"template-page\"").length - 1, 40);
-  assert.equal(html.includes("Partner 3"), false);
-  assert.equal(html.includes("Partner 4"), false);
+  for (const number of [3, 4, 5, 6, 7, 8]) assert.equal(html.includes(`Partner ${number}`), false);
   assert.equal(html.includes("Partner 1"), true);
 });
 for (const amount of [0, 0.01, 1, 99.99, 1000, 999999.99]) for (const rate of [0, 5, 7.5, 15, 100]) test(`VAT reconciles amount=${amount} rate=${rate}`, () => {
