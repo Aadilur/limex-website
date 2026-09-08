@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { businessTools, getTool } from "@/lib/business-tools";
 import { pageContentClass, pageLayoutClass, pageShellClass } from "@/components/limex/layout";
 import { SiteHeader } from "@/components/limex/site-header";
@@ -13,6 +13,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: `${tool?.title ?? "Business tools"} | Limex`, description: tool?.description };
 }
 export default async function ToolPage({ params }: Props) {
-  const tool = getTool((await params).slug); if (!tool) notFound();
+  const slug = (await params).slug;
+  if (slug === "rental-deed") redirect("/business-tools/templates/office-rental-deed-en");
+  const tool = getTool(slug); if (!tool) notFound();
   return <main className={pageLayoutClass}><section className={pageShellClass}><SiteHeader fullBleed /><div className={pageContentClass}><ToolWorkspace tool={tool} /></div></section><SiteFooter /></main>;
 }

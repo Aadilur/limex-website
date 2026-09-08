@@ -3,6 +3,7 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import { navigation, services } from "../src/components/limex/data.js";
 import { defaultLandingContent } from "../src/lib/landing-defaults.js";
 import { defaultMouTemplate, flattenTemplatePages } from "../src/lib/document-templates.js";
+import { defaultRentalDeedTemplates } from "../src/lib/rental-deed-templates.js";
 
 const prisma = new PrismaClient();
 
@@ -71,27 +72,29 @@ async function main() {
     },
   });
 
-  await prisma.documentTemplate.upsert({
-    where: { slug: defaultMouTemplate.slug },
-    update: {},
-    create: {
-      slug: defaultMouTemplate.slug,
-      title: defaultMouTemplate.title,
-      description: defaultMouTemplate.description,
-      settings: defaultMouTemplate.settings as unknown as Prisma.InputJsonValue,
-      fields: defaultMouTemplate.fields as unknown as Prisma.InputJsonValue,
-      blocks: flattenTemplatePages(defaultMouTemplate.pages) as unknown as Prisma.InputJsonValue,
-      pages: defaultMouTemplate.pages as unknown as Prisma.InputJsonValue,
-      publishedSettings: defaultMouTemplate.settings as unknown as Prisma.InputJsonValue,
-      publishedFields: defaultMouTemplate.fields as unknown as Prisma.InputJsonValue,
-      publishedBlocks: flattenTemplatePages(defaultMouTemplate.pages) as unknown as Prisma.InputJsonValue,
-      publishedPages: defaultMouTemplate.pages as unknown as Prisma.InputJsonValue,
-      status: "PUBLISHED",
-      revision: 1,
-      publishedRevision: 1,
-      publishedAt: new Date(),
-    },
-  });
+  for (const template of [defaultMouTemplate, ...defaultRentalDeedTemplates]) {
+    await prisma.documentTemplate.upsert({
+      where: { slug: template.slug },
+      update: {},
+      create: {
+        slug: template.slug,
+        title: template.title,
+        description: template.description,
+        settings: template.settings as unknown as Prisma.InputJsonValue,
+        fields: template.fields as unknown as Prisma.InputJsonValue,
+        blocks: flattenTemplatePages(template.pages) as unknown as Prisma.InputJsonValue,
+        pages: template.pages as unknown as Prisma.InputJsonValue,
+        publishedSettings: template.settings as unknown as Prisma.InputJsonValue,
+        publishedFields: template.fields as unknown as Prisma.InputJsonValue,
+        publishedBlocks: flattenTemplatePages(template.pages) as unknown as Prisma.InputJsonValue,
+        publishedPages: template.pages as unknown as Prisma.InputJsonValue,
+        status: "PUBLISHED",
+        revision: 1,
+        publishedRevision: 1,
+        publishedAt: new Date(),
+      },
+    });
+  }
 
   console.log(`Database seeded for ${adminUser.name ?? "Limex"}.`);
 }

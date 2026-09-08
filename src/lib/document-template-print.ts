@@ -36,7 +36,7 @@ function pageBlocksHtml(blocks: TemplateBlock[], template: DocumentTemplateDraft
 function pageHtml(page: TemplatePage, index: number, template: DocumentTemplateDraft, values: TemplateValues, totalPages: number, pageWidth: string, pageHeight: string) {
   const settings = resolvePageSettings(template, page);
   const pagePadding = `${settings.marginTop + settings.stampGap}mm ${settings.marginRight}mm ${settings.marginBottom}mm ${settings.marginLeft}mm`;
-  const fontFamily = settings.fontFamily === "sans" ? "Arial, Helvetica, sans-serif" : `Georgia,"Times New Roman",serif`;
+  const fontFamily = settings.fontFamily === "sans" ? `"Noto Sans Bengali","Noto Sans",Arial,Helvetica,sans-serif` : `"Noto Serif Bengali","Noto Serif",Kalpurush,Georgia,"Times New Roman",serif`;
   return `<section class="template-page" style="width:${pageWidth};height:${pageHeight};padding:${pagePadding};font-family:${fontFamily};">${pageBlocksHtml(page.blocks, template, values, settings.defaultFontSize)}${settings.showPageNumbers ? `<div class="page-number">${index + 1} / ${totalPages}</div>` : ""}</section>`;
 }
 

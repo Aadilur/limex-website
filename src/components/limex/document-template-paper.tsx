@@ -86,7 +86,7 @@ export function DocumentTemplatePaper({ template, values = {}, showLabels = true
       <div className="origin-top-left" style={{ width: pageWidthPx, transform: `scale(${scale})`, transformOrigin: "top left" }}>
         <div className="grid" style={{ rowGap: `${pageGapPx}px` }}>{template.pages.map((page, index) => {
     const pageSettings = resolvePageSettings(template, page);
-    const fontFamily = pageSettings.fontFamily === "sans" ? "Arial, Helvetica, sans-serif" : "Georgia, \"Times New Roman\", serif";
+    const fontFamily = pageSettings.fontFamily === "sans" ? "\"Noto Sans Bengali\", \"Noto Sans\", Arial, Helvetica, sans-serif" : "\"Noto Serif Bengali\", \"Noto Serif\", Kalpurush, Georgia, \"Times New Roman\", serif";
     return <article className="relative mx-auto block overflow-hidden bg-white text-[#25221f] shadow-[0_10px_28px_rgba(57,48,41,0.1)] ring-1 ring-[#e1dbd2]" style={{ width: pageWidthPx, height: pageHeightPx, aspectRatio: `${pageDimensions.widthMm} / ${pageDimensions.heightMm}`, boxSizing: "border-box", paddingTop: `${pageSettings.marginTop + pageSettings.stampGap}mm`, paddingRight: `${pageSettings.marginRight}mm`, paddingBottom: `${pageSettings.marginBottom}mm`, paddingLeft: `${pageSettings.marginLeft}mm`, fontFamily }} key={page.id} data-template-paper data-page-title={page.title}>
       <div className="h-full min-h-0 overflow-hidden"><div className="min-h-full min-w-0"><RenderPageBlocks blocks={page.blocks} template={template} values={values} showLabels={showLabels} defaultFontSize={pageSettings.defaultFontSize} /></div></div>
       {pageSettings.showPageNumbers ? <span className="absolute bottom-3 left-0 right-0 text-center text-[9px] text-[#928980]">{index + 1} / {template.pages.length}</span> : null}

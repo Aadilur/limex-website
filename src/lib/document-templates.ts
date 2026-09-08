@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const templatePaperSizes = ["A4", "LEGAL"] as const;
+export const templatePaperSizes = ["A4", "LEGAL", "DEED"] as const;
 export type TemplatePaperSize = (typeof templatePaperSizes)[number];
 
 export const templateFontSizes = ["small", "body", "subtitle", "title", "large"] as const;
@@ -17,7 +17,15 @@ export const templateFontSizeMetrics = {
 export const templatePaperDimensions = {
   A4: { widthMm: 210, heightMm: 297 },
   LEGAL: { widthMm: 216, heightMm: 356 },
+  // The supplied rental deed uses an 8.5 × 13.5 inch long deed sheet.
+  DEED: { widthMm: 216, heightMm: 343 },
 } as const;
+
+export const templatePaperSizeLabels: Record<TemplatePaperSize, string> = {
+  A4: "A4",
+  LEGAL: "Legal",
+  DEED: "Deed sheet · 8.5 × 13.5 in",
+};
 
 export const templateFontFamilies = ["serif", "sans"] as const;
 export type TemplateFontFamily = (typeof templateFontFamilies)[number];

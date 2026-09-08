@@ -11,7 +11,7 @@ export const businessTools: ToolDefinition[] = [
   { slug: "trademark", title: "Trademark", description: "Plan costs by class and filing stage.", group: "calculator", icon: "trademark", menuLabel: "Trademark Calculator" },
   { slug: "rjsc", title: "RJSC fees", description: "Separate registration fees from extras.", group: "calculator", icon: "building", menuLabel: "RJSC Fee Calculator" },
   { slug: "irc-erc", title: "Import & export", description: "Budget for IRC or ERC registration.", group: "calculator", icon: "world", menuLabel: "IRC/ERC FEE Calculator" },
-  { slug: "rental-deed", title: "Office rental deed", description: "Agree on rent, deposits and handover.", group: "builder", icon: "contract", menuLabel: "Office Rental Deed Agreement Builder (Eng and Bangla)" },
+  { slug: "rental-deed", title: "Office rental deed", description: "Agree on rent, deposits and handover.", group: "builder", icon: "contract", menuLabel: "Office Rental Deed - English and বাংলা" },
   { slug: "partnership-deed", title: "Partnership deed", description: "Set out ownership and responsibilities.", group: "builder", icon: "users-group", menuLabel: "Partnership Deed Agreement Builder (Eng and Bangla)" },
   { slug: "mou", title: "MOU builder", description: "Put a shared understanding in writing.", group: "builder", icon: "contract", menuLabel: "MOU Generator" },
   { slug: "moa-aoa", title: "MOA & AOA", description: "Outline your company’s foundations.", group: "builder", icon: "building", menuLabel: "MOA/AOA Builder" },

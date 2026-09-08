@@ -298,7 +298,8 @@ const businessTools: MegaMenuGroup[] = [
         href: agreementBuilderUrl,
         marker: "02",
         children: [
-          { label: "Office Rental Deed Agreement Builder (Eng and Bangla)", href: "/business-tools/rental-deed" },
+          { label: "Office Rental Deed - English", href: "/business-tools/templates/office-rental-deed-en" },
+          { label: "Office Rental Deed - বাংলা", href: "/business-tools/templates/office-rental-deed-bn" },
           { label: "E-Trade License Closed/Cancel Application", href: "/business-tools/trade-license-cancellation" },
           { label: "Partnership Deed Agreement Builder (Eng and Bangla)", href: "/business-tools/partnership-deed" },
           { label: "MOA/AOA Builder", href: "/business-tools/moa-aoa" },

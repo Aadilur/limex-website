@@ -3,6 +3,7 @@ import test from "node:test";
 import { businessTools, calculateTool, calculatorFields, defaultToolsSettings, initialToolValues, toolsSettingsSchema, validateFields, type ToolSlug, type ToolValues } from "../src/lib/business-tools.js";
 import { createDocumentDraft, documentFields, documentText } from "../src/lib/business-documents.js";
 import { defaultMouTemplate, documentTemplateDraftSchema, normalizeDocumentTemplateDraft } from "../src/lib/document-templates.js";
+import { defaultRentalDeedBanglaTemplate, defaultRentalDeedEnglishTemplate } from "../src/lib/rental-deed-templates.js";
 
 const settings = defaultToolsSettings;
 function calculate(slug: ToolSlug, values: ToolValues) { return calculateTool(slug, { ...initialToolValues(calculatorFields(slug, settings)), ...values }, settings).result; }
@@ -14,6 +15,17 @@ test("document templates keep a safe service CTA default and reject external ser
   assert.equal(legacy.settings.serviceCta.enabled, false);
   assert.equal(legacy.settings.serviceCta.href, "");
   assert.throws(() => documentTemplateDraftSchema.parse({ ...defaultMouTemplate, settings: { ...defaultMouTemplate.settings, serviceCta: { ...defaultMouTemplate.settings.serviceCta, enabled: true, href: "https://example.com" } } }));
+});
+test("rental deed templates preserve the supplied long-sheet ratio and separate languages", () => {
+  for (const template of [defaultRentalDeedEnglishTemplate, defaultRentalDeedBanglaTemplate]) {
+    const parsed = documentTemplateDraftSchema.parse(template);
+    assert.equal(parsed.settings.paperSize, "DEED");
+    assert.equal(parsed.pages.length, 3);
+    assert.equal(parsed.pages[0]?.blocks.some((block) => block.type === "paragraph" && block.text.includes("{{landlord_details}}")), true);
+  }
+  assert.match(defaultRentalDeedBanglaTemplate.title, /[\u0980-\u09ff]/);
+  assert.equal(defaultRentalDeedEnglishTemplate.slug, "office-rental-deed-en");
+  assert.equal(defaultRentalDeedBanglaTemplate.slug, "office-rental-deed-bn");
 });
 for (const amount of [0, 0.01, 1, 99.99, 1000, 999999.99]) for (const rate of [0, 5, 7.5, 15, 100]) test(`VAT reconciles amount=${amount} rate=${rate}`, () => {
   for (const mode of ["Including VAT", "Excluding VAT"]) {
