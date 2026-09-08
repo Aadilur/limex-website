@@ -94,6 +94,7 @@ function sendKnownMenuError(error: unknown, reply: FastifyReply) {
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     if (error.code === "P2002") return reply.code(409).send({ error: "A menu item with those details already exists." });
     if (error.code === "P2025") return reply.code(404).send({ error: "The requested menu record was not found." });
+    if (error.code === "P2003") return reply.code(409).send({ error: "This menu record is still referenced. Refresh the menu and try again." });
   }
 
   throw error;

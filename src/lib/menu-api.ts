@@ -128,6 +128,10 @@ export function updateMenuSection(id: string, input: MenuSectionInput) {
   return mutateMenu(`/api/admin/menu/sections/${id}`, "PUT", input);
 }
 
+export function createMenuSection(input: Required<Pick<MenuSectionInput, "key" | "label" | "href">> & MenuSectionInput) {
+  return mutateMenu("/api/admin/menu/sections", "POST", input);
+}
+
 export function updateMenuGroup(id: string, input: MenuGroupInput) {
   return mutateMenu(`/api/admin/menu/groups/${id}`, "PUT", input);
 }

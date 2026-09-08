@@ -3,9 +3,11 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from "react";
 
 import {
+  createMenuSection,
   createMenuGroup,
   createMenuItem,
   createMenuLink,
+  deleteMenuSection,
   deleteMenuGroup,
   deleteMenuItem,
   deleteMenuLink,
@@ -146,11 +148,15 @@ function SectionSettings({
   saving,
   onChange,
   onSave,
+  canDelete,
+  onDelete,
 }: {
   section: AdminMenuSection;
   saving: boolean;
   onChange: (patch: Partial<AdminMenuSection>) => void;
   onSave: () => void;
+  canDelete: boolean;
+  onDelete: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const tone = toneOptions.includes(section.tone as typeof toneOptions[number]) ? section.tone : "green";
@@ -171,6 +177,7 @@ function SectionSettings({
         <div className="flex w-full items-center gap-2 sm:w-auto">
           <Toggle label={section.isVisible ? "Visible" : "Hidden"} checked={section.isVisible} onChange={() => onChange({ isVisible: !section.isVisible })} />
           <SaveButton saving={saving} onClick={onSave} />
+          {canDelete ? <button className="grid size-10 shrink-0 place-items-center rounded-full border border-[#f1c6ce] text-[16px] text-[#c63c56] transition-colors hover:bg-[#fce0e3] disabled:opacity-50" type="button" aria-label={`Delete ${section.label}`} disabled={saving} onClick={onDelete}>×</button> : null}
         </div>
       </div>
 
@@ -354,11 +361,13 @@ function CategoryRail({
   activeGroupId,
   onSelect,
   onAdd,
+  disabled,
 }: {
   groups: AdminMenuGroup[];
   activeGroupId: string;
   onSelect: (group: AdminMenuGroup) => void;
   onAdd: () => void;
+  disabled?: boolean;
 }) {
   return (
     <aside className="rounded-[18px] border border-[#e1dcd4] bg-white p-3.5 lg:sticky lg:top-5" aria-label="Categories">
@@ -390,7 +399,7 @@ function CategoryRail({
           );
         })}
       </div>
-      <OutlineButton className="mt-3 w-full" onClick={onAdd}>+ Add category</OutlineButton>
+      <OutlineButton className="mt-3 w-full" disabled={disabled} onClick={onAdd}>+ Add category</OutlineButton>
     </aside>
   );
 }
@@ -539,6 +548,7 @@ export function ServicesModule() {
   }
 
   async function mutate(key: string, action: () => Promise<AdminMenuSection[]>, message: string, onSuccess?: (nextSections: AdminMenuSection[]) => void) {
+    if (savingKey) return;
     setSavingKey(key);
     setError("");
     setNotice("");
@@ -639,6 +649,18 @@ export function ServicesModule() {
     );
   }
 
+  function addSection() {
+    const nextOrder = sections.length ? Math.max(...sections.map((section) => section.sortOrder)) + 1 : 0;
+    const key = `${slugify("new-section")}-${Date.now()}`;
+    void mutate("create-section", () => createMenuSection({ key, label: "New section", href: "#contact", tone: "green", sortOrder: nextOrder, isVisible: true }), "New section added.", (nextSections) => {
+      const nextSection = nextSections.find((section) => section.key === key) ?? nextSections.at(-1);
+      const nextGroup = nextSection?.groups[0];
+      setActiveSectionId(nextSection?.id ?? "");
+      setActiveGroupId(nextGroup?.id ?? "");
+      setActiveItemId(nextGroup?.items[0]?.id ?? "");
+    });
+  }
+
   function addCategory() {
     const nextOrder = activeSection.groups.length ? Math.max(...activeSection.groups.map((group) => group.sortOrder)) + 1 : 0;
     const key = `${slugify(activeSection.label)}-${Date.now()}`;
@@ -700,6 +722,7 @@ export function ServicesModule() {
             </button>
           );
         })}
+        <OutlineButton className="min-w-[140px] shrink-0" disabled={savingKey !== null} onClick={addSection}>+ Add section</OutlineButton>
       </nav>
 
       <SectionSettings
@@ -707,6 +730,17 @@ export function ServicesModule() {
         saving={savingKey === `section:${activeSection.id}`}
         onChange={(patch) => updateSectionInState(activeSection.id, patch)}
         onSave={() => saveSection(activeSection)}
+        canDelete={sections.length > 1}
+        onDelete={() => {
+          if (sections.length <= 1 || !confirmDelete(`Delete ${activeSection.label || "this section"} and all of its categories, services and links?`)) return;
+          void mutate(`delete-section:${activeSection.id}`, () => deleteMenuSection(activeSection.id), `${activeSection.label || "Section"} deleted.`, (nextSections) => {
+            const nextSection = nextSections[0];
+            const nextGroup = nextSection?.groups[0];
+            setActiveSectionId(nextSection?.id ?? "");
+            setActiveGroupId(nextGroup?.id ?? "");
+            setActiveItemId(nextGroup?.items[0]?.id ?? "");
+          });
+        }}
       />
 
       <section aria-labelledby="categories-title">
@@ -727,6 +761,7 @@ export function ServicesModule() {
               setActiveItemId(group.items[0]?.id ?? "");
             }}
             onAdd={addCategory}
+            disabled={savingKey !== null}
           />
 
           {activeGroup ? (
@@ -738,7 +773,13 @@ export function ServicesModule() {
                 onSave={() => saveGroup(activeGroup)}
                 onDelete={() => {
                   if (!confirmDelete(`Delete ${activeGroup.label || "this category"} and all of its services?`)) return;
-                  void mutate(`delete-group:${activeGroup.id}`, () => deleteMenuGroup(activeGroup.id), `${activeGroup.label || "Category"} deleted.`);
+                  void mutate(`delete-group:${activeGroup.id}`, () => deleteMenuGroup(activeGroup.id), `${activeGroup.label || "Category"} deleted.`, (nextSections) => {
+                    const nextSection = nextSections.find((section) => section.id === activeSection.id) ?? nextSections[0];
+                    const nextGroup = nextSection?.groups[0];
+                    setActiveSectionId(nextSection?.id ?? "");
+                    setActiveGroupId(nextGroup?.id ?? "");
+                    setActiveItemId(nextGroup?.items[0]?.id ?? "");
+                  });
                 }}
               />
 
@@ -768,7 +809,13 @@ export function ServicesModule() {
                   onSave={() => saveItem(activeItem)}
                   onDelete={() => {
                     if (!confirmDelete(`Delete ${activeItem.label || "this service"} and its sub-links?`)) return;
-                    void mutate(`delete-item:${activeItem.id}`, () => deleteMenuItem(activeItem.id), `${activeItem.label || "Service"} deleted.`, () => setActiveItemId(""));
+                    void mutate(`delete-item:${activeItem.id}`, () => deleteMenuItem(activeItem.id), `${activeItem.label || "Service"} deleted.`, (nextSections) => {
+                      const nextSection = nextSections.find((section) => section.id === activeSection.id) ?? nextSections[0];
+                      const nextGroup = nextSection?.groups.find((group) => group.id === activeGroup.id) ?? nextSection?.groups[0];
+                      setActiveSectionId(nextSection?.id ?? "");
+                      setActiveGroupId(nextGroup?.id ?? "");
+                      setActiveItemId(nextGroup?.items[0]?.id ?? "");
+                    });
                   }}
                   onAddLink={() => {
                     const nextOrder = activeItem.links.length ? Math.max(...activeItem.links.map((link) => link.sortOrder)) + 1 : 0;

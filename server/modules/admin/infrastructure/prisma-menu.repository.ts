@@ -55,7 +55,20 @@ export class PrismaMenuRepository implements MenuRepository {
   }
 
   public async deleteSection(id: string): Promise<void> {
-    await this.client.menuSection.delete({ where: { id } });
+    await this.client.$transaction(async (transaction) => {
+      const groups = await transaction.menuGroup.findMany({ where: { sectionId: id }, select: { id: true } });
+      const groupIds = groups.map((group) => group.id);
+
+      if (groupIds.length) {
+        const items = await transaction.menuItem.findMany({ where: { groupId: { in: groupIds } }, select: { id: true } });
+        const itemIds = items.map((item) => item.id);
+        if (itemIds.length) await transaction.menuLink.deleteMany({ where: { itemId: { in: itemIds } } });
+        await transaction.menuItem.deleteMany({ where: { groupId: { in: groupIds } } });
+        await transaction.menuGroup.deleteMany({ where: { id: { in: groupIds } } });
+      }
+
+      await transaction.menuSection.delete({ where: { id } });
+    });
   }
 
   public async createGroup(input: CreateMenuGroupInput): Promise<void> {
@@ -73,7 +86,13 @@ export class PrismaMenuRepository implements MenuRepository {
   }
 
   public async deleteGroup(id: string): Promise<void> {
-    await this.client.menuGroup.delete({ where: { id } });
+    await this.client.$transaction(async (transaction) => {
+      const items = await transaction.menuItem.findMany({ where: { groupId: id }, select: { id: true } });
+      const itemIds = items.map((item) => item.id);
+      if (itemIds.length) await transaction.menuLink.deleteMany({ where: { itemId: { in: itemIds } } });
+      await transaction.menuItem.deleteMany({ where: { groupId: id } });
+      await transaction.menuGroup.delete({ where: { id } });
+    });
   }
 
   public async createItem(input: CreateMenuItemInput): Promise<void> {
@@ -92,7 +111,10 @@ export class PrismaMenuRepository implements MenuRepository {
   }
 
   public async deleteItem(id: string): Promise<void> {
-    await this.client.menuItem.delete({ where: { id } });
+    await this.client.$transaction(async (transaction) => {
+      await transaction.menuLink.deleteMany({ where: { itemId: id } });
+      await transaction.menuItem.delete({ where: { id } });
+    });
   }
 
   public async createLink(input: CreateMenuLinkInput): Promise<void> {
