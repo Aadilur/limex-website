@@ -1,4 +1,4 @@
-import { expandTemplateBlockInstances, isTemplateBlockVisible, isTemplateFieldVisible, resolveBlockFontSize, resolvePageSettings, resolveTemplateText, scaledTemplateFontSizeMetrics, templatePaperDimensions, type DocumentTemplateDraft, type TemplateBlock, type TemplateBlockInstance, type TemplateField, type TemplatePage, type TemplateValues } from "./document-templates";
+import { expandTemplateBlockInstances, isTemplateBlockVisible, isTemplateFieldVisible, resolveBlockFontSize, resolvePageSettings, resolveTemplateFieldValue, resolveTemplateText, scaledTemplateFontSizeMetrics, templatePaperDimensions, type DocumentTemplateDraft, type TemplateBlock, type TemplateBlockInstance, type TemplateField, type TemplatePage, type TemplateValues } from "./document-templates";
 
 function escapeHtml(value: string) {
   return value.replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character] ?? character);
@@ -19,7 +19,7 @@ function blockHtml(block: TemplateBlock, template: DocumentTemplateDraft, values
     if (block.type === "heading") return `<h2 style="${style}margin:20px 0 10px;">${text}</h2>`;
     return `<p style="${style}margin:0 0 12px;">${text}</p>`;
   }
-  if (block.type === "field") { const field = fields.find((item) => item.key === block.fieldKey); if (field && !isTemplateFieldVisible(field, values)) return ""; const value = values[block.fieldKey]?.trim() || ""; if (!value) return ""; const style = styleFor(block, defaultFontSize, template.settings.fontScale); return `<p style="${style}margin:0 0 12px;">${escapeHtml(value)}</p>`; }
+  if (block.type === "field") { const field = fields.find((item) => item.key === block.fieldKey); if (field && !isTemplateFieldVisible(field, values)) return ""; const value = resolveTemplateFieldValue(field, values[block.fieldKey]); if (!value) return ""; const style = styleFor(block, defaultFontSize, template.settings.fontScale); return `<p style="${style}margin:0 0 12px;">${escapeHtml(value)}</p>`; }
   if (block.type === "spacer") return `<div style="height:${Math.min(240, Math.max(4, block.height))}px;"></div>`;
   if (block.type === "signature") { const metrics = scaledTemplateFontSizeMetrics(defaultFontSize, template.settings.fontScale); return `<div style="display:grid;row-gap:2px;margin-top:20px;max-width:280px;border-top:1px solid #2b2927;padding-top:6px;font-size:${metrics.sizePx}px;line-height:${metrics.lineHeight};"><div>${escapeHtml(resolveTemplateText(block.label, values, fields, false))}</div><div style="color:#69635d;">Signature / stamp</div><div style="color:#69635d;">Date: __________________</div></div>`; }
   return "";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { expandTemplateBlockInstances, isTemplateBlockVisible, isTemplateFieldVisible, resolveBlockFontSize, resolvePageSettings, resolveTemplateText, scaledTemplateFontSizeMetrics, templatePaperDimensions, type DocumentTemplateDraft, type TemplateBlock, type TemplateBlockInstance, type TemplateField, type TemplateValues } from "@/lib/document-templates";
+import { expandTemplateBlockInstances, isTemplateBlockVisible, isTemplateFieldVisible, resolveBlockFontSize, resolvePageSettings, resolveTemplateFieldValue, resolveTemplateText, scaledTemplateFontSizeMetrics, templatePaperDimensions, type DocumentTemplateDraft, type TemplateBlock, type TemplateBlockInstance, type TemplateField, type TemplateValues } from "@/lib/document-templates";
 
 const cssPixelsPerMillimetre = 96 / 25.4;
 
@@ -37,7 +37,7 @@ function RenderBlock({ block, template, values, fields, showLabels, defaultFontS
   if (block.type === "field") {
     const field = fields.find((item) => item.key === block.fieldKey);
     if (field && !isTemplateFieldVisible(field, values)) return null;
-    const text = values[block.fieldKey]?.trim() || (showLabels ? `[${field?.label ?? block.fieldKey}]` : "");
+    const text = resolveTemplateFieldValue(field, values[block.fieldKey]) || (showLabels ? `[${field?.label ?? block.fieldKey}]` : "");
     if (!text.trim()) return null;
     return <p className="mb-3 whitespace-pre-wrap break-words" style={formattedStyle(block, defaultFontSize, template.settings.fontScale)}>{text}</p>;
   }

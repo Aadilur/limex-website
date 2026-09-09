@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { businessTools, calculateTool, calculatorFields, defaultToolsSettings, initialToolValues, toolsSettingsSchema, validateFields, type ToolSlug, type ToolValues } from "../src/lib/business-tools.js";
 import { createDocumentDraft, documentFields, documentText } from "../src/lib/business-documents.js";
-import { defaultMouTemplate, defaultTemplateSettings, documentTemplateDraftSchema, expandTemplateBlockInstances, isTemplateFieldVisible, missingTemplateFields, normalizeDocumentTemplateDraft, templateRepeaterFieldValueKey, type TemplateBlock } from "../src/lib/document-templates.js";
+import { defaultMouTemplate, defaultTemplateSettings, documentTemplateDraftSchema, expandTemplateBlockInstances, isTemplateFieldVisible, missingTemplateFields, normalizeDocumentTemplateDraft, resolveTemplateFieldValue, templateRepeaterFieldValueKey, type TemplateBlock } from "../src/lib/document-templates.js";
 import { renderTemplateDocx } from "../src/lib/document-template-docx.js";
 import { renderTemplatePrintHtml } from "../src/lib/document-template-print.js";
 import { addPartnershipPartnerSlot, defaultPartnershipDeed40BanglaTemplate, defaultPartnershipDeed40EnglishTemplate, partnershipDeedMaxPartners, partnershipPartnerVisibility, upgradePartnershipDeedTemplate } from "../src/lib/partnership-deed-templates.js";
@@ -64,8 +64,9 @@ test("repeatable groups expand generic item fields and validate only active item
   assert.deepEqual(missingTemplateFields(template.fields, values, template.settings.repeaters).map((field) => field.key), ["members.2.note"]);
   assert.equal(templateRepeaterFieldValueKey(group, 2, group.fields[0]!), "members.2.name");
   const html = renderTemplatePrintHtml(template, values);
-  assert.equal(html.includes("Member 1 — A (person)"), true);
-  assert.equal(html.includes("Member 2 — B (company)"), true);
+  assert.equal(resolveTemplateFieldValue(group.fields[1], "person"), "Person");
+  assert.equal(html.includes("Member 1 — A (Person)"), true);
+  assert.equal(html.includes("Member 2 — B (Company)"), true);
   assert.equal(html.includes("[Company note]"), false);
 });
 test("40-page partnership deed templates preserve the source structure and separate languages", () => {

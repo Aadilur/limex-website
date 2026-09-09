@@ -23,6 +23,7 @@ import {
   isTemplateBlockVisible,
   isTemplateFieldVisible,
   resolveBlockFontSize,
+  resolveTemplateFieldValue,
   resolvePageSettings,
   resolveTemplateText,
   scaledTemplateFontSizeMetrics,
@@ -205,7 +206,7 @@ function blockElements(
   if (block.type === "field") {
     const field = fields.find((item) => item.key === block.fieldKey);
     if (field && !isTemplateFieldVisible(field, values)) return [];
-    const text = values[block.fieldKey]?.trim() || "";
+    const text = resolveTemplateFieldValue(field, values[block.fieldKey]);
     return text ? [paragraphFor(block, text, template, defaultFontSize, family)] : [];
   }
 

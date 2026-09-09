@@ -98,11 +98,47 @@ function updateBlock(blocks: TemplateBlock[], id: string, patch: Partial<Templat
   return blocks.map((block) => block.id === id ? { ...block, ...patch } as TemplateBlock : block);
 }
 
-function parseOptions(value: string) {
-  return value.split("\n").map((line) => {
-    const [optionValue, ...labelParts] = line.split("|");
-    return { value: (optionValue ?? "").trim(), label: labelParts.join("|").trim() || (optionValue ?? "").trim() };
-  }).filter((option) => option.value && option.label);
+type SelectOption = TemplateField["options"][number];
+
+function MoveControls({ index, count, onMove, onRemove, removeLabel = "Remove", removeDisabled = false }: { index: number; count: number; onMove: (direction: -1 | 1) => void; onRemove?: () => void; removeLabel?: string; removeDisabled?: boolean }) {
+  return <div className="flex shrink-0 items-center gap-0.5"><button className="grid size-7 place-items-center rounded-full text-[13px] text-[#817970] transition-colors hover:bg-white hover:text-[#17151c] disabled:cursor-not-allowed disabled:opacity-25" type="button" aria-label="Move up" disabled={index === 0} onClick={() => onMove(-1)}>↑</button><button className="grid size-7 place-items-center rounded-full text-[13px] text-[#817970] transition-colors hover:bg-white hover:text-[#17151c] disabled:cursor-not-allowed disabled:opacity-25" type="button" aria-label="Move down" disabled={index === count - 1} onClick={() => onMove(1)}>↓</button>{onRemove ? <button className="grid size-7 place-items-center rounded-full text-[15px] text-[#a59d94] transition-colors hover:bg-[#fff0f2] hover:text-[#c63d58] disabled:cursor-not-allowed disabled:opacity-30" type="button" aria-label={removeLabel} disabled={removeDisabled} onClick={onRemove}>×</button> : null}</div>;
+}
+
+function OptionsEditor({ options, onChange }: { options: SelectOption[]; onChange: (options: SelectOption[]) => void }) {
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const incomplete = options.some((option) => !option.value.trim() || !option.label.trim());
+  const duplicateValues = new Set(options.map((option) => option.value.trim()).filter(Boolean)).size !== options.filter((option) => option.value.trim()).length;
+
+  function update(index: number, patch: Partial<SelectOption>) {
+    onChange(options.map((option, optionIndex) => optionIndex === index ? { ...option, ...patch } : option));
+  }
+
+  function move(index: number, direction: -1 | 1) {
+    const target = index + direction;
+    if (target < 0 || target >= options.length) return;
+    const next = [...options];
+    [next[index], next[target]] = [next[target], next[index]];
+    onChange(next);
+  }
+
+  function drop(targetIndex: number) {
+    if (dragIndex === null || dragIndex === targetIndex) return;
+    const next = [...options];
+    const [moved] = next.splice(dragIndex, 1);
+    if (!moved) return;
+    next.splice(targetIndex, 0, moved);
+    onChange(next);
+    setDragIndex(null);
+  }
+
+  function add() {
+    if (options.length >= 30) return;
+    let suffix = options.length + 1;
+    while (options.some((option) => option.value === `option_${suffix}`)) suffix += 1;
+    onChange([...options, { value: `option_${suffix}`, label: `Option ${suffix}` }]);
+  }
+
+  return <div className="mt-2.5 rounded-[11px] bg-[#f7f4ef] p-2.5 sm:p-3"><div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#756e66]">Dropdown options</p><p className="mt-0.5 text-[10px] leading-[1.4] text-[#958c82]">Value is stored; label is shown to the user.</p></div><span className="rounded-full bg-white px-2 py-1 text-[10px] font-bold text-[#817970]">{options.length} / 30</span></div><div className="mt-2 space-y-1.5">{options.length ? options.map((option, index) => <div className={`flex items-start gap-2 rounded-[10px] bg-white/75 p-2 transition-opacity ${dragIndex === index ? "opacity-50" : ""}`.trim()} key={index} onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; }} onDrop={() => drop(index)}><span className="mt-6 cursor-grab select-none px-0.5 text-[16px] leading-none text-[#aaa198]" title="Drag to reorder option" aria-label="Drag to reorder option" draggable onDragStart={(event) => { event.dataTransfer.effectAllowed = "move"; setDragIndex(index); }} onDragEnd={() => setDragIndex(null)}>⠿</span><span className="mt-6 grid size-5 shrink-0 place-items-center rounded-full bg-[#f4eee8] text-[9px] font-bold text-[#817970]">{index + 1}</span><div className="grid min-w-0 flex-1 gap-2 sm:grid-cols-2"><label className={labelClass}>Value<input className={`${inputClass} mt-1`} value={option.value} placeholder="option_value" onChange={(event) => update(index, { value: event.target.value })} /></label><label className={labelClass}>Label<input className={`${inputClass} mt-1`} value={option.label} placeholder="Option label" onChange={(event) => update(index, { label: event.target.value })} /></label></div><MoveControls index={index} count={options.length} onMove={(direction) => move(index, direction)} onRemove={() => onChange(options.filter((_, optionIndex) => optionIndex !== index))} removeLabel={`Remove option ${index + 1}`} /></div>) : <p className="rounded-[10px] bg-white/70 px-3 py-2.5 text-[11px] text-[#817970]">No options yet. Add the first choice below.</p>}</div><button className="mt-2.5 rounded-full bg-white px-3 py-2 text-[11px] font-bold text-[#29634d] transition-colors hover:bg-[#eaf5ed] disabled:cursor-not-allowed disabled:opacity-40" type="button" onClick={add} disabled={options.length >= 30}>+ Add option</button>{incomplete ? <p className="mt-2 text-[10px] font-semibold text-[#b13c53]">Complete both value and label before saving.</p> : duplicateValues ? <p className="mt-2 text-[10px] font-semibold text-[#b13c53]">Each option value should be unique.</p> : null}</div>;
 }
 
 function blockSummary(block: TemplateBlock, fields: TemplateField[], repeaters: TemplateRepeater[] = []) {
@@ -167,14 +203,58 @@ function ElementPicker({ fields, defaultFontSize, onAdd }: { fields: TemplateFie
 }
 
 function FieldsEditor({ fields, onChange }: { fields: TemplateField[]; onChange: (fields: TemplateField[]) => void }) {
-  function update(id: string, patch: Partial<TemplateField>) { onChange(fields.map((field) => field.id === id ? { ...field, ...patch } : field)); }
-  return <div className="divide-y divide-[#eee9e2]">{fields.length ? fields.map((field) => <div className="py-3 first:pt-0 last:pb-0" key={field.id}><div className="grid gap-2.5 sm:grid-cols-[minmax(0,1fr)_150px]"><div className="grid gap-2.5 sm:grid-cols-2"><Field label="Label" value={field.label} onChange={(label) => update(field.id, { label })} /><Field label="Key" value={field.key} onChange={(key) => update(field.id, { key: key.toLowerCase().replace(/[^a-z0-9_]/g, "_") })} placeholder="party_name" /></div><label className={labelClass}>Input type<select className={`${inputClass} mt-1.5`} value={field.type} onChange={(event) => update(field.id, { type: event.target.value as TemplateFieldType, options: event.target.value === "select" ? field.options.length ? field.options : [{ value: "option_1", label: "Option 1" }] : [] })}><option value="text">Short text</option><option value="textarea">Long text</option><option value="date">Date</option><option value="number">Number</option><option value="select">Dropdown</option><option value="checkbox">Checkbox</option></select></label></div><div className="mt-2.5 grid gap-2.5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"><Field label="Placeholder" value={field.placeholder} onChange={(placeholder) => update(field.id, { placeholder })} /><div className="flex items-center justify-between gap-3"><Toggle label="Required" checked={field.required} onChange={(required) => update(field.id, { required })} /><button className="rounded-full px-2 py-1 text-[11px] font-semibold text-[#b13c53] hover:bg-[#fff0f2]" type="button" onClick={() => onChange(fields.filter((item) => item.id !== field.id))}>Remove</button></div></div>{field.type === "select" ? <label className={`${labelClass} mt-2.5 block`}>Options — value | label per line<textarea className={`${areaClass} mt-1.5 min-h-16`} value={field.options.map((option) => `${option.value} | ${option.label}`).join("\n")} onChange={(event) => update(field.id, { options: parseOptions(event.target.value) })} /></label> : null}</div>) : <p className="py-1 text-[12px] text-[#817970]">No user inputs yet. Add one when someone needs to fill this document.</p>}</div>;
+  const [dragId, setDragId] = useState<string | null>(null);
+
+  function update(id: string, patch: Partial<TemplateField>) {
+    onChange(fields.map((field) => field.id === id ? { ...field, ...patch } : field));
+  }
+
+  function move(id: string, direction: -1 | 1) {
+    const index = fields.findIndex((field) => field.id === id);
+    const target = index + direction;
+    if (index < 0 || target < 0 || target >= fields.length) return;
+    const next = [...fields];
+    [next[index], next[target]] = [next[target], next[index]];
+    onChange(next);
+  }
+
+  function drop(targetId: string) {
+    if (!dragId || dragId === targetId) return;
+    const from = fields.findIndex((field) => field.id === dragId);
+    const to = fields.findIndex((field) => field.id === targetId);
+    if (from < 0 || to < 0) return;
+    const next = [...fields];
+    const [moved] = next.splice(from, 1);
+    if (!moved) return;
+    next.splice(to, 0, moved);
+    onChange(next);
+    setDragId(null);
+  }
+
+  return <div className="space-y-1.5">{fields.length ? fields.map((field, index) => <div className={`rounded-[12px] bg-[#faf8f4] p-3 transition-opacity ${dragId === field.id ? "opacity-50" : ""}`.trim()} key={field.id} onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; }} onDrop={() => drop(field.id)}>
+    <div className="flex items-start gap-2.5">
+      <span className="mt-1 cursor-grab select-none px-0.5 text-[17px] leading-none text-[#aaa198]" title="Drag to reorder shared input" aria-label="Drag to reorder shared input" draggable onDragStart={(event) => { event.dataTransfer.effectAllowed = "move"; setDragId(field.id); }} onDragEnd={() => setDragId(null)}>⠿</span>
+      <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-white text-[9px] font-bold text-[#817970]">{index + 1}</span>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2"><p className="truncate text-[13px] font-bold text-[#2d2824]">{field.label || "Untitled input"}</p><span className="rounded-full bg-white px-2 py-1 text-[9px] font-bold uppercase tracking-[0.08em] text-[#817970]">{field.type === "textarea" ? "Long text" : field.type === "select" ? "Dropdown" : field.type === "checkbox" ? "Checkbox" : field.type === "date" ? "Date" : field.type === "number" ? "Number" : "Short text"}</span></div>
+        <p className="mt-0.5 truncate text-[10px] text-[#958c82]">{field.key || "Key needed"} · {field.required ? "Required" : "Optional"}</p>
+      </div>
+      <MoveControls index={index} count={fields.length} onMove={(direction) => move(field.id, direction)} onRemove={() => onChange(fields.filter((item) => item.id !== field.id))} removeLabel={`Remove ${field.label || "input"}`} />
+    </div>
+    <div className="mt-2.5 grid gap-2.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_150px]">
+      <Field label="Label" value={field.label} onChange={(label) => update(field.id, { label })} />
+      <Field label="Key" value={field.key} onChange={(key) => update(field.id, { key: key.toLowerCase().replace(/[^a-z0-9_]/g, "_") })} placeholder="party_name" />
+      <label className={labelClass}>Input type<select className={`${inputClass} mt-1.5`} value={field.type} onChange={(event) => update(field.id, { type: event.target.value as TemplateFieldType, options: event.target.value === "select" && !field.options.length ? [{ value: "option_1", label: "Option 1" }] : field.options })}><option value="text">Short text</option><option value="textarea">Long text</option><option value="date">Date</option><option value="number">Number</option><option value="select">Dropdown</option><option value="checkbox">Checkbox</option></select></label>
+    </div>
+    <div className="mt-2.5 grid gap-2.5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"><Field label="Placeholder" value={field.placeholder} onChange={(placeholder) => update(field.id, { placeholder })} /><Toggle label="Required" checked={field.required} onChange={(required) => update(field.id, { required })} /></div>
+    {field.type === "select" ? <OptionsEditor options={field.options} onChange={(options) => update(field.id, { options })} /> : null}
+  </div>) : <p className="rounded-[11px] bg-[#faf8f4] px-3 py-2.5 text-[12px] text-[#817970]">No user inputs yet. Add one when someone needs to fill this document.</p>}</div>;
 }
 
 function TemplateInputsCard({ fields, onChange, onAdd }: { fields: TemplateField[]; onChange: (fields: TemplateField[]) => void; onAdd: () => void }) {
   const [open, setOpen] = useState(false);
   useEffect(() => { if (!open) return; const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setOpen(false); }; const previousOverflow = document.body.style.overflow; document.body.style.overflow = "hidden"; document.addEventListener("keydown", closeOnEscape); return () => { document.body.style.overflow = previousOverflow; document.removeEventListener("keydown", closeOnEscape); }; }, [open]);
-  return <><button className="group w-full rounded-[13px] bg-[#f5faf6] px-3.5 py-3 text-left transition-colors hover:bg-[#eef7f0] focus:outline-none focus:ring-4 focus:ring-[#dcefe0]" type="button" onClick={() => setOpen(true)}><span className="flex items-center justify-between gap-3"><span><span className="block text-[13px] font-bold text-[#254d39]">{fields.length ? `${fields.length} shared input${fields.length === 1 ? "" : "s"}` : "No shared inputs"}</span><span className="mt-0.5 block text-[11px] text-[#668171]">Available to place on any page · click to manage</span></span><span className="grid size-8 shrink-0 place-items-center rounded-full bg-white text-[16px] text-[#347054] shadow-[0_1px_4px_rgba(44,36,31,0.08)] transition-transform group-hover:translate-x-0.5">→</span></span></button>{open ? <div className="fixed inset-0 z-50 grid place-items-center bg-[#17151c]/30 p-3 backdrop-blur-[2px]" role="dialog" aria-modal="true" aria-label="Shared document inputs" onMouseDown={(event) => { if (event.currentTarget === event.target) setOpen(false); }}><div className="flex max-h-[min(720px,calc(100vh-24px))] w-full max-w-[760px] flex-col overflow-hidden rounded-[18px] bg-white shadow-[0_25px_80px_rgba(44,36,31,0.24)]"><header className="flex items-center justify-between gap-3 border-b border-[#eee9e2] px-4 py-3.5"><div><p className="font-brand text-[17px] font-bold tracking-[-0.02em] text-[#17151c]">Shared inputs</p><p className="mt-0.5 text-[11px] text-[#817970]">These are document-wide. Add them once, then place them on any page.</p></div><button type="button" className="grid size-8 place-items-center rounded-full bg-[#f5eee8] text-[18px] text-[#71685f] hover:bg-[#eee4da]" onClick={() => setOpen(false)} aria-label="Close inputs">×</button></header><div className="min-h-0 flex-1 overflow-y-auto px-4 py-3.5"><FieldsEditor fields={fields} onChange={onChange} /></div><footer className="flex flex-wrap items-center justify-between gap-2 border-t border-[#eee9e2] px-4 py-3"><button type="button" className="rounded-full bg-[#f2f7f3] px-3.5 py-2 text-[11px] font-bold text-[#29634d] hover:bg-[#dff0e5]" onClick={onAdd}>+ Add input</button><button type="button" className="rounded-full bg-[#17151c] px-4 py-2 text-[11px] font-bold text-white hover:bg-[#e44762]" onClick={() => setOpen(false)}>Done</button></footer></div></div> : null}</>;
+  return <><button className="group w-full rounded-[13px] bg-[#f5faf6] px-3.5 py-3 text-left transition-colors hover:bg-[#eef7f0] focus:outline-none focus:ring-4 focus:ring-[#dcefe0]" type="button" onClick={() => setOpen(true)}><span className="flex items-center justify-between gap-3"><span><span className="block text-[13px] font-bold text-[#254d39]">{fields.length ? `${fields.length} shared input${fields.length === 1 ? "" : "s"}` : "No shared inputs"}</span><span className="mt-0.5 block text-[11px] text-[#668171]">Document-wide · drag inside to set form order</span></span><span className="grid size-8 shrink-0 place-items-center rounded-full bg-white text-[16px] text-[#347054] shadow-[0_1px_4px_rgba(44,36,31,0.08)] transition-transform group-hover:translate-x-0.5">→</span></span></button>{open ? <div className="fixed inset-0 z-50 grid place-items-center bg-[#17151c]/30 p-3 backdrop-blur-[2px]" role="dialog" aria-modal="true" aria-label="Shared document inputs" onMouseDown={(event) => { if (event.currentTarget === event.target) setOpen(false); }}><div className="flex max-h-[min(720px,calc(100vh-24px))] w-full max-w-[760px] flex-col overflow-hidden rounded-[18px] bg-white shadow-[0_25px_80px_rgba(44,36,31,0.24)]"><header className="flex items-center justify-between gap-3 border-b border-[#eee9e2] px-4 py-3.5"><div><p className="font-brand text-[17px] font-bold tracking-[-0.02em] text-[#17151c]">Shared inputs</p><p className="mt-0.5 text-[11px] text-[#817970]">Document-wide fields appear in this order in the user form.</p></div><button type="button" className="grid size-8 place-items-center rounded-full bg-[#f5eee8] text-[18px] text-[#71685f] hover:bg-[#eee4da]" onClick={() => setOpen(false)} aria-label="Close inputs">×</button></header><div className="min-h-0 flex-1 overflow-y-auto px-4 py-3.5"><FieldsEditor fields={fields} onChange={onChange} /></div><footer className="flex flex-wrap items-center justify-between gap-2 border-t border-[#eee9e2] px-4 py-3"><button type="button" className="rounded-full bg-[#f2f7f3] px-3.5 py-2 text-[11px] font-bold text-[#29634d] hover:bg-[#dff0e5]" onClick={onAdd}>+ Add input</button><button type="button" className="rounded-full bg-[#17151c] px-4 py-2 text-[11px] font-bold text-white hover:bg-[#e44762]" onClick={() => setOpen(false)}>Done</button></footer></div></div> : null}</>;
 }
 
 function makeRepeaterField(index: number): TemplateRepeaterField {
@@ -186,11 +266,52 @@ function makeRepeater(index: number, countFieldKey: string): TemplateRepeater {
 }
 
 function RepeaterFieldsEditor({ repeater, usedFieldKeys, onChange }: { repeater: TemplateRepeater; usedFieldKeys: Set<string>; onChange: (repeater: TemplateRepeater) => void }) {
+  const [dragId, setDragId] = useState<string | null>(null);
+
   function updateField(id: string, patch: Partial<TemplateRepeaterField>) {
     onChange({ ...repeater, fields: repeater.fields.map((field) => field.id === id ? { ...field, ...patch } : field) });
   }
-  function addField() { onChange({ ...repeater, fields: [...repeater.fields, makeRepeaterField(repeater.fields.length)] }); }
-  return <><div><div className="divide-y divide-[#eee9e2]">{repeater.fields.map((field) => <div className="space-y-2.5 py-3 first:pt-0 last:pb-0" key={field.id}><div className="grid gap-2.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_140px]"><Field label="Field label" value={field.label} onChange={(label) => updateField(field.id, { label })} /><Field label="Item key" value={field.key} onChange={(key) => updateField(field.id, { key: key.toLowerCase().replace(/[^a-z0-9_]/g, "_") })} placeholder="member_name" /><label className={labelClass}>Input type<select className={`${inputClass} mt-1.5`} value={field.type} onChange={(event) => updateField(field.id, { type: event.target.value as TemplateFieldType, options: event.target.value === "select" ? field.options.length ? field.options : [{ value: "option_1", label: "Option 1" }] : [] })}><option value="text">Short text</option><option value="textarea">Long text</option><option value="date">Date</option><option value="number">Number</option><option value="select">Dropdown</option><option value="checkbox">Checkbox</option></select></label></div><div className="grid gap-2.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end"><Field label="Placeholder" value={field.placeholder} onChange={(placeholder) => updateField(field.id, { placeholder })} /><Field label="Saved key pattern (optional)" value={field.sourceKeyPattern ?? ""} onChange={(sourceKeyPattern) => updateField(field.id, { sourceKeyPattern: sourceKeyPattern || undefined })} placeholder="member_{index}_name" /><div className="flex items-center justify-between gap-3"><Toggle label="Required" checked={field.required} onChange={(required) => updateField(field.id, { required })} /><button className="rounded-full px-2 py-1 text-[11px] font-semibold text-[#b13c53] hover:bg-[#fff0f2] disabled:cursor-not-allowed disabled:opacity-40" type="button" disabled={repeater.fields.length === 1 || usedFieldKeys.has(field.key)} onClick={() => onChange({ ...repeater, fields: repeater.fields.filter((item) => item.id !== field.id) })}>{usedFieldKeys.has(field.key) ? "Used" : "Remove"}</button></div></div>{field.type === "select" ? <label className={`${labelClass} block`}>Options — value | label per line<textarea className={`${areaClass} mt-1.5 min-h-16`} value={field.options.map((option) => `${option.value} | ${option.label}`).join("\n")} onChange={(event) => updateField(field.id, { options: parseOptions(event.target.value) })} /></label> : null}<p className="text-[10px] leading-[1.4] text-[#958c82]">Leave the saved-key pattern empty for new templates. Use <code className="rounded bg-[#f0ece6] px-1">{'member_{index}_name'}</code> when this group must read existing flat values.</p></div>)}</div><button className="mt-3 rounded-full bg-[#f2f7f3] px-3.5 py-2 text-[11px] font-bold text-[#29634d] hover:bg-[#dff0e5]" type="button" onClick={addField}>+ Add item field</button></div></>;
+
+  function move(id: string, direction: -1 | 1) {
+    const index = repeater.fields.findIndex((field) => field.id === id);
+    const target = index + direction;
+    if (index < 0 || target < 0 || target >= repeater.fields.length) return;
+    const next = [...repeater.fields];
+    [next[index], next[target]] = [next[target], next[index]];
+    onChange({ ...repeater, fields: next });
+  }
+
+  function drop(targetId: string) {
+    if (!dragId || dragId === targetId) return;
+    const from = repeater.fields.findIndex((field) => field.id === dragId);
+    const to = repeater.fields.findIndex((field) => field.id === targetId);
+    if (from < 0 || to < 0) return;
+    const next = [...repeater.fields];
+    const [moved] = next.splice(from, 1);
+    if (!moved) return;
+    next.splice(to, 0, moved);
+    onChange({ ...repeater, fields: next });
+    setDragId(null);
+  }
+
+  function addField() {
+    if (repeater.fields.length >= 20) return;
+    onChange({ ...repeater, fields: [...repeater.fields, makeRepeaterField(repeater.fields.length)] });
+  }
+
+  return <div><div className="space-y-1.5">{repeater.fields.map((field, index) => <div className={`rounded-[11px] bg-white/70 p-3 transition-opacity ${dragId === field.id ? "opacity-50" : ""}`.trim()} key={field.id} onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; }} onDrop={() => drop(field.id)}>
+    <div className="flex items-start gap-2.5">
+      <span className="mt-1 cursor-grab select-none px-0.5 text-[17px] leading-none text-[#aaa198]" title="Drag to reorder item field" aria-label="Drag to reorder item field" draggable onDragStart={(event) => { event.dataTransfer.effectAllowed = "move"; setDragId(field.id); }} onDragEnd={() => setDragId(null)}>⠿</span>
+      <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-[#f7f4ef] text-[9px] font-bold text-[#817970]">{index + 1}</span>
+      <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="truncate text-[13px] font-bold text-[#2d2824]">{field.label || "Untitled item field"}</p><span className="rounded-full bg-[#f7f4ef] px-2 py-1 text-[9px] font-bold uppercase tracking-[0.08em] text-[#817970]">{field.type === "textarea" ? "Long text" : field.type === "select" ? "Dropdown" : field.type === "checkbox" ? "Checkbox" : field.type === "date" ? "Date" : field.type === "number" ? "Number" : "Short text"}</span></div><p className="mt-0.5 truncate text-[10px] text-[#958c82]">{field.key || "Key needed"} · {field.required ? "Required" : "Optional"}</p></div>
+      <MoveControls index={index} count={repeater.fields.length} onMove={(direction) => move(field.id, direction)} onRemove={() => onChange({ ...repeater, fields: repeater.fields.filter((item) => item.id !== field.id) })} removeDisabled={repeater.fields.length === 1 || usedFieldKeys.has(field.key)} removeLabel={usedFieldKeys.has(field.key) ? "This field is used on a page" : `Remove ${field.label || "item field"}`} />
+    </div>
+    <div className="mt-2.5 grid gap-2.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_150px]"><Field label="Field label" value={field.label} onChange={(label) => updateField(field.id, { label })} /><Field label="Item key" value={field.key} onChange={(key) => updateField(field.id, { key: key.toLowerCase().replace(/[^a-z0-9_]/g, "_") })} placeholder="member_name" /><label className={labelClass}>Input type<select className={`${inputClass} mt-1.5`} value={field.type} onChange={(event) => updateField(field.id, { type: event.target.value as TemplateFieldType, options: event.target.value === "select" && !field.options.length ? [{ value: "option_1", label: "Option 1" }] : field.options })}><option value="text">Short text</option><option value="textarea">Long text</option><option value="date">Date</option><option value="number">Number</option><option value="select">Dropdown</option><option value="checkbox">Checkbox</option></select></label></div>
+    <div className="mt-2.5 grid gap-2.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"><Field label="Placeholder" value={field.placeholder} onChange={(placeholder) => updateField(field.id, { placeholder })} /><Field label="Saved key pattern (optional)" value={field.sourceKeyPattern ?? ""} onChange={(sourceKeyPattern) => updateField(field.id, { sourceKeyPattern: sourceKeyPattern || undefined })} placeholder="member_{index}_name" /></div>
+    <div className="mt-2.5"><Toggle label="Required" checked={field.required} onChange={(required) => updateField(field.id, { required })} /></div>
+    {field.type === "select" ? <OptionsEditor options={field.options} onChange={(options) => updateField(field.id, { options })} /> : null}
+    <p className="mt-2 text-[10px] leading-[1.4] text-[#958c82]">Use <code className="rounded bg-[#f0ece6] px-1">{'member_{index}_name'}</code> only when this group must read existing flat values.</p>
+  </div>)}</div><button className="mt-2.5 rounded-full bg-[#f2f7f3] px-3.5 py-2 text-[11px] font-bold text-[#29634d] transition-colors hover:bg-[#dff0e5] disabled:cursor-not-allowed disabled:opacity-40" type="button" onClick={addField} disabled={repeater.fields.length >= 20}>+ Add item field</button></div>;
 }
 
 function RepeatersEditor({ repeaters, countFields, usedRepeaterKeys, usedFieldKeysByRepeater, onChange }: { repeaters: TemplateRepeater[]; countFields: TemplateField[]; usedRepeaterKeys: Set<string>; usedFieldKeysByRepeater: Map<string, Set<string>>; onChange: (repeaters: TemplateRepeater[]) => void }) {

@@ -424,6 +424,12 @@ export function createBlankTemplate(): DocumentTemplateDraft {
   };
 }
 
+export function resolveTemplateFieldValue(field: Pick<TemplateField, "type" | "options"> | undefined, value: string | undefined) {
+  const rawValue = value?.trim() ?? "";
+  if (!rawValue || field?.type !== "select") return rawValue;
+  return field.options.find((option) => option.value === rawValue)?.label ?? rawValue;
+}
+
 export function resolveTemplateText(text: string, values: TemplateValues = {}, fields: TemplateField[] = [], showLabels = true) {
   const placeholders = /\{\{\s*([a-z][a-z0-9_]*)\s*\}\}/gi;
   const isVisible = (key: string) => {
@@ -436,10 +442,11 @@ export function resolveTemplateText(text: string, values: TemplateValues = {}, f
   }).join("\n");
   return withoutHiddenLines.replace(placeholders, (_match, key: string) => {
     if (!isVisible(key)) return "";
-    const value = values[key]?.trim();
+    const field = fields.find((item) => item.key === key);
+    const value = resolveTemplateFieldValue(field, values[key]);
     if (value) return value;
     if (!showLabels) return "";
-    return `[${fields.find((field) => field.key === key)?.label ?? key}]`;
+    return `[${field?.label ?? key}]`;
   });
 }
 

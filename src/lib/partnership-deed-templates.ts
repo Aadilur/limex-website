@@ -311,8 +311,8 @@ function partnershipDeedPages(language: Language): TemplatePage[] {
 
   const opening = copy(
     language,
-    'Keeping before us the timeless saying that “Allah has made business lawful and interest unlawful”, we, the following {{partner_count}} partners, in the name of Allah, the sole Provider, have voluntarily and unanimously resolved that, Insha’Allah, we will start a business on a partnership basis. This partnership firm shall be operated with the consent of all partners and in accordance with the principles of the Partnership Act, 1932.',
-    '“আল্লাহ ব্যবসাকে করেছেন হালাল আর সুদকে করেছেন হারাম”—এই চিরন্তন বাণীকে সামনে রেখে আমরা নিম্নোক্ত {{partner_count}} জন, একমাত্র রিযিকদাতা পরম করুণাময় আল্লাহর নামে, স্বতঃস্ফূর্তভাবে ও সর্বসম্মতিক্রমে সিদ্ধান্তে উপনীত হইয়াছি যে, ইনশা-আল্লাহ আমরা অংশীদারি ভিত্তিতে একটি ব্যবসা শুরু করিব। এই অংশীদারী প্রতিষ্ঠানটি সকল অংশীদারের সম্মতিতে অংশীদারী আইন, ১৯৩২-এর নীতিমালা অনুসরণ করে পরিচালিত হইবে।',
+    'Keeping before us the timeless saying that “Allah has made business lawful and interest unlawful”, we, the following {{partner_count}}, in the name of Allah, the sole Provider, have voluntarily and unanimously resolved that, Insha’Allah, we will start a business on a partnership basis. This partnership firm shall be operated with the consent of all partners and in accordance with the principles of the Partnership Act, 1932.',
+    '“আল্লাহ ব্যবসাকে করেছেন হালাল আর সুদকে করেছেন হারাম”—এই চিরন্তন বাণীকে সামনে রেখে আমরা নিম্নোক্ত {{partner_count}}, একমাত্র রিযিকদাতা পরম করুণাময় আল্লাহর নামে, স্বতঃস্ফূর্তভাবে ও সর্বসম্মতিক্রমে সিদ্ধান্তে উপনীত হইয়াছি যে, ইনশা-আল্লাহ আমরা অংশীদারি ভিত্তিতে একটি ব্যবসা শুরু করিব। এই অংশীদারী প্রতিষ্ঠানটি সকল অংশীদারের সম্মতিতে অংশীদারী আইন, ১৯৩২-এর নীতিমালা অনুসরণ করে পরিচালিত হইবে।',
   );
 
   const recital = copy(
@@ -519,6 +519,14 @@ function blockText(block: TemplateBlock) {
   if (block.type === "title" || block.type === "heading" || block.type === "paragraph") return block.text;
   if (block.type === "signature") return block.label;
   return "";
+}
+
+function repairPartnerCountPhrase(block: TemplateBlock, language: Language) {
+  if (block.type !== "title" && block.type !== "heading" && block.type !== "paragraph") return block;
+  const text = language === "bn"
+    ? block.text.replace(/\{\{\s*partner_count\s*\}\}\s*জন/g, "{{partner_count}}")
+    : block.text.replace(/\{\{\s*partner_count\s*\}\}\s+partners?/gi, "{{partner_count}}");
+  return text === block.text ? block : { ...block, text };
 }
 
 function partnerReferences(block: TemplateBlock) {
@@ -736,8 +744,9 @@ export function upgradePartnershipDeedTemplate(template: DocumentTemplateDraft):
   let pages = template.pages.map((page) => ({
     ...page,
     blocks: page.blocks.map((block) => {
-      const references = partnerReferences(block);
-      return references.length === 1 && !block.visibleWhen ? { ...block, visibleWhen: partnershipPartnerVisibility(references[0]) } : block;
+      const repairedPhraseBlock = repairPartnerCountPhrase(block, language);
+      const references = partnerReferences(repairedPhraseBlock);
+      return references.length === 1 && !repairedPhraseBlock.visibleWhen ? { ...repairedPhraseBlock, visibleWhen: partnershipPartnerVisibility(references[0]) } : repairedPhraseBlock;
     }),
   }));
 
