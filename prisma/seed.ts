@@ -101,17 +101,17 @@ async function main() {
     if (!isPartnershipDeedTemplate(template)) continue;
     const current = normalizeDocumentTemplateDraft({ title: existing.title, slug: existing.slug, description: existing.description, settings: existing.settings, fields: existing.fields, pages: existing.pages ?? undefined, blocks: existing.blocks });
     const upgraded = upgradePartnershipDeedTemplate(current);
-    const draftChanged = JSON.stringify(current.fields) !== JSON.stringify(upgraded.fields) || JSON.stringify(current.pages) !== JSON.stringify(upgraded.pages);
+    const draftChanged = JSON.stringify(current.settings) !== JSON.stringify(upgraded.settings) || JSON.stringify(current.fields) !== JSON.stringify(upgraded.fields) || JSON.stringify(current.pages) !== JSON.stringify(upgraded.pages);
     const publishedSource = existing.publishedPages ?? existing.publishedBlocks;
     const published = normalizeDocumentTemplateDraft({ title: existing.title, slug: existing.slug, description: existing.description, settings: existing.publishedSettings ?? existing.settings, fields: existing.publishedFields ?? existing.fields, pages: existing.publishedPages ?? undefined, blocks: publishedSource });
     const upgradedPublished = upgradePartnershipDeedTemplate(published);
-    const publishedChanged = JSON.stringify(published.fields) !== JSON.stringify(upgradedPublished.fields) || JSON.stringify(published.pages) !== JSON.stringify(upgradedPublished.pages);
+    const publishedChanged = JSON.stringify(published.settings) !== JSON.stringify(upgradedPublished.settings) || JSON.stringify(published.fields) !== JSON.stringify(upgradedPublished.fields) || JSON.stringify(published.pages) !== JSON.stringify(upgradedPublished.pages);
     if (!draftChanged && !publishedChanged) continue;
     await prisma.documentTemplate.update({
       where: { id: existing.id },
       data: {
-        ...(draftChanged ? { fields: upgraded.fields as unknown as Prisma.InputJsonValue, blocks: flattenTemplatePages(upgraded.pages) as unknown as Prisma.InputJsonValue, pages: upgraded.pages as unknown as Prisma.InputJsonValue, revision: { increment: 1 } } : {}),
-        ...(publishedChanged ? { publishedFields: upgradedPublished.fields as unknown as Prisma.InputJsonValue, publishedBlocks: flattenTemplatePages(upgradedPublished.pages) as unknown as Prisma.InputJsonValue, publishedPages: upgradedPublished.pages as unknown as Prisma.InputJsonValue, publishedRevision: existing.publishedRevision === null ? null : { increment: 1 } } : {}),
+        ...(draftChanged ? { settings: upgraded.settings as unknown as Prisma.InputJsonValue, fields: upgraded.fields as unknown as Prisma.InputJsonValue, blocks: flattenTemplatePages(upgraded.pages) as unknown as Prisma.InputJsonValue, pages: upgraded.pages as unknown as Prisma.InputJsonValue, revision: { increment: 1 } } : {}),
+        ...(publishedChanged ? { publishedSettings: upgradedPublished.settings as unknown as Prisma.InputJsonValue, publishedFields: upgradedPublished.fields as unknown as Prisma.InputJsonValue, publishedBlocks: flattenTemplatePages(upgradedPublished.pages) as unknown as Prisma.InputJsonValue, publishedPages: upgradedPublished.pages as unknown as Prisma.InputJsonValue, publishedRevision: existing.publishedRevision === null ? null : { increment: 1 } } : {}),
       },
     });
   }

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { businessTools, calculateTool, calculatorFields, defaultToolsSettings, initialToolValues, toolsSettingsSchema, validateFields, type ToolSlug, type ToolValues } from "../src/lib/business-tools.js";
 import { createDocumentDraft, documentFields, documentText } from "../src/lib/business-documents.js";
-import { defaultMouTemplate, documentTemplateDraftSchema, isTemplateFieldVisible, missingTemplateFields, normalizeDocumentTemplateDraft, type TemplateBlock } from "../src/lib/document-templates.js";
+import { defaultMouTemplate, defaultTemplateSettings, documentTemplateDraftSchema, expandTemplateBlockInstances, isTemplateFieldVisible, missingTemplateFields, normalizeDocumentTemplateDraft, templateRepeaterFieldValueKey, type TemplateBlock } from "../src/lib/document-templates.js";
 import { renderTemplatePrintHtml } from "../src/lib/document-template-print.js";
 import { addPartnershipPartnerSlot, defaultPartnershipDeed40BanglaTemplate, defaultPartnershipDeed40EnglishTemplate, partnershipDeedMaxPartners, partnershipPartnerVisibility, upgradePartnershipDeedTemplate } from "../src/lib/partnership-deed-templates.js";
 import { defaultRentalDeedBanglaTemplate, defaultRentalDeedEnglishTemplate } from "../src/lib/rental-deed-templates.js";
@@ -29,6 +29,44 @@ test("rental deed templates preserve the supplied long-sheet ratio and separate 
   assert.equal(defaultRentalDeedEnglishTemplate.slug, "office-rental-deed-en");
   assert.equal(defaultRentalDeedBanglaTemplate.slug, "office-rental-deed-bn");
 });
+test("repeatable groups expand generic item fields and validate only active items", () => {
+  const repeater = {
+    id: "members-group",
+    key: "members",
+    label: "Members",
+    itemLabel: "Member",
+    description: "Add each member once.",
+    countFieldKey: "member_count",
+    minItems: 1,
+    maxItems: 4,
+    fields: [
+      { id: "member-name", key: "name", label: "Name", type: "text" as const, required: true, placeholder: "Full name", options: [] },
+      { id: "member-kind", key: "kind", label: "Type", type: "select" as const, required: true, placeholder: "Choose a type", options: [{ value: "person", label: "Person" }, { value: "company", label: "Company" }] },
+      { id: "member-note", key: "note", label: "Company note", type: "textarea" as const, required: true, placeholder: "Registration details", options: [], visibleWhen: { fieldKey: "kind", values: ["company"] } },
+    ],
+  };
+  const template = documentTemplateDraftSchema.parse({
+    title: "Member roster",
+    slug: "member-roster",
+    description: "A reusable member list.",
+    settings: { ...defaultTemplateSettings, repeaters: [repeater] },
+    fields: [{ id: "member-count", key: "member_count", label: "Number of members", type: "number", required: true, placeholder: "2", options: [], defaultValue: "2" }],
+    pages: [{ id: "member-page", title: "Members", settings: {}, blocks: [{ id: "member-row", type: "paragraph", text: "Member {{item_number}} — {{name}} ({{kind}}) {{note}}", align: "left", bold: false, italic: false, fontSize: "body", repeat: { repeaterKey: "members" } }] }],
+  });
+  const values = { member_count: "2", "members.1.name": "A", "members.1.kind": "person", "members.2.name": "B", "members.2.kind": "company" };
+  const group = template.settings.repeaters[0]!;
+  const row = template.pages[0]!.blocks[0]!;
+  const instances = expandTemplateBlockInstances(template, row, values);
+  assert.equal(instances.length, 2);
+  assert.equal(instances[0]?.values.name, "A");
+  assert.equal(instances[1]?.values.item_number, "2");
+  assert.deepEqual(missingTemplateFields(template.fields, values, template.settings.repeaters).map((field) => field.key), ["members.2.note"]);
+  assert.equal(templateRepeaterFieldValueKey(group, 2, group.fields[0]!), "members.2.name");
+  const html = renderTemplatePrintHtml(template, values);
+  assert.equal(html.includes("Member 1 — A (person)"), true);
+  assert.equal(html.includes("Member 2 — B (company)"), true);
+  assert.equal(html.includes("[Company note]"), false);
+});
 test("40-page partnership deed templates preserve the source structure and separate languages", () => {
   for (const template of [defaultPartnershipDeed40EnglishTemplate, defaultPartnershipDeed40BanglaTemplate]) {
     const parsed = documentTemplateDraftSchema.parse(template);
@@ -44,9 +82,17 @@ test("40-page partnership deed templates preserve the source structure and separ
     assert.equal(parsed.fields.length, 68);
     assert.equal(parsed.fields.find((field) => field.key === "partner_count")?.defaultValue, "2");
     assert.deepEqual(parsed.fields.find((field) => field.key === "partner_count")?.options.map((option) => option.value), ["2", "3", "4", "5", "6", "7", "8"]);
-    assert.equal(parsed.pages[10]?.blocks.some((block) => block.type === "paragraph" && block.text.includes("{{partner_1_capital}}")), true);
-    assert.equal(parsed.pages[39]?.blocks.filter((block) => block.type === "signature").length, 11);
-    assert.deepEqual(parsed.pages.flatMap((page, index) => page.blocks.some((block) => JSON.stringify(block).includes("partner_8_name")) ? [index + 1] : []), [3, 11, 23, 40]);
+    const partners = parsed.settings.repeaters.find((repeater) => repeater.key === "partners");
+    assert.ok(partners);
+    assert.equal(partners.countFieldKey, "partner_count");
+    assert.equal(partners.minItems, 2);
+    assert.equal(partners.maxItems, 8);
+    assert.deepEqual(partners.fields.map((field) => field.key), ["name", "details", "role", "capital", "capital_words", "profit_share"]);
+    assert.equal(templateRepeaterFieldValueKey(partners, 8, partners.fields[0]!), "partner_8_name");
+    assert.equal(parsed.pages[10]?.blocks.some((block) => block.type === "paragraph" && block.repeat?.repeaterKey === "partners" && block.text.includes("{{capital}}")), true);
+    assert.equal(parsed.pages[39]?.blocks.filter((block) => block.type === "signature").length, 4);
+    assert.deepEqual(parsed.pages.flatMap((page, index) => page.blocks.some((block) => block.repeat?.repeaterKey === "partners") ? [index + 1] : []), [2, 3, 11, 23, 40]);
+    assert.equal(parsed.pages.some((page) => page.blocks.some((block) => JSON.stringify(block).includes("partner_8_name"))), false);
   }
   assert.match(defaultPartnershipDeed40BanglaTemplate.title, /[\u0980-\u09ff]/);
   assert.equal(defaultPartnershipDeed40EnglishTemplate.slug, "partnership-deed-40-en");
@@ -59,7 +105,7 @@ test("partnership deed partner slots are conditional, extendable to eight and ke
   assert.equal(isTemplateFieldVisible(template.fields.find((field) => field.key === "partner_2_name")!, values), true);
   assert.equal(isTemplateFieldVisible(template.fields.find((field) => field.key === "partner_3_name")!, values), false);
   assert.equal(isTemplateFieldVisible(template.fields.find((field) => field.key === "partner_4_name")!, values), false);
-  const missing = missingTemplateFields(template.fields, values).map((field) => field.key);
+  const missing = missingTemplateFields(template.fields, values, template.settings.repeaters).map((field) => field.key);
   assert.equal(missing.includes("partner_1_profit_share"), true);
   assert.equal(missing.includes("partner_1_capital"), false);
   assert.equal(missing.includes("partner_1_capital_words"), false);
@@ -73,9 +119,13 @@ test("partnership deed partner slots are conditional, extendable to eight and ke
   assert.equal(parsed.fields.some((field) => field.key === "partner_8_name"), true);
   assert.equal(parsed.fields.some((field) => field.key === "partner_9_name"), false);
   assert.equal(parsed.fields.find((field) => field.key === "partner_count")?.options.some((option) => option.value === "8"), true);
-  assert.equal(parsed.pages.some((page) => page.blocks.some((block) => JSON.stringify(block).includes("partner_8_name"))), true);
+  const partnerRepeater = parsed.settings.repeaters.find((repeater) => repeater.key === "partners");
+  assert.ok(partnerRepeater);
+  const partnerSignature = parsed.pages[39]?.blocks.find((block) => block.type === "signature" && block.repeat?.repeaterKey === "partners");
+  assert.ok(partnerSignature);
+  assert.equal(expandTemplateBlockInstances(parsed, partnerSignature, { partner_count: "8" }).length, 8);
   const finalSignatures = parsed.pages[39]?.blocks.filter((block) => block.type === "signature") ?? [];
-  assert.equal(finalSignatures.filter((block) => JSON.stringify(block).includes("partner_")).length, 8);
+  assert.equal(finalSignatures.filter((block) => block.repeat?.repeaterKey === "partners").length, 1);
   assert.equal(finalSignatures.filter((block) => JSON.stringify(block).includes("witness_")).length, 3);
 });
 test("partnership deed repair removes legacy misplaced partner blocks", () => {
@@ -93,7 +143,7 @@ test("partnership deed repair removes legacy misplaced partner blocks", () => {
   corrupted.pages[29]?.blocks.push(misplaced);
   const repaired = upgradePartnershipDeedTemplate(corrupted);
   assert.equal(repaired.pages[29]?.blocks.some((block) => block.id === misplaced.id), false);
-  assert.equal(repaired.pages[2]?.blocks.filter((block) => JSON.stringify(block).includes("partner_5_name")).length, 1);
+  assert.equal(repaired.pages[2]?.blocks.some((block) => block.repeat?.repeaterKey === "partners" && block.type === "paragraph" && block.text.includes("{{details}}")), true);
 });
 test("partnership deed print output removes inactive partner rows and signatures", () => {
   const values = Object.fromEntries(defaultPartnershipDeed40EnglishTemplate.fields.map((field) => [field.key, field.key === "partner_count" ? "2" : field.key.match(/^partner_([1-8])_name$/)?.[1] ? `Partner ${field.key.match(/^partner_([1-8])_name$/)?.[1]}` : "Sample"]));

@@ -87,6 +87,41 @@ export const templateFieldSchema = z.object({
   visibleWhen: templateVisibilityRuleSchema.optional(),
 });
 
+const templateRepeaterFieldSchema = templateFieldSchema.extend({
+  sourceKeyPattern: z.string().trim().max(120).refine((value) => value.includes("{index}"), "Use {index} in a source key pattern.").optional(),
+});
+
+const templateRepeatSchema = z.object({
+  repeaterKey: keySchema,
+  from: z.number().int().min(1).max(80).optional(),
+  to: z.number().int().min(1).max(80).optional(),
+}).superRefine((value, context) => {
+  if (value.from !== undefined && value.to !== undefined && value.from > value.to) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["to"], message: "The last item must be at or after the first item." });
+  }
+});
+
+const templateRepeaterSchema = z.object({
+  id: idSchema,
+  key: keySchema,
+  label: textSchema(160),
+  itemLabel: textSchema(100),
+  description: z.string().max(240).default(""),
+  countFieldKey: keySchema,
+  minItems: z.number().int().min(1).max(80).default(1),
+  maxItems: z.number().int().min(1).max(80).default(8),
+  fields: z.array(templateRepeaterFieldSchema).min(1).max(20),
+}).superRefine((value, context) => {
+  if (value.minItems > value.maxItems) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["maxItems"], message: "Maximum items must be at least the minimum." });
+  }
+  const seen = new Set<string>();
+  for (const [index, field] of value.fields.entries()) {
+    if (seen.has(field.key)) context.addIssue({ code: z.ZodIssueCode.custom, path: ["fields", index, "key"], message: "Repeatable field keys must be unique." });
+    seen.add(field.key);
+  }
+});
+
 const formattedBlockSchema = z.object({
   id: idSchema,
   align: z.enum(["left", "center", "right"]).default("left"),
@@ -94,6 +129,7 @@ const formattedBlockSchema = z.object({
   italic: z.boolean().default(false),
   fontSize: fontSizeSchema.default("body"),
   visibleWhen: templateVisibilityRuleSchema.optional(),
+  repeat: templateRepeatSchema.optional(),
 });
 
 export const templateBlockSchema = z.discriminatedUnion("type", [
@@ -101,9 +137,9 @@ export const templateBlockSchema = z.discriminatedUnion("type", [
   formattedBlockSchema.extend({ type: z.literal("heading"), text: textSchema(500) }),
   formattedBlockSchema.extend({ type: z.literal("paragraph"), text: textSchema(5000) }),
   formattedBlockSchema.extend({ type: z.literal("field"), fieldKey: keySchema }),
-  z.object({ id: idSchema, type: z.literal("spacer"), height: z.number().int().min(4).max(240).default(24), visibleWhen: templateVisibilityRuleSchema.optional() }),
-  z.object({ id: idSchema, type: z.literal("pageBreak"), visibleWhen: templateVisibilityRuleSchema.optional() }),
-  z.object({ id: idSchema, type: z.literal("signature"), label: textSchema(240), visibleWhen: templateVisibilityRuleSchema.optional() }),
+  z.object({ id: idSchema, type: z.literal("spacer"), height: z.number().int().min(4).max(240).default(24), visibleWhen: templateVisibilityRuleSchema.optional(), repeat: templateRepeatSchema.optional() }),
+  z.object({ id: idSchema, type: z.literal("pageBreak"), visibleWhen: templateVisibilityRuleSchema.optional(), repeat: templateRepeatSchema.optional() }),
+  z.object({ id: idSchema, type: z.literal("signature"), label: textSchema(240), visibleWhen: templateVisibilityRuleSchema.optional(), repeat: templateRepeatSchema.optional() }),
 ]);
 
 export const templatePageSettingsSchema = z.object({
@@ -136,6 +172,7 @@ export const templateSettingsSchema = z.object({
   defaultFontSize: fontSizeSchema.default("body"),
   fontScale: z.number().int().min(templateFontScaleMin).max(templateFontScaleMax).default(templateFontScaleDefault),
   serviceCta: serviceCtaSchema.default(defaultServiceCta),
+  repeaters: z.array(templateRepeaterSchema).max(20).default([]),
 });
 
 const documentTemplateBaseSchema = z.object({
@@ -156,8 +193,22 @@ const legacyDocumentTemplateSchema = z.object({
   blocks: z.array(templateBlockSchema).min(1).max(240),
 });
 
-function addReferenceValidation(value: { fields: TemplateField[]; pages: TemplatePage[] }, context: z.RefinementCtx) {
+function templatePlaceholderKeys(text: string) {
+  return Array.from(text.matchAll(/\{\{\s*([a-z][a-z0-9_]*)\s*\}\}/gi), (match) => match[1]);
+}
+
+function addReferenceValidation(value: { fields: TemplateField[]; pages: TemplatePage[]; settings: TemplateSettings }, context: z.RefinementCtx) {
   const seen = new Set<string>();
+  const reservedKeys = new Set(["item_number"]);
+  const repeaterKeys = new Set<string>();
+  const repeatersByKey = new Map<string, TemplateRepeater>();
+  for (const [index, repeater] of value.settings.repeaters.entries()) {
+    if (repeaterKeys.has(repeater.key)) context.addIssue({ code: z.ZodIssueCode.custom, path: ["settings", "repeaters", index, "key"], message: "Repeatable group keys must be unique." });
+    repeaterKeys.add(repeater.key);
+    repeatersByKey.set(repeater.key, repeater);
+    const countField = value.fields.find((field) => field.key === repeater.countFieldKey);
+    if (!countField || (countField.type !== "select" && countField.type !== "number")) context.addIssue({ code: z.ZodIssueCode.custom, path: ["settings", "repeaters", index, "countFieldKey"], message: "Choose an existing number or dropdown field for this repeatable group." });
+  }
   for (const [index, field] of value.fields.entries()) {
     if (seen.has(field.key)) context.addIssue({ code: z.ZodIssueCode.custom, path: ["fields", index, "key"], message: "Field keys must be unique." });
     seen.add(field.key);
@@ -165,10 +216,27 @@ function addReferenceValidation(value: { fields: TemplateField[]; pages: Templat
   for (const [index, field] of value.fields.entries()) {
     if (field.visibleWhen && !seen.has(field.visibleWhen.fieldKey)) context.addIssue({ code: z.ZodIssueCode.custom, path: ["fields", index, "visibleWhen", "fieldKey"], message: "Choose an existing field for this visibility rule." });
   }
+  for (const [repeaterIndex, repeater] of value.settings.repeaters.entries()) {
+    const repeaterFields = new Set(repeater.fields.map((field) => field.key));
+    for (const [fieldIndex, field] of repeater.fields.entries()) {
+      if (field.visibleWhen && !seen.has(field.visibleWhen.fieldKey) && !repeaterFields.has(field.visibleWhen.fieldKey)) {
+        context.addIssue({ code: z.ZodIssueCode.custom, path: ["settings", "repeaters", repeaterIndex, "fields", fieldIndex, "visibleWhen", "fieldKey"], message: "Choose an existing global or repeatable field for this visibility rule." });
+      }
+    }
+  }
   for (const [pageIndex, page] of value.pages.entries()) {
     for (const [blockIndex, block] of page.blocks.entries()) {
-      if (block.type === "field" && !seen.has(block.fieldKey)) context.addIssue({ code: z.ZodIssueCode.custom, path: ["pages", pageIndex, "blocks", blockIndex, "fieldKey"], message: "Choose an existing field for this block." });
-      if (block.visibleWhen && !seen.has(block.visibleWhen.fieldKey)) context.addIssue({ code: z.ZodIssueCode.custom, path: ["pages", pageIndex, "blocks", blockIndex, "visibleWhen", "fieldKey"], message: "Choose an existing field for this visibility rule." });
+      if (block.repeat && !repeaterKeys.has(block.repeat.repeaterKey)) context.addIssue({ code: z.ZodIssueCode.custom, path: ["pages", pageIndex, "blocks", blockIndex, "repeat", "repeaterKey"], message: "Choose an existing repeatable group for this block." });
+      const repeater = block.repeat ? repeatersByKey.get(block.repeat.repeaterKey) : undefined;
+      const allowedKeys = repeater ? new Set([...seen, ...repeater.fields.map((field) => field.key)]) : seen;
+      if (block.type === "field" && !allowedKeys.has(block.fieldKey)) context.addIssue({ code: z.ZodIssueCode.custom, path: ["pages", pageIndex, "blocks", blockIndex, "fieldKey"], message: "Choose an existing global or repeatable field for this block." });
+      if (block.visibleWhen && !allowedKeys.has(block.visibleWhen.fieldKey)) context.addIssue({ code: z.ZodIssueCode.custom, path: ["pages", pageIndex, "blocks", blockIndex, "visibleWhen", "fieldKey"], message: "Choose an existing global or repeatable field for this visibility rule." });
+      const placeholderText = block.type === "title" || block.type === "heading" || block.type === "paragraph"
+        ? block.text
+        : block.type === "signature" ? block.label : "";
+      for (const key of templatePlaceholderKeys(placeholderText)) {
+        if (!allowedKeys.has(key) && !(repeater && reservedKeys.has(key))) context.addIssue({ code: z.ZodIssueCode.custom, path: ["pages", pageIndex, "blocks", blockIndex, block.type === "signature" ? "label" : "text"], message: `Unknown template field placeholder: ${key}.` });
+      }
     }
   }
 }
@@ -176,6 +244,9 @@ function addReferenceValidation(value: { fields: TemplateField[]; pages: Templat
 export const documentTemplateDraftSchema = documentTemplateBaseSchema.superRefine(addReferenceValidation);
 
 export type TemplateField = z.infer<typeof templateFieldSchema>;
+export type TemplateRepeaterField = z.infer<typeof templateRepeaterFieldSchema>;
+export type TemplateRepeat = z.infer<typeof templateRepeatSchema>;
+export type TemplateRepeater = z.infer<typeof templateRepeaterSchema>;
 export type TemplateVisibilityRule = z.infer<typeof templateVisibilityRuleSchema>;
 export type TemplateBlock = z.infer<typeof templateBlockSchema>;
 export type TemplatePageSettings = z.infer<typeof templatePageSettingsSchema>;
@@ -211,6 +282,59 @@ export type PublicDocumentTemplate = {
 
 export type TemplateValues = Record<string, string>;
 
+export type TemplateBlockInstance = {
+  block: TemplateBlock;
+  values: TemplateValues;
+  fields: TemplateField[];
+  key: string;
+};
+
+export function templateRepeaterFieldValueKey(repeater: TemplateRepeater, index: number, field: TemplateRepeaterField) {
+  return field.sourceKeyPattern?.replace(/\{index\}/g, String(index)) ?? `${repeater.key}.${index}.${field.key}`;
+}
+
+export function templateRepeaterItemCount(repeater: TemplateRepeater, values: TemplateValues = {}) {
+  const parsed = Number.parseInt(values[repeater.countFieldKey] ?? "", 10);
+  const requested = Number.isFinite(parsed) ? parsed : repeater.minItems;
+  return Math.min(repeater.maxItems, Math.max(repeater.minItems, requested));
+}
+
+export function templateRepeaterItemIndexes(repeater: TemplateRepeater, values: TemplateValues = {}, range?: TemplateRepeat) {
+  const count = templateRepeaterItemCount(repeater, values);
+  const from = range?.from ?? 1;
+  const to = range?.to ?? count;
+  if (from > count || to < 1 || to < from) return [];
+  const start = Math.max(1, from);
+  const end = Math.min(count, to);
+  return Array.from({ length: Math.max(0, end - start + 1) }, (_, index) => start + index);
+}
+
+export function templateRepeaterItemContext(repeater: TemplateRepeater, index: number, values: TemplateValues = {}) {
+  const context: TemplateValues = { ...values, item_number: String(index) };
+  for (const field of repeater.fields) {
+    const valueKey = templateRepeaterFieldValueKey(repeater, index, field);
+    context[field.key] = values[valueKey] ?? field.defaultValue ?? "";
+  }
+  return context;
+}
+
+export function isTemplateFieldManagedByRepeater(field: TemplateField, repeaters: TemplateRepeater[] = []) {
+  return repeaters.some((repeater) => repeater.fields.some((repeaterField) => Array.from({ length: repeater.maxItems }, (_, offset) => offset + 1).some((index) => templateRepeaterFieldValueKey(repeater, index, repeaterField) === field.key)));
+}
+
+export function expandTemplateBlockInstances(template: DocumentTemplateDraft, block: TemplateBlock, values: TemplateValues = {}): TemplateBlockInstance[] {
+  if (!block.repeat) return [{ block, values, fields: template.fields, key: block.id }];
+  const repeater = template.settings.repeaters.find((item) => item.key === block.repeat?.repeaterKey);
+  if (!repeater) return [{ block, values, fields: template.fields, key: block.id }];
+  const { repeat: _repeat, ...baseBlock } = block;
+  return templateRepeaterItemIndexes(repeater, values, block.repeat).map((index) => ({
+    block: baseBlock as TemplateBlock,
+    values: templateRepeaterItemContext(repeater, index, values),
+    fields: [...repeater.fields, ...template.fields],
+    key: `${block.id}-${index}`,
+  }));
+}
+
 export const defaultTemplateSettings: TemplateSettings = {
   paperSize: "A4",
   marginTop: 20,
@@ -223,6 +347,7 @@ export const defaultTemplateSettings: TemplateSettings = {
   defaultFontSize: "body",
   fontScale: templateFontScaleDefault,
   serviceCta: { ...defaultServiceCta },
+  repeaters: [],
 };
 
 const defaultMouBlocks: TemplateBlock[] = [
@@ -309,6 +434,7 @@ export function resolveTemplateText(text: string, values: TemplateValues = {}, f
     return !keys.length || keys.some((key) => isVisible(key));
   }).join("\n");
   return withoutHiddenLines.replace(placeholders, (_match, key: string) => {
+    if (!isVisible(key)) return "";
     const value = values[key]?.trim();
     if (value) return value;
     if (!showLabels) return "";
@@ -329,8 +455,21 @@ export function isTemplateBlockVisible(block: TemplateBlock, values: TemplateVal
   return !block.visibleWhen || isTemplateVisibilityMatch(block.visibleWhen, values);
 }
 
-export function missingTemplateFields(fields: TemplateField[], values: TemplateValues) {
-  return fields.filter((field) => isTemplateFieldVisible(field, values) && field.required && (!values[field.key] || (field.type === "checkbox" && values[field.key] !== "true")));
+export function missingTemplateFields(fields: TemplateField[], values: TemplateValues, repeaters: TemplateRepeater[] = []) {
+  const managedKeys = new Set(repeaters.flatMap((repeater) => repeater.fields.flatMap((field) => Array.from({ length: repeater.maxItems }, (_, offset) => templateRepeaterFieldValueKey(repeater, offset + 1, field)))));
+  const missing = fields.filter((field) => !managedKeys.has(field.key) && isTemplateFieldVisible(field, values) && field.required && (!values[field.key] || (field.type === "checkbox" && values[field.key] !== "true")));
+  for (const repeater of repeaters) {
+    for (const index of templateRepeaterItemIndexes(repeater, values)) {
+      const itemValues = templateRepeaterItemContext(repeater, index, values);
+      for (const field of repeater.fields) {
+        const valueKey = templateRepeaterFieldValueKey(repeater, index, field);
+        if (isTemplateFieldVisible(field, itemValues) && field.required && (!values[valueKey] || (field.type === "checkbox" && values[valueKey] !== "true"))) {
+          missing.push({ ...field, key: valueKey, label: `${repeater.itemLabel} ${index} — ${field.label}` });
+        }
+      }
+    }
+  }
+  return missing;
 }
 
 export function resolvePageSettings(template: Pick<DocumentTemplateDraft, "settings">, page: Pick<TemplatePage, "settings">) {

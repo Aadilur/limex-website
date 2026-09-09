@@ -4,6 +4,8 @@ import {
   type TemplateBlock,
   type TemplateField,
   type TemplatePage,
+  type TemplateRepeater,
+  type TemplateRepeaterField,
   type TemplateSettings,
   type TemplateVisibilityRule,
 } from "./document-templates";
@@ -132,16 +134,66 @@ function partnerCountOptions(language: Language, maxPartners: number, existingOp
   });
 }
 
+type PartnerFieldDefinition = {
+  key: "name" | "details" | "role" | "capital" | "capital_words" | "profit_share";
+  type: TemplateField["type"];
+  required: boolean;
+  englishLabel: string;
+  banglaLabel: string;
+  englishItemLabel: string;
+  banglaItemLabel: string;
+  englishPlaceholder: string;
+  banglaPlaceholder: string;
+};
+
+const partnerFieldDefinitions: PartnerFieldDefinition[] = [
+  { key: "name", type: "text", required: true, englishLabel: "Partner {index} name", banglaLabel: "অংশীদার {index}-এর নাম", englishItemLabel: "Name", banglaItemLabel: "নাম", englishPlaceholder: "Full legal name", banglaPlaceholder: "পূর্ণ আইনগত নাম" },
+  { key: "details", type: "textarea", required: true, englishLabel: "Partner {index} identity and address", banglaLabel: "অংশীদার {index}-এর পরিচয় ও ঠিকানা", englishItemLabel: "Identity and address", banglaItemLabel: "পরিচয় ও ঠিকানা", englishPlaceholder: "Father or spouse, mother, present and permanent address, NID, TIN, date of birth, religion, occupation and nationality", banglaPlaceholder: "পিতা বা স্বামী, মাতা, বর্তমান ও স্থায়ী ঠিকানা, এনআইডি, টিআইএন, জন্মতারিখ, ধর্ম, পেশা ও জাতীয়তা" },
+  { key: "role", type: "text", required: true, englishLabel: "Partner {index} designation", banglaLabel: "অংশীদার {index}-এর পদবী", englishItemLabel: "Designation", banglaItemLabel: "পদবী", englishPlaceholder: "Partner designation", banglaPlaceholder: "অংশীদারের পদবী" },
+  { key: "capital", type: "number", required: false, englishLabel: "Partner {index} capital (BDT)", banglaLabel: "অংশীদার {index}-এর মূলধন (টাকা)", englishItemLabel: "Capital (BDT)", banglaItemLabel: "মূলধন (টাকা)", englishPlaceholder: "Optional", banglaPlaceholder: "ঐচ্ছিক" },
+  { key: "capital_words", type: "text", required: false, englishLabel: "Partner {index} capital in words", banglaLabel: "অংশীদার {index}-এর মূলধন কথায়", englishItemLabel: "Capital in words", banglaItemLabel: "মূলধন কথায়", englishPlaceholder: "Optional", banglaPlaceholder: "ঐচ্ছিক" },
+  { key: "profit_share", type: "text", required: true, englishLabel: "Partner {index} profit/loss share", banglaLabel: "অংশীদার {index}-এর লাভ-লোকসানের অনুপাত", englishItemLabel: "Profit/loss share", banglaItemLabel: "লাভ-লোকসানের অনুপাত", englishPlaceholder: "Agreed percentage", banglaPlaceholder: "সম্মত শতাংশ" },
+];
+
+function partnerRepeaterFields(language: Language): TemplateRepeaterField[] {
+  return partnerFieldDefinitions.map((definition) => ({
+    id: `partnership-partner-field-${definition.key}`,
+    key: definition.key,
+    label: copy(language, definition.englishItemLabel, definition.banglaItemLabel),
+    type: definition.type,
+    required: definition.required,
+    placeholder: copy(language, definition.englishPlaceholder, definition.banglaPlaceholder),
+    options: [],
+    sourceKeyPattern: `partner_{index}_${definition.key}`,
+  }));
+}
+
+function partnershipPartnerRepeater(language: Language): TemplateRepeater {
+  return {
+    id: "partnership-partners",
+    key: "partners",
+    label: copy(language, "Partner slots", "অংশীদারদের তথ্য"),
+    itemLabel: copy(language, "Partner", "অংশীদার"),
+    description: copy(language, "Starts at 2 partners and supports up to 8. Unused slots stay hidden in the form and document.", "২ জন অংশীদার থেকে শুরু করে সর্বোচ্চ ৮ জন পর্যন্ত যোগ করা যাবে। ব্যবহার না করা ঘর ফর্ম ও দলিলে দেখা যাবে না।"),
+    countFieldKey: "partner_count",
+    minItems: partnershipDeedMinPartners,
+    maxItems: partnershipDeedMaxPartners,
+    fields: partnerRepeaterFields(language),
+  };
+}
+
 function partnerFieldsForSlot(language: Language, number: number): TemplateField[] {
   const visibility = partnershipPartnerVisibility(number);
-  return [
-    { ...textField(`partnership-partner-${number}-name`, `partner_${number}_name`, language, `Partner ${number} name`, `অংশীদার ${number}-এর নাম`, "Full legal name", "পূর্ণ আইনগত নাম"), visibleWhen: visibility },
-    { ...areaField(`partnership-partner-${number}-details`, `partner_${number}_details`, language, `Partner ${number} identity and address`, `অংশীদার ${number}-এর পরিচয় ও ঠিকানা`, "Father or spouse, mother, present and permanent address, NID, TIN, date of birth, religion, occupation and nationality", "পিতা বা স্বামী, মাতা, বর্তমান ও স্থায়ী ঠিকানা, এনআইডি, টিআইএন, জন্মতারিখ, ধর্ম, পেশা ও জাতীয়তা"), visibleWhen: visibility },
-    { ...textField(`partnership-partner-${number}-role`, `partner_${number}_role`, language, `Partner ${number} designation`, `অংশীদার ${number}-এর পদবী`, number === 1 ? "Managing Partner" : "Partner", number === 1 ? "ম্যানেজিং পার্টনার" : "পার্টনার"), visibleWhen: visibility },
-    { ...numberField(`partnership-partner-${number}-capital`, `partner_${number}_capital`, language, `Partner ${number} capital (BDT)`, `অংশীদার ${number}-এর মূলধন (টাকা)`, number <= 2 ? "500000" : "Optional", false), visibleWhen: visibility },
-    { ...textField(`partnership-partner-${number}-capital-words`, `partner_${number}_capital_words`, language, `Partner ${number} capital in words`, `অংশীদার ${number}-এর মূলধন কথায়`, number <= 2 ? "Five hundred thousand taka" : "Optional", number <= 2 ? "পাঁচ লক্ষ টাকা" : "ঐচ্ছিক", false), visibleWhen: visibility },
-    { ...textField(`partnership-partner-${number}-profit-share`, `partner_${number}_profit_share`, language, `Partner ${number} profit/loss share`, `অংশীদার ${number}-এর লাভ-লোকসানের অনুপাত`, number <= 2 ? "50%" : "Agreed percentage", number <= 2 ? "৫০%" : "সম্মত শতাংশ"), visibleWhen: visibility },
-  ];
+  return partnerFieldDefinitions.map((definition) => ({
+    id: `partnership-partner-${number}-${definition.key}`,
+    key: `partner_${number}_${definition.key}`,
+    label: copy(language, definition.englishLabel.replace("{index}", String(number)), definition.banglaLabel.replace("{index}", String(number))),
+    type: definition.type,
+    required: definition.required,
+    placeholder: copy(language, definition.englishPlaceholder, definition.banglaPlaceholder),
+    options: [],
+    visibleWhen: visibility,
+  }));
 }
 
 function textBlock(
@@ -162,21 +214,20 @@ function textBlock(
   };
 }
 
-function signatureBlock(id: string, label: string, visibleWhen?: TemplateVisibilityRule): TemplateBlock {
-  return { id, type: "signature", label, ...(visibleWhen ? { visibleWhen } : {}) };
+function signatureBlock(id: string, label: string, visibleWhen?: TemplateVisibilityRule, options: Partial<Extract<TemplateBlock, { type: "signature" }>> = {}): TemplateBlock {
+  return { id, type: "signature", label, ...(visibleWhen ? { visibleWhen } : {}), ...options };
 }
 
-function partnerParticularsBlock(language: Language, number: number): TemplateBlock {
-  const label = copy(language, `Partner ${number}`, `অংশীদার ${number}`);
+function partnerParticularsRepeatBlock(language: Language, from: number, to: number, repeaterKey = "partners"): TemplateBlock {
   return textBlock(
-    `partnership-partner-${number}-particulars`,
+    "partnership-partner-particulars-repeat",
     "paragraph",
-    `${label} — {{partner_${number}_name}}\n{{partner_${number}_details}}\n${copy(language, "Designation", "পদবী")}: {{partner_${number}_role}}`,
-    { bold: false, visibleWhen: partnershipPartnerVisibility(number) },
+    `${copy(language, "Partner", "অংশীদার")} {{item_number}} — {{name}}\n{{details}}\n${copy(language, "Designation", "পদবী")}: {{role}}`,
+    { bold: false, repeat: { repeaterKey, from, to } },
   );
 }
 
-function partnershipDeedSettings(): TemplateSettings {
+function partnershipDeedSettings(language: Language): TemplateSettings {
   return {
     ...defaultTemplateSettings,
     paperSize: "LEGAL",
@@ -191,6 +242,7 @@ function partnershipDeedSettings(): TemplateSettings {
     // subtitle metric is the closest available readable body size.
     defaultFontSize: "subtitle",
     serviceCta: { ...defaultTemplateSettings.serviceCta },
+    repeaters: [partnershipPartnerRepeater(language)],
   };
 }
 
@@ -241,9 +293,6 @@ function clause(
 }
 
 function partnershipDeedPages(language: Language): TemplatePage[] {
-  const partnerLabel = (number: number) => copy(language, `Partner ${number}`, `অংশীদার ${number}`);
-  const partnerName = (number: number) => `{{partner_${number}_name}}`;
-
   const page = (number: number, englishTitle: string, banglaTitle: string, blocks: TemplateBlock[]): TemplatePage => {
     const prefix = `partnership-deed-${language}-page-${number}`;
     const pageBlocks = number === 1
@@ -288,23 +337,10 @@ function partnershipDeedPages(language: Language): TemplatePage[] {
     "উপরোক্ত ব্যবসার সঙ্গে আমদানি, রপ্তানি ও সরবরাহের কাজসহ অন্য যেকোনো বৈধ ব্যবসা বা উদ্যোগ যৌথ সিদ্ধান্তের মাধ্যমে গ্রহণ করা যাইবে।",
   );
 
-  const capitalSchedule = copy(
-    language,
-    [
-      "PARTNER | CAPITAL (BDT) | PROFIT / LOSS SHARE",
-      ...partnershipPartnerNumbers.map((number) => `${partnerLabel(number)}: ${partnerName(number)} | {{partner_${number}_capital}} ({{partner_${number}_capital_words}}) | {{partner_${number}_profit_share}}`),
-    ].join("\n"),
-    [
-      "অংশীদার | মূলধন (টাকা) | লাভ-লোকসানের অনুপাত",
-      ...partnershipPartnerNumbers.map((number) => `${partnerLabel(number)}: ${partnerName(number)} | {{partner_${number}_capital}} ({{partner_${number}_capital_words}}) | {{partner_${number}_profit_share}}`),
-    ].join("\n"),
-  );
-
-  const designationSchedule = copy(
-    language,
-    ["DESIGNATIONS", ...partnershipPartnerNumbers.map((number) => `${partnerName(number)} — {{partner_${number}_role}}`)].join("\n"),
-    ["পদবী", ...partnershipPartnerNumbers.map((number) => `${partnerName(number)} — {{partner_${number}_role}}`)].join("\n"),
-  );
+  const capitalScheduleHeading = copy(language, "PARTNER | CAPITAL (BDT) | PROFIT / LOSS SHARE", "অংশীদার | মূলধন (টাকা) | লাভ-লোকসানের অনুপাত");
+  const capitalScheduleRow = `${copy(language, "Partner", "অংশীদার")} {{item_number}}: {{name}} | {{capital}} ({{capital_words}}) | {{profit_share}}`;
+  const designationScheduleHeading = copy(language, "DESIGNATIONS", "পদবী");
+  const designationScheduleRow = `${copy(language, "Partner", "অংশীদার")} {{item_number}} — {{name}} — {{role}}`;
 
   return [
     page(1, "Title and opening declaration", "শিরোনাম ও প্রারম্ভিক ঘোষণা", [
@@ -317,11 +353,10 @@ function partnershipDeedPages(language: Language): TemplatePage[] {
     ]),
     page(2, "Partner particulars · 1 and 2", "অংশীদারদের পরিচয় · ১ ও ২", [
       textBlock("partner-heading", "heading", copy(language, "Particulars of the partners", "কারবারী অংশীদারদের নাম ও পরিচয়"), { align: "center" }),
-      partnerParticularsBlock(language, 1),
-      partnerParticularsBlock(language, 2),
+      partnerParticularsRepeatBlock(language, 1, 2),
     ]),
     page(3, "Partner particulars · 3 to 8; recital", "অংশীদারদের পরিচয় · ৩ থেকে ৮; ভূমিকা", [
-      ...partnershipPartnerNumbers.filter((number) => number >= 3).map((number) => partnerParticularsBlock(language, number)),
+      partnerParticularsRepeatBlock(language, 3, 8),
       textBlock("recital", "paragraph", recital, { bold: false }),
     ]),
     page(4, "Terms and first clause", "শর্তাবলী ও প্রথম ধারা", [
@@ -353,7 +388,8 @@ function partnershipDeedPages(language: Language): TemplatePage[] {
     ]),
     page(11, "Capital and profit-share schedule", "মূলধন ও লাভ-লোকসানের অনুপাত", [
       textBlock("capital-schedule-heading", "heading", copy(language, "Capital contribution and profit/loss schedule", "মূলধন বিনিয়োগ ও লাভ-লোকসানের অনুপাত"), { align: "center" }),
-      textBlock("capital-schedule", "paragraph", capitalSchedule, { bold: false }),
+      textBlock("capital-schedule-label", "paragraph", capitalScheduleHeading, { bold: true, align: "center", fontSize: "small" }),
+      textBlock("capital-schedule-row", "paragraph", capitalScheduleRow, { bold: false, repeat: { repeaterKey: "partners" } }),
       textBlock("capital-note", "paragraph", copy(language, "Each partner’s contribution and agreed profit/loss percentage should be checked before publishing the deed.", "প্রকাশের আগে প্রত্যেক অংশীদারের মূলধন ও সম্মত লাভ-লোকসানের শতাংশ যাচাই করুন।"), { bold: false, fontSize: "small" }),
     ]),
     page(12, "Profit and loss", "লাভ-লোকসান", [
@@ -391,7 +427,8 @@ function partnershipDeedPages(language: Language): TemplatePage[] {
     ]),
     page(23, "Designations", "পদ-পদবী", [
       ...clause(language, 18, "Designations", "পদ-পদবী", "For the convenient operation of the business, the partners shall hold the designations set out below.", "ব্যবসা পরিচালনার সুবিধার্থে অংশীদারগণ নিম্নলিখিত পদ-পদবীতে ভূষিত হইবেন।"),
-      textBlock("designation-schedule", "paragraph", designationSchedule, { bold: false }),
+      textBlock("designation-schedule-label", "paragraph", designationScheduleHeading, { bold: true, align: "center", fontSize: "small" }),
+      textBlock("designation-schedule-row", "paragraph", designationScheduleRow, { bold: false, repeat: { repeaterKey: "partners" } }),
     ]),
     page(24, "Employees", "কর্মচারী নিয়োগ", [
       ...clause(language, 19, "Appointment of employees", "কর্মচারী নিয়োগ", "The firm may appoint the number of employees necessary for the joint business with unanimous consent. No employee may be appointed by a single decision. Salaries shall be paid from the business accounts, and qualified candidates shall receive priority.", "যৌথ ব্যবসা পরিচালনার জন্য সর্বসম্মতিতে প্রয়োজনীয় সংখ্যক কর্মচারী নিয়োগ করা যাইবে। কোনো একক সিদ্ধান্তে কর্মচারী নিয়োগ করা যাইবে না এবং কর্মচারীদের বেতন ব্যবসার হিসাব হইতে বহন করা হইবে। কর্মকর্তা ও কর্মচারী নিয়োগের ক্ষেত্রে যোগ্য প্রার্থীকে অগ্রাধিকার দেওয়া হইবে।"),
@@ -451,11 +488,12 @@ function partnershipDeedPages(language: Language): TemplatePage[] {
       textBlock("stamp-note", "paragraph", copy(language, "This partnership deed is computer-composed on {{stamp_value}} ({{stamp_value_words}}) taka non-judicial stamp paper in 40 forms, with three witnesses.", "অত্র অংশীদারী চুক্তিপত্র দলিল {{stamp_value}} ({{stamp_value_words}}) টাকার নন-জুডিশিয়াল স্ট্যাম্পে ৪০ (চল্লিশ) ফর্মে কম্পিউটার কম্পোজকৃত এবং সাক্ষী মোট ৩ জন।"), { align: "center", bold: false, fontSize: "body" }),
       textBlock("witness-heading", "heading", copy(language, "Witnesses and partners", "সাক্ষী ও অংশীদারগণ"), { align: "center" }),
       textBlock("witnesses", "paragraph", copy(language, "Witness 1: {{witness_1}}\nWitness 2: {{witness_2}}\nWitness 3: {{witness_3}}", "সাক্ষী ১: {{witness_1}}\nসাক্ষী ২: {{witness_2}}\nসাক্ষী ৩: {{witness_3}}"), { bold: false, fontSize: "body" }),
-      ...partnershipPartnerNumbers.map((number) => signatureBlock(
-        `partner-${number}-signature`,
-        copy(language, `Partner ${number} — ${partnerName(number)}`, `অংশীদার ${number} — ${partnerName(number)}`),
-        partnershipPartnerVisibility(number),
-      )),
+      signatureBlock(
+        "partnership-partners-signatures",
+        `${copy(language, "Partner", "অংশীদার")} {{item_number}} — {{name}}`,
+        undefined,
+        { repeat: { repeaterKey: "partners" } },
+      ),
       signatureBlock("witness-1-signature", copy(language, `Witness 1 — {{witness_1}}`, `সাক্ষী ১ — {{witness_1}}`)),
       signatureBlock("witness-2-signature", copy(language, `Witness 2 — {{witness_2}}`, `সাক্ষী ২ — {{witness_2}}`)),
       signatureBlock("witness-3-signature", copy(language, `Witness 3 — {{witness_3}}`, `সাক্ষী ৩ — {{witness_3}}`)),
@@ -471,7 +509,7 @@ function createPartnershipDeedTemplate(language: Language): DocumentTemplateDraf
     description: bangla
       ? "৪০টি দলিল ফর্মে অংশীদারদের পরিচয়, ব্যবসার উদ্দেশ্য, মূলধন, লাভ-লোকসান, পরিচালনা, দায়-দেনা ও স্বাক্ষর প্রস্তুত করার বাংলা অংশীদারী দলিল।"
       : "A 40-form partnership deed covering the partners, business purpose, capital, profit share, management, liabilities, dissolution and signatures.",
-    settings: partnershipDeedSettings(),
+    settings: partnershipDeedSettings(language),
     fields: partnershipDeedFields(language),
     pages: partnershipDeedPages(language),
   };
@@ -486,13 +524,6 @@ function blockText(block: TemplateBlock) {
 function partnerReferences(block: TemplateBlock) {
   const references = Array.from(blockText(block).matchAll(/partner_(\d+)_/g), (match) => Number(match[1]));
   return Array.from(new Set(references));
-}
-
-function partnerSlotNumbers(fields: TemplateField[]) {
-  return Array.from(new Set(fields.flatMap((field) => {
-    const match = /^partner_(\d+)_name$/.exec(field.key);
-    return match ? [Number(match[1])] : [];
-  }))).sort((left, right) => left - right);
 }
 
 export function isPartnershipDeedTemplate(template: Pick<DocumentTemplateDraft, "slug" | "fields">) {
@@ -531,11 +562,26 @@ function generatedPartnershipSlotBlock(block: TemplateBlock) {
   return { number: Number(match[1]), kind: match[2] as PartnershipSlotBlockKind };
 }
 
+function legacyPartnershipSlotBlock(block: TemplateBlock) {
+  const generated = generatedPartnershipSlotBlock(block);
+  if (generated) return generated;
+  if (block.repeat?.repeaterKey === "partners" || block.visibleWhen?.fieldKey !== "partner_count") return null;
+  const references = partnerReferences(block);
+  if (references.length !== 1) return null;
+  const text = blockText(block);
+  const number = references[0];
+  if (block.type === "signature") return { number, kind: "signature" as const };
+  if (text.includes(`{{partner_${number}_details}}`) && text.includes(`{{partner_${number}_role}}`)) return { number, kind: "particulars" as const };
+  if (text.includes(`{{partner_${number}_capital}}`) && text.includes(`{{partner_${number}_profit_share}}`)) return { number, kind: "capital-row" as const };
+  if (text.includes(`{{partner_${number}_role}}`)) return { number, kind: "designation-row" as const };
+  return null;
+}
+
 function cleanMisplacedPartnershipSlotBlocks(pages: TemplatePage[]) {
   return pages.map((page, pageIndex) => ({
     ...page,
     blocks: page.blocks.filter((block) => {
-      const generated = generatedPartnershipSlotBlock(block);
+      const generated = legacyPartnershipSlotBlock(block);
       if (!generated) return true;
       const targetIndex = findPartnershipPageIndex(pages, partnershipSlotPageNumber(generated.kind, generated.number));
       // If the intended page cannot be identified, preserve the block rather
@@ -545,22 +591,15 @@ function cleanMisplacedPartnershipSlotBlocks(pages: TemplatePage[]) {
   }));
 }
 
-function hasWitnessSignature(block: TemplateBlock): block is Extract<TemplateBlock, { type: "signature" }> {
-  return block.type === "signature" && /Witness [123]|সাক্ষী [১২৩]/i.test(block.label);
+function removeLegacyPartnershipSlotBlocks(pages: TemplatePage[]) {
+  return pages.map((page) => ({
+    ...page,
+    blocks: page.blocks.filter((block) => !legacyPartnershipSlotBlock(block)),
+  }));
 }
 
-function hasPartnershipSlotBlock(pages: TemplatePage[], kind: PartnershipSlotBlockKind, partnerNumber: number) {
-  const pageIndex = findPartnershipPageIndex(pages, partnershipSlotPageNumber(kind, partnerNumber));
-  const page = pageIndex >= 0 ? pages[pageIndex] : undefined;
-  if (!page) return false;
-
-  return page.blocks.some((block) => {
-    const text = blockText(block);
-    if (kind === "signature") return block.type === "signature" && text.includes(`{{partner_${partnerNumber}_name}}`);
-    if (kind === "particulars") return text.includes(`{{partner_${partnerNumber}_details}}`) && text.includes(`{{partner_${partnerNumber}_role}}`);
-    if (kind === "capital-row") return text.includes(`{{partner_${partnerNumber}_capital}}`) && text.includes(`{{partner_${partnerNumber}_profit_share}}`);
-    return text.includes(`{{partner_${partnerNumber}_role}}`);
-  });
+function hasWitnessSignature(block: TemplateBlock): block is Extract<TemplateBlock, { type: "signature" }> {
+  return block.type === "signature" && /Witness [123]|সাক্ষী [১২৩]/i.test(block.label);
 }
 
 function addBlockBefore(blocks: TemplateBlock[], block: TemplateBlock, predicate: (candidate: TemplateBlock) => boolean) {
@@ -569,47 +608,66 @@ function addBlockBefore(blocks: TemplateBlock[], block: TemplateBlock, predicate
   return [...blocks.slice(0, index), block, ...blocks.slice(index)];
 }
 
-function partnerSignatureBlock(language: Language, number: number) {
-  const label = copy(language, `Partner ${number}`, `অংশীদার ${number}`);
-  return signatureBlock(
-    `partnership-partner-${number}-signature`,
-    `${label} — {{partner_${number}_name}}`,
-    partnershipPartnerVisibility(number),
-  );
-}
-
-function insertPartnershipSlotBlock(
-  pages: TemplatePage[],
-  kind: PartnershipSlotBlockKind,
-  partnerNumber: number,
-  block: TemplateBlock,
-  predicate?: (candidate: TemplateBlock) => boolean,
-) {
-  const targetIndex = findPartnershipPageIndex(pages, partnershipSlotPageNumber(kind, partnerNumber));
-  if (targetIndex < 0) return pages;
-
-  return pages.map((page, index) => {
-    if (index !== targetIndex || page.blocks.some((candidate) => candidate.id === block.id)) return page;
-    return {
-      ...page,
-      blocks: predicate ? addBlockBefore(page.blocks, block, predicate) : [...page.blocks, block],
-    };
+function pageHasRepeatBlock(page: TemplatePage | undefined, kind: PartnershipSlotBlockKind, repeaterKey = "partners") {
+  if (!page) return false;
+  return page.blocks.some((block) => {
+    if (block.repeat?.repeaterKey !== repeaterKey) return false;
+    if (kind === "signature") return block.type === "signature";
+    if (block.type !== "paragraph") return false;
+    if (kind === "particulars") return block.text.includes("{{details}}") && block.text.includes("{{role}}");
+    if (kind === "capital-row") return block.text.includes("{{capital}}") && block.text.includes("{{profit_share}}");
+    return block.text.includes("{{name}}") && block.text.includes("{{role}}");
   });
 }
 
-function ensureFinalSignatureBlocks(pages: TemplatePage[], language: Language) {
+function ensurePageBlock(
+  pages: TemplatePage[],
+  pageNumber: number,
+  block: TemplateBlock,
+  present: (page: TemplatePage | undefined) => boolean,
+  predicate?: (candidate: TemplateBlock) => boolean,
+) {
+  const targetIndex = findPartnershipPageIndex(pages, pageNumber);
+  if (targetIndex < 0 || present(pages[targetIndex])) return pages;
+  return pages.map((page, index) => index === targetIndex
+    ? { ...page, blocks: predicate ? addBlockBefore(page.blocks, block, predicate) : [...page.blocks, block] }
+    : page);
+}
+
+function ensurePartnershipRepeatBlocks(pages: TemplatePage[], language: Language, repeaterKey = "partners") {
+  let next = removeLegacyPartnershipSlotBlocks(cleanMisplacedPartnershipSlotBlocks(pages));
+  next = ensurePageBlock(next, 2, partnerParticularsRepeatBlock(language, 1, 2, repeaterKey), (page) => pageHasRepeatBlock(page, "particulars", repeaterKey));
+  next = ensurePageBlock(next, 3, partnerParticularsRepeatBlock(language, 3, 8, repeaterKey), (page) => pageHasRepeatBlock(page, "particulars", repeaterKey), (candidate) => /recital|ভূমিকা/i.test(blockText(candidate)));
+  const capitalLabel = textBlock("partnership-capital-schedule-label", "paragraph", copy(language, "PARTNER | CAPITAL (BDT) | PROFIT / LOSS SHARE", "অংশীদার | মূলধন (টাকা) | লাভ-লোকসানের অনুপাত"), { bold: true, align: "center", fontSize: "small" });
+  const capitalRow = textBlock("partnership-capital-schedule-row", "paragraph", `${copy(language, "Partner", "অংশীদার")} {{item_number}}: {{name}} | {{capital}} ({{capital_words}}) | {{profit_share}}`, { bold: false, repeat: { repeaterKey } });
+  next = ensurePageBlock(next, 11, capitalLabel, (page) => Boolean(page?.blocks.some((block) => block.type === "paragraph" && (block.text.includes("PARTNER | CAPITAL") || block.text.includes("অংশীদার | মূলধন")))), (candidate) => /capital-note|প্রকাশের আগে/i.test(blockText(candidate)));
+  next = ensurePageBlock(next, 11, capitalRow, (page) => pageHasRepeatBlock(page, "capital-row", repeaterKey), (candidate) => /capital-note|প্রকাশের আগে/i.test(blockText(candidate)));
+  const designationLabel = textBlock("partnership-designation-schedule-label", "paragraph", copy(language, "DESIGNATIONS", "পদবী"), { bold: true, align: "center", fontSize: "small" });
+  const designationRow = textBlock("partnership-designation-schedule-row", "paragraph", `${copy(language, "Partner", "অংশীদার")} {{item_number}} — {{name}} — {{role}}`, { bold: false, repeat: { repeaterKey } });
+  next = ensurePageBlock(next, 23, designationLabel, (page) => Boolean(page?.blocks.some((block) => block.type === "paragraph" && (block.text.includes("DESIGNATIONS") || block.text.includes("পদবী")))));
+  next = ensurePageBlock(next, 23, designationRow, (page) => pageHasRepeatBlock(page, "designation-row", repeaterKey));
+  return next;
+}
+
+function ensureFinalSignatureBlocks(pages: TemplatePage[], language: Language, repeaterKey = "partners") {
   const targetIndex = findPartnershipPageIndex(pages, 40);
   const finalPage = pages[targetIndex];
   if (!finalPage) return pages;
 
-  let blocks = [...finalPage.blocks];
-  const existingPartnerNumbers = new Set(blocks.flatMap((block) => block.type === "signature" ? partnerReferences(block) : []));
+  let blocks = finalPage.blocks.filter((block) => {
+    const legacy = legacyPartnershipSlotBlock(block);
+    return !legacy || legacy.kind !== "signature";
+  });
+  const hasRepeatSignature = pageHasRepeatBlock({ ...finalPage, blocks }, "signature", repeaterKey);
   const firstWitnessIndex = blocks.findIndex((block) => hasWitnessSignature(block) && /Witness 1|সাক্ষী ১/i.test(block.label));
   let insertAt = firstWitnessIndex >= 0 ? firstWitnessIndex : blocks.length;
-  for (const number of partnershipPartnerNumbers) {
-    if (existingPartnerNumbers.has(number)) continue;
-    blocks.splice(insertAt, 0, partnerSignatureBlock(language, number));
-    insertAt += 1;
+  if (!hasRepeatSignature) {
+    blocks.splice(insertAt, 0, signatureBlock(
+      "partnership-partners-signatures",
+      `${copy(language, "Partner", "অংশীদার")} {{item_number}} — {{name}}`,
+      undefined,
+      { repeat: { repeaterKey } },
+    ));
   }
 
   for (const number of [1, 2, 3]) {
@@ -627,51 +685,26 @@ function ensureFinalSignatureBlocks(pages: TemplatePage[], language: Language) {
   return pages.map((page, index) => index === targetIndex ? { ...page, settings: finalSettings, blocks } : page);
 }
 
-function addPartnerSlotBlocks(pages: TemplatePage[], language: Language, number: number) {
-  const label = copy(language, `Partner ${number}`, `অংশীদার ${number}`);
-  const particulars = textBlock(
-    `partnership-partner-${number}-particulars`,
-    "paragraph",
-    `${label} — {{partner_${number}_name}}\n{{partner_${number}_details}}\n${copy(language, "Designation", "পদবী")}: {{partner_${number}_role}}`,
-    { bold: false, visibleWhen: partnershipPartnerVisibility(number) },
-  );
-  const capitalRow = textBlock(
-    `partnership-partner-${number}-capital-row`,
-    "paragraph",
-    `${label}: {{partner_${number}_name}} | {{partner_${number}_capital}} ({{partner_${number}_capital_words}}) | {{partner_${number}_profit_share}}`,
-    { bold: false, visibleWhen: partnershipPartnerVisibility(number) },
-  );
-  const designationRow = textBlock(
-    `partnership-partner-${number}-designation-row`,
-    "paragraph",
-    `{{partner_${number}_name}} — {{partner_${number}_role}}`,
-    { bold: false, visibleWhen: partnershipPartnerVisibility(number) },
-  );
-  const signature = signatureBlock(
-    `partnership-partner-${number}-signature`,
-    `${label} — {{partner_${number}_name}}`,
-    partnershipPartnerVisibility(number),
-  );
-
-  let nextPages = pages;
-  if (!hasPartnershipSlotBlock(nextPages, "particulars", number)) {
-    nextPages = insertPartnershipSlotBlock(nextPages, "particulars", number, particulars, (candidate) => /recital|ভূমিকা/i.test(blockText(candidate)));
-  }
-  if (!hasPartnershipSlotBlock(nextPages, "capital-row", number)) {
-    nextPages = insertPartnershipSlotBlock(nextPages, "capital-row", number, capitalRow, (candidate) => /Each partner|প্রকাশের আগে/i.test(blockText(candidate)));
-  }
-  if (!hasPartnershipSlotBlock(nextPages, "designation-row", number)) {
-    nextPages = insertPartnershipSlotBlock(nextPages, "designation-row", number, designationRow);
-  }
-  if (!hasPartnershipSlotBlock(nextPages, "signature", number)) {
-    nextPages = insertPartnershipSlotBlock(nextPages, "signature", number, signature, (candidate) => hasWitnessSignature(candidate) && /Witness 1|সাক্ষী ১/i.test(candidate.label));
-  }
-  return nextPages;
-}
-
 export function upgradePartnershipDeedTemplate(template: DocumentTemplateDraft): DocumentTemplateDraft {
   if (!isPartnershipDeedTemplate(template)) return template;
   const language: Language = template.slug.endsWith("-bn") ? "bn" : "en";
+  const defaultRepeater = partnershipPartnerRepeater(language);
+  const existingRepeater = template.settings.repeaters.find((repeater) => repeater.id === defaultRepeater.id || repeater.key === defaultRepeater.key || repeater.fields.some((field) => field.sourceKeyPattern === "partner_{index}_name"));
+  const configuredRepeater: TemplateRepeater = existingRepeater
+    ? {
+        ...defaultRepeater,
+        ...existingRepeater,
+        minItems: partnershipDeedMinPartners,
+        maxItems: partnershipDeedMaxPartners,
+        fields: defaultRepeater.fields.map((defaultField) => {
+          const currentField = existingRepeater.fields.find((field) => field.key === defaultField.key);
+          return currentField ? { ...defaultField, ...currentField, sourceKeyPattern: currentField.sourceKeyPattern ?? defaultField.sourceKeyPattern } : defaultField;
+        }).concat(existingRepeater.fields.filter((field) => !defaultRepeater.fields.some((defaultField) => defaultField.key === field.key))),
+      }
+    : defaultRepeater;
+  const repeaters = existingRepeater
+    ? template.settings.repeaters.map((repeater) => repeater.id === existingRepeater.id ? configuredRepeater : repeater)
+    : [...template.settings.repeaters, configuredRepeater];
   let fields = template.fields.map((field) => {
     const partnerMatch = /^partner_(\d+)_(name|details|role|capital|capital_words|profit_share)$/.exec(field.key);
     if (partnerMatch) {
@@ -686,7 +719,7 @@ export function upgradePartnershipDeedTemplate(template: DocumentTemplateDraft):
     if (["initial_capital", "initial_capital_words", "additional_capital_stamp"].includes(field.key)) return { ...field, required: false };
     if (field.key === "partner_count") return {
       ...field,
-      options: partnerCountOptions(language, partnershipDeedMaxPartners, field.options),
+      options: partnerCountOptions(language, configuredRepeater.maxItems, field.options),
       defaultValue: String(partnershipDeedMinPartners),
     };
     return field;
@@ -708,29 +741,22 @@ export function upgradePartnershipDeedTemplate(template: DocumentTemplateDraft):
     }),
   }));
 
-  // Repair blocks produced by the old broad page-id match (page 3 also
-  // matched pages 30–39), then ensure every slot has its intended content.
-  pages = cleanMisplacedPartnershipSlotBlocks(pages);
-  for (const number of partnershipPartnerNumbers) pages = addPartnerSlotBlocks(pages, language, number);
+  // Repair blocks produced by older versions, then replace the generated
+  // per-slot rows with repeatable blocks driven by the group definition.
+  pages = ensurePartnershipRepeatBlocks(pages, language, configuredRepeater.key);
 
   const fieldsWithWitnesses = [...fields];
   for (const witness of witnessFields(language)) {
     if (!fieldsWithWitnesses.some((field) => field.key === witness.key)) fieldsWithWitnesses.push(witness);
   }
-  return { ...template, fields: fieldsWithWitnesses, pages: ensureFinalSignatureBlocks(pages, language) };
+  return { ...template, settings: { ...template.settings, repeaters }, fields: fieldsWithWitnesses, pages: ensureFinalSignatureBlocks(pages, language, configuredRepeater.key) };
 }
 
 export function addPartnershipPartnerSlot(template: DocumentTemplateDraft): DocumentTemplateDraft {
-  const upgraded = upgradePartnershipDeedTemplate(template);
-  if (!isPartnershipDeedTemplate(upgraded)) return upgraded;
-  const slots = partnerSlotNumbers(upgraded.fields);
-  const nextNumber = (slots.at(-1) ?? partnershipDeedMinPartners - 1) + 1;
-  if (nextNumber > partnershipDeedMaxPartners) return upgraded;
-  const language: Language = upgraded.slug.endsWith("-bn") ? "bn" : "en";
-  const fields = [...upgraded.fields, ...partnerFieldsForSlot(language, nextNumber)].map((field) => field.key === "partner_count"
-    ? { ...field, options: partnerCountOptions(language, nextNumber, field.options) }
-    : field);
-  return { ...upgraded, fields, pages: addPartnerSlotBlocks(upgraded.pages, language, nextNumber) };
+  // Kept as a compatibility export for older callers. Partner slots are now
+  // always provisioned by the repeatable-group metadata and the user chooses
+  // the active count in the public form.
+  return upgradePartnershipDeedTemplate(template);
 }
 
 export const defaultPartnershipDeed40EnglishTemplate = createPartnershipDeedTemplate("en");
