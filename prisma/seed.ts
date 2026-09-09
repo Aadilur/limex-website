@@ -73,7 +73,7 @@ async function main() {
     },
   });
 
-  for (const template of [defaultMouTemplate, ...defaultRentalDeedTemplates, ...defaultPartnershipDeed40Templates]) {
+  for (const [sortOrder, template] of [defaultMouTemplate, ...defaultRentalDeedTemplates, ...defaultPartnershipDeed40Templates].entries()) {
     const existing = await prisma.documentTemplate.findUnique({ where: { slug: template.slug } });
     if (!existing) {
       await prisma.documentTemplate.create({
@@ -93,6 +93,7 @@ async function main() {
           revision: 1,
           publishedRevision: 1,
           publishedAt: new Date(),
+          sortOrder,
         },
       });
       continue;

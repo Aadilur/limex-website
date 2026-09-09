@@ -164,10 +164,13 @@ model DocumentTemplate {
   revision           Int       @default(1)
   publishedRevision  Int?
   publishedAt        DateTime?
+  sortOrder          Int       @default(0)
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
   @@index([status, updatedAt])
+  @@index([status, sortOrder])
+  @@index([sortOrder])
   @@index([updatedAt])
 }
 

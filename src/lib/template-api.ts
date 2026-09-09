@@ -43,6 +43,13 @@ export function getAdminTemplates(): Promise<DocumentTemplateSummary[]> {
   return request<unknown>("/api/admin/tools/templates", { cache: "no-store" }).then(assertAdminTemplateList);
 }
 
+export function reorderAdminTemplates(ids: string[]): Promise<DocumentTemplateSummary[]> {
+  return request<unknown>("/api/admin/tools/templates/order", {
+    method: "PUT",
+    body: JSON.stringify({ ids }),
+  }).then(assertAdminTemplateList);
+}
+
 export function getAdminTemplate(id: string): Promise<AdminDocumentTemplate> {
   return request<unknown>(`/api/admin/tools/templates/${encodeURIComponent(id)}`, { cache: "no-store" }).then(assertAdminTemplate);
 }

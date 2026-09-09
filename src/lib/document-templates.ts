@@ -265,6 +265,7 @@ export type DocumentTemplateSummary = {
   revision: number;
   publishedRevision: number | null;
   publishedAt: string | null;
+  sortOrder: number;
   updatedAt: string;
 };
 

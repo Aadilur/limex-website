@@ -18,6 +18,7 @@ const slugParamsSchema = z.object({ slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-
 const slugAvailabilitySchema = z.object({ slug: z.string().trim().min(1).max(180), excludeId: z.string().cuid().optional() });
 const revisionBodySchema = z.object({ expectedRevision: z.number().int().positive() }).strict();
 const templateBodySchema = z.object({ template: z.unknown(), expectedRevision: z.number().int().positive().optional() }).strict();
+const templateOrderBodySchema = z.object({ ids: z.array(z.string().cuid()).max(200) }).strict();
 
 function asJson(value: unknown) {
   return value as Prisma.InputJsonValue;
@@ -33,6 +34,7 @@ const templateSummarySelect = {
   revision: true,
   publishedRevision: true,
   publishedAt: true,
+  sortOrder: true,
   updatedAt: true,
 } as const;
 
@@ -46,6 +48,7 @@ function toSummary(row: {
   revision: number;
   publishedRevision: number | null;
   publishedAt: Date | null;
+  sortOrder: number;
   updatedAt: Date;
 }): DocumentTemplateSummary {
   const settings = templateSettingsSchema.parse(row.settings);
@@ -59,6 +62,7 @@ function toSummary(row: {
     revision: row.revision,
     publishedRevision: row.publishedRevision,
     publishedAt: row.publishedAt?.toISOString() ?? null,
+    sortOrder: row.sortOrder,
     updatedAt: row.updatedAt.toISOString(),
   };
 }
@@ -76,6 +80,7 @@ function toAdminTemplate(row: {
   revision: number;
   publishedRevision: number | null;
   publishedAt: Date | null;
+  sortOrder: number;
   updatedAt: Date;
 }): AdminDocumentTemplate {
   const draft = normalizeDocumentTemplateDraft({
@@ -125,7 +130,7 @@ export async function templateRoutes(app: FastifyInstance) {
     const rows = await prisma.documentTemplate.findMany({
       where: { status: "PUBLISHED" },
       select: templateSummarySelect,
-      orderBy: [{ publishedAt: "desc" }, { title: "asc" }],
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }, { title: "asc" }],
     });
     return { data: rows.map(toSummary) };
   });
@@ -146,7 +151,24 @@ export async function templateRoutes(app: FastifyInstance) {
     // here makes MySQL sort/fetch large values before the admin screen can open.
     const rows = await prisma.documentTemplate.findMany({
       select: templateSummarySelect,
-      orderBy: { updatedAt: "desc" },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }, { title: "asc" }],
+    });
+    return { data: rows.map(toSummary) };
+  });
+
+  app.put("/api/admin/tools/templates/order", async (request, reply) => {
+    if (!requireAdminSession(request, reply)) return;
+    const { ids } = templateOrderBodySchema.parse(request.body);
+    const current = await prisma.documentTemplate.findMany({ select: { id: true } });
+    const currentIds = new Set(current.map((template) => template.id));
+    const nextIds = new Set(ids);
+    if (ids.length !== current.length || nextIds.size !== ids.length || ids.some((id) => !currentIds.has(id))) {
+      return reply.code(400).send({ error: "The template order is out of date. Reload the template list and try again." });
+    }
+    await prisma.$transaction(ids.map((id, sortOrder) => prisma.documentTemplate.update({ where: { id }, data: { sortOrder } })));
+    const rows = await prisma.documentTemplate.findMany({
+      select: templateSummarySelect,
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }, { title: "asc" }],
     });
     return { data: rows.map(toSummary) };
   });
@@ -179,6 +201,7 @@ export async function templateRoutes(app: FastifyInstance) {
   app.post("/api/admin/tools/templates", async (request, reply) => {
     if (!requireAdminSession(request, reply)) return;
     const template = normalizeDocumentTemplateDraft(request.body);
+    const lastTemplate = await prisma.documentTemplate.findFirst({ select: { sortOrder: true }, orderBy: { sortOrder: "desc" } });
     try {
       const row = await prisma.documentTemplate.create({
         data: {
@@ -189,6 +212,7 @@ export async function templateRoutes(app: FastifyInstance) {
           fields: asJson(template.fields),
           blocks: asJson(flattenTemplatePages(template.pages)),
           pages: asJson(template.pages),
+          sortOrder: (lastTemplate?.sortOrder ?? -1) + 1,
         },
       });
       return reply.code(201).send({ data: toAdminTemplate(row) });

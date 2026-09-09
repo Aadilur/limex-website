@@ -3,6 +3,7 @@ import test from "node:test";
 import { businessTools, calculateTool, calculatorFields, defaultToolsSettings, initialToolValues, toolsSettingsSchema, validateFields, type ToolSlug, type ToolValues } from "../src/lib/business-tools.js";
 import { createDocumentDraft, documentFields, documentText } from "../src/lib/business-documents.js";
 import { defaultMouTemplate, defaultTemplateSettings, documentTemplateDraftSchema, expandTemplateBlockInstances, isTemplateFieldVisible, missingTemplateFields, normalizeDocumentTemplateDraft, templateRepeaterFieldValueKey, type TemplateBlock } from "../src/lib/document-templates.js";
+import { renderTemplateDocx } from "../src/lib/document-template-docx.js";
 import { renderTemplatePrintHtml } from "../src/lib/document-template-print.js";
 import { addPartnershipPartnerSlot, defaultPartnershipDeed40BanglaTemplate, defaultPartnershipDeed40EnglishTemplate, partnershipDeedMaxPartners, partnershipPartnerVisibility, upgradePartnershipDeedTemplate } from "../src/lib/partnership-deed-templates.js";
 import { defaultRentalDeedBanglaTemplate, defaultRentalDeedEnglishTemplate } from "../src/lib/rental-deed-templates.js";
@@ -151,6 +152,13 @@ test("partnership deed print output removes inactive partner rows and signatures
   assert.equal(html.split("class=\"template-page\"").length - 1, 40);
   for (const number of [3, 4, 5, 6, 7, 8]) assert.equal(html.includes(`Partner ${number}`), false);
   assert.equal(html.includes("Partner 1"), true);
+});
+test("document templates export as editable DOCX files", async () => {
+  const values = Object.fromEntries(defaultMouTemplate.fields.map((field) => [field.key, field.defaultValue ?? "Sample"]));
+  const blob = await renderTemplateDocx(defaultMouTemplate, values);
+  const bytes = Buffer.from(await blob.arrayBuffer());
+  assert.ok(blob.size > 1000);
+  assert.equal(bytes.subarray(0, 2).toString("hex"), "504b");
 });
 for (const amount of [0, 0.01, 1, 99.99, 1000, 999999.99]) for (const rate of [0, 5, 7.5, 15, 100]) test(`VAT reconciles amount=${amount} rate=${rate}`, () => {
   for (const mode of ["Including VAT", "Excluding VAT"]) {
