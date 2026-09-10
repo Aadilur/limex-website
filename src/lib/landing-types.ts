@@ -174,6 +174,7 @@ export type ArticleItem = {
   coverTone: BlogTone;
   coverNumber: string;
   media: "image" | "video";
+  coverUrl?: string;
   href: string;
 };
 

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from "
 import { getAdminMenu, isUnauthorizedError, type AdminMenuSection } from "@/lib/menu-api";
 import {
   defaultLandingContent,
+  landingTestVideoUrl,
   getAdminLanding,
   isLandingConflictError,
   isLandingSafetyError,
@@ -612,12 +613,15 @@ function ProcessEditor({ content, onChange }: { content: ProcessContent; onChang
 function TestimonialsEditor({ content, onChange }: { content: TestimonialsContent; onChange: (patch: Partial<TestimonialsContent>) => void }) {
   return (
     <div className="space-y-6">
-      <SectionHeader title="Video testimonials" description="Add a YouTube URL for inline playback, or keep an image-only story card." count={content.items.length} />
+      <SectionHeader title="Video testimonials" description="Add a YouTube URL for inline playback, or keep an image-only story card. A sample playback link is ready to test the player." count={content.items.length} />
       <div className="grid gap-3 sm:grid-cols-2"><Field label="Section title" value={content.title} onChange={(title) => onChange({ title })} /><TextAreaField label="Description" value={content.description} onChange={(description) => onChange({ description })} /></div>
       <SortableRows items={content.items} onChange={(items) => onChange({ items })} render={(item) => <div className="grid gap-2.5 sm:grid-cols-2">
         <Field label="Title" value={item.title} onChange={(title) => onChange({ items: updateById(content.items, item.id, { title }) })} />
         <Field label="Subtitle / metadata" value={item.subtitle} onChange={(subtitle) => onChange({ items: updateById(content.items, item.id, { subtitle }) })} />
-        <Field label="YouTube URL" value={item.youtubeUrl} onChange={(youtubeUrl) => onChange({ items: updateById(content.items, item.id, { youtubeUrl }) })} placeholder="https://youtube.com/watch?v=" />
+        <div className="min-w-0">
+          <Field label="YouTube URL" value={item.youtubeUrl} onChange={(youtubeUrl) => onChange({ items: updateById(content.items, item.id, { youtubeUrl }) })} placeholder="https://youtube.com/watch?v=" />
+          {!item.youtubeUrl ? <button className="mt-2 text-[12px] font-semibold text-[#355b45] underline underline-offset-4 hover:text-[#e44762]" type="button" onClick={() => onChange({ items: updateById(content.items, item.id, { youtubeUrl: landingTestVideoUrl }) })}>Use sample playback link ↗</button> : null}
+        </div>
         <Field label="Fallback image URL" value={item.imageUrl} onChange={(imageUrl) => onChange({ items: updateById(content.items, item.id, { imageUrl }) })} placeholder="/figma/reel-1.png" />
         <Toggle label="Visible" checked={item.isVisible} onChange={(isVisible) => onChange({ items: updateById(content.items, item.id, { isVisible }) })} />
       </div>} />

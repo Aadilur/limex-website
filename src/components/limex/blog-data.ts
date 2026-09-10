@@ -47,6 +47,16 @@ export type BlogArticle = {
   isFeatured?: boolean;
 };
 
+export const blogCoverFallbacks: Record<string, string> = {
+  "Business setup": "/blog/business-setup-cover.jpg",
+  "VAT & Tax": "/blog/vat-tax-cover.jpg",
+  "Brand protection": "/blog/trademark-cover.jpg",
+};
+
+export function getBlogCoverFallbackUrl(article: Pick<BlogArticle, "category">) {
+  return blogCoverFallbacks[article.category] ?? "";
+}
+
 const businessSetupBlocks: BlogContentBlock[] = [
   { type: "heading", text: "Before you file anything" },
   {

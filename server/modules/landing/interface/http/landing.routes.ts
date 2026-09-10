@@ -13,6 +13,7 @@ import {
   uploadStoredObject,
   type ImageUpload,
 } from "../../../../shared/storage/object-storage.js";
+import { getYouTubeVideoId } from "../../../about/domain/youtube.js";
 import { LandingConflictError, LandingSafetyError, LandingService } from "../../application/landing.service.js";
 import { landingSectionKeys, type LandingSectionKey } from "../../domain/landing.js";
 
@@ -48,6 +49,7 @@ const nonEmptyText = (max: number) => z.string().trim().min(1).max(max);
 const optionalText = (max: number) => z.string().max(max).default("");
 const hrefSchema = z.string().trim().min(1).max(1000);
 const visibleSchema = z.boolean().default(true);
+const youtubeUrlSchema = optionalText(1000).refine((value) => !value || Boolean(getYouTubeVideoId(value)), "Use a valid YouTube link or leave it blank.");
 
 const serviceItemSchema = z.object({
   id: nonEmptyText(120),
@@ -130,7 +132,7 @@ const testimonialsSchema = z.object({
     imageUrl: optionalText(1000),
     title: nonEmptyText(240),
     subtitle: nonEmptyText(240),
-    youtubeUrl: optionalText(1000),
+    youtubeUrl: youtubeUrlSchema,
   })).max(20),
 });
 

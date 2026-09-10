@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import type { ServicePageContent, ServicePriceTier } from "./service-page-data";
+import { ContactModal } from "./contact-section";
 import { ActionButton, WaveLabel } from "./ui";
 
 export function ServiceHeroSection({ service }: { service: ServicePageContent }) {
@@ -172,7 +173,7 @@ export function ServiceContactSection({ service }: { service: ServicePageContent
         <h2 className="mt-cluster max-w-[760px] font-brand text-page-title max-lg:text-page-title-mobile" id="service-contact-title">Need help choosing the right option?</h2>
         <p className="mt-cluster max-w-[680px] text-body-sm text-[#c7cfe0]">A short conversation is enough to recommend the right path for {service.title.toLowerCase()}.</p>
       </div>
-      <ActionButton href="/#contact" variant="white" arrow="text" className="min-h-button-lg w-[218px] shrink-0 justify-center text-body-xs">Talk to an advisor</ActionButton>
+      <ContactModal serviceKey={service.title} variant="white" buttonClassName="min-h-button-lg w-[218px] shrink-0 justify-center text-body-xs" buttonLabel="Talk to an advisor" />
     </section>
   );
 }

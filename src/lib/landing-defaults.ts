@@ -1,4 +1,4 @@
-import { homeArticles } from "../components/limex/blog-data";
+import { getBlogCoverFallbackUrl, homeArticles } from "../components/limex/blog-data";
 import {
   createServicesFromNavigation,
   faqs,
@@ -37,6 +37,10 @@ function requiredService(title: string, displayTitle = title) {
   const service = serviceByTitle.get(title);
   return service ? landingService(service, displayTitle) : null;
 }
+
+// Public sample playback URL for validating the testimonial player before real Limex stories are added.
+// Admins can replace this from Landing > Testimonials.
+export const landingTestVideoUrl = "https://www.youtube.com/watch?v=aqz-KE-bpKQ";
 
 const heroServices = [
   requiredService("Company Formation", "Company registration"),
@@ -133,7 +137,7 @@ export const defaultLandingContent: LandingContent = {
       imageUrl: reel.image,
       title: reel.title,
       subtitle: reel.meta,
-      youtubeUrl: "",
+      youtubeUrl: index === 0 ? landingTestVideoUrl : "",
     })),
   },
   packages: {
@@ -193,6 +197,7 @@ export const defaultLandingContent: LandingContent = {
       coverTone: article.coverTone,
       coverNumber: article.coverNumber,
       media: article.media,
+      coverUrl: article.coverUrl ?? getBlogCoverFallbackUrl(article),
       href: `/blog/${article.slug}`,
     })),
   },

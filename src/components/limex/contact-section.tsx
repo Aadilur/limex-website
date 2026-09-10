@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from "react";
 
 import { navigation, type NavItem } from "./data";
 import { ActionButton, CheckIcon, ChevronDownIcon } from "./ui";
@@ -17,6 +17,12 @@ type ContactValues = {
   preferredDate: string;
   preferredTime: string;
   message: string;
+};
+
+export type ContactRequestSource = {
+  type: "BLOG";
+  slug: string;
+  service?: string;
 };
 
 type ServiceOption = { label: string; value: string };
@@ -54,9 +60,19 @@ function getServiceGroups(menuNavigation: NavItem[]): ServiceGroup[] {
     .filter((section) => section.items.length > 0);
 }
 
-function ServiceMultiSelect({ groups, value, onChange, hasError, helperText }: { groups: ServiceGroup[]; value: string[]; onChange: (nextValue: string[]) => void; hasError: boolean; helperText: string }) {
+function findServiceOption(groups: ServiceGroup[], requestedService: string) {
+  const normalized = requestedService.trim().toLowerCase();
+  if (!normalized) return undefined;
+  return groups.flatMap((group) => group.items).find((option) => {
+    const value = option.value.toLowerCase();
+    return value === normalized || option.label.toLowerCase() === normalized || value.endsWith(`: ${normalized}`);
+  });
+}
+
+function ServiceMultiSelect({ groups, value, onChange, hasError, helperText, instanceId }: { groups: ServiceGroup[]; value: string[]; onChange: (nextValue: string[]) => void; hasError: boolean; helperText: string; instanceId: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const optionsId = `${instanceId}-service-options`;
   const options = useMemo(() => groups.flatMap((group) => group.items), [groups]);
   const selectedOptions = options.filter((option) => value.includes(option.value));
   const summary = selectedOptions.length === 0
@@ -94,7 +110,7 @@ function ServiceMultiSelect({ groups, value, onChange, hasError, helperText }: {
         type="button"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        aria-controls="contact-service-options"
+        aria-controls={optionsId}
         aria-invalid={hasError}
         aria-label="Choose one or more services"
         onClick={() => setIsOpen((open) => !open)}
@@ -105,7 +121,7 @@ function ServiceMultiSelect({ groups, value, onChange, hasError, helperText }: {
       <p className="mt-1 text-micro text-muted">{helperText}</p>
 
       {isOpen ? (
-        <div className="absolute inset-x-0 top-[calc(100%+8px)] z-30 overflow-hidden rounded-[16px] border border-[#d0cdc4] bg-[#f8f6f1] shadow-[0_18px_42px_rgba(42,44,39,0.12)]" id="contact-service-options" role="listbox" aria-multiselectable="true" aria-label="Choose services">
+        <div className="absolute inset-x-0 top-[calc(100%+8px)] z-30 overflow-hidden rounded-[16px] border border-[#d0cdc4] bg-[#f8f6f1] shadow-[0_18px_42px_rgba(42,44,39,0.12)]" id={optionsId} role="listbox" aria-multiselectable="true" aria-label="Choose services">
           <div className="flex items-center justify-between border-b border-[#dedbd3] px-3.5 py-2.5">
             <span className="text-micro font-semibold text-[#4c4d48]">Choose services</span>
             <button className="text-micro font-semibold text-accent transition-colors hover:text-[#bd3f60] disabled:cursor-not-allowed disabled:text-[#aaa9a2]" type="button" onClick={() => onChange([])} disabled={value.length === 0}>Clear</button>
@@ -141,7 +157,15 @@ function ServiceMultiSelect({ groups, value, onChange, hasError, helperText }: {
   );
 }
 
-export function ContactSection({ content = defaultLandingContent.contact }: { content?: ContactContent }) {
+type ContactFormProps = {
+  content?: ContactContent;
+  compact?: boolean;
+  formId?: string;
+  initialService?: string;
+  source?: ContactRequestSource | null;
+};
+
+export function ContactForm({ content = defaultLandingContent.contact, compact = false, formId = "contact-form", initialService, source = null }: ContactFormProps) {
   const [menuNavigation, setMenuNavigation] = useState<NavItem[]>(navigation);
   const [values, setValues] = useState<ContactValues>(initialValues);
   const [submitted, setSubmitted] = useState(false);
@@ -150,9 +174,12 @@ export function ContactSection({ content = defaultLandingContent.contact }: { co
   const [consent, setConsent] = useState(false);
   const [reference, setReference] = useState("");
   const [todayInputValue, setTodayInputValue] = useState("");
-  const [blogSource, setBlogSource] = useState<{ slug: string; service?: string } | null>(null);
+  const [blogSource, setBlogSource] = useState<ContactRequestSource | null>(source);
   const submission = useRef<{ key: string; fingerprint: string } | null>(null);
   const serviceGroups = useMemo(() => getServiceGroups(menuNavigation), [menuNavigation]);
+  const instanceId = useId().replace(/:/g, "");
+  const formTitleId = `${instanceId}-title`;
+  const contactMethodHelpId = `${instanceId}-contact-method-help`;
 
   const updateValue = <Field extends keyof ContactValues>(field: Field, value: ContactValues[Field]) => {
     setSubmitted(false);
@@ -208,7 +235,7 @@ export function ContactSection({ content = defaultLandingContent.contact }: { co
       message: values.message,
       consent,
       website: String(data.get("website") ?? ""),
-      ...(blogSource ? { source: { type: "BLOG" as const, slug: blogSource.slug, ...(blogSource.service ? { service: blogSource.service } : {}) } } : {}),
+      ...(blogSource ? { source: blogSource } : {}),
     };
     const fingerprint = JSON.stringify(payload);
     if (!submission.current || submission.current.fingerprint !== fingerprint) submission.current = { key: crypto.randomUUID(), fingerprint };
@@ -233,21 +260,26 @@ export function ContactSection({ content = defaultLandingContent.contact }: { co
 
     const params = new URLSearchParams(window.location.search);
     const article = params.get("article");
-    const requestedService = params.get("service");
-    if (params.get("from") === "blog" && article) setBlogSource({ slug: article, ...(requestedService ? { service: requestedService } : {}) });
-    if (params.get("from") === "blog" && requestedService) {
-      const fallbackService = getServiceGroups(navigation).flatMap((group) => group.items).find((item) => item.value.endsWith(`: ${requestedService}`) || item.value === requestedService);
-      if (fallbackService) setValues((current) => ({ ...current, services: [fallbackService.value] }));
-    }
+    const requestedService = initialService ?? source?.service ?? params.get("service") ?? "";
+    const urlService = params.get("service") || undefined;
+    const urlSource: ContactRequestSource | null = params.get("from") === "blog" && article
+      ? { type: "BLOG", slug: article, ...(urlService ? { service: urlService } : {}) }
+      : null;
+    const resolvedSource = source ?? urlSource;
+    if (resolvedSource) setBlogSource(resolvedSource);
 
+    const setInitialService = (groups: ServiceGroup[]) => {
+      const match = findServiceOption(groups, requestedService);
+      if (!match) return;
+      setValues((current) => current.services.length ? current : { ...current, services: [match.value] });
+    };
+
+    setInitialService(getServiceGroups(navigation));
     void getPublicMenu()
       .then((managedItems) => {
         if (cancelled) return;
         setMenuNavigation(managedItems);
-        if (params.get("from") === "blog" && requestedService) {
-          const matchingService = getServiceGroups(managedItems).flatMap((group) => group.items).find((item) => item.value.endsWith(`: ${requestedService}`) || item.value === requestedService);
-          if (matchingService) setValues((current) => ({ ...current, services: [matchingService.value] }));
-        }
+        setInitialService(getServiceGroups(managedItems));
       })
       .catch(() => {
         // Keep the bundled top-level service list available when the API is unavailable.
@@ -256,14 +288,113 @@ export function ContactSection({ content = defaultLandingContent.contact }: { co
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialService, source?.service, source?.slug]);
 
+  const formClassName = compact
+    ? "relative flex min-h-0 flex-col p-4 sm:p-6"
+    : "relative flex min-h-0 flex-col rounded-[24px] border border-[#c8c6be] bg-page p-card-pad-sm shadow-[0_12px_30px_rgba(42,44,39,0.04)] lg:min-h-[560px] lg:p-[32px]";
+  const fieldGap = compact ? "gap-3" : "gap-cluster";
+
+  return (
+    <form className={formClassName} id={formId} aria-labelledby={formTitleId} onSubmit={handleSubmit}>
+      {!compact ? <span className="pointer-events-none absolute left-4 top-0 h-1 w-14 rounded-b-full bg-accent lg:left-8" aria-hidden="true" /> : null}
+      <div className={`border-b border-[#d3d0c8] ${compact ? "pb-4" : "pb-section-gap-lg"}`.trim()}>
+        <p className="text-overline text-accent">{content.formEyebrow}</p>
+        <h3 className="mt-2 font-brand text-subheading text-ink" id={formTitleId}>{content.formTitle}</h3>
+        <p className="mt-cluster-xs text-body-xs text-muted">{content.formDescription}</p>
+      </div>
+
+      <div className={`${compact ? "mt-4" : "mt-section-gap-lg"} flex flex-col ${fieldGap}`.trim()}>
+        <div className="grid grid-cols-1 gap-cluster lg:grid-cols-2">
+          <div className={fieldLabelClassName}>
+            <span className={fieldLabelTextClassName}>Service</span>
+            <ServiceMultiSelect groups={serviceGroups} value={values.services} onChange={(nextValue) => updateValue("services", nextValue)} hasError={Boolean(formError && values.services.length === 0)} helperText={content.serviceHelper} instanceId={instanceId} />
+          </div>
+          <label className={fieldLabelClassName}>
+            <span className={fieldLabelTextClassName}>Name</span>
+            <input className={`h-12 ${fieldControlClassName}`} autoComplete="name" value={values.name} onChange={(event) => updateValue("name", event.target.value)} placeholder="Your name" required />
+          </label>
+        </div>
+
+        <fieldset className="flex min-w-0 flex-col gap-2">
+          <legend className={fieldLabelTextClassName}>How can we help?</legend>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {(["CALLBACK", "APPOINTMENT"] as const).map((type) => (
+              <button
+                className={`min-h-11 rounded-[12px] border px-3 text-left text-body-xs font-semibold transition-colors ${values.requestType === type ? "border-[#6d806e] bg-[#edf3eb] text-[#294d3f]" : "border-[#c8c6be] bg-page text-[#60635d] hover:border-[#9ca397]"}`.trim()}
+                type="button"
+                aria-pressed={values.requestType === type}
+                onClick={() => updateValue("requestType", type)}
+                disabled={busy}
+                key={type}
+              >
+                {type === "CALLBACK" ? "Request a callback" : "Book an appointment"}
+              </button>
+            ))}
+          </div>
+          <p className="text-micro text-muted">Choose appointment to request a time with our team.</p>
+        </fieldset>
+
+        <div className="grid grid-cols-1 gap-cluster lg:grid-cols-2">
+          <label className={fieldLabelClassName}>
+            <span className={fieldLabelTextClassName}>Phone / WhatsApp</span>
+            <input className={`h-12 ${fieldControlClassName}`} type="tel" inputMode="tel" autoComplete="tel" value={values.phone} onChange={(event) => updateValue("phone", event.target.value)} placeholder="+880 1XXX XXXXXX" aria-describedby={contactMethodHelpId} />
+          </label>
+          <label className={fieldLabelClassName}>
+            <span className={fieldLabelTextClassName}>Email</span>
+            <input className={`h-12 ${fieldControlClassName}`} type="email" inputMode="email" autoComplete="email" value={values.email} onChange={(event) => updateValue("email", event.target.value)} placeholder="you@example.com" aria-describedby={contactMethodHelpId} />
+          </label>
+        </div>
+        <p className="-mt-1 text-micro text-muted" id={contactMethodHelpId}>{content.contactMethodHelper}</p>
+        {formError ? <p className="-mt-1 text-body-xs font-semibold text-accent" role="alert">{formError}</p> : null}
+
+        <fieldset className="flex min-w-0 flex-col gap-2">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <legend className={fieldLabelTextClassName}>Preferred schedule <span className="font-normal text-muted">{values.requestType === "APPOINTMENT" ? "(required)" : "(optional)"}</span></legend>
+            <span className="text-micro text-muted">Dhaka time</span>
+          </div>
+          <div className="grid grid-cols-1 gap-cluster sm:grid-cols-2">
+            <label className="flex min-w-0 flex-col gap-1.5">
+              <span className="text-micro font-semibold text-muted">Date</span>
+              <input className={`h-12 ${fieldControlClassName}`} type="date" min={todayInputValue || undefined} value={values.preferredDate} onChange={(event) => updateValue("preferredDate", event.target.value)} aria-label="Preferred date" required={values.requestType === "APPOINTMENT"} />
+            </label>
+            <label className="flex min-w-0 flex-col gap-1.5">
+              <span className="text-micro font-semibold text-muted">Time</span>
+              <input className={`h-12 ${fieldControlClassName}`} type="time" min="09:00" max="18:00" step="1800" value={values.preferredTime} onChange={(event) => updateValue("preferredTime", event.target.value)} aria-label="Preferred time" required={values.requestType === "APPOINTMENT"} />
+            </label>
+          </div>
+          <p className="text-micro leading-relaxed text-muted">{content.scheduleHelper}</p>
+        </fieldset>
+
+        <label className={fieldLabelClassName}>
+          <span className={fieldLabelTextClassName}>Short message <span className="font-normal text-muted">(optional)</span></span>
+          <textarea className={`min-h-[88px] ${fieldControlClassName} resize-y py-3`} maxLength={500} value={values.message} onChange={(event) => updateValue("message", event.target.value)} placeholder="Tell us what you need help with." />
+        </label>
+      </div>
+
+      <div className="mt-auto pt-section-gap-lg">
+        <div className="hidden" aria-hidden="true"><label>Website<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
+        <label className="flex items-start gap-2.5 text-micro leading-relaxed text-muted">
+          <input className="mt-0.5 size-4 shrink-0 accent-[#35573f]" type="checkbox" checked={consent} onChange={(event) => { setConsent(event.target.checked); setSubmitted(false); setReference(""); setFormError(""); }} disabled={busy} />
+          <span>I agree that Limex may store these details and contact me about this request.</span>
+        </label>
+        <button className="group mt-4 flex h-12 w-full items-center justify-between rounded-[14px] border border-accent bg-accent px-5 text-button font-strong text-white shadow-[0_8px_16px_rgba(222,77,115,0.18)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[#c53f62] hover:bg-[#c53f62] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-3 disabled:cursor-wait disabled:opacity-65" type="submit" disabled={busy} aria-busy={busy}>
+          <span>{busy ? "Sending…" : submitted ? "Request received" : content.submitLabel}</span>
+          <span className="text-icon-action transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden="true">{busy ? "…" : submitted ? "✓" : "↗"}</span>
+        </button>
+        <p className="mt-cluster text-body-xs text-muted/70" aria-live="polite">{submitted ? `${content.submittedNote} Reference: ${reference}` : content.privacyNote}</p>
+      </div>
+    </form>
+  );
+}
+
+export function ContactSection({ content = defaultLandingContent.contact }: { content?: ContactContent }) {
   return (
     <section className="flex min-h-0 flex-col gap-cluster-sm bg-page px-page-gutter pt-section-gap-xl pb-page-gutter lg:grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:gap-cluster-lg lg:rounded-panel lg:px-page-gutter-lg lg:pt-section-gap-xl lg:pb-section-y-lg" id="contact" aria-labelledby="contact-title">
       <div className="flex min-h-0 flex-col items-center text-center lg:min-h-[560px] lg:justify-center lg:py-6">
         <div className="flex w-full max-w-[430px] flex-col items-center">
           <div className="max-w-[400px]">
-          <h2 className="mt-0 max-w-[390px] text-balance font-brand text-section-title-mobile text-ink lg:text-section-title" id="contact-title">{content.title}</h2>
+            <h2 className="mt-0 max-w-[390px] text-balance font-brand text-section-title-mobile text-ink lg:text-section-title" id="contact-title">{content.title}</h2>
             <p className="mt-cluster-lg max-w-[360px] text-body-sm text-muted">{content.description}</p>
           </div>
         </div>
@@ -289,91 +420,64 @@ export function ContactSection({ content = defaultLandingContent.contact }: { co
         </div>
       </div>
 
-      <form className="relative flex min-h-0 flex-col rounded-[24px] border border-[#c8c6be] bg-page p-card-pad-sm shadow-[0_12px_30px_rgba(42,44,39,0.04)] lg:min-h-[560px] lg:p-[32px]" id="contact-form" aria-labelledby="contact-form-title" onSubmit={handleSubmit}>
-        <span className="pointer-events-none absolute left-4 top-0 h-1 w-14 rounded-b-full bg-accent lg:left-8" aria-hidden="true" />
-        <div className="border-b border-[#d3d0c8] pb-section-gap-lg">
-          <p className="text-overline text-accent">{content.formEyebrow}</p>
-          <h3 className="mt-2 font-brand text-subheading text-ink" id="contact-form-title">{content.formTitle}</h3>
-          <p className="mt-cluster-xs text-body-xs text-muted">{content.formDescription}</p>
-        </div>
-
-        <div className="mt-section-gap-lg flex flex-col gap-cluster">
-          <div className="grid grid-cols-1 gap-cluster lg:grid-cols-2">
-            <div className={fieldLabelClassName}>
-              <span className={fieldLabelTextClassName}>Service</span>
-              <ServiceMultiSelect groups={serviceGroups} value={values.services} onChange={(nextValue) => updateValue("services", nextValue)} hasError={Boolean(formError && values.services.length === 0)} helperText={content.serviceHelper} />
-            </div>
-            <label className={fieldLabelClassName}>
-              <span className={fieldLabelTextClassName}>Name</span>
-              <input className={`h-12 ${fieldControlClassName}`} autoComplete="name" value={values.name} onChange={(event) => updateValue("name", event.target.value)} placeholder="Your name" required />
-            </label>
-          </div>
-          <fieldset className="flex min-w-0 flex-col gap-2">
-            <legend className={fieldLabelTextClassName}>How can we help?</legend>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {(["CALLBACK", "APPOINTMENT"] as const).map((type) => (
-                <button
-                  className={`min-h-11 rounded-[12px] border px-3 text-left text-body-xs font-semibold transition-colors ${values.requestType === type ? "border-[#6d806e] bg-[#edf3eb] text-[#294d3f]" : "border-[#c8c6be] bg-page text-[#60635d] hover:border-[#9ca397]"}`.trim()}
-                  type="button"
-                  aria-pressed={values.requestType === type}
-                  onClick={() => updateValue("requestType", type)}
-                  disabled={busy}
-                  key={type}
-                >
-                  {type === "CALLBACK" ? "Request a callback" : "Book an appointment"}
-                </button>
-              ))}
-            </div>
-            <p className="text-micro text-muted">Choose appointment to request a time with our team.</p>
-          </fieldset>
-          <div className="grid grid-cols-1 gap-cluster lg:grid-cols-2">
-            <label className={fieldLabelClassName}>
-              <span className={fieldLabelTextClassName}>Phone / WhatsApp</span>
-              <input className={`h-12 ${fieldControlClassName}`} type="tel" inputMode="tel" autoComplete="tel" value={values.phone} onChange={(event) => updateValue("phone", event.target.value)} placeholder="+880 1XXX XXXXXX" aria-describedby="contact-method-help" />
-            </label>
-            <label className={fieldLabelClassName}>
-              <span className={fieldLabelTextClassName}>Email</span>
-              <input className={`h-12 ${fieldControlClassName}`} type="email" inputMode="email" autoComplete="email" value={values.email} onChange={(event) => updateValue("email", event.target.value)} placeholder="you@example.com" aria-describedby="contact-method-help" />
-            </label>
-          </div>
-          <p className="-mt-1 text-micro text-muted" id="contact-method-help">{content.contactMethodHelper}</p>
-          {formError ? <p className="-mt-1 text-body-xs font-semibold text-accent" role="alert">{formError}</p> : null}
-          <fieldset className="flex min-w-0 flex-col gap-2">
-            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-              <legend className={fieldLabelTextClassName}>Preferred schedule <span className="font-normal text-muted">{values.requestType === "APPOINTMENT" ? "(required)" : "(optional)"}</span></legend>
-              <span className="text-micro text-muted">Dhaka time</span>
-            </div>
-            <div className="grid grid-cols-1 gap-cluster sm:grid-cols-2">
-              <label className="flex min-w-0 flex-col gap-1.5">
-                <span className="text-micro font-semibold text-muted">Date</span>
-                <input className={`h-12 ${fieldControlClassName}`} type="date" min={todayInputValue || undefined} value={values.preferredDate} onChange={(event) => updateValue("preferredDate", event.target.value)} aria-label="Preferred date" required={values.requestType === "APPOINTMENT"} />
-              </label>
-              <label className="flex min-w-0 flex-col gap-1.5">
-                <span className="text-micro font-semibold text-muted">Time</span>
-                <input className={`h-12 ${fieldControlClassName}`} type="time" min="09:00" max="18:00" step="1800" value={values.preferredTime} onChange={(event) => updateValue("preferredTime", event.target.value)} aria-label="Preferred time" required={values.requestType === "APPOINTMENT"} />
-              </label>
-            </div>
-            <p className="text-micro leading-relaxed text-muted">{content.scheduleHelper}</p>
-          </fieldset>
-          <label className={fieldLabelClassName}>
-            <span className={fieldLabelTextClassName}>Short message <span className="font-normal text-muted">(optional)</span></span>
-            <textarea className={`min-h-[88px] ${fieldControlClassName} resize-y py-3`} maxLength={500} value={values.message} onChange={(event) => updateValue("message", event.target.value)} placeholder="Tell us what you need help with." />
-          </label>
-        </div>
-
-        <div className="mt-auto pt-section-gap-lg">
-          <div className="hidden" aria-hidden="true"><label>Website<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
-          <label className="flex items-start gap-2.5 text-micro leading-relaxed text-muted">
-            <input className="mt-0.5 size-4 shrink-0 accent-[#35573f]" type="checkbox" checked={consent} onChange={(event) => { setConsent(event.target.checked); setSubmitted(false); setReference(""); setFormError(""); }} disabled={busy} />
-            <span>I agree that Limex may store these details and contact me about this request.</span>
-          </label>
-          <button className="group mt-4 flex h-12 w-full items-center justify-between rounded-[14px] border border-accent bg-accent px-5 text-button font-strong text-white shadow-[0_8px_16px_rgba(222,77,115,0.18)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[#c53f62] hover:bg-[#c53f62] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-3 disabled:cursor-wait disabled:opacity-65" type="submit" disabled={busy} aria-busy={busy}>
-            <span>{busy ? "Sending…" : submitted ? "Request received" : content.submitLabel}</span>
-            <span className="text-icon-action transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden="true">{busy ? "…" : submitted ? "✓" : "↗"}</span>
-          </button>
-          <p className="mt-cluster text-body-xs text-muted/70" aria-live="polite">{submitted ? `${content.submittedNote} Reference: ${reference}` : content.privacyNote}</p>
-        </div>
-      </form>
+      <ContactForm content={content} />
     </section>
+  );
+}
+
+type ContactModalProps = {
+  articleSlug?: string;
+  buttonClassName?: string;
+  buttonLabel?: string;
+  content?: ContactContent;
+  serviceKey?: string;
+  variant?: "dark" | "light" | "outline" | "white" | "soft" | "ghost" | "ghost-muted";
+};
+
+export function ContactModal({ articleSlug, buttonClassName = "", buttonLabel = "Start a conversation", content = defaultLandingContent.contact, serviceKey, variant = "white" }: ContactModalProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const modalId = useId().replace(/:/g, "");
+  const source: ContactRequestSource | null = articleSlug
+    ? { type: "BLOG", slug: articleSlug, ...(serviceKey ? { service: serviceKey } : {}) }
+    : null;
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    closeButtonRef.current?.focus();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsOpen(false);
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen]);
+
+  return (
+    <>
+      <ActionButton variant={variant} className={buttonClassName} onClick={() => setIsOpen(true)}>{buttonLabel}</ActionButton>
+      {isOpen ? (
+        <div className="fixed inset-0 z-[100]" role="presentation">
+          <button className="absolute inset-0 size-full cursor-default bg-[#14131c]/45 backdrop-blur-[3px]" type="button" aria-label="Close contact form" onClick={() => setIsOpen(false)} />
+          <div className="relative flex min-h-dvh items-start justify-center overflow-y-auto px-3 py-3 sm:items-center sm:p-6">
+            <div className="relative z-10 my-auto max-h-[calc(100dvh-1.5rem)] w-full max-w-[760px] overflow-y-auto rounded-[26px] bg-page shadow-[0_24px_80px_rgba(20,19,28,0.22)]" role="dialog" aria-modal="true" aria-labelledby={`${modalId}-title`}>
+              <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-[#e2ddd4] bg-page/95 px-4 py-4 backdrop-blur sm:px-6">
+                <div>
+                  <p className="text-overline text-accent">LET’S TALK</p>
+                  <h2 className="mt-1 font-brand text-subheading text-ink" id={`${modalId}-title`}>A clear next step starts here.</h2>
+                  <p className="mt-1 text-body-xs text-muted">Share the essentials and our team will guide you from there.</p>
+                </div>
+                <button ref={closeButtonRef} className="grid size-10 shrink-0 place-items-center rounded-full border border-[#d5d0c8] bg-white text-[22px] leading-none text-ink transition-colors hover:border-accent hover:text-accent focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2" type="button" aria-label="Close contact form" onClick={() => setIsOpen(false)}>×</button>
+              </div>
+              <ContactForm content={content} compact formId={`${modalId}-form`} initialService={serviceKey} source={source} />
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </>
   );
 }

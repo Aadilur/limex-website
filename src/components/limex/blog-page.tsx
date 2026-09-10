@@ -2,7 +2,7 @@ import { BlogDetailContent, BlogIndexContent } from "./blog-sections";
 import { pageContentClass, pageLayoutClass, pageShellClass } from "./layout";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
-import type { BlogArticle } from "./blog-data";
+import { getBlogCoverFallbackUrl, type BlogArticle } from "./blog-data";
 import { getPublicBlogIndexServer } from "@/lib/blog-server";
 import type { BlogLocale } from "@/lib/blog-api";
 
@@ -30,6 +30,7 @@ export async function BlogDetailPage({ article, locale = "en" }: { article: Blog
   const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? process.env.PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
   const localizedPath = locale === "bn" && article.contentLocale === "bn" ? "bn/blog" : "blog";
   const canonical = article.canonicalUrl || `${baseUrl}/${localizedPath}/${article.slug}`;
+  const coverUrl = article.coverUrl || getBlogCoverFallbackUrl(article);
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
@@ -40,7 +41,7 @@ export async function BlogDetailPage({ article, locale = "en" }: { article: Blog
     ...(article.updatedAt || article.updatedDate ? { dateModified: article.updatedAt ?? article.updatedDate } : {}),
     author: { "@type": "Person", name: article.author },
     mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
-    ...(article.coverUrl ? { image: [new URL(article.coverUrl, baseUrl).toString()] } : {}),
+    ...(coverUrl ? { image: [new URL(coverUrl, baseUrl).toString()] } : {}),
     publisher: { "@type": "Organization", name: "Limex" },
   };
   const structuredDataJson = JSON.stringify(structuredData).replace(/</g, "\\u003c");

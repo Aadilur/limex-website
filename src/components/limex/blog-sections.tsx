@@ -7,10 +7,12 @@ import {
   blogFilters,
   featuredArticle,
   getRelatedBlogArticles,
+  getBlogCoverFallbackUrl,
   type BlogArticle,
   type BlogContentBlock,
 } from "./blog-data";
 import { getBlogToneClasses } from "./styles";
+import { ContactModal } from "./contact-section";
 import { ActionButton, SearchIcon } from "./ui";
 import { getPublicBlogIndex, type BlogIndexResponse, type BlogLocale } from "@/lib/blog-api";
 import { sanitizeBlogHtml } from "@/lib/blog-content";
@@ -50,19 +52,20 @@ function BlogSearchField({
 
 function BlogCover({ article, variant = "card" }: { article: BlogArticle; variant?: "card" | "featured" | "hero" | "related" | "thumb" }) {
   const tone = getBlogToneClasses(article.coverTone);
+  const coverUrl = article.coverUrl || getBlogCoverFallbackUrl(article);
   const isFeatured = variant === "featured";
   const isHero = variant === "hero";
   const isThumb = variant === "thumb";
   const coverWidthClass = isThumb ? "" : "w-full";
   const coverClass = isFeatured
-    ? "h-[210px] rounded-[16px] sm:h-[250px]"
+    ? "aspect-[2/1] rounded-[16px]"
     : isHero
       ? "aspect-[852/430] rounded-[28px]"
       : isThumb
         ? "size-20 rounded-[16px]"
         : variant === "related"
-          ? "h-[156px] rounded-t-[22px]"
-        : "h-[180px] rounded-t-[22px] lg:h-[200px]";
+          ? "aspect-[852/430] rounded-t-[22px]"
+          : "aspect-[852/430] rounded-t-[22px]";
   const paperClass = isThumb
     ? "left-8 top-[31px] h-[42px] w-[34px] rounded-[8px]"
     : isHero
@@ -71,11 +74,11 @@ function BlogCover({ article, variant = "card" }: { article: BlogArticle; varian
   const lineClass = isThumb ? "left-[7px]" : "left-4";
 
   return (
-    <div className={`relative shrink-0 overflow-hidden ${tone.surface} ${coverWidthClass} ${coverClass}`.trim()} aria-hidden={article.coverUrl ? undefined : true}>
-      {article.coverUrl ? (
+    <div className={`relative shrink-0 overflow-hidden ${tone.surface} ${coverWidthClass} ${coverClass}`.trim()} aria-hidden={coverUrl ? undefined : true}>
+      {coverUrl ? (
         <img
           className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-          src={article.coverUrl}
+          src={coverUrl}
           alt={article.coverAlt || article.title}
           loading={isHero || isFeatured ? "eager" : "lazy"}
           decoding="async"
@@ -99,7 +102,7 @@ function BlogCover({ article, variant = "card" }: { article: BlogArticle; varian
           {!isThumb ? <strong className={`absolute bottom-2 right-7 text-page-title ${tone.text}`.trim()}>{article.coverNumber}</strong> : null}
         </>
       )}
-      {isHero ? <span className={`absolute bottom-7 left-7 text-meta ${tone.text}`.trim()}>ARTICLE COVER</span> : null}
+      {isHero && !coverUrl ? <span className={`absolute bottom-7 left-7 text-meta ${tone.text}`.trim()}>ARTICLE COVER</span> : null}
     </div>
   );
 }
@@ -107,14 +110,15 @@ function BlogCover({ article, variant = "card" }: { article: BlogArticle; varian
 function BlogArticleCard({ article, locale = "en" }: { article: BlogArticle; locale?: BlogLocale }) {
   return (
     <a
-      className="group flex min-h-[400px] flex-col overflow-hidden rounded-card border border-[#e5e0d6] bg-white transition-transform duration-200 hover:-translate-y-1 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3 lg:min-h-[430px]"
+      className="group flex h-full min-h-0 flex-col overflow-hidden rounded-card border border-[#e5e0d6] bg-white transition-transform duration-200 hover:-translate-y-1 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3"
       href={blogHref(article.slug, locale)}
     >
       <BlogCover article={article} />
       <div className="flex min-h-0 flex-1 flex-col items-start gap-cluster-xs overflow-hidden px-card-pad-sm pb-4 pt-cluster lg:gap-cluster-sm lg:px-card-pad lg:pb-5 lg:pt-cluster-lg">
-        <p className="text-overline text-pink">{categoryLabel(article.category)} <span className="px-1">·</span> {article.date}</p>
-        <h3 className="font-brand text-subheading text-ink">{article.title}</h3>
-        <p className="text-body-sm text-muted">{article.summary}</p>
+        <p className="line-clamp-1 text-overline text-pink">{categoryLabel(article.category)} <span className="px-1">·</span> {article.date}</p>
+        <h3 className="line-clamp-2 font-brand text-subheading text-ink">{article.title}</h3>
+        <p className="line-clamp-3 text-body-sm text-muted">{article.summary}</p>
+        {article.relatedServices?.length ? <p className="line-clamp-1 text-micro font-semibold text-[#6d806e]">Related: {article.relatedServices.slice(0, 2).map((service) => service.label).join(" · ")}</p> : null}
         <span className="mt-auto pt-3 text-body-sm font-semibold text-pink transition-transform duration-200 group-hover:translate-x-0.5">Read more <span aria-hidden="true">↗</span></span>
       </div>
     </a>
@@ -124,14 +128,14 @@ function BlogArticleCard({ article, locale = "en" }: { article: BlogArticle; loc
 export function BlogRelatedArticleCard({ article, locale = "en" }: { article: BlogArticle; locale?: BlogLocale }) {
   return (
     <a
-      className="group flex min-h-[320px] flex-col overflow-hidden rounded-card bg-white transition-transform duration-200 hover:-translate-y-1 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3"
+      className="group flex h-full min-h-0 flex-col overflow-hidden rounded-card bg-white transition-transform duration-200 hover:-translate-y-1 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3"
       href={blogHref(article.slug, locale)}
     >
       <BlogCover article={article} variant="related" />
       <div className="flex min-h-0 flex-1 flex-col gap-cluster-xs overflow-hidden px-card-pad pb-3 pt-cluster-lg">
-        <p className="text-overline text-pink">{categoryLabel(article.category)} <span className="px-1">·</span> {article.date}</p>
-        <h3 className="font-brand text-subheading text-ink">{article.title}</h3>
-        <p className="text-body-sm text-muted">{article.summary}</p>
+        <p className="line-clamp-1 text-overline text-pink">{categoryLabel(article.category)} <span className="px-1">·</span> {article.date}</p>
+        <h3 className="line-clamp-2 font-brand text-subheading text-ink">{article.title}</h3>
+        <p className="line-clamp-3 text-body-sm text-muted">{article.summary}</p>
         <span className="mt-auto text-body-xs font-semibold text-pink">Read more <span aria-hidden="true">↗</span></span>
       </div>
     </a>
@@ -307,11 +311,28 @@ function BlogBody({ article }: { article: BlogArticle }) {
   );
 }
 
-function blogBookingHref(article: BlogArticle) {
-  const primaryService = article.relatedServices?.find((service) => service.isPrimary) ?? article.relatedServices?.[0];
-  const params = new URLSearchParams({ from: "blog", article: article.slug });
-  if (primaryService) params.set("service", primaryService.serviceKey);
+function blogServiceHref(article: BlogArticle, service: NonNullable<BlogArticle["relatedServices"]>[number]) {
+  if (service.href !== "#contact") return service.href;
+  const params = new URLSearchParams({ from: "blog", article: article.slug, service: service.serviceKey });
   return `/?${params.toString()}#contact-form`;
+}
+
+function BlogRelatedServices({ article }: { article: BlogArticle }) {
+  if (!article.relatedServices?.length) return null;
+
+  return (
+    <div className="mt-section-gap-lg flex flex-col gap-cluster-sm" aria-label="Related services">
+      <p className="text-meta font-semibold text-pink">RELATED SERVICES</p>
+      <div className="flex flex-wrap gap-2">
+        {article.relatedServices.slice(0, 4).map((service) => (
+          <a className="inline-flex min-h-9 items-center gap-2 rounded-pill border border-[#dfd8cf] bg-white px-3.5 text-body-xs font-semibold text-ink transition-colors hover:border-pink/50 hover:text-pink" href={blogServiceHref(article, service)} key={`${service.serviceKey}-${service.sortOrder}`}>
+            <span>{service.label}</span>
+            <span className="text-pink" aria-hidden="true">↗</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export function BlogDetailContent({ article, relatedArticles, locale = "en" }: { article: BlogArticle; relatedArticles?: BlogArticle[]; locale?: BlogLocale }) {
@@ -362,6 +383,7 @@ export function BlogDetailContent({ article, relatedArticles, locale = "en" }: {
           <article className="min-w-0">
             <BlogCover article={article} variant="hero" />
             {article.coverCaption ? <p className="mt-cluster text-body-xs text-muted">{article.coverCaption}</p> : null}
+            <BlogRelatedServices article={article} />
             {article.intro ? <p className="mt-section-gap-lg text-subheading text-ink">{article.intro}</p> : null}
             {article.atAGlance ? <div className="mt-section-gap-lg flex gap-cluster rounded-panel-mobile border border-[#e5e0d6] bg-white px-card-pad-sm py-card-pad-sm">
               <span className="h-[70px] w-1 shrink-0 rounded-sm bg-pink" aria-hidden="true" />
@@ -376,7 +398,7 @@ export function BlogDetailContent({ article, relatedArticles, locale = "en" }: {
               <p className="mt-cluster-sm max-w-[620px] font-brand text-subheading">Want a clear next step for your business?</p>
               {primaryService ? <p className="mt-cluster-sm max-w-[620px] text-body-sm text-white/65">We can help with {primaryService.label.toLowerCase()} and the next steps around it.</p> : null}
               <div className="mt-cluster-lg flex flex-wrap items-center gap-cluster-sm">
-                <ActionButton href={blogBookingHref(article)} variant="white" className="min-w-[170px]">Book this service</ActionButton>
+                <ContactModal articleSlug={article.slug} buttonClassName="min-w-[170px]" buttonLabel="Book this service" serviceKey={primaryService?.serviceKey} />
                 {primaryService && primaryService.href !== "#contact" ? <a className="text-body-xs font-semibold text-white/75 underline decoration-white/30 underline-offset-4 transition-colors hover:text-white" href={primaryService.href}>View {primaryService.label.toLowerCase()} ↗</a> : null}
               </div>
             </div>
@@ -387,7 +409,7 @@ export function BlogDetailContent({ article, relatedArticles, locale = "en" }: {
               <div className="rounded-card border border-[#e5e0d6] bg-white px-card-pad py-card-pad">
                 <p className="text-meta font-semibold text-pink">WATCH THE TUTORIAL</p>
                 <div className="mt-cluster aspect-video overflow-hidden rounded-[16px] bg-[#f3f1ec]">
-                  <iframe className="size-full" src={`https://www.youtube.com/embed/${encodeURIComponent(article.sidebarVideo.videoId)}`} title={article.sidebarVideo.title} loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+                  <iframe className="size-full" src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(article.sidebarVideo.videoId)}?rel=0&playsinline=1`} title={article.sidebarVideo.title} loading="lazy" referrerPolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
                 </div>
                 <p className="mt-cluster-sm text-body-sm font-semibold text-ink">{article.sidebarVideo.title}</p>
               </div>
@@ -407,7 +429,7 @@ export function BlogDetailContent({ article, relatedArticles, locale = "en" }: {
               <p className="text-meta font-semibold text-[#f5b8c7]">NEED A HAND?</p>
               <h2 className="mt-cluster font-brand text-subheading">Have a question about your next step?</h2>
               <p className="mt-cluster-sm text-body-sm text-soft-muted">Talk to our team before you move forward.</p>
-              <ActionButton href={blogBookingHref(article)} variant="white" className="mt-cluster-lg w-full justify-center" arrow="none">Ask a question</ActionButton>
+              <ContactModal articleSlug={article.slug} buttonClassName="mt-cluster-lg w-full justify-center" buttonLabel="Ask a question" serviceKey={primaryService?.serviceKey} />
             </div>
           </aside>
         </div>

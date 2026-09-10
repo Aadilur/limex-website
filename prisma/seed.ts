@@ -102,6 +102,29 @@ async function seedBlogPosts() {
   }
 }
 
+async function ensureLandingTestVideo() {
+  const landing = await prisma.landingPage.findUnique({ where: { id: "home" } });
+  if (!landing || !landing.content || typeof landing.content !== "object" || Array.isArray(landing.content)) return;
+
+  const content = landing.content as Record<string, unknown>;
+  const testimonials = content.testimonials;
+  if (!testimonials || typeof testimonials !== "object" || Array.isArray(testimonials)) return;
+  const testimonialContent = testimonials as Record<string, unknown>;
+  const items = testimonialContent.items;
+  if (!Array.isArray(items)) return;
+  const defaultFirst = defaultLandingContent.testimonials.items[0];
+  const first = items.find((item): item is Record<string, unknown> => Boolean(item && typeof item === "object" && !Array.isArray(item) && (item as Record<string, unknown>).id === defaultFirst.id));
+  const hasVideo = items.some((item) => Boolean(item && typeof item === "object" && typeof (item as Record<string, unknown>).youtubeUrl === "string" && String((item as Record<string, unknown>).youtubeUrl).trim()));
+
+  // Repair only an untouched seeded landing row. Custom landing content is never overwritten by seed.
+  if (!first || hasVideo || first.title !== defaultFirst.title || first.imageUrl !== defaultFirst.imageUrl) return;
+  const nextItems = items.map((item) => item === first ? { ...item, youtubeUrl: defaultFirst.youtubeUrl } : item);
+  await prisma.landingPage.update({
+    where: { id: "home" },
+    data: { content: { ...content, testimonials: { ...testimonialContent, items: nextItems } } as Prisma.InputJsonValue },
+  });
+}
+
 async function main() {
   const adminUser = await prisma.user.upsert({
     where: { email: "hello@limex.local" },
@@ -166,6 +189,7 @@ async function main() {
       content: defaultLandingContent,
     },
   });
+  await ensureLandingTestVideo();
 
   for (const [sortOrder, template] of [defaultMouTemplate, ...defaultRentalDeedTemplates, ...defaultPartnershipDeed40Templates].entries()) {
     const existing = await prisma.documentTemplate.findUnique({ where: { slug: template.slug } });

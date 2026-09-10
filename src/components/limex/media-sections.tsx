@@ -14,8 +14,18 @@ const blogVisuals: Record<BlogTone, { surface: string; text: string; glow: strin
 };
 
 function getYouTubeVideoId(url: string) {
-  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/);
-  return match?.[1] ?? "";
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace(/^www\./, "").toLowerCase();
+    const candidate = host === "youtu.be"
+      ? parsed.pathname.slice(1).split("/")[0]
+      : parsed.searchParams.get("v")
+        ?? parsed.pathname.match(/\/(?:embed|shorts|live)\/([^/?]+)/)?.[1]
+        ?? "";
+    return /^[\w-]{11}$/.test(candidate) ? candidate : "";
+  } catch {
+    return "";
+  }
 }
 
 export function VideoReelsSection({ content = defaultLandingContent.testimonials }: { content?: TestimonialsContent }) {
@@ -66,23 +76,26 @@ export function VideoReelsSection({ content = defaultLandingContent.testimonials
 
           return (
             <article className={`group relative min-h-[480px] min-w-[min(306px,calc(100vw-56px))] basis-[min(306px,calc(100vw-56px))] snap-start overflow-hidden rounded-3xl border ${selected ? "border-white/90 -translate-y-1" : "border-white/35"} bg-[#293a40] transition-transform duration-200 lg:min-h-[535px] lg:min-w-[306px] lg:basis-[306px] hover:-translate-y-1`.trim()} key={reel.id}>
-              <img className={`absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-[1.04] ${selected ? "scale-[1.04]" : ""}`.trim()} src={reel.imageUrl || (videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : "/figma/reel-1.png")} alt="" />
-              {selected && videoId ? <iframe className="absolute inset-0 z-[5] size-full" src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`} title={reel.title} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen /> : null}
+              <img className={`absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-[1.04] ${selected ? "scale-[1.04]" : ""}`.trim()} src={reel.imageUrl || (videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : "/figma/reel-1.png")} alt="" loading="lazy" decoding="async" />
+              {selected && videoId ? <iframe className="absolute inset-0 z-[5] size-full" src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&playsinline=1`} title={reel.title} loading="lazy" referrerPolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen /> : null}
               <div className="absolute inset-x-0 bottom-0 flex min-h-24 flex-col justify-end gap-1.5 bg-gradient-to-b from-transparent to-[rgba(18,20,33,0.88)] px-5 pb-[18px] pt-[54px] text-[#ffebd7] drop-shadow-[0_1px_12px_rgba(18,20,33,0.32)]">
                 <h3 className="max-w-[250px] text-card-title">{reel.title}</h3>
                 <p className="text-micro">{reel.subtitle}</p>
               </div>
-              <button
-                className="absolute left-1/2 top-1/2 z-10 grid size-[240px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-0 bg-transparent transition-transform duration-200 hover:scale-[1.04] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2"
-                type="button"
-                aria-label={`${selected ? "Pause" : "Play"} ${reel.title}`}
-                aria-pressed={selected}
-                onClick={() => setActiveReel((current) => (current === index ? null : index))}
-              >
-                <img className="absolute inset-0 size-full" src="/figma/play-overlay.svg" alt="" aria-hidden="true" />
-                <span className="relative z-10 size-[58px] rounded-full bg-[rgba(252,251,250,0.96)] shadow-play" aria-hidden="true" />
-                <span className="absolute left-1/2 top-1/2 z-20 h-0 w-0 -translate-y-1/2 translate-x-[-34%] border-y-[12px] border-y-transparent border-l-[18px] border-l-[#17151c]" aria-hidden="true" />
-              </button>
+              {videoId ? (
+                <button
+                  className="absolute left-1/2 top-1/2 z-10 grid size-[144px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-0 bg-transparent transition-transform duration-200 hover:scale-[1.04] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2 sm:size-[176px]"
+                  type="button"
+                  aria-label={`${selected ? "Pause" : "Play"} ${reel.title}`}
+                  aria-pressed={selected}
+                  onClick={() => setActiveReel((current) => (current === index ? null : index))}
+                >
+                  <img className="absolute inset-0 size-full" src="/figma/play-overlay.svg" alt="" aria-hidden="true" />
+                  <span className="relative z-10 grid size-[58px] place-items-center rounded-full bg-[rgba(252,251,250,0.96)] shadow-play" aria-hidden="true">
+                    <span className={`ml-1 h-0 w-0 border-y-[10px] border-y-transparent border-l-[15px] border-l-[#17151c] ${selected ? "ml-0 h-[18px] w-[14px] border-0 border-l-[5px] border-r-[5px] border-solid border-[#17151c]" : ""}`.trim()} />
+                  </span>
+                </button>
+              ) : null}
             </article>
           );
         })}
@@ -95,11 +108,15 @@ function ArticleVisual({ article }: { article: ArticleItem }) {
   const tone = blogVisuals[article.coverTone];
 
   return (
-    <div className={`relative h-[190px] overflow-hidden rounded-t-[22px] ${tone.text} ${tone.surface}`.trim()}>
+    <div className={`relative aspect-[852/430] overflow-hidden rounded-t-[22px] ${tone.text} ${tone.surface}`.trim()}>
+      {article.coverUrl ? <img className="absolute inset-0 size-full object-cover" src={article.coverUrl} alt="" loading="lazy" decoding="async" /> : null}
+      <div className={`pointer-events-none absolute inset-0 ${article.coverUrl ? "bg-gradient-to-t from-[#17151c]/35 via-transparent to-white/10" : ""}`.trim()} aria-hidden="true" />
       <div className={`pointer-events-none absolute -right-14 -top-16 size-48 rounded-full opacity-60 blur-2xl ${tone.glow}`.trim()} aria-hidden="true" />
-      <img className="absolute -right-[116px] -top-[62px] block size-[260px] opacity-60" src="/figma/blog-orbit-a.svg" alt="" aria-hidden="true" />
-      <img className="absolute bottom-[-2px] left-6 block size-[118px] opacity-60" src="/figma/blog-orbit-b.svg" alt="" aria-hidden="true" />
-      <span className={`absolute bottom-5 right-6 font-brand text-section-title opacity-50 ${tone.text}`.trim()} aria-hidden="true">{article.coverNumber}</span>
+      {!article.coverUrl ? <>
+        <img className="absolute -right-[116px] -top-[62px] block size-[260px] opacity-60" src="/figma/blog-orbit-a.svg" alt="" aria-hidden="true" />
+        <img className="absolute bottom-[-2px] left-6 block size-[118px] opacity-60" src="/figma/blog-orbit-b.svg" alt="" aria-hidden="true" />
+      </> : null}
+      <span className={`absolute bottom-5 right-6 font-brand text-section-title opacity-50 ${article.coverUrl ? "text-white" : tone.text}`.trim()} aria-hidden="true">{article.coverNumber}</span>
       {article.media === "video" ? (
         <span className="absolute left-1/2 top-1/2 grid size-[60px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-white/80 bg-white/75 text-body-sm text-ink shadow-[0_10px_24px_rgba(49,42,35,0.08)]" aria-hidden="true">▶</span>
       ) : null}
@@ -120,11 +137,11 @@ export function BlogSection({ content = defaultLandingContent.articles }: { cont
       </div>
       <div className="mt-section-y grid grid-cols-1 gap-cluster-sm lg:mt-section-y-xl lg:grid-cols-3 lg:gap-cluster-lg">
         {content.items.filter((article) => article.isVisible).map((article) => (
-          <article className="group flex min-h-[410px] flex-col overflow-hidden rounded-[26px] border border-[#ded9d0] bg-[#faf9f6] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(49,42,35,0.07)]" key={article.id}>
+          <article className="group flex h-full min-h-0 flex-col overflow-hidden rounded-[26px] border border-[#ded9d0] bg-[#faf9f6] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(49,42,35,0.07)]" key={article.id}>
             <ArticleVisual article={article} />
-            <div className="flex flex-1 flex-col p-card-pad">
+            <div className="flex min-h-0 flex-1 flex-col p-card-pad">
               <p className="text-overline text-[#958b80]">{article.date} <span className="px-cluster-xs">·</span> {article.readTime}</p>
-              <h3 className="mt-cluster-lg font-brand text-subheading text-ink">{article.title}</h3>
+              <h3 className="mt-cluster-lg line-clamp-2 font-brand text-subheading text-ink">{article.title}</h3>
               <p className="mt-cluster-sm line-clamp-2 text-body-xs text-muted">{article.subtitle}</p>
               <a className="mt-auto inline-flex w-max items-center gap-cluster-sm border-b border-[#9d948a] pb-1 pt-section-gap-lg text-meta font-semibold text-ink transition-colors hover:border-ink hover:text-[#5e554d] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3" href={article.href}>
                 Read article <span aria-hidden="true">↗</span>

@@ -4,7 +4,7 @@ import { businessTools, toolHref } from "./business-tools";
 import type { LandingContent, LandingSectionKey } from "./landing-types";
 
 export type { LandingContent, LandingSectionKey } from "./landing-types";
-export { defaultLandingContent } from "./landing-defaults";
+export { defaultLandingContent, landingTestVideoUrl } from "./landing-defaults";
 export { ApiError };
 
 export type LandingAdminSnapshot = {
@@ -56,6 +56,12 @@ export function isLandingSafetyError(error: unknown) {
 }
 
 export function withLandingFallback(content: Partial<LandingContent> | null | undefined): LandingContent {
+  const sourceArticles = content?.articles?.items ?? [];
+  const savedArticles = sourceArticles.map((saved) => {
+    const fallback = defaultLandingContent.articles.items.find((item) => item.id === saved.id || item.slug === saved.slug);
+    if (!fallback || Object.prototype.hasOwnProperty.call(saved, "coverUrl")) return saved;
+    return { ...fallback, ...saved, coverUrl: fallback.coverUrl };
+  });
   const sourceTools = content?.tools?.items ?? [];
   const seen = new Set<string>();
   const savedTools = sourceTools.flatMap((saved) => {
@@ -83,7 +89,7 @@ export function withLandingFallback(content: Partial<LandingContent> | null | un
     testimonials: { ...defaultLandingContent.testimonials, ...(content?.testimonials ?? {}) },
     packages: { ...defaultLandingContent.packages, ...(content?.packages ?? {}) },
     tools: { ...defaultLandingContent.tools, ...(content?.tools ?? {}), items: toolItems },
-    articles: { ...defaultLandingContent.articles, ...(content?.articles ?? {}) },
+    articles: { ...defaultLandingContent.articles, ...(content?.articles ?? {}), ...(savedArticles.length ? { items: savedArticles } : {}) },
     faq: { ...defaultLandingContent.faq, ...(content?.faq ?? {}) },
     contact: { ...defaultLandingContent.contact, ...(content?.contact ?? {}) },
     footer: { ...defaultLandingContent.footer, ...(content?.footer ?? {}) },

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { getPublicAboutReels, getPublicAboutTeam, type AboutReel, type AboutTeamMember } from "@/lib/about-api";
+import { ContactModal } from "./contact-section";
 import { ActionButton, SectionTitle } from "./ui";
 
 const approachPoints = [
@@ -357,9 +358,7 @@ export function AboutContactCta() {
       <div>
         <h2 className="font-brand text-subheading" id="about-contact-title">Let’s make the next step simple.</h2>
       </div>
-      <ActionButton href="/#contact" variant="white" arrow="text" className="min-h-control w-[176px] shrink-0 text-button">
-        Talk to an expert
-      </ActionButton>
+      <ContactModal variant="white" buttonClassName="min-h-control w-[176px] shrink-0 text-button" buttonLabel="Talk to an expert" />
     </section>
   );
 }
