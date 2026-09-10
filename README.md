@@ -73,6 +73,8 @@ npm run prisma:migrate -- --name add_feature
 
 The admin workspace is at `/admin` after signing in. The Enquiries & bookings module collects website contact requests and tool support requests, including appointment intent, preferred Dhaka schedule, contact details, consent, source filters, search and status updates. The Services & menu module manages the four primary mega-menu areas, categories, service URLs, optional sub-links, visibility, and service icons. Menu records live in Prisma; run `npm run prisma:deploy` and `npm run db:seed` after applying the menu migration in a database environment.
 
+The Blog module is available at `/admin/blog`. It stores English and Bangla translations, sanitized visual/HTML content, comma-separated SEO keywords, optional WebP-compressed cover media, YouTube sidebar tutorials, related service links, draft revisions, slug redirects, and publish snapshots. Public pages are `/blog` and `/bn/blog`; booking links from an article preserve the article and selected service in the enquiry context. Saving uses optimistic revision checks and rejects accidental empty title/body updates so a failed or stale fetch cannot overwrite existing content. The public reader falls back to the bundled articles while the API or migration is unavailable.
+
 Public API mutations have endpoint-specific and process-wide rate limits, bounded body sizes, strict plain-text validation, honeypot checks and idempotent submission keys. The in-memory limiter is appropriate for the current single-container runtime; move its buckets to a shared store before scaling the API horizontally.
 
 Set `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and a long random `ADMIN_SESSION_SECRET` in deployment environments. The admin session is an HTTP-only, signed cookie and is shared by the frontend and API through the same gateway origin.
@@ -84,6 +86,8 @@ Set `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and a long random `ADMIN_SESSION_SECRET`
 3. Set DATABASE_URL to the MySQL service connection string, using the format `mysql://USER:PASSWORD@HOST:3306/DATABASE`.
 4. Optionally set CORS_ORIGIN to the public frontend origin. Leave PORT and GATEWAY_PORT unset; Railway supplies PORT automatically.
 5. Deploy. The image runs prisma migrate deploy and then starts all three processes in one container.
+
+The migration `20260910100000_add_blog_cms` creates the blog tables. The production start command runs it before the seed, and the seed inserts the existing bundled articles only when their slugs do not already exist; it does not overwrite editorial work on subsequent deploys. Set `PUBLIC_SITE_URL`/`NEXT_PUBLIC_SITE_URL` to the Railway public URL so canonical metadata, Open Graph URLs and the sitemap use the deployed origin. `BUCKET`, `ENDPOINT`, `ACCESS_KEY_ID` and `SECRET_ACCESS_KEY` enable blog/landing image storage; without them, text publishing still works but image upload is unavailable.
 
 Railway only needs to expose the dynamic PORT. The gateway owns that port and proxies to the internal frontend/backend ports. You do not need two Railway services or two containers for this layout.
 

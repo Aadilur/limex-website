@@ -5,11 +5,23 @@ export type BlogContentBlock =
   | { type: "paragraph"; text: string }
   | { type: "step"; number: string; title: string; text: string };
 
+export type BlogRelatedService = {
+  serviceKey: string;
+  label: string;
+  href: string;
+  isPrimary: boolean;
+  sortOrder: number;
+};
+
 export type BlogArticle = {
+  id?: string;
+  contentLocale?: "en" | "bn";
   slug: string;
   category: string;
   date: string;
+  publishedAt?: string;
   updatedDate?: string;
+  updatedAt?: string;
   readTime: string;
   author: string;
   title: string;
@@ -21,7 +33,18 @@ export type BlogArticle = {
   coverNumber: string;
   media: "image" | "video";
   tags: string[];
-  blocks: BlogContentBlock[];
+  blocks?: BlogContentBlock[];
+  bodyHtml?: string;
+  coverUrl?: string;
+  coverAlt?: string;
+  coverCaption?: string;
+  noIndex?: boolean;
+  canonicalUrl?: string | null;
+  sidebarVideo?: { url: string; videoId: string; title: string } | null;
+  relatedServices?: BlogRelatedService[];
+  seoTitle?: string;
+  seoDescription?: string;
+  isFeatured?: boolean;
 };
 
 const businessSetupBlocks: BlogContentBlock[] = [

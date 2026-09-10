@@ -6,8 +6,10 @@ import { env } from "../../config/env.js";
 
 export const MAX_TEAM_IMAGE_BYTES = 5 * 1024 * 1024;
 export const MAX_LANDING_LOGO_BYTES = 5 * 1024 * 1024;
+export const MAX_BLOG_IMAGE_BYTES = 5 * 1024 * 1024;
 export const SIGNED_IMAGE_TTL_SECONDS = 60 * 60;
 export const LANDING_LOGO_CACHE_CONTROL = "public, max-age=31536000, immutable";
+export const BLOG_MEDIA_CACHE_CONTROL = "public, max-age=31536000, immutable";
 
 export const teamImageTypes = {
   "image/jpeg": ".jpg",
@@ -19,6 +21,8 @@ export type TeamImageContentType = keyof typeof teamImageTypes;
 
 export const landingLogoTypes = teamImageTypes;
 export type LandingLogoContentType = keyof typeof landingLogoTypes;
+export const blogImageTypes = teamImageTypes;
+export type BlogImageContentType = keyof typeof blogImageTypes;
 
 export type ImageUpload = {
   body: Buffer;
@@ -69,6 +73,10 @@ export function isSupportedLandingLogoType(value: string): value is LandingLogoC
   return Object.prototype.hasOwnProperty.call(landingLogoTypes, value);
 }
 
+export function isSupportedBlogImageType(value: string): value is BlogImageContentType {
+  return Object.prototype.hasOwnProperty.call(blogImageTypes, value);
+}
+
 export function createTeamImageKey(contentType: TeamImageContentType) {
   return `about/team/${randomUUID()}${teamImageTypes[contentType]}`;
 }
@@ -79,6 +87,10 @@ export function createLandingLogoKey(asset: string) {
 
 export function createLandingLogoAsset(hash: string, contentType: LandingLogoContentType) {
   return `${hash}${landingLogoTypes[contentType]}`;
+}
+
+export function createBlogMediaKey(postId: string, hash: string, contentType: BlogImageContentType) {
+  return `blog/${postId}/${hash}${blogImageTypes[contentType]}`;
 }
 
 export async function uploadStoredObject(key: string, image: ImageUpload, options?: { cacheControl?: string }) {

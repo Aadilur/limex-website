@@ -1,31 +1,28 @@
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { BlogDetailPage } from "@/components/limex/blog-page";
-import { allBlogArticles, getBlogArticle } from "@/components/limex/blog-data";
+import { createBlogMetadata } from "@/lib/blog-metadata";
+import { getPublicBlogPostServer } from "@/lib/blog-server";
+
+export const dynamic = "force-dynamic";
 
 type BlogDetailRouteProps = {
   params: Promise<{ slug: string }>;
 };
 
-export function generateStaticParams() {
-  return allBlogArticles.map((article) => ({ slug: article.slug }));
-}
-
-export async function generateMetadata({ params }: BlogDetailRouteProps): Promise<Metadata> {
+export async function generateMetadata({ params }: BlogDetailRouteProps) {
   const { slug } = await params;
-  const article = getBlogArticle(slug);
-
-  return article
-    ? { title: `${article.title} | Limex`, description: article.summary }
-    : { title: "Article not found | Limex" };
+  const result = await getPublicBlogPostServer(slug);
+  const article = result?.article;
+  return createBlogMetadata(article, slug);
 }
 
 export default async function BlogDetailRoute({ params }: BlogDetailRouteProps) {
   const { slug } = await params;
-  const article = getBlogArticle(slug);
+  const result = await getPublicBlogPostServer(slug);
 
-  if (!article) notFound();
+  if (!result) notFound();
+  if (result.redirectTo && result.redirectTo !== slug) redirect(`/blog/${result.redirectTo}`);
 
-  return <BlogDetailPage article={article} />;
+  return <BlogDetailPage article={result.article} />;
 }

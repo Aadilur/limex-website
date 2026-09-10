@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ChangeEvent } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 
 import {
   blogArticles,
@@ -12,9 +12,15 @@ import {
 } from "./blog-data";
 import { getBlogToneClasses } from "./styles";
 import { ActionButton, SearchIcon } from "./ui";
+import { getPublicBlogIndex, type BlogIndexResponse, type BlogLocale } from "@/lib/blog-api";
+import { sanitizeBlogHtml } from "@/lib/blog-content";
 
 function categoryLabel(category: string) {
   return category.toUpperCase();
+}
+
+function blogHref(slug: string, locale: BlogLocale = "en") {
+  return locale === "bn" ? `/bn/blog/${slug}` : `/blog/${slug}`;
 }
 
 function BlogSearchField({
@@ -51,7 +57,7 @@ function BlogCover({ article, variant = "card" }: { article: BlogArticle; varian
   const coverClass = isFeatured
     ? "h-[210px] rounded-[16px] sm:h-[250px]"
     : isHero
-      ? "aspect-[852/430] min-h-[260px] rounded-[28px]"
+      ? "aspect-[852/430] rounded-[28px]"
       : isThumb
         ? "size-20 rounded-[16px]"
         : variant === "related"
@@ -65,8 +71,16 @@ function BlogCover({ article, variant = "card" }: { article: BlogArticle; varian
   const lineClass = isThumb ? "left-[7px]" : "left-4";
 
   return (
-    <div className={`relative shrink-0 overflow-hidden ${tone.surface} ${coverWidthClass} ${coverClass}`.trim()} aria-hidden="true">
-      {isFeatured ? (
+    <div className={`relative shrink-0 overflow-hidden ${tone.surface} ${coverWidthClass} ${coverClass}`.trim()} aria-hidden={article.coverUrl ? undefined : true}>
+      {article.coverUrl ? (
+        <img
+          className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+          src={article.coverUrl}
+          alt={article.coverAlt || article.title}
+          loading={isHero || isFeatured ? "eager" : "lazy"}
+          decoding="async"
+        />
+      ) : isFeatured ? (
         <div className="absolute inset-0 flex flex-col items-center justify-center px-5 text-center">
           <strong className={`text-overline ${tone.text}`.trim()}>IMAGE PLACEHOLDER</strong>
           <span className="mt-cluster-sm text-body-sm text-muted">{article.coverNote}</span>
@@ -90,11 +104,11 @@ function BlogCover({ article, variant = "card" }: { article: BlogArticle; varian
   );
 }
 
-function BlogArticleCard({ article }: { article: BlogArticle }) {
+function BlogArticleCard({ article, locale = "en" }: { article: BlogArticle; locale?: BlogLocale }) {
   return (
     <a
       className="group flex min-h-[400px] flex-col overflow-hidden rounded-card border border-[#e5e0d6] bg-white transition-transform duration-200 hover:-translate-y-1 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3 lg:min-h-[430px]"
-      href={`/blog/${article.slug}`}
+      href={blogHref(article.slug, locale)}
     >
       <BlogCover article={article} />
       <div className="flex min-h-0 flex-1 flex-col items-start gap-cluster-xs overflow-hidden px-card-pad-sm pb-4 pt-cluster lg:gap-cluster-sm lg:px-card-pad lg:pb-5 lg:pt-cluster-lg">
@@ -107,11 +121,11 @@ function BlogArticleCard({ article }: { article: BlogArticle }) {
   );
 }
 
-export function BlogRelatedArticleCard({ article }: { article: BlogArticle }) {
+export function BlogRelatedArticleCard({ article, locale = "en" }: { article: BlogArticle; locale?: BlogLocale }) {
   return (
     <a
       className="group flex min-h-[320px] flex-col overflow-hidden rounded-card bg-white transition-transform duration-200 hover:-translate-y-1 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3"
-      href={`/blog/${article.slug}`}
+      href={blogHref(article.slug, locale)}
     >
       <BlogCover article={article} variant="related" />
       <div className="flex min-h-0 flex-1 flex-col gap-cluster-xs overflow-hidden px-card-pad pb-3 pt-cluster-lg">
@@ -124,11 +138,11 @@ export function BlogRelatedArticleCard({ article }: { article: BlogArticle }) {
   );
 }
 
-function BlogSidebarArticleItem({ article }: { article: BlogArticle }) {
+function BlogSidebarArticleItem({ article, locale = "en" }: { article: BlogArticle; locale?: BlogLocale }) {
   return (
     <a
       className="group flex min-h-[92px] items-start gap-3 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3"
-      href={`/blog/${article.slug}`}
+      href={blogHref(article.slug, locale)}
     >
       <BlogCover article={article} variant="thumb" />
       <span className="flex min-w-0 flex-col gap-1 overflow-hidden">
@@ -139,17 +153,41 @@ function BlogSidebarArticleItem({ article }: { article: BlogArticle }) {
   );
 }
 
-export function BlogIndexContent() {
+export function BlogIndexContent({ initialData, locale = "en" }: { initialData?: BlogIndexResponse; locale?: BlogLocale }) {
+  const initialFeatured = initialData?.featured ?? (initialData?.fallback === false ? null : featuredArticle);
+  const initialArticles = initialData?.items ?? blogArticles;
+  const initialCategories = initialData?.categories ?? blogFilters.filter((filter) => filter.value !== "all").map((filter) => filter.value);
   const [query, setQuery] = useState("");
-  const [activeFilter, setActiveFilter] = useState<(typeof blogFilters)[number]["value"]>("all");
+  const [activeFilter, setActiveFilter] = useState("all");
+  const [featured, setFeatured] = useState(initialFeatured);
+  const [articles, setArticles] = useState(initialArticles);
+  const [categories, setCategories] = useState(initialCategories);
+  const filters = useMemo(() => [
+    { label: "All posts", value: "all" },
+    ...categories.map((category) => ({ label: category, value: category })),
+  ], [categories]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void getPublicBlogIndex({ locale })
+      .then((nextData) => {
+        if (cancelled) return;
+        setFeatured(nextData.featured ?? (nextData.fallback ? initialFeatured : null));
+        setArticles(nextData.items);
+        setCategories(nextData.categories);
+      })
+      .catch(() => undefined);
+    return () => { cancelled = true; };
+  }, [initialFeatured, locale]);
+
   const normalizedQuery = query.trim().toLowerCase();
   const visibleArticles = useMemo(
-    () => blogArticles.filter((article) => {
+    () => articles.filter((article) => {
       const matchesFilter = activeFilter === "all" || article.category === activeFilter;
       const searchableText = [article.title, article.summary, article.category, ...article.tags].join(" ").toLowerCase();
       return matchesFilter && (!normalizedQuery || searchableText.includes(normalizedQuery));
     }),
-    [activeFilter, normalizedQuery],
+    [activeFilter, articles, normalizedQuery],
   );
 
   return (
@@ -164,33 +202,36 @@ export function BlogIndexContent() {
             <p className="mt-cluster text-body-sm font-text text-ink">New guides added every week</p>
           </div>
           <div className="w-full rounded-nav bg-white p-card-pad-sm lg:max-w-[440px] lg:p-card-pad">
-            <p className="mb-cluster text-label text-pink">SEARCH THE JOURNAL</p>
+            <div className="mb-cluster flex items-center justify-between gap-3">
+              <p className="text-label text-pink">SEARCH THE JOURNAL</p>
+              <a className="shrink-0 text-body-xs font-semibold text-pink hover:text-ink" href={locale === "bn" ? "/blog" : "/bn/blog"}>{locale === "bn" ? "English" : "বাংলা"}</a>
+            </div>
             <BlogSearchField id="blog-hero-search" value={query} onChange={(event) => setQuery(event.target.value)} />
           </div>
         </div>
       </section>
 
-      <section className="bg-page px-page-gutter py-section-y lg:px-page-gutter-lg lg:py-10" aria-labelledby="featured-guide-title">
+      {featured ? <section className="bg-page px-page-gutter py-section-y lg:px-page-gutter-lg lg:py-10" aria-labelledby="featured-guide-title">
         <div className="flex items-center justify-between gap-5">
           <h2 className="font-brand text-section-title text-ink" id="featured-guide-title">Featured guide</h2>
           <a className="shrink-0 whitespace-nowrap text-right text-body-sm font-semibold text-pink transition-colors hover:text-ink" href="#latest">View all posts <span aria-hidden="true">↗</span></a>
         </div>
         <a
           className="group mt-6 grid gap-6 rounded-[22px] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3 lg:grid-cols-[minmax(0,500px)_minmax(0,1fr)] lg:items-center lg:gap-8"
-          href={`/blog/${featuredArticle.slug}`}
+          href={blogHref(featured.slug, locale)}
         >
-          <BlogCover article={featuredArticle} variant="featured" />
+          <BlogCover article={featured} variant="featured" />
           <div className="flex min-w-0 flex-col gap-3">
-            <p className="text-meta font-semibold text-pink">{categoryLabel(featuredArticle.category)} <span className="px-1">·</span> {featuredArticle.readTime}</p>
-            <h2 className="font-brand text-section-title text-ink">{featuredArticle.title}</h2>
-            <p className="max-w-[630px] text-body-lg text-muted">{featuredArticle.summary}</p>
+            <p className="text-meta font-semibold text-pink">{categoryLabel(featured.category)} <span className="px-1">·</span> {featured.readTime}</p>
+            <h2 className="font-brand text-section-title text-ink">{featured.title}</h2>
+            <p className="max-w-[630px] text-body-lg text-muted">{featured.summary}</p>
             <div className="mt-cluster-sm flex flex-wrap items-center justify-between gap-cluster-sm text-body-sm">
-              <span className="text-muted">{featuredArticle.date} <span className="px-1">·</span> By {featuredArticle.author}</span>
+              <span className="text-muted">{featured.date} <span className="px-1">·</span> By {featured.author}</span>
               <span className="font-semibold text-pink transition-transform duration-200 group-hover:translate-x-0.5">Read the guide <span aria-hidden="true">↗</span></span>
             </div>
           </div>
         </a>
-      </section>
+      </section> : null}
 
       <section className="bg-page px-page-gutter py-section-y lg:px-page-gutter-lg lg:py-10" id="latest" aria-labelledby="latest-journal-title">
         <div className="flex flex-col gap-section-gap lg:flex-row lg:items-start lg:justify-between lg:gap-section-gap-lg">
@@ -203,7 +244,7 @@ export function BlogIndexContent() {
           </div>
         </div>
         <div className="mt-6 flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="group" aria-label="Filter blog posts">
-          {blogFilters.map((filter) => {
+          {filters.map((filter) => {
             const active = activeFilter === filter.value;
             return (
               <button
@@ -221,7 +262,7 @@ export function BlogIndexContent() {
         <p className="mt-section-gap-lg text-footer font-text text-muted" aria-live="polite">Showing {visibleArticles.length} {visibleArticles.length === 1 ? "guide" : "guides"}</p>
         {visibleArticles.length ? (
           <div className="mt-4 grid grid-cols-1 gap-5 lg:grid-cols-3 lg:gap-8">
-            {visibleArticles.map((article) => <BlogArticleCard article={article} key={article.slug} />)}
+            {visibleArticles.map((article) => <BlogArticleCard article={article} locale={locale} key={article.slug} />)}
           </div>
         ) : (
           <div className="mt-section-gap-lg rounded-card border border-[#e5e0d6] bg-white px-card-pad py-10 text-center">
@@ -249,9 +290,34 @@ function BlogContentBlockView({ block }: { block: BlogContentBlock }) {
   );
 }
 
-export function BlogDetailContent({ article }: { article: BlogArticle }) {
+function BlogBody({ article }: { article: BlogArticle }) {
+  if (article.bodyHtml) {
+    return (
+      <div
+        className="blog-rich-text mt-5 text-body-lg text-muted [&_a]:font-semibold [&_a]:text-pink [&_a]:underline [&_blockquote]:my-6 [&_blockquote]:border-l-4 [&_blockquote]:border-pink [&_blockquote]:pl-5 [&_blockquote]:italic [&_h2]:mt-8 [&_h2]:font-brand [&_h2]:text-section-title [&_h2]:text-ink [&_h3]:mt-6 [&_h3]:font-brand [&_h3]:text-subheading [&_h3]:text-ink [&_hr]:my-8 [&_img]:my-6 [&_img]:max-h-[520px] [&_img]:w-full [&_img]:rounded-[20px] [&_img]:object-cover [&_li]:ml-5 [&_li]:list-disc [&_li]:py-1 [&_ol_li]:list-decimal [&_p]:mb-4 [&_p:last-child]:mb-0 [&_strong]:font-bold [&_table]:my-6 [&_table]:w-full [&_td]:border [&_td]:border-[#e5e0d6] [&_td]:p-2 [&_th]:border [&_th]:border-[#e5e0d6] [&_th]:bg-[#f7f4ef] [&_th]:p-2"
+        dangerouslySetInnerHTML={{ __html: sanitizeBlogHtml(article.bodyHtml) }}
+      />
+    );
+  }
+
+  return (
+    <div className="mt-5 flex flex-col gap-2">
+      {(article.blocks ?? []).map((block, index) => <BlogContentBlockView block={block} key={`${article.slug}-${block.type}-${index}`} />)}
+    </div>
+  );
+}
+
+function blogBookingHref(article: BlogArticle) {
+  const primaryService = article.relatedServices?.find((service) => service.isPrimary) ?? article.relatedServices?.[0];
+  const params = new URLSearchParams({ from: "blog", article: article.slug });
+  if (primaryService) params.set("service", primaryService.serviceKey);
+  return `/?${params.toString()}#contact-form`;
+}
+
+export function BlogDetailContent({ article, relatedArticles, locale = "en" }: { article: BlogArticle; relatedArticles?: BlogArticle[]; locale?: BlogLocale }) {
   const [shareState, setShareState] = useState<"idle" | "copied">("idle");
-  const relatedArticles = getRelatedBlogArticles(article.slug, 3);
+  const visibleRelatedArticles = relatedArticles ?? getRelatedBlogArticles(article.slug, 3).map((item) => ({ ...item, id: item.id ?? item.slug }));
+  const primaryService = article.relatedServices?.find((service) => service.isPrimary) ?? article.relatedServices?.[0];
 
   const handleShare = async () => {
     try {
@@ -272,7 +338,10 @@ export function BlogDetailContent({ article }: { article: BlogArticle }) {
       <section className="bg-page px-page-gutter pb-section-y lg:px-page-gutter-lg lg:pb-10" aria-labelledby="article-title">
         <div className="flex flex-col items-start gap-cluster-sm text-footer font-text text-muted sm:flex-row sm:items-center sm:justify-between sm:gap-cluster-lg">
           <p>Home <span className="px-1">/</span> Blog <span className="px-1">/</span> {article.category}</p>
-          <a className="shrink-0 text-body-xs font-semibold text-pink hover:text-ink" href="/blog">← Back to all posts</a>
+          <div className="flex flex-wrap items-center gap-3">
+            <a className="shrink-0 text-body-xs font-semibold text-pink hover:text-ink" href={locale === "bn" ? "/bn/blog" : "/blog"}>← Back to all posts</a>
+            <a className="shrink-0 text-body-xs font-semibold text-pink hover:text-ink" href={locale === "bn" ? "/blog" : "/bn/blog"}>{locale === "bn" ? "English" : "বাংলা"}</a>
+          </div>
         </div>
         <div className="mt-section-gap-xl max-w-[960px]">
           <p className="text-meta font-semibold text-pink">{categoryLabel(article.category)} <span className="px-1">·</span> {article.readTime}</p>
@@ -292,59 +361,71 @@ export function BlogDetailContent({ article }: { article: BlogArticle }) {
         <div className="mt-section-gap-lg grid gap-section-gap lg:grid-cols-[minmax(0,820px)_336px] lg:gap-section-gap-lg">
           <article className="min-w-0">
             <BlogCover article={article} variant="hero" />
-            <p className="mt-section-gap-lg text-subheading text-ink">{article.intro}</p>
-            <div className="mt-section-gap-lg flex gap-cluster rounded-panel-mobile border border-[#e5e0d6] bg-white px-card-pad-sm py-card-pad-sm">
+            {article.coverCaption ? <p className="mt-cluster text-body-xs text-muted">{article.coverCaption}</p> : null}
+            {article.intro ? <p className="mt-section-gap-lg text-subheading text-ink">{article.intro}</p> : null}
+            {article.atAGlance ? <div className="mt-section-gap-lg flex gap-cluster rounded-panel-mobile border border-[#e5e0d6] bg-white px-card-pad-sm py-card-pad-sm">
               <span className="h-[70px] w-1 shrink-0 rounded-sm bg-pink" aria-hidden="true" />
               <div>
                 <p className="text-meta font-semibold text-pink">AT A GLANCE</p>
                 <p className="mt-cluster-sm text-body-sm font-text text-ink">{article.atAGlance}</p>
               </div>
-            </div>
-            <div className="mt-5 flex flex-col gap-2">
-              {article.blocks.map((block, index) => <BlogContentBlockView block={block} key={`${article.slug}-${block.type}-${index}`} />)}
-            </div>
+            </div> : null}
+            <BlogBody article={article} />
             <div className="mt-section-y rounded-card bg-navy px-card-pad py-card-pad text-white">
               <p className="text-meta font-semibold text-[#f5b8c7]">GET SUPPORT</p>
               <p className="mt-cluster-sm max-w-[620px] font-brand text-subheading">Want a clear next step for your business?</p>
-              <ActionButton href="/#contact" variant="white" className="mt-cluster-lg min-w-[170px]">Talk to an advisor</ActionButton>
+              {primaryService ? <p className="mt-cluster-sm max-w-[620px] text-body-sm text-white/65">We can help with {primaryService.label.toLowerCase()} and the next steps around it.</p> : null}
+              <div className="mt-cluster-lg flex flex-wrap items-center gap-cluster-sm">
+                <ActionButton href={blogBookingHref(article)} variant="white" className="min-w-[170px]">Book this service</ActionButton>
+                {primaryService && primaryService.href !== "#contact" ? <a className="text-body-xs font-semibold text-white/75 underline decoration-white/30 underline-offset-4 transition-colors hover:text-white" href={primaryService.href}>View {primaryService.label.toLowerCase()} ↗</a> : null}
+              </div>
             </div>
           </article>
 
           <aside className="flex min-w-0 flex-col gap-section-gap" aria-label="More from the journal">
-            <div className="rounded-card border border-[#e5e0d6] bg-white px-card-pad py-card-pad">
+            {article.sidebarVideo?.videoId ? (
+              <div className="rounded-card border border-[#e5e0d6] bg-white px-card-pad py-card-pad">
+                <p className="text-meta font-semibold text-pink">WATCH THE TUTORIAL</p>
+                <div className="mt-cluster aspect-video overflow-hidden rounded-[16px] bg-[#f3f1ec]">
+                  <iframe className="size-full" src={`https://www.youtube.com/embed/${encodeURIComponent(article.sidebarVideo.videoId)}`} title={article.sidebarVideo.title} loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+                </div>
+                <p className="mt-cluster-sm text-body-sm font-semibold text-ink">{article.sidebarVideo.title}</p>
+              </div>
+            ) : null}
+            {visibleRelatedArticles.length ? <div className="rounded-card border border-[#e5e0d6] bg-white px-card-pad py-card-pad">
               <h2 className="text-meta font-semibold text-pink">MORE FROM THE JOURNAL</h2>
               <div className="mt-section-gap-lg flex flex-col gap-cluster">
-                {relatedArticles.map((relatedArticle, index) => (
+                {visibleRelatedArticles.map((relatedArticle, index) => (
                   <div key={relatedArticle.slug}>
                     {index ? <div className="mb-4 h-px bg-[#e5e3e5]" /> : null}
-                    <BlogSidebarArticleItem article={relatedArticle} />
+                    <BlogSidebarArticleItem article={relatedArticle} locale={locale} />
                   </div>
                 ))}
               </div>
-            </div>
+            </div> : null}
             <div className="rounded-card bg-navy px-card-pad py-card-pad text-white">
               <p className="text-meta font-semibold text-[#f5b8c7]">NEED A HAND?</p>
               <h2 className="mt-cluster font-brand text-subheading">Have a question about your next step?</h2>
               <p className="mt-cluster-sm text-body-sm text-soft-muted">Talk to our team before you move forward.</p>
-              <ActionButton href="/#contact" variant="white" className="mt-cluster-lg w-full justify-center" arrow="none">Ask a question</ActionButton>
+              <ActionButton href={blogBookingHref(article)} variant="white" className="mt-cluster-lg w-full justify-center" arrow="none">Ask a question</ActionButton>
             </div>
           </aside>
         </div>
       </section>
 
-      <section className="bg-page px-page-gutter py-section-y lg:px-page-gutter-lg lg:py-10" aria-labelledby="more-practical-reads-title">
+      {visibleRelatedArticles.length ? <section className="bg-page px-page-gutter py-section-y lg:px-page-gutter-lg lg:py-10" aria-labelledby="more-practical-reads-title">
         <div className="flex flex-col gap-cluster-sm lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-meta font-semibold text-pink">05 <span className="px-1">/</span> MORE TO READ</p>
             <h2 className="mt-cluster-sm font-brand text-section-title text-ink" id="more-practical-reads-title">More practical reads</h2>
             <p className="mt-cluster-sm text-body text-muted">Keep exploring the journal for your next business decision.</p>
           </div>
-          <a className="text-body-sm font-semibold text-pink hover:text-ink" href="/blog">View all posts <span aria-hidden="true">↗</span></a>
+          <a className="text-body-sm font-semibold text-pink hover:text-ink" href={locale === "bn" ? "/bn/blog" : "/blog"}>View all posts <span aria-hidden="true">↗</span></a>
         </div>
         <div className="mt-section-gap-lg grid grid-cols-1 gap-cluster lg:grid-cols-3 lg:gap-section-gap">
-          {relatedArticles.map((relatedArticle) => <BlogRelatedArticleCard article={relatedArticle} key={relatedArticle.slug} />)}
+          {visibleRelatedArticles.map((relatedArticle) => <BlogRelatedArticleCard article={relatedArticle} locale={locale} key={relatedArticle.slug} />)}
         </div>
-      </section>
+      </section> : null}
     </>
   );
 }

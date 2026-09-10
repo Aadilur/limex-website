@@ -27,6 +27,9 @@ import { userRoutes } from "./modules/users/interface/http/user.routes.js";
 import { prisma } from "./shared/database/prisma.js";
 import { toolsRoutes } from "./modules/tools/tools.routes.js";
 import { templateRoutes } from "./modules/tools/template.routes.js";
+import { BlogService } from "./modules/blog/application/blog.service.js";
+import { PrismaBlogRepository } from "./modules/blog/infrastructure/prisma-blog.repository.js";
+import { createBlogRoutes } from "./modules/blog/interface/http/blog.routes.js";
 import { createRateLimiter } from "./shared/http/rate-limit.js";
 
 export async function buildApp() {
@@ -68,6 +71,7 @@ export async function buildApp() {
   const menuService = new MenuService(new PrismaMenuRepository(prisma));
   const aboutService = new AboutService(new PrismaAboutRepository(prisma), new PrismaAboutReelRepository(prisma));
   const landingService = new LandingService(new PrismaLandingRepository(prisma));
+  const blogService = new BlogService(new PrismaBlogRepository(prisma));
 
   await app.register(healthRoutes, { service: healthService });
   await app.register(userRoutes, { service: userService });
@@ -78,6 +82,7 @@ export async function buildApp() {
   await app.register(landingRoutes, { service: landingService });
   await app.register(toolsRoutes);
   await app.register(templateRoutes);
+  await app.register(createBlogRoutes(blogService));
 
   app.setErrorHandler((error, request, reply) => {
     if (error instanceof ZodError) {

@@ -150,6 +150,7 @@ export function ContactSection({ content = defaultLandingContent.contact }: { co
   const [consent, setConsent] = useState(false);
   const [reference, setReference] = useState("");
   const [todayInputValue, setTodayInputValue] = useState("");
+  const [blogSource, setBlogSource] = useState<{ slug: string; service?: string } | null>(null);
   const submission = useRef<{ key: string; fingerprint: string } | null>(null);
   const serviceGroups = useMemo(() => getServiceGroups(menuNavigation), [menuNavigation]);
 
@@ -207,6 +208,7 @@ export function ContactSection({ content = defaultLandingContent.contact }: { co
       message: values.message,
       consent,
       website: String(data.get("website") ?? ""),
+      ...(blogSource ? { source: { type: "BLOG" as const, slug: blogSource.slug, ...(blogSource.service ? { service: blogSource.service } : {}) } } : {}),
     };
     const fingerprint = JSON.stringify(payload);
     if (!submission.current || submission.current.fingerprint !== fingerprint) submission.current = { key: crypto.randomUUID(), fingerprint };
@@ -229,9 +231,23 @@ export function ContactSection({ content = defaultLandingContent.contact }: { co
     let cancelled = false;
     setTodayInputValue(getTodayInputValue());
 
+    const params = new URLSearchParams(window.location.search);
+    const article = params.get("article");
+    const requestedService = params.get("service");
+    if (params.get("from") === "blog" && article) setBlogSource({ slug: article, ...(requestedService ? { service: requestedService } : {}) });
+    if (params.get("from") === "blog" && requestedService) {
+      const fallbackService = getServiceGroups(navigation).flatMap((group) => group.items).find((item) => item.value.endsWith(`: ${requestedService}`) || item.value === requestedService);
+      if (fallbackService) setValues((current) => ({ ...current, services: [fallbackService.value] }));
+    }
+
     void getPublicMenu()
       .then((managedItems) => {
-        if (!cancelled) setMenuNavigation(managedItems);
+        if (cancelled) return;
+        setMenuNavigation(managedItems);
+        if (params.get("from") === "blog" && requestedService) {
+          const matchingService = getServiceGroups(managedItems).flatMap((group) => group.items).find((item) => item.value.endsWith(`: ${requestedService}`) || item.value === requestedService);
+          if (matchingService) setValues((current) => ({ ...current, services: [matchingService.value] }));
+        }
       })
       .catch(() => {
         // Keep the bundled top-level service list available when the API is unavailable.

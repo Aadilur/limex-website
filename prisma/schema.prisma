@@ -31,6 +31,122 @@ model Post {
   @@index([authorId])
 }
 
+model BlogPost {
+  id                String                  @id @default(cuid())
+  slug              String                  @unique @db.VarChar(180)
+  publishedSlug     String?                 @unique @db.VarChar(180)
+  category          String                  @db.VarChar(100)
+  author            String                  @db.VarChar(120)
+  readTimeMinutes   Int                     @default(6)
+  coverTone         String                  @default("mint") @db.VarChar(20)
+  coverNote         String?                 @db.VarChar(240)
+  coverNumber       String?                 @db.VarChar(20)
+  coverMediaId      String?                 @db.VarChar(191)
+  sidebarVideoUrl   String?                 @db.VarChar(500)
+  sidebarVideoId    String?                 @db.VarChar(64)
+  sidebarVideoTitle String?                 @db.VarChar(240)
+  status            String                  @default("DRAFT") @db.VarChar(16)
+  isFeatured        Boolean                 @default(false)
+  noIndex           Boolean                 @default(false)
+  canonicalUrl      String?                 @db.VarChar(500)
+  sortOrder         Int                     @default(0)
+  revision          Int                     @default(1)
+  publishedRevision Int?
+  publishedSnapshot Json?
+  publishedAt      DateTime?
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  translations      BlogPostTranslation[]
+  media             BlogPostMedia[]
+  services          BlogPostService[]
+  revisions         BlogPostRevision[]
+  redirects         BlogPostRedirect[]     @relation("BlogPostRedirectPost")
+
+  @@index([status, publishedAt])
+  @@index([status, sortOrder])
+  @@index([updatedAt])
+}
+
+model BlogPostTranslation {
+  id              String   @id @default(cuid())
+  postId          String
+  locale          String   @db.VarChar(5)
+  title           String   @db.VarChar(240)
+  subtitle        String   @db.VarChar(500)
+  intro           String   @db.Text
+  atAGlance       String?  @db.Text
+  bodyHtml        String   @db.LongText
+  bodyJson        Json?
+  keywords        Json
+  seoTitle        String?  @db.VarChar(240)
+  seoDescription  String?  @db.VarChar(320)
+  coverAlt       String?  @db.VarChar(240)
+  coverCaption   String?  @db.VarChar(300)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  post            BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, locale])
+  @@index([locale, updatedAt])
+}
+
+model BlogPostMedia {
+  id          String   @id @default(cuid())
+  postId      String
+  kind        String   @default("IMAGE") @db.VarChar(16)
+  objectKey   String   @unique @db.VarChar(500)
+  contentType String   @db.VarChar(80)
+  byteSize    Int
+  width       Int?
+  height      Int?
+  altText     String?  @db.VarChar(240)
+  caption     String?  @db.VarChar(300)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  post        BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId, kind])
+}
+
+model BlogPostService {
+  id         String   @id @default(cuid())
+  postId     String
+  serviceKey String   @db.VarChar(180)
+  label      String   @db.VarChar(180)
+  href       String   @db.VarChar(1000)
+  isPrimary  Boolean  @default(false)
+  sortOrder  Int      @default(0)
+  post       BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, serviceKey])
+  @@index([postId, sortOrder])
+}
+
+model BlogPostRevision {
+  id        String   @id @default(cuid())
+  postId    String
+  version   Int
+  kind      String   @default("DRAFT") @db.VarChar(16)
+  snapshot  Json
+  createdBy String?  @db.VarChar(120)
+  createdAt DateTime @default(now())
+  post      BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, version])
+  @@index([postId, createdAt])
+}
+
+model BlogPostRedirect {
+  id        String   @id @default(cuid())
+  fromSlug  String   @unique @db.VarChar(180)
+  toSlug    String   @db.VarChar(180)
+  postId    String
+  createdAt DateTime @default(now())
+  post      BlogPost @relation("BlogPostRedirectPost", fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([toSlug])
+}
+
 model MenuSection {
   id             String      @id @default(cuid())
   key            String      @unique

@@ -59,6 +59,7 @@ const requestSchema = z.object({
   consent: z.literal(true),
   values: valuesSchema.optional(),
   website: safeText(200).default(""),
+  source: z.object({ type: z.literal("BLOG"), slug: safeText(180), service: safeText(180).optional() }).strict().optional(),
 }).strict().superRefine((input, context) => {
   if (!input.phone && !input.email) context.addIssue({ code: z.ZodIssueCode.custom, path: ["phone"], message: "Add a phone number or email so we know how to reach you." });
   if (Boolean(input.preferredDate) !== Boolean(input.preferredTime)) context.addIssue({ code: z.ZodIssueCode.custom, path: ["preferredDate"], message: "Choose both a date and time, or leave the schedule blank." });
@@ -104,7 +105,7 @@ export async function toolsRoutes(app: FastifyInstance) {
       preferredDate: input.preferredDate ?? null,
       preferredTime: input.preferredTime ?? null,
     };
-    let snapshot: unknown = { type: "general-enquiry", ...requestMeta, services: input.services ?? [] };
+    let snapshot: unknown = { type: "general-enquiry", ...requestMeta, services: input.services ?? [], source: input.source ?? null };
     try {
       if (input.toolSlug !== "contact") {
         const config = await configuration();
