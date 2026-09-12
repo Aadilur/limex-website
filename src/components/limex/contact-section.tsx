@@ -10,7 +10,6 @@ import type { ContactContent } from "@/lib/landing-types";
 
 type ContactValues = {
   services: string[];
-  requestType: "CALLBACK" | "APPOINTMENT";
   name: string;
   phone: string;
   email: string;
@@ -30,7 +29,6 @@ type ServiceGroup = { label: string; items: ServiceOption[] };
 
 const initialValues: ContactValues = {
   services: [],
-  requestType: "CALLBACK",
   name: "",
   phone: "",
   email: "",
@@ -42,10 +40,22 @@ const fieldLabelClassName = "flex min-w-0 flex-col gap-2";
 const fieldLabelTextClassName = "text-button font-semibold text-[#49313a]";
 const fieldControlClassName = "w-full min-w-0 rounded-[14px] border-2 border-[#a4a39b] bg-page px-3.5 text-body-sm leading-normal text-[#172019] shadow-[inset_0_1px_0_rgba(255,255,255,0.55),0_1px_2px_rgba(54,54,49,0.06)] outline-none placeholder:text-[#777872] transition-colors hover:border-[#8f9089] focus:border-accent focus:bg-page focus:ring-4 focus:ring-[#f3d2da]";
 
-function getTodayInputValue() {
-  const today = new Date();
-  const localToday = new Date(today.getTime() - today.getTimezoneOffset() * 60_000);
-  return localToday.toISOString().slice(0, 10);
+function getMinimumDateTimeInputValue() {
+  const minimum = new Date();
+  const minutes = minimum.getMinutes();
+  minimum.setSeconds(0, 0);
+  if (minutes === 0) minimum.setMinutes(0);
+  else if (minutes <= 30) minimum.setMinutes(30);
+  else minimum.setHours(minimum.getHours() + 1, 0, 0, 0);
+
+  if (minimum.getHours() < 9) minimum.setHours(9, 0, 0, 0);
+  if (minimum.getHours() > 18 || (minimum.getHours() === 18 && minimum.getMinutes() > 0)) {
+    minimum.setDate(minimum.getDate() + 1);
+    minimum.setHours(9, 0, 0, 0);
+  }
+
+  const localMinimum = new Date(minimum.getTime() - minimum.getTimezoneOffset() * 60_000);
+  return localMinimum.toISOString().slice(0, 16);
 }
 
 function getServiceGroups(menuNavigation: NavItem[]): ServiceGroup[] {
@@ -171,9 +181,8 @@ export function ContactForm({ content = defaultLandingContent.contact, compact =
   const [submitted, setSubmitted] = useState(false);
   const [formError, setFormError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [consent, setConsent] = useState(false);
   const [reference, setReference] = useState("");
-  const [todayInputValue, setTodayInputValue] = useState("");
+  const [minimumDateTimeValue, setMinimumDateTimeValue] = useState("");
   const [blogSource, setBlogSource] = useState<ContactRequestSource | null>(source);
   const submission = useRef<{ key: string; fingerprint: string } | null>(null);
   const serviceGroups = useMemo(() => getServiceGroups(menuNavigation), [menuNavigation]);
@@ -186,6 +195,14 @@ export function ContactForm({ content = defaultLandingContent.contact, compact =
     setReference("");
     setFormError("");
     setValues((current) => ({ ...current, [field]: value }));
+  };
+
+  const updateSchedule = (value: string) => {
+    const [preferredDate = "", preferredTime = ""] = value.split("T");
+    setSubmitted(false);
+    setReference("");
+    setFormError("");
+    setValues((current) => ({ ...current, preferredDate, preferredTime }));
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -210,22 +227,11 @@ export function ContactForm({ content = defaultLandingContent.contact, compact =
       return;
     }
 
-    if (values.requestType === "APPOINTMENT" && (!values.preferredDate || !values.preferredTime)) {
-      setSubmitted(false);
-      setFormError("Choose a preferred date and time for an appointment request.");
-      return;
-    }
-
-    if (!consent) {
-      setSubmitted(false);
-      setFormError("Please agree to let Limex store these details and contact you.");
-      return;
-    }
-
     const data = new FormData(event.currentTarget);
+    const requestType = values.preferredDate && values.preferredTime ? "APPOINTMENT" : "CALLBACK";
     const payload = {
       toolSlug: "contact",
-      requestType: values.requestType,
+      requestType,
       services: values.services,
       name: values.name,
       phone: values.phone,
@@ -233,7 +239,7 @@ export function ContactForm({ content = defaultLandingContent.contact, compact =
       preferredDate: values.preferredDate,
       preferredTime: values.preferredTime,
       message: values.message,
-      consent,
+      consent: true,
       website: String(data.get("website") ?? ""),
       ...(blogSource ? { source: blogSource } : {}),
     };
@@ -256,7 +262,7 @@ export function ContactForm({ content = defaultLandingContent.contact, compact =
 
   useEffect(() => {
     let cancelled = false;
-    setTodayInputValue(getTodayInputValue());
+    setMinimumDateTimeValue(getMinimumDateTimeInputValue());
 
     const params = new URLSearchParams(window.location.search);
     const article = params.get("article");
@@ -316,25 +322,6 @@ export function ContactForm({ content = defaultLandingContent.contact, compact =
           </label>
         </div>
 
-        <fieldset className="flex min-w-0 flex-col gap-2">
-          <legend className={fieldLabelTextClassName}>How can we help?</legend>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {(["CALLBACK", "APPOINTMENT"] as const).map((type) => (
-              <button
-                className={`min-h-11 rounded-[12px] border px-3 text-left text-body-xs font-semibold transition-colors ${values.requestType === type ? "border-[#6d806e] bg-[#edf3eb] text-[#294d3f]" : "border-[#c8c6be] bg-page text-[#60635d] hover:border-[#9ca397]"}`.trim()}
-                type="button"
-                aria-pressed={values.requestType === type}
-                onClick={() => updateValue("requestType", type)}
-                disabled={busy}
-                key={type}
-              >
-                {type === "CALLBACK" ? "Request a callback" : "Book an appointment"}
-              </button>
-            ))}
-          </div>
-          <p className="text-micro text-muted">Choose appointment to request a time with our team.</p>
-        </fieldset>
-
         <div className="grid grid-cols-1 gap-cluster lg:grid-cols-2">
           <label className={fieldLabelClassName}>
             <span className={fieldLabelTextClassName}>Phone / WhatsApp</span>
@@ -350,19 +337,13 @@ export function ContactForm({ content = defaultLandingContent.contact, compact =
 
         <fieldset className="flex min-w-0 flex-col gap-2">
           <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-            <legend className={fieldLabelTextClassName}>Preferred schedule <span className="font-normal text-muted">{values.requestType === "APPOINTMENT" ? "(required)" : "(optional)"}</span></legend>
-            <span className="text-micro text-muted">Dhaka time</span>
+            <legend className={fieldLabelTextClassName}>Preferred date &amp; time <span className="font-normal text-muted">(optional)</span></legend>
+            <span className="text-micro text-muted">Dhaka time · 30-minute slots</span>
           </div>
-          <div className="grid grid-cols-1 gap-cluster sm:grid-cols-2">
-            <label className="flex min-w-0 flex-col gap-1.5">
-              <span className="text-micro font-semibold text-muted">Date</span>
-              <input className={`h-12 ${fieldControlClassName}`} type="date" min={todayInputValue || undefined} value={values.preferredDate} onChange={(event) => updateValue("preferredDate", event.target.value)} aria-label="Preferred date" required={values.requestType === "APPOINTMENT"} />
-            </label>
-            <label className="flex min-w-0 flex-col gap-1.5">
-              <span className="text-micro font-semibold text-muted">Time</span>
-              <input className={`h-12 ${fieldControlClassName}`} type="time" min="09:00" max="18:00" step="1800" value={values.preferredTime} onChange={(event) => updateValue("preferredTime", event.target.value)} aria-label="Preferred time" required={values.requestType === "APPOINTMENT"} />
-            </label>
-          </div>
+          <label className="relative block">
+            <span className="sr-only">Preferred date and time</span>
+            <input className={`h-12 ${fieldControlClassName}`} type="datetime-local" min={minimumDateTimeValue || undefined} step="1800" value={values.preferredDate && values.preferredTime ? `${values.preferredDate}T${values.preferredTime}` : ""} onChange={(event) => updateSchedule(event.target.value)} aria-label="Preferred date and time" />
+          </label>
           <p className="text-micro leading-relaxed text-muted">{content.scheduleHelper}</p>
         </fieldset>
 
@@ -374,10 +355,6 @@ export function ContactForm({ content = defaultLandingContent.contact, compact =
 
       <div className="mt-auto pt-section-gap-lg">
         <div className="hidden" aria-hidden="true"><label>Website<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
-        <label className="flex items-start gap-2.5 text-micro leading-relaxed text-muted">
-          <input className="mt-0.5 size-4 shrink-0 accent-[#35573f]" type="checkbox" checked={consent} onChange={(event) => { setConsent(event.target.checked); setSubmitted(false); setReference(""); setFormError(""); }} disabled={busy} />
-          <span>I agree that Limex may store these details and contact me about this request.</span>
-        </label>
         <button className="group mt-4 flex h-12 w-full items-center justify-between rounded-[14px] border border-accent bg-accent px-5 text-button font-strong text-white shadow-[0_8px_16px_rgba(222,77,115,0.18)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[#c53f62] hover:bg-[#c53f62] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-3 disabled:cursor-wait disabled:opacity-65" type="submit" disabled={busy} aria-busy={busy}>
           <span>{busy ? "Sending…" : submitted ? "Request received" : content.submitLabel}</span>
           <span className="text-icon-action transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden="true">{busy ? "…" : submitted ? "✓" : "↗"}</span>
