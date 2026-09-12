@@ -251,6 +251,7 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
   const [imageAlt, setImageAlt] = useState("");
   const [panelError, setPanelError] = useState("");
   const initialContent = useRef(value || "");
+  const previousValue = useRef(value || "");
 
   const extensions = useMemo(
     () => [
@@ -289,26 +290,31 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
 
   const editor = useEditor({
     immediatelyRender: false,
-    // Let TipTap refresh its view after transactions; stable editorProps below
-    // prevents that refresh from replacing the browser's active selection.
-    shouldRerenderOnTransaction: true,
+    // The parent already receives every content update. Avoid an additional
+    // TipTap-driven React render for each keypress so the browser selection
+    // remains owned by the same contenteditable node.
+    shouldRerenderOnTransaction: false,
     extensions,
     content: initialContent.current,
     editorProps,
     onUpdate: ({ editor: nextEditor }) => {
       onChange(nextEditor.getHTML(), nextEditor.getJSON());
-      setSelectionVersion((current) => current + 1);
     },
     onSelectionUpdate: () => setSelectionVersion((current) => current + 1),
   });
 
   useEffect(() => {
+    const nextHtml = value || "";
+    const lastPropValue = previousValue.current;
+    previousValue.current = nextHtml;
     if (!editor || sourceMode) return;
     const currentHtml = editor.getHTML();
-    const nextHtml = value || "";
-    if (currentHtml !== nextHtml && !(nextHtml === "" && currentHtml === "<p></p>")) {
-      editor.commands.setContent(nextHtml, false);
-    }
+    if (currentHtml === nextHtml || (nextHtml === "" && currentHtml === "<p></p>")) return;
+    // A local transaction updates the editor before the parent state update
+    // reaches this component. Do not push the stale parent value back into
+    // the editor while it still has focus, or the cursor jumps/resets.
+    if (editor.isFocused && nextHtml === lastPropValue) return;
+    editor.commands.setContent(nextHtml, false);
   }, [editor, sourceMode, value]);
 
   const activeStyle = useMemo<BlockStyle>(() => {
@@ -317,7 +323,7 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
     if (editor.isActive("heading", { level: 3 })) return "heading-3";
     if (editor.isActive("heading", { level: 4 })) return "heading-4";
     return "paragraph";
-  }, [editor, selectionVersion]);
+  }, [editor, selectionVersion, value]);
 
   const bodyText = sourceMode ? value.replace(/<[^>]+>/g, " ") : editor?.getText() || "";
   const wordCount = countWords(bodyText);
