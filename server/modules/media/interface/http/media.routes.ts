@@ -145,6 +145,17 @@ export function mediaRoutes(app: FastifyInstance, options: { service: MediaServi
     }
   });
 
+  app.get("/api/admin/media/assets/:id", async (request, reply) => {
+    if (!requireAdminSession(request, reply)) return;
+    try {
+      const { id } = idSchema.parse(request.params);
+      reply.header("Cache-Control", "no-store");
+      return { data: await options.service.getAssetResponse(id) };
+    } catch (error) {
+      return sendKnownError(error, reply);
+    }
+  });
+
   app.patch("/api/admin/media/assets/:id", async (request, reply) => {
     if (!requireAdminSession(request, reply)) return;
     try {

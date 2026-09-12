@@ -18,6 +18,15 @@ import {
 } from "@/lib/service-api";
 import type { ServiceDetailContent, ServiceMenuTargetType, ServiceProfileInput } from "@/lib/service-types";
 import { businessTools } from "@/lib/business-tools";
+import { compressImageToWebp } from "@/lib/image-compression";
+import {
+  getAdminMedia,
+  getAdminMediaAsset,
+  isUnauthorizedMediaError,
+  uploadMediaAsset,
+  type MediaAsset,
+} from "@/lib/media-api";
+import { RichTextEditor } from "./rich-text-editor";
 import { ServiceIcon } from "@/components/limex/service-icons";
 import type { ServiceIconName } from "@/components/limex/data";
 import { getToneClasses } from "@/components/limex/styles";
@@ -38,11 +47,31 @@ function emptyDetail(): ServiceDetailContent {
     overviewEyebrow: "OVERVIEW",
     overviewTitle: "A practical path forward",
     overviewDescription: "Share the scope of this service and the next step your customer should take.",
+    overviewDescriptionHtml: "",
     contentLabel: "THE LIMEX APPROACH",
     contentTitle: "Make the next step easier to understand.",
     contentDescription: "Add the key guidance, inclusions and expectations for this service.",
+    contentDescriptionHtml: "",
     contentLinkLabel: "Talk to an advisor",
     contentLinkHref: "#service-contact",
+    keyFactsLabel: "Key facts",
+    relatedOptionsLabel: "Related options",
+    toolsEyebrow: "Helpful tools",
+    toolsTitle: "Keep the next step close at hand.",
+    toolsDescription: "Link a calculator or document builder that helps customers move forward.",
+    pricingEyebrow: "Optional / pricing",
+    pricingTitle: "Show the right price for this service",
+    pricingDescription: "Use a starting price, package cards or a custom quote depending on the scope.",
+    mostPopularLabel: "Most popular",
+    faqEyebrow: "Optional / FAQ",
+    faqTitle: "Common questions",
+    faqDescription: "A few clear answers before you choose the next step.",
+    faqSupportLabel: "Still deciding?",
+    faqSupportDescription: "Talk to an advisor when the right path needs a little context.",
+    contactEyebrow: "Ready when you are",
+    contactTitle: "Need help choosing the right option?",
+    contactDescription: "A short conversation is enough to recommend the right path for",
+    contactButtonLabel: "Talk to an advisor",
     benefits: [],
     steps: [],
     facts: [],
@@ -79,6 +108,7 @@ function draftFromService(service: AdminService): ServiceProfileInput & { revisi
     titleBn: service.titleBn,
     descriptionEn: service.descriptionEn,
     descriptionBn: service.descriptionBn,
+    mediaAssetId: service.mediaAssetId,
     detail: cloneDetail(service.detail),
   };
 }
@@ -136,8 +166,155 @@ function StatusPill({ service }: { service: AdminService }) {
   return <span className={`inline-flex min-h-7 items-center rounded-full px-2.5 text-[10px] font-bold uppercase tracking-[0.09em] ${classes}`.trim()}>{label}</span>;
 }
 
-function DetailEditor({ detail, onChange }: { detail: ServiceDetailContent; onChange: (next: ServiceDetailContent) => void }) {
+function SectionDisclosure({ title, count, open = false, children }: { title: string; count?: number; open?: boolean; children: ReactNode }) {
+  return (
+    <details className="group border-b border-[#ebe5dd] last:border-b-0" open={open}>
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-4 text-[13px] font-bold text-[#29252a] [&::-webkit-details-marker]:hidden">
+        <span className="min-w-0 truncate">{title}{typeof count === "number" ? <span className="ml-2 font-medium text-[#9b958c]">{count}</span> : null}</span>
+        <span className="grid size-7 shrink-0 place-items-center rounded-full bg-[#f3f0eb] text-[16px] font-normal text-[#8b857e] transition-transform group-open:rotate-45" aria-hidden="true">+</span>
+      </summary>
+      <div className="pb-5 pt-1">{children}</div>
+    </details>
+  );
+}
+
+function AddButton({ children, onClick }: { children: ReactNode; onClick: () => void }) {
+  return <button className="inline-flex min-h-8 items-center rounded-full px-2.5 text-[11px] font-bold text-[#d63c57] transition-colors hover:bg-[#fff1f3]" type="button" onClick={onClick}>{children}</button>;
+}
+
+function RemoveButton({ label, onClick }: { label: string; onClick: () => void }) {
+  return <button className="grid size-8 shrink-0 place-items-center rounded-full text-[17px] font-normal text-[#b34b60] transition-colors hover:bg-[#fce7ea]" type="button" aria-label={label} onClick={onClick}>×</button>;
+}
+
+function MediaAssetThumb({ asset }: { asset: MediaAsset }) {
+  const [source, setSource] = useState(asset.url);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    setSource(asset.url);
+    setFailed(false);
+  }, [asset.id, asset.url]);
+
+  if (failed) return <span className="grid size-full place-items-center bg-[#f3f1ec] text-[10px] text-[#aaa49b]">No preview</span>;
+  return <img className="size-full object-cover" src={source} alt={asset.altText || asset.displayName} onError={() => {
+    if (source !== asset.publicUrl) {
+      setSource(asset.publicUrl);
+      return;
+    }
+    setFailed(true);
+  }} />;
+}
+
+function MediaPicker({ value, onChange, disabled = false }: { value: string | null | undefined; onChange: (value: string | null) => void; disabled?: boolean }) {
+  const [assets, setAssets] = useState<MediaAsset[]>([]);
+  const [folderId, setFolderId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    void (async () => {
+      try {
+        const root = await getAdminMedia(null);
+        const servicesFolder = root.folders.find((folder) => folder.name.toLowerCase() === "services");
+        if (!servicesFolder) throw new Error("The Services media folder is not available yet.");
+        const library = await getAdminMedia(servicesFolder.id);
+        let nextAssets = library.assets;
+        if (value && !nextAssets.some((asset) => asset.id === value)) {
+          try {
+            const selected = await getAdminMediaAsset(value);
+            nextAssets = [selected, ...nextAssets];
+          } catch {
+            // A deleted or inaccessible asset should not block the rest of the editor.
+          }
+        }
+        if (active) {
+          setFolderId(servicesFolder.id);
+          setAssets(nextAssets);
+          setError("");
+        }
+      } catch (loadError) {
+        if (!active) return;
+        if (isUnauthorizedMediaError(loadError)) {
+          window.location.assign("/admin/login");
+          return;
+        }
+        setError(loadError instanceof Error ? loadError.message : "Service media could not be loaded.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [value]);
+
+  const selectedAsset = assets.find((asset) => asset.id === value) ?? null;
+
+  async function upload(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || !folderId) return;
+    setUploading(true);
+    setError("");
+    try {
+      const compressed = await compressImageToWebp(file);
+      const asset = await uploadMediaAsset(folderId, compressed.file, {
+        displayName: compressed.file.name,
+        width: compressed.width,
+        height: compressed.height,
+      });
+      setAssets((current) => [asset, ...current.filter((candidate) => candidate.id !== asset.id)]);
+      onChange(asset.id);
+    } catch (uploadError) {
+      if (isUnauthorizedMediaError(uploadError)) {
+        window.location.assign("/admin/login");
+        return;
+      }
+      setError(uploadError instanceof Error ? uploadError.message : "The service image could not be uploaded.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div className="border-y border-[#ebe5dd] py-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Service image</p>
+          <p className="mt-1 text-[10px] text-[#aaa49b]">Managed images are compressed, cached and safe to reuse.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="inline-flex min-h-8 cursor-pointer items-center rounded-full bg-[#14131c] px-3 text-[10px] font-bold text-white transition-colors hover:bg-[#e44762]">
+            {uploading ? "Uploading…" : "Upload image"}
+            <input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => void upload(event)} disabled={disabled || uploading || loading} />
+          </label>
+          {value ? <button className="min-h-8 rounded-full px-2.5 text-[10px] font-bold text-[#b34b60] transition-colors hover:bg-[#fff1f3]" type="button" onClick={() => onChange(null)} disabled={disabled}>Remove</button> : null}
+        </div>
+      </div>
+      <div className="mt-3 flex min-w-0 items-center gap-3">
+        <div className="grid size-14 shrink-0 overflow-hidden rounded-[10px] bg-[#f3f1ec]">
+          {selectedAsset ? <MediaAssetThumb asset={selectedAsset} /> : <span className="grid place-items-center text-[10px] text-[#aaa49b]">None</span>}
+        </div>
+        <label className="min-w-0 flex-1">
+          <span className="sr-only">Choose a managed service image</span>
+          <select className={`${fieldClass} mt-0`} value={value ?? ""} disabled={disabled || loading} onChange={(event) => onChange(event.target.value || null)}>
+            <option value="">No managed image</option>
+            {assets.map((asset) => <option value={asset.id} key={asset.id}>{asset.displayName}</option>)}
+          </select>
+        </label>
+      </div>
+      {error ? <p className="mt-2 text-[10px] font-semibold text-[#ad3148]" role="alert">{error}</p> : null}
+      <p className="mt-2 text-[10px] leading-[1.45] text-[#aaa49b]">The published page uses a refreshable <code className="font-mono text-[#77736e]">/api/media/…</code> URL. External media can remain below as a fallback.</p>
+    </div>
+  );
+}
+
+function DetailEditor({ detail, onChange, mediaAssetId, onMediaAssetChange }: { detail: ServiceDetailContent; onChange: (next: ServiceDetailContent) => void; mediaAssetId: string | null | undefined; onMediaAssetChange: (value: string | null) => void }) {
   const update = <K extends keyof ServiceDetailContent>(key: K, value: ServiceDetailContent[K]) => onChange({ ...detail, [key]: value });
+  const updateRichText = (key: "overviewDescriptionHtml" | "contentDescriptionHtml", legacyKey: "overviewDescription" | "contentDescription", html: string) => onChange({ ...detail, [key]: html, [legacyKey]: html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() });
   const addBenefit = () => update("benefits", [...detail.benefits, ""]);
   const addFact = () => update("facts", [...detail.facts, { label: "", value: "" }]);
   const addStep = () => update("steps", [...detail.steps, { title: "", description: "" }]);
@@ -150,140 +327,147 @@ function DetailEditor({ detail, onChange }: { detail: ServiceDetailContent; onCh
   };
 
   return (
-    <div className="space-y-3">
-      <details className="group rounded-[17px] bg-[#faf9f6] px-4 py-3" open>
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[13px] font-bold text-[#29252a] [&::-webkit-details-marker]:hidden">
-          <span>Page introduction</span><span className="text-[18px] font-normal text-[#a59d93] transition-transform group-open:rotate-45">+</span>
-        </summary>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+    <div className="divide-y divide-[#ebe5dd] border-y border-[#ebe5dd]">
+      <SectionDisclosure title="Page introduction" open>
+        <div className="grid gap-4 sm:grid-cols-2">
           <Field label="CTA label" value={detail.ctaLabel} onChange={(event) => update("ctaLabel", event.target.value)} />
           <Field label="Starting price" value={detail.startingPrice} onChange={(event) => update("startingPrice", event.target.value)} />
           <Field label="Delivery time" value={detail.deliveryTime} onChange={(event) => update("deliveryTime", event.target.value)} />
           <Field label="Service mode" value={detail.serviceMode} onChange={(event) => update("serviceMode", event.target.value)} />
-          <Field label="Media title" value={detail.mediaTitle} onChange={(event) => update("mediaTitle", event.target.value)} />
-          <Field label="Media URL" value={detail.mediaUrl} onChange={(event) => update("mediaUrl", event.target.value)} placeholder="/api/... or https://…" />
+          <Field className="sm:col-span-2" label="Media title" value={detail.mediaTitle} onChange={(event) => update("mediaTitle", event.target.value)} />
+          <div className="sm:col-span-2"><MediaPicker value={mediaAssetId} onChange={onMediaAssetChange} disabled={false} /></div>
+          <Field className="sm:col-span-2" label="External media URL (optional fallback)" value={detail.mediaUrl} onChange={(event) => update("mediaUrl", event.target.value)} placeholder="https://…" />
           <TextAreaField className="sm:col-span-2" label="Media description" value={detail.mediaDescription} onChange={(event) => update("mediaDescription", event.target.value)} />
           <Field className="sm:col-span-2" label="Media alt text" value={detail.mediaAlt} onChange={(event) => update("mediaAlt", event.target.value)} placeholder="Describe the image for accessibility" />
         </div>
-      </details>
+      </SectionDisclosure>
 
-      <details className="group rounded-[17px] bg-[#faf9f6] px-4 py-3">
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[13px] font-bold text-[#29252a] [&::-webkit-details-marker]:hidden">
-          <span>Helpful tools <span className="ml-1 text-[11px] font-medium text-[#9b958c]">{selectedTools.length}</span></span><span className="text-[18px] font-normal text-[#a59d93] transition-transform group-open:rotate-45">+</span>
-        </summary>
-        <div className="mt-4">
-          <label className="block min-w-0">
-            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Add a calculator or builder</span>
-            <select className={fieldClass} value="" onChange={(event) => addTool(event.target.value)}>
-              <option value="">Choose a tool…</option>
-              <optgroup label="Calculators">
-                {businessTools.filter((tool) => tool.group === "calculator" && !selectedTools.includes(tool.slug)).map((tool) => <option key={tool.slug} value={tool.slug}>{tool.title}</option>)}
-              </optgroup>
-              <optgroup label="Document builders">
-                {businessTools.filter((tool) => tool.group === "builder" && !selectedTools.includes(tool.slug)).map((tool) => <option key={tool.slug} value={tool.slug}>{tool.title}</option>)}
-              </optgroup>
-            </select>
-          </label>
-          {selectedTools.length ? <div className="mt-3 grid gap-2 sm:grid-cols-2">
-            {selectedTools.map((slug) => {
-              const tool = businessTools.find((candidate) => candidate.slug === slug);
-              if (!tool) return null;
-              return <div className="flex min-w-0 items-center justify-between gap-2 rounded-[12px] bg-white px-3 py-2.5 ring-1 ring-[#e5dfd7]" key={slug}>
-                <span className="min-w-0"><span className="block truncate text-[12px] font-semibold text-[#3f3b37]">{tool.title}</span><span className="mt-0.5 block text-[10px] uppercase tracking-[0.08em] text-[#a19a91]">{tool.group === "calculator" ? "Calculator" : "Document builder"}</span></span>
-                <button className="grid size-8 shrink-0 place-items-center rounded-full text-[17px] text-[#b34b60] hover:bg-[#fce7ea]" type="button" aria-label={`Remove ${tool.title}`} onClick={() => update("tools", selectedTools.filter((candidate) => candidate !== slug))}>×</button>
-              </div>;
-            })}
-          </div> : <p className="mt-2 text-[11px] text-[#9b958c]">No tools attached. This section stays hidden on the public page until you add one.</p>}
-        </div>
-      </details>
-
-      <details className="group rounded-[17px] bg-[#faf9f6] px-4 py-3" open>
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[13px] font-bold text-[#29252a] [&::-webkit-details-marker]:hidden">
-          <span>Overview and approach</span><span className="text-[18px] font-normal text-[#a59d93] transition-transform group-open:rotate-45">+</span>
-        </summary>
-        <div className="mt-4 grid gap-4">
-          <Field label="Overview eyebrow" value={detail.overviewEyebrow} onChange={(event) => update("overviewEyebrow", event.target.value)} />
-          <Field label="Overview title" value={detail.overviewTitle} onChange={(event) => update("overviewTitle", event.target.value)} />
-          <TextAreaField label="Overview description" value={detail.overviewDescription} onChange={(event) => update("overviewDescription", event.target.value)} />
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Approach label" value={detail.contentLabel} onChange={(event) => update("contentLabel", event.target.value)} />
-            <Field label="Approach title" value={detail.contentTitle} onChange={(event) => update("contentTitle", event.target.value)} />
-          </div>
-          <TextAreaField label="Approach description" value={detail.contentDescription} onChange={(event) => update("contentDescription", event.target.value)} />
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Approach link label" value={detail.contentLinkLabel} onChange={(event) => update("contentLinkLabel", event.target.value)} />
-            <Field label="Approach link URL" value={detail.contentLinkHref} onChange={(event) => update("contentLinkHref", event.target.value)} placeholder="#service-contact" />
-          </div>
-        </div>
-      </details>
-
-      <details className="group rounded-[17px] bg-[#faf9f6] px-4 py-3">
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[13px] font-bold text-[#29252a] [&::-webkit-details-marker]:hidden">
-          <span>What customers receive <span className="ml-1 text-[11px] font-medium text-[#9b958c]">{detail.benefits.length}</span></span><span className="text-[18px] font-normal text-[#a59d93] transition-transform group-open:rotate-45">+</span>
-        </summary>
-        <div className="mt-4 space-y-2">
-          {detail.benefits.map((benefit, index) => <div className="flex items-center gap-2" key={`benefit-${index}`}><input className={fieldClass.replace("mt-2 ", "mt-0 ")} value={benefit} placeholder="A clear customer outcome" onChange={(event) => update("benefits", detail.benefits.map((item, itemIndex) => itemIndex === index ? event.target.value : item))} /><button className="grid size-10 shrink-0 place-items-center rounded-full text-[18px] text-[#b34b60] hover:bg-[#fce7ea]" type="button" aria-label="Remove benefit" onClick={() => update("benefits", detail.benefits.filter((_, itemIndex) => itemIndex !== index))}>×</button></div>)}
-          <button className="min-h-9 rounded-full bg-white px-3.5 text-[11px] font-bold text-[#5a554f] ring-1 ring-[#ddd7ce] hover:ring-[#aaa197]" type="button" onClick={addBenefit}>+ Add benefit</button>
-        </div>
-      </details>
-
-      <details className="group rounded-[17px] bg-[#faf9f6] px-4 py-3">
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[13px] font-bold text-[#29252a] [&::-webkit-details-marker]:hidden">
-          <span>Steps and key facts <span className="ml-1 text-[11px] font-medium text-[#9b958c]">{detail.steps.length + detail.facts.length}</span></span><span className="text-[18px] font-normal text-[#a59d93] transition-transform group-open:rotate-45">+</span>
-        </summary>
-        <div className="mt-4 space-y-5">
+      <SectionDisclosure title="Overview / guided filing" open>
+        <div className="grid gap-4">
+          <Field label="Section eyebrow" value={detail.overviewEyebrow} onChange={(event) => update("overviewEyebrow", event.target.value)} />
+          <Field label="Section title" value={detail.overviewTitle} onChange={(event) => update("overviewTitle", event.target.value)} />
           <div>
-            <div className="flex items-center justify-between gap-3"><p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Steps</p><button className="text-[11px] font-bold text-accent" type="button" onClick={addStep}>+ Add</button></div>
-            <div className="mt-2 space-y-2">{detail.steps.map((step, index) => <div className="grid gap-2 sm:grid-cols-[minmax(0,0.7fr)_minmax(0,1fr)_40px]" key={`step-${index}`}><input className={`${fieldClass} mt-0`} value={step.title} placeholder="Step title" onChange={(event) => update("steps", detail.steps.map((item, itemIndex) => itemIndex === index ? { ...item, title: event.target.value } : item))} /><input className={`${fieldClass} mt-0`} value={step.description} placeholder="Short explanation" onChange={(event) => update("steps", detail.steps.map((item, itemIndex) => itemIndex === index ? { ...item, description: event.target.value } : item))} /><button className="grid size-10 place-items-center rounded-full text-[18px] text-[#b34b60] hover:bg-[#fce7ea]" type="button" aria-label="Remove step" onClick={() => update("steps", detail.steps.filter((_, itemIndex) => itemIndex !== index))}>×</button></div>)}</div>
+            <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Overview content</span>
+              <span className="text-[10px] text-[#aaa49b]">Rich text · headings, lists, links and images</span>
+            </div>
+            <RichTextEditor compact ariaLabel="Service overview content" placeholder="Explain what this service includes and how the filing works…" value={detail.overviewDescriptionHtml || detail.overviewDescription} onChange={(html) => updateRichText("overviewDescriptionHtml", "overviewDescription", html)} />
+          </div>
+          <div className="border-t border-[#ebe5dd] pt-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Approach eyebrow" value={detail.contentLabel} onChange={(event) => update("contentLabel", event.target.value)} />
+              <Field label="Approach title" value={detail.contentTitle} onChange={(event) => update("contentTitle", event.target.value)} />
+            </div>
+            <div className="mt-4">
+              <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Approach content</span>
+                <span className="text-[10px] text-[#aaa49b]">Optional rich text</span>
+              </div>
+              <RichTextEditor compact ariaLabel="Service approach content" placeholder="Add the practical guidance and expectations…" value={detail.contentDescriptionHtml || detail.contentDescription} onChange={(html) => updateRichText("contentDescriptionHtml", "contentDescription", html)} />
+            </div>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <Field label="Approach link label" value={detail.contentLinkLabel} onChange={(event) => update("contentLinkLabel", event.target.value)} />
+              <Field label="Approach link URL" value={detail.contentLinkHref} onChange={(event) => update("contentLinkHref", event.target.value)} placeholder="#service-contact" />
+            </div>
+          </div>
+        </div>
+      </SectionDisclosure>
+
+      <SectionDisclosure title="Section copy">
+        <p className="mb-4 max-w-[680px] text-[11px] leading-[1.5] text-[#8b857e]">Change the public labels and supporting copy without changing the page structure. Empty optional sections stay hidden.</p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Key facts label" value={detail.keyFactsLabel ?? ""} onChange={(event) => update("keyFactsLabel", event.target.value)} placeholder="Key facts" />
+          <Field label="Related options label" value={detail.relatedOptionsLabel ?? ""} onChange={(event) => update("relatedOptionsLabel", event.target.value)} placeholder="Related options" />
+          <Field label="Tools eyebrow" value={detail.toolsEyebrow ?? ""} onChange={(event) => update("toolsEyebrow", event.target.value)} placeholder="Helpful tools" />
+          <Field label="Tools title" value={detail.toolsTitle ?? ""} onChange={(event) => update("toolsTitle", event.target.value)} placeholder="Keep the next step close at hand." />
+          <TextAreaField className="sm:col-span-2" label="Tools description" value={detail.toolsDescription ?? ""} onChange={(event) => update("toolsDescription", event.target.value)} />
+          <Field label="Pricing eyebrow" value={detail.pricingEyebrow ?? ""} onChange={(event) => update("pricingEyebrow", event.target.value)} placeholder="Optional / pricing" />
+          <Field label="Pricing title" value={detail.pricingTitle ?? ""} onChange={(event) => update("pricingTitle", event.target.value)} placeholder="Show the right price for this service" />
+          <TextAreaField className="sm:col-span-2" label="Pricing subtitle" value={detail.pricingDescription ?? ""} onChange={(event) => update("pricingDescription", event.target.value)} />
+          <Field label="Most popular label" value={detail.mostPopularLabel ?? ""} onChange={(event) => update("mostPopularLabel", event.target.value)} placeholder="Most popular" />
+          <Field label="FAQ eyebrow" value={detail.faqEyebrow ?? ""} onChange={(event) => update("faqEyebrow", event.target.value)} placeholder="Optional / FAQ" />
+          <Field label="FAQ title" value={detail.faqTitle ?? ""} onChange={(event) => update("faqTitle", event.target.value)} placeholder="Common questions" />
+          <TextAreaField className="sm:col-span-2" label="FAQ subtitle" value={detail.faqDescription ?? ""} onChange={(event) => update("faqDescription", event.target.value)} />
+          <Field label="FAQ support label" value={detail.faqSupportLabel ?? ""} onChange={(event) => update("faqSupportLabel", event.target.value)} placeholder="Still deciding?" />
+          <TextAreaField label="FAQ support text" value={detail.faqSupportDescription ?? ""} onChange={(event) => update("faqSupportDescription", event.target.value)} />
+          <Field label="Contact eyebrow" value={detail.contactEyebrow ?? ""} onChange={(event) => update("contactEyebrow", event.target.value)} placeholder="Ready when you are" />
+          <Field label="Contact button label" value={detail.contactButtonLabel ?? ""} onChange={(event) => update("contactButtonLabel", event.target.value)} placeholder="Talk to an advisor" />
+          <Field className="sm:col-span-2" label="Contact title" value={detail.contactTitle ?? ""} onChange={(event) => update("contactTitle", event.target.value)} placeholder="Need help choosing the right option?" />
+          <TextAreaField className="sm:col-span-2" label="Contact subtitle" value={detail.contactDescription ?? ""} onChange={(event) => update("contactDescription", event.target.value)} />
+        </div>
+      </SectionDisclosure>
+
+      <SectionDisclosure title="Helpful tools" count={selectedTools.length}>
+        <label className="block min-w-0">
+          <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Add a calculator or builder</span>
+          <select className={fieldClass} value="" onChange={(event) => addTool(event.target.value)}>
+            <option value="">Choose a tool…</option>
+            <optgroup label="Calculators">
+              {businessTools.filter((tool) => tool.group === "calculator" && !selectedTools.includes(tool.slug)).map((tool) => <option key={tool.slug} value={tool.slug}>{tool.title}</option>)}
+            </optgroup>
+            <optgroup label="Document builders">
+              {businessTools.filter((tool) => tool.group === "builder" && !selectedTools.includes(tool.slug)).map((tool) => <option key={tool.slug} value={tool.slug}>{tool.title}</option>)}
+            </optgroup>
+          </select>
+        </label>
+        {selectedTools.length ? <div className="mt-3 divide-y divide-[#ebe5dd] border-y border-[#ebe5dd]">
+          {selectedTools.map((slug) => {
+            const tool = businessTools.find((candidate) => candidate.slug === slug);
+            if (!tool) return null;
+            return <div className="flex min-w-0 items-center justify-between gap-2 py-3" key={slug}>
+              <span className="min-w-0"><span className="block truncate text-[12px] font-semibold text-[#3f3b37]">{tool.title}</span><span className="mt-0.5 block text-[10px] uppercase tracking-[0.08em] text-[#a19a91]">{tool.group === "calculator" ? "Calculator" : "Document builder"}</span></span>
+              <RemoveButton label={`Remove ${tool.title}`} onClick={() => update("tools", selectedTools.filter((candidate) => candidate !== slug))} />
+            </div>;
+          })}
+        </div> : <p className="mt-3 text-[11px] text-[#9b958c]">No tools attached. This section stays hidden on the public page until you add one.</p>}
+      </SectionDisclosure>
+
+      <SectionDisclosure title="What customers receive" count={detail.benefits.length}>
+        {detail.benefits.length ? <div className="divide-y divide-[#ebe5dd] border-y border-[#ebe5dd]">
+          {detail.benefits.map((benefit, index) => <div className="flex items-center gap-2 py-2" key={`benefit-${index}`}><input className={`${fieldClass} mt-0`} value={benefit} placeholder="A clear customer outcome" onChange={(event) => update("benefits", detail.benefits.map((item, itemIndex) => itemIndex === index ? event.target.value : item))} /><RemoveButton label="Remove benefit" onClick={() => update("benefits", detail.benefits.filter((_, itemIndex) => itemIndex !== index))} /></div>)}
+        </div> : <p className="text-[11px] text-[#9b958c]">No benefits yet. The public benefits section stays hidden.</p>}
+        <div className="mt-3"><AddButton onClick={addBenefit}>+ Add benefit</AddButton></div>
+      </SectionDisclosure>
+
+      <SectionDisclosure title="Steps and key facts" count={detail.steps.length + detail.facts.length}>
+        <div className="space-y-5">
+          <div>
+            <div className="flex items-center justify-between gap-3"><p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Steps</p><AddButton onClick={addStep}>+ Add step</AddButton></div>
+            {detail.steps.length ? <div className="mt-2 divide-y divide-[#ebe5dd] border-y border-[#ebe5dd]">{detail.steps.map((step, index) => <div className="grid gap-2 py-2 sm:grid-cols-[minmax(0,0.7fr)_minmax(0,1fr)_32px]" key={`step-${index}`}><input className={`${fieldClass} mt-0`} value={step.title} placeholder="Step title" onChange={(event) => update("steps", detail.steps.map((item, itemIndex) => itemIndex === index ? { ...item, title: event.target.value } : item))} /><input className={`${fieldClass} mt-0`} value={step.description} placeholder="Short explanation" onChange={(event) => update("steps", detail.steps.map((item, itemIndex) => itemIndex === index ? { ...item, description: event.target.value } : item))} /><RemoveButton label="Remove step" onClick={() => update("steps", detail.steps.filter((_, itemIndex) => itemIndex !== index))} /></div>)}</div> : <p className="mt-2 text-[11px] text-[#9b958c]">No filing steps yet. This section stays hidden.</p>}
           </div>
           <div>
-            <div className="flex items-center justify-between gap-3"><p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Facts</p><button className="text-[11px] font-bold text-accent" type="button" onClick={addFact}>+ Add</button></div>
-            <div className="mt-2 space-y-2">{detail.facts.map((fact, index) => <div className="grid gap-2 sm:grid-cols-2" key={`fact-${index}`}><input className={`${fieldClass} mt-0`} value={fact.label} placeholder="Label" onChange={(event) => update("facts", detail.facts.map((item, itemIndex) => itemIndex === index ? { ...item, label: event.target.value } : item))} /><div className="flex gap-2"><input className={`${fieldClass} mt-0`} value={fact.value} placeholder="Value" onChange={(event) => update("facts", detail.facts.map((item, itemIndex) => itemIndex === index ? { ...item, value: event.target.value } : item))} /><button className="grid size-10 shrink-0 place-items-center rounded-full text-[18px] text-[#b34b60] hover:bg-[#fce7ea]" type="button" aria-label="Remove fact" onClick={() => update("facts", detail.facts.filter((_, itemIndex) => itemIndex !== index))}>×</button></div></div>)}</div>
+            <div className="flex items-center justify-between gap-3"><div><p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Key facts</p><p className="mt-1 text-[10px] text-[#aaa49b]">Optional. Empty facts do not leave a blank column on the public page.</p></div><AddButton onClick={addFact}>+ Add fact</AddButton></div>
+            {detail.facts.length ? <div className="mt-2 divide-y divide-[#ebe5dd] border-y border-[#ebe5dd]">{detail.facts.map((fact, index) => <div className="grid gap-2 py-2 sm:grid-cols-2" key={`fact-${index}`}><input className={`${fieldClass} mt-0`} value={fact.label} placeholder="Label" onChange={(event) => update("facts", detail.facts.map((item, itemIndex) => itemIndex === index ? { ...item, label: event.target.value } : item))} /><div className="flex gap-2"><input className={`${fieldClass} mt-0`} value={fact.value} placeholder="Value" onChange={(event) => update("facts", detail.facts.map((item, itemIndex) => itemIndex === index ? { ...item, value: event.target.value } : item))} /><RemoveButton label="Remove fact" onClick={() => update("facts", detail.facts.filter((_, itemIndex) => itemIndex !== index))} /></div></div>)}</div> : <p className="mt-2 text-[11px] text-[#9b958c]">No key facts added. The facts column will not render publicly.</p>}
           </div>
         </div>
-      </details>
+      </SectionDisclosure>
 
-      <details className="group rounded-[17px] bg-[#faf9f6] px-4 py-3">
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[13px] font-bold text-[#29252a] [&::-webkit-details-marker]:hidden">
-          <span>Pricing and booking <span className="ml-1 text-[11px] font-medium text-[#9b958c]">{detail.pricing.length}</span></span><span className="text-[18px] font-normal text-[#a59d93] transition-transform group-open:rotate-45">+</span>
-        </summary>
-        <div className="mt-4 space-y-3">
-          <p className="max-w-[620px] text-[11px] leading-[1.5] text-[#8b857e]">Add up to six packages. Each package gets a booking button, and a WhatsApp discussion link appears automatically when a WhatsApp number is configured in Contact settings.</p>
-          {detail.pricing.map((tier, index) => (
-            <article className="relative rounded-[15px] bg-white p-3 ring-1 ring-[#e5dfd7]" key={`pricing-${index}`}>
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#9b958c]">Package {String(index + 1).padStart(2, "0")}</p>
-                <button className="grid size-8 place-items-center rounded-full text-[17px] text-[#b34b60] hover:bg-[#fce7ea]" type="button" aria-label={`Remove package ${index + 1}`} onClick={() => update("pricing", detail.pricing.filter((_, itemIndex) => itemIndex !== index))}>×</button>
-              </div>
-              <div className="mt-2 grid gap-3 sm:grid-cols-2">
-                <Field label="Package name" value={tier.name} onChange={(event) => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, name: event.target.value } : item))} />
-                <Field label="Price" value={tier.price} onChange={(event) => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, price: event.target.value } : item))} placeholder="From BDT 5,000" />
-                <Field label="Book button label" value={tier.action} onChange={(event) => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, action: event.target.value } : item))} />
-                <Field label="WhatsApp label" value={tier.whatsappLabel ?? ""} onChange={(event) => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, whatsappLabel: event.target.value } : item))} placeholder="Discuss on WhatsApp" />
-                <TextAreaField className="sm:col-span-2" label="Package description" value={tier.description} onChange={(event) => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, description: event.target.value } : item))} placeholder="What this option is best for" />
-              </div>
-              <div className="mt-3">
-                <div className="flex items-center justify-between gap-3"><p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Included features <span className="ml-1 font-medium text-[#9b958c]">{tier.features.length}</span></p><button className="text-[11px] font-bold text-accent" type="button" onClick={() => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, features: [...item.features, ""] } : item))}>+ Add</button></div>
-                <div className="mt-2 space-y-2">
-                  {tier.features.map((feature, featureIndex) => <div className="flex items-center gap-2" key={`pricing-${index}-feature-${featureIndex}`}><input className={`${fieldClass} mt-0`} value={feature} placeholder="Included outcome or deliverable" onChange={(event) => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, features: item.features.map((candidate, candidateIndex) => candidateIndex === featureIndex ? event.target.value : candidate) } : item))} /><button className="grid size-10 shrink-0 place-items-center rounded-full text-[18px] text-[#b34b60] hover:bg-[#fce7ea]" type="button" aria-label="Remove package feature" onClick={() => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, features: item.features.filter((_, candidateIndex) => candidateIndex !== featureIndex) } : item))}>×</button></div>)}
-                </div>
-              </div>
-              <label className="mt-3 inline-flex items-center gap-2 text-[11px] font-semibold text-[#5f5a54]"><input className="size-4 accent-[#de4d73]" type="checkbox" checked={Boolean(tier.featured)} onChange={(event) => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, featured: event.target.checked } : item))} />Mark as most popular</label>
-            </article>
-          ))}
-          {detail.pricing.length < 6 ? <button className="min-h-9 rounded-full bg-white px-3.5 text-[11px] font-bold text-[#5a554f] ring-1 ring-[#ddd7ce] hover:ring-[#aaa197]" type="button" onClick={addPricing}>+ Add pricing package</button> : <p className="text-[11px] text-[#9b958c]">Six pricing packages is the maximum.</p>}
-        </div>
-      </details>
+      <SectionDisclosure title="Pricing and booking" count={detail.pricing.length}>
+        <p className="mb-4 max-w-[680px] text-[11px] leading-[1.5] text-[#8b857e]">Add up to six packages. Each package gets a booking button; WhatsApp appears automatically when Contact settings has a number.</p>
+        {detail.pricing.length ? <div className="divide-y divide-[#ebe5dd] border-y border-[#ebe5dd]">
+          {detail.pricing.map((tier, index) => <div className="relative py-4" key={`pricing-${index}`}>
+            <div className="flex items-center justify-between gap-3"><p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#9b958c]">Package {String(index + 1).padStart(2, "0")}</p><RemoveButton label={`Remove package ${index + 1}`} onClick={() => update("pricing", detail.pricing.filter((_, itemIndex) => itemIndex !== index))} /></div>
+            <div className="mt-2 grid gap-3 sm:grid-cols-2">
+              <Field label="Package name" value={tier.name} onChange={(event) => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, name: event.target.value } : item))} />
+              <Field label="Price" value={tier.price} onChange={(event) => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, price: event.target.value } : item))} placeholder="From BDT 5,000" />
+              <Field label="Book button label" value={tier.action} onChange={(event) => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, action: event.target.value } : item))} />
+              <Field label="WhatsApp label" value={tier.whatsappLabel ?? ""} onChange={(event) => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, whatsappLabel: event.target.value } : item))} placeholder="Discuss on WhatsApp" />
+              <TextAreaField className="sm:col-span-2" label="Package description" value={tier.description} onChange={(event) => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, description: event.target.value } : item))} placeholder="What this option is best for" />
+            </div>
+            <div className="mt-3 border-t border-[#ebe5dd] pt-3">
+              <div className="flex items-center justify-between gap-3"><p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Included features <span className="ml-1 font-medium text-[#9b958c]">{tier.features.length}</span></p><AddButton onClick={() => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, features: [...item.features, ""] } : item))}>+ Add feature</AddButton></div>
+              {tier.features.length ? <div className="mt-2 divide-y divide-[#ebe5dd]">{tier.features.map((feature, featureIndex) => <div className="flex items-center gap-2 py-1.5" key={`pricing-${index}-feature-${featureIndex}`}><input className={`${fieldClass} mt-0`} value={feature} placeholder="Included outcome or deliverable" onChange={(event) => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, features: item.features.map((candidate, candidateIndex) => candidateIndex === featureIndex ? event.target.value : candidate) } : item))} /><RemoveButton label="Remove package feature" onClick={() => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, features: item.features.filter((_, candidateIndex) => candidateIndex !== featureIndex) } : item))} /></div>)}</div> : <p className="mt-2 text-[11px] text-[#9b958c]">No included features yet.</p>}
+            </div>
+            <label className="mt-3 inline-flex items-center gap-2 text-[11px] font-semibold text-[#5f5a54]"><input className="size-4 accent-[#de4d73]" type="checkbox" checked={Boolean(tier.featured)} onChange={(event) => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, featured: event.target.checked } : item))} />Mark as most popular</label>
+          </div>)}
+        </div> : <p className="text-[11px] text-[#9b958c]">No pricing yet. The pricing section stays hidden on the public page.</p>}
+        <div className="mt-3">{detail.pricing.length < 6 ? <AddButton onClick={addPricing}>+ Add pricing package</AddButton> : <p className="text-[11px] text-[#9b958c]">Six pricing packages is the maximum.</p>}</div>
+      </SectionDisclosure>
 
-      <details className="group rounded-[17px] bg-[#faf9f6] px-4 py-3">
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[13px] font-bold text-[#29252a] [&::-webkit-details-marker]:hidden">
-          <span>FAQs <span className="ml-1 text-[11px] font-medium text-[#9b958c]">{detail.faqs.length}</span></span><span className="text-[18px] font-normal text-[#a59d93] transition-transform group-open:rotate-45">+</span>
-        </summary>
-        <div className="mt-4 space-y-3">
-          {detail.faqs.map((faq, index) => <div className="relative rounded-[13px] bg-white p-3 ring-1 ring-[#e5dfd7]" key={`faq-${index}`}><button className="absolute right-2 top-2 grid size-8 place-items-center rounded-full text-[17px] text-[#b34b60] hover:bg-[#fce7ea]" type="button" aria-label="Remove FAQ" onClick={() => update("faqs", detail.faqs.filter((_, itemIndex) => itemIndex !== index))}>×</button><div className="grid gap-3 pr-8"><Field label="Question" value={faq.question} onChange={(event) => update("faqs", detail.faqs.map((item, itemIndex) => itemIndex === index ? { ...item, question: event.target.value } : item))} /><TextAreaField label="Answer" value={faq.answer} onChange={(event) => update("faqs", detail.faqs.map((item, itemIndex) => itemIndex === index ? { ...item, answer: event.target.value } : item))} /></div></div>)}
-          <button className="min-h-9 rounded-full bg-white px-3.5 text-[11px] font-bold text-[#5a554f] ring-1 ring-[#ddd7ce] hover:ring-[#aaa197]" type="button" onClick={addFaq}>+ Add FAQ</button>
-        </div>
-      </details>
+      <SectionDisclosure title="FAQs" count={detail.faqs.length}>
+        {detail.faqs.length ? <div className="divide-y divide-[#ebe5dd] border-y border-[#ebe5dd]">{detail.faqs.map((faq, index) => <div className="relative py-4" key={`faq-${index}`}><div className="flex items-center justify-between gap-3"><p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#9b958c]">Question {String(index + 1).padStart(2, "0")}</p><RemoveButton label="Remove FAQ" onClick={() => update("faqs", detail.faqs.filter((_, itemIndex) => itemIndex !== index))} /></div><div className="mt-2 grid gap-3"><Field label="Question" value={faq.question} onChange={(event) => update("faqs", detail.faqs.map((item, itemIndex) => itemIndex === index ? { ...item, question: event.target.value } : item))} /><TextAreaField label="Answer" value={faq.answer} onChange={(event) => update("faqs", detail.faqs.map((item, itemIndex) => itemIndex === index ? { ...item, answer: event.target.value } : item))} /></div></div>)}</div> : <p className="text-[11px] text-[#9b958c]">No FAQs yet. The FAQ section stays hidden.</p>}
+        <div className="mt-3"><AddButton onClick={addFaq}>+ Add FAQ</AddButton></div>
+      </SectionDisclosure>
     </div>
   );
 }
@@ -353,6 +537,7 @@ function ServiceEditor({ service, menuOptions, onSaved }: { service: AdminServic
         titleBn: draft.titleBn,
         descriptionEn: draft.descriptionEn,
         descriptionBn: draft.descriptionBn,
+        mediaAssetId: draft.mediaAssetId,
         detail: detailOpen ? (detail ?? emptyDetail()) : null,
       }, draft.revision);
       onSaved(saved);
@@ -416,17 +601,17 @@ function ServiceEditor({ service, menuOptions, onSaved }: { service: AdminServic
   }
 
   return (
-    <section className="min-w-0 rounded-[22px] bg-white/65 ring-1 ring-[#ddd8cf]/80" aria-labelledby="service-editor-title">
-      <div className="flex flex-col gap-4 border-b border-[#eee9e2] px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-5">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2"><p className="text-[11px] font-bold uppercase tracking-[0.14em] text-accent">Service page</p><StatusPill service={service} /></div>
-          <h2 className="mt-2 truncate font-brand text-[25px] font-bold tracking-[-0.04em] text-[#14131c]" id="service-editor-title">{draft.titleEn || "Untitled service"}</h2>
-          <p className="mt-1 text-[11px] text-[#9b958c]">{service.assignedMenu ? `${service.assignedMenu.sectionLabel} · ${service.assignedMenu.groupLabel}` : "Not assigned to a menu"} · Updated {dateLabel(service.updatedAt)}</p>
+    <section className="min-w-0 bg-white/60" aria-labelledby="service-editor-title">
+      <div className="sticky top-[72px] z-20 flex min-w-0 items-center justify-between gap-3 border-b border-[#ddd8cf] bg-[#fffdfa]/95 px-3 py-3 backdrop-blur lg:top-[80px] sm:px-5">
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 items-center gap-2"><p className="hidden text-[10px] font-bold uppercase tracking-[0.14em] text-accent sm:block">Service page</p><h2 className="truncate font-brand text-[17px] font-bold tracking-[-0.035em] text-[#14131c] sm:text-[22px]" id="service-editor-title">{draft.titleEn || "Untitled service"}</h2><StatusPill service={service} /></div>
+          <p className="mt-1 hidden truncate text-[10px] text-[#9b958c] sm:block">{service.assignedMenu ? `${service.assignedMenu.sectionLabel} · ${service.assignedMenu.groupLabel}` : "Not assigned to a menu"} · Updated {dateLabel(service.updatedAt)}</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-          {service.hasDetailPage ? <a className="inline-flex min-h-10 items-center justify-center rounded-full bg-white px-3.5 text-[11px] font-bold text-[#4f4b47] ring-1 ring-[#d8d2c8] hover:ring-[#aaa197]" href={`/services/${service.slug}`} target="_blank" rel="noreferrer">Preview ↗</a> : null}
-          <SaveButton disabled={saving || !service.profileId} onClick={() => void save()}>{saving ? "Saving…" : "Save draft"}</SaveButton>
-          {service.status === "PUBLISHED" ? <button className="min-h-10 rounded-full px-3 text-[11px] font-bold text-[#a34b5c] hover:bg-[#fce7ea] disabled:opacity-50" type="button" disabled={saving} onClick={() => void unpublish()}>Unpublish</button> : detailOpen ? <button className="min-h-10 rounded-full px-3 text-[11px] font-bold text-[#29634d] hover:bg-[#e3f4e8] disabled:opacity-50" type="button" disabled={saving || !service.profileId} onClick={() => void publish()}>Publish</button> : null}
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          {hasUnsavedChanges ? <span className="hidden rounded-full bg-[#fff0e0] px-2 py-1 text-[10px] font-bold text-[#a45e24] md:inline-flex">Unsaved</span> : null}
+          {service.status === "PUBLISHED" ? <a className="hidden min-h-9 items-center justify-center rounded-full bg-white px-3 text-[11px] font-bold text-[#4f4b47] ring-1 ring-[#d8d2c8] hover:ring-[#aaa197] sm:inline-flex" href={`/services/${service.slug}`} target="_blank" rel="noreferrer">Preview ↗</a> : null}
+          <SaveButton disabled={saving || !service.profileId} onClick={() => void save()}>{saving ? <><span className="hidden sm:inline">Saving…</span><span className="sm:hidden">…</span></> : <><span className="hidden sm:inline">Save draft</span><span className="sm:hidden">Save</span></>}</SaveButton>
+          {service.status === "PUBLISHED" ? <button className="min-h-9 rounded-full px-2 text-[10px] font-bold text-[#a34b5c] hover:bg-[#fce7ea] disabled:opacity-50 sm:px-3 sm:text-[11px]" type="button" disabled={saving} onClick={() => void unpublish()}>Unpublish</button> : detailOpen ? <button className="min-h-9 rounded-full px-2 text-[10px] font-bold text-[#29634d] hover:bg-[#e3f4e8] disabled:opacity-50 sm:px-3 sm:text-[11px]" type="button" disabled={saving || !service.profileId} onClick={() => void publish()}>Publish</button> : null}
         </div>
       </div>
 
@@ -434,7 +619,7 @@ function ServiceEditor({ service, menuOptions, onSaved }: { service: AdminServic
       {error ? <p className="mx-4 mt-4 rounded-[12px] bg-[#fff4f5] px-3.5 py-2.5 text-[12px] font-semibold text-[#ad3148] sm:mx-5" role="alert">{error}</p> : null}
 
       <div className="space-y-5 p-4 sm:p-5">
-        <div className="rounded-[16px] bg-[#f8f6f2] p-4">
+        <div className="border-b border-[#ebe5dd] pb-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Menu assignment</p>
@@ -469,7 +654,7 @@ function ServiceEditor({ service, menuOptions, onSaved }: { service: AdminServic
 
         <div className="border-t border-[#eee9e2] pt-5">
           <div className="flex flex-wrap items-end justify-between gap-2"><div><p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Service page content</p><p className="mt-1 text-[12px] text-[#9b958c]">Optional while drafting. Add the sections below when this service needs a public detail page.</p></div>{service.detail || detailOpen ? <span className="inline-flex min-h-9 items-center rounded-full bg-[#e4f3e8] px-3 text-[11px] font-bold text-[#29634d]">Page content enabled</span> : <button className="inline-flex min-h-9 items-center rounded-full bg-[#f4f1ec] px-3 text-[11px] font-bold text-[#77736e] transition-colors hover:bg-[#ece7df]" type="button" onClick={() => { setDetailOpen(true); setDraft((current) => ({ ...current, href: `/services/${current.slug}`, detail: current.detail ?? emptyDetail() })); }}>Add page content</button>}</div>
-          {detailOpen ? <div className="mt-4"><DetailEditor detail={detail ?? emptyDetail()} onChange={(next) => update("detail", next)} /></div> : <div className="mt-4 rounded-[14px] bg-[#faf9f6] px-4 py-3 text-[12px] text-[#817a72]">Save the title and slug first. You can add detailed sections later, then publish the service page.</div>}
+          {detailOpen ? <div className="mt-4"><DetailEditor detail={detail ?? emptyDetail()} mediaAssetId={draft.mediaAssetId} onMediaAssetChange={(value) => update("mediaAssetId", value)} onChange={(next) => update("detail", next)} /></div> : <div className="mt-4 border-t border-[#ebe5dd] pt-3 text-[12px] text-[#817a72]">Save the title and slug first. You can add detailed sections later, then publish the service page.</div>}
         </div>
       </div>
     </section>

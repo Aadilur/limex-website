@@ -24,6 +24,22 @@ function assetInclude() {
         post: { select: { slug: true, status: true } },
       },
     },
+    serviceDraftProfiles: {
+      select: {
+        id: true,
+        slug: true,
+        titleEn: true,
+        status: true,
+      },
+    },
+    servicePublishedProfiles: {
+      select: {
+        id: true,
+        slug: true,
+        titleEn: true,
+        status: true,
+      },
+    },
   } satisfies Prisma.MediaAssetInclude;
 }
 
@@ -45,6 +61,8 @@ function toAsset(row: any): MediaAssetRecord {
     updatedAt: row.updatedAt,
     folder: row.folder ? toFolder(row.folder) : undefined,
     blogMedia: row.blogMedia ?? null,
+    serviceDraftProfiles: row.serviceDraftProfiles ?? [],
+    servicePublishedProfiles: row.servicePublishedProfiles ?? [],
   };
 }
 

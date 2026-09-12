@@ -43,11 +43,31 @@ export type ServiceDetailContent = {
   overviewEyebrow: string;
   overviewTitle: string;
   overviewDescription: string;
+  overviewDescriptionHtml?: string;
   contentLabel: string;
   contentTitle: string;
   contentDescription: string;
+  contentDescriptionHtml?: string;
   contentLinkLabel: string;
   contentLinkHref: string;
+  keyFactsLabel?: string;
+  relatedOptionsLabel?: string;
+  toolsEyebrow?: string;
+  toolsTitle?: string;
+  toolsDescription?: string;
+  pricingEyebrow?: string;
+  pricingTitle?: string;
+  pricingDescription?: string;
+  mostPopularLabel?: string;
+  faqEyebrow?: string;
+  faqTitle?: string;
+  faqDescription?: string;
+  faqSupportLabel?: string;
+  faqSupportDescription?: string;
+  contactEyebrow?: string;
+  contactTitle?: string;
+  contactDescription?: string;
+  contactButtonLabel?: string;
   benefits: string[];
   steps: ServiceStep[];
   facts: ServiceFact[];
@@ -122,6 +142,8 @@ export type AdminService = PublicService & {
   publishedRevision: number | null;
   publishedAt: string | null;
   createdAt: string | null;
+  mediaAssetId: string | null;
+  publishedMediaAssetId: string | null;
   detail: ServiceDetailContent | null;
 };
 
@@ -155,5 +177,6 @@ export type ServiceProfileInput = {
   titleBn: string;
   descriptionEn: string;
   descriptionBn: string;
+  mediaAssetId?: string | null;
   detail: ServiceDetailContent | null;
 };

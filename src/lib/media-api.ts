@@ -9,7 +9,7 @@ export type MediaFolder = {
 };
 
 export type MediaUsage = {
-  type: "blog";
+  type: "blog" | "service";
   label: string;
   href: string;
 } | null;
@@ -43,6 +43,10 @@ export type MediaLibrary = {
 export function getAdminMedia(folderId?: string | null) {
   const search = folderId ? "?folderId=" + encodeURIComponent(folderId) : "";
   return request<MediaLibrary>("/api/admin/media" + search, { cache: "no-store" });
+}
+
+export function getAdminMediaAsset(id: string) {
+  return request<MediaAsset>("/api/admin/media/assets/" + encodeURIComponent(id), { cache: "no-store" });
 }
 
 export function createMediaFolder(name: string, parentId?: string | null) {

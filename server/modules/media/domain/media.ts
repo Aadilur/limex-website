@@ -25,6 +25,8 @@ export type MediaAssetRecord = {
   updatedAt: Date;
   folder?: MediaFolderRecord;
   blogMedia?: { id: string; postId: string; post: { slug: string; status: string } } | null;
+  serviceDraftProfiles?: Array<{ id: string; slug: string; titleEn: string; status: string }>;
+  servicePublishedProfiles?: Array<{ id: string; slug: string; titleEn: string; status: string }>;
 };
 
 export type MediaBreadcrumb = {
@@ -55,7 +57,7 @@ export type MediaAssetResponse = {
   urlExpiresAt: string | null;
   createdAt: string;
   updatedAt: string;
-  usage: { type: "blog"; label: string; href: string } | null;
+  usage: { type: "blog" | "service"; label: string; href: string } | null;
 };
 
 export class MediaNotFoundError extends Error {

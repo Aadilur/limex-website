@@ -22,7 +22,7 @@ import {
   type MediaRepository,
 } from "../domain/media.js";
 
-const systemFolderNames = ["Blog", "Landing", "About", "General"] as const;
+const systemFolderNames = ["Blog", "Landing", "About", "Services", "General"] as const;
 
 function isUniqueError(error: unknown) {
   return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
@@ -122,6 +122,18 @@ export class MediaService {
             label: asset.blogMedia.post.slug,
             href: "/admin/blog/" + asset.blogMedia.postId,
           }
+        : asset.servicePublishedProfiles?.[0]
+          ? {
+              type: "service",
+              label: asset.servicePublishedProfiles[0].titleEn || asset.servicePublishedProfiles[0].slug,
+              href: "/admin/services/pages/" + asset.servicePublishedProfiles[0].id,
+            }
+          : asset.serviceDraftProfiles?.[0]
+            ? {
+                type: "service",
+                label: asset.serviceDraftProfiles[0].titleEn || asset.serviceDraftProfiles[0].slug,
+                href: "/admin/services/pages/" + asset.serviceDraftProfiles[0].id,
+              }
         : null,
     };
   }
@@ -295,6 +307,10 @@ export class MediaService {
     return asset;
   }
 
+  public async getAssetResponse(id: string) {
+    return this.toResponse(await this.getAsset(id));
+  }
+
   public async getSignedAssetUrl(id: string) {
     const asset = await this.getAsset(id);
     return signStoredObject(asset.objectKey);
@@ -319,6 +335,12 @@ export class MediaService {
     const current = await this.getAsset(id);
     if (current.blogMedia) {
       throw new MediaInUseError("Remove this image from the blog article " + current.blogMedia.post.slug + " before deleting it.");
+    }
+    if (current.servicePublishedProfiles?.length) {
+      throw new MediaInUseError("Unpublish the service page using this image before deleting it.");
+    }
+    if (current.serviceDraftProfiles?.length) {
+      throw new MediaInUseError("Remove this image from the service draft before deleting it.");
     }
 
     await deleteStoredObject(current.objectKey);

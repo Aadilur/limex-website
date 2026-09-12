@@ -179,6 +179,8 @@ function toAdminService(target: ServiceMenuTarget, profile: ServiceProfileRow | 
     titleBn: profile?.titleBn ?? target.label,
     descriptionEn: profile?.descriptionEn ?? target.description,
     descriptionBn: profile?.descriptionBn ?? target.description,
+    mediaAssetId: profile?.mediaAssetId ?? null,
+    publishedMediaAssetId: profile?.publishedMediaAssetId ?? null,
   } as AdminService & { titleEn: string; titleBn: string; descriptionEn: string; descriptionBn: string };
 }
 
@@ -218,6 +220,8 @@ function toDetachedAdminService(profile: ServiceProfileRow): AdminService {
     titleBn: profile.titleBn,
     descriptionEn: profile.descriptionEn,
     descriptionBn: profile.descriptionBn,
+    mediaAssetId: profile.mediaAssetId,
+    publishedMediaAssetId: profile.publishedMediaAssetId,
   } as AdminService & { titleEn: string; titleBn: string; descriptionEn: string; descriptionBn: string };
 }
 

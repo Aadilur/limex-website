@@ -78,6 +78,13 @@ const serviceUi = {
   },
 } as const;
 
+const richTextClass = "text-body-lg text-muted [&_a]:font-semibold [&_a]:text-pink [&_a]:underline [&_a]:decoration-pink/30 [&_a]:underline-offset-2 [&_blockquote]:my-cluster [&_blockquote]:border-l-2 [&_blockquote]:border-pink [&_blockquote]:pl-cluster [&_h2]:mt-section-gap-lg [&_h2]:font-brand [&_h2]:text-section-title [&_h2]:font-bold [&_h2]:text-ink [&_h3]:mt-section-gap [&_h3]:font-brand [&_h3]:text-subheading-mobile [&_h3]:font-bold [&_h3]:text-ink [&_li]:ml-5 [&_li]:list-disc [&_li]:pl-1 [&_ol_li]:list-decimal [&_p+p]:mt-cluster [&_strong]:font-bold [&_ul]:my-cluster [&_ol]:my-cluster";
+
+function RichTextContent({ html, fallback, className = richTextClass }: { html?: string; fallback: string; className?: string }) {
+  if (!html?.trim()) return <p className={className}>{fallback}</p>;
+  return <div className={className} dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
 export function ServiceHeroSection({ service }: { service: ServicePageContent }) {
   const locale = service.locale ?? "en";
   const ui = serviceUi[locale];
@@ -137,6 +144,11 @@ export function ServiceHeroSection({ service }: { service: ServicePageContent })
 
 export function ServiceOverviewSection({ service }: { service: ServicePageContent }) {
   const ui = serviceUi[service.locale ?? "en"];
+  const keyFactsLabel = service.keyFactsLabel?.trim() || ui.keyFacts;
+  const relatedOptionsLabel = service.relatedOptionsLabel?.trim() || ui.relatedOptions;
+  const toolsEyebrow = service.toolsEyebrow?.trim() || ui.helpfulTools;
+  const toolsTitle = service.toolsTitle?.trim() || "Keep the next step close at hand.";
+  const toolsDescription = service.toolsDescription?.trim() || "Link a calculator or document builder that helps customers move forward.";
   const helpfulTools = (service.tools ?? []).flatMap((slug) => {
     const tool = getTool(slug);
     return tool ? [tool] : [];
@@ -148,12 +160,12 @@ export function ServiceOverviewSection({ service }: { service: ServicePageConten
         <div className="min-w-0">
           <p className="text-overline text-[#de5778]">{service.overviewEyebrow}</p>
           <h2 className="mt-cluster max-w-[760px] font-brand text-page-title text-ink max-lg:text-page-title-mobile" id="service-overview-title">{service.overviewTitle}</h2>
-          <p className="mt-cluster max-w-[720px] text-body-lg text-muted">{service.overviewDescription}</p>
+          <RichTextContent html={service.overviewDescriptionHtml} fallback={service.overviewDescription} className={`${richTextClass} mt-cluster max-w-[720px]`} />
 
           <article className="mt-section-gap-lg rounded-nav border border-[#e0dee3] bg-white px-card-pad py-card-pad lg:px-section-y lg:py-section-y">
             <p className="text-overline text-[#de5778]">{service.contentLabel}</p>
             <h3 className="mt-cluster font-brand text-section-title text-ink">{service.contentTitle}</h3>
-            <p className="mt-cluster max-w-[680px] text-body-sm text-muted">{service.contentDescription}</p>
+            <RichTextContent html={service.contentDescriptionHtml} fallback={service.contentDescription} className={`${richTextClass} mt-cluster max-w-[680px] text-body-sm`} />
             {service.contentLinkLabel ? <a className="mt-section-gap-lg inline-flex items-center gap-cluster-sm text-button font-bold text-ink transition-colors hover:text-pink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3" href={service.contentLinkHref || "#pricing"} {...externalLinkProps(service.contentLinkHref || "#pricing")}>
               {service.contentLinkLabel} <span className="text-pink" aria-hidden="true">↗</span>
             </a> : null}
@@ -173,7 +185,7 @@ export function ServiceOverviewSection({ service }: { service: ServicePageConten
 
           {service.relatedLinks?.length ? (
             <div className="mt-section-gap-xl border-t border-[#e0dee3] pt-section-y">
-              <p className="text-overline text-[#de5778]">{ui.relatedOptions}</p>
+              <p className="text-overline text-[#de5778]">{relatedOptionsLabel}</p>
               <div className="mt-cluster flex flex-wrap gap-2">
                 {service.relatedLinks.map((link) => <a className="inline-flex min-h-10 items-center gap-2 rounded-pill bg-white px-3.5 text-button font-semibold text-ink ring-1 ring-[#e0dee3] transition-colors hover:text-pink hover:ring-[#de5778]/40" href={link.href} {...externalLinkProps(link.href)} key={link.id}>{link.label}<span className="text-pink" aria-hidden="true">↗</span></a>)}
               </div>
@@ -183,9 +195,13 @@ export function ServiceOverviewSection({ service }: { service: ServicePageConten
           {helpfulTools.length ? (
             <div className="mt-section-gap-xl border-t border-[#e0dee3] pt-section-y">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-overline text-[#de5778]">{ui.helpfulTools}</p>
+                <div>
+                  <p className="text-overline text-[#de5778]">{toolsEyebrow}</p>
+                  <h3 className="mt-cluster font-brand text-section-title text-ink">{toolsTitle}</h3>
+                </div>
                 <span className="text-micro font-semibold text-muted">{helpfulTools.length}</span>
               </div>
+              <p className="mt-cluster max-w-[680px] text-body-sm text-muted">{toolsDescription}</p>
               <div className="mt-cluster grid gap-cluster sm:grid-cols-2">
                 {helpfulTools.map((tool) => (
                   <a className="group flex min-w-0 items-center justify-between gap-cluster rounded-card bg-white px-card-pad-sm py-cluster ring-1 ring-[#e0dee3] transition-colors hover:ring-[#de5778]/50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3" href={toolHref(tool.slug)} key={tool.slug}>
@@ -202,7 +218,7 @@ export function ServiceOverviewSection({ service }: { service: ServicePageConten
         </div>
 
         {service.facts.length ? <aside className="lg:pt-[166px]" aria-label="Service key facts">
-          <p className="text-overline text-[#de5778]">{ui.keyFacts}</p>
+          <p className="text-overline text-[#de5778]">{keyFactsLabel}</p>
           <dl className="mt-cluster divide-y divide-[#e0dee3] border-y border-[#e0dee3]">
             {service.facts.map((fact) => (
               <div className="grid grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] gap-cluster py-4" key={fact.label}>
@@ -217,13 +233,13 @@ export function ServiceOverviewSection({ service }: { service: ServicePageConten
   );
 }
 
-function PriceCard({ tier, locale, serviceTitle, serviceKey, contact }: { tier: ServicePriceTier; locale: "en" | "bn"; serviceTitle: string; serviceKey?: string; contact?: PublicContactSettings | null }) {
+function PriceCard({ tier, locale, serviceTitle, serviceKey, contact, mostPopularLabel }: { tier: ServicePriceTier; locale: "en" | "bn"; serviceTitle: string; serviceKey?: string; contact?: PublicContactSettings | null; mostPopularLabel: string }) {
   const ui = serviceUi[locale];
   const whatsappHref = serviceWhatsAppUrl(contact, `Hello Limex, I’d like to discuss ${serviceTitle}${tier.name ? ` · ${tier.name}` : ""}.`);
 
   return (
     <article className={`relative flex min-h-[292px] flex-col rounded-nav border bg-white p-card-pad ${tier.featured ? "border-[#de4d73]" : "border-[#e0dee3]"}`.trim()}>
-      {tier.featured ? <WaveLabel className="absolute left-5 top-4 text-[#de4d73]">{ui.mostPopular}</WaveLabel> : null}
+      {tier.featured ? <WaveLabel className="absolute left-5 top-4 text-[#de4d73]">{mostPopularLabel}</WaveLabel> : null}
       <p className={`text-body font-semibold ${tier.featured ? "mt-8 text-[#de4d73]" : "text-muted"}`.trim()}>{tier.name}</p>
       <p className="mt-cluster-sm font-brand text-section-title text-ink">{tier.price}</p>
       <p className="mt-cluster-sm text-body-xs text-muted">{tier.description}</p>
@@ -256,14 +272,18 @@ export function ServicePricingSection({ service, contact }: { service: ServicePa
   if (!service.pricing.length) return null;
   const locale = service.locale ?? "en";
   const ui = serviceUi[locale];
+  const pricingEyebrow = service.pricingEyebrow?.trim() || ui.pricingEyebrow;
+  const pricingTitle = service.pricingTitle?.trim() || ui.pricingTitle;
+  const pricingDescription = service.pricingDescription?.trim() || ui.pricingDescription;
+  const mostPopularLabel = service.mostPopularLabel?.trim() || ui.mostPopular;
 
   return (
     <section className="mt-section-gap-xl border-t border-[#e0dee3] bg-page pt-section-y lg:mt-section-gap-xl lg:pt-section-y-xl" id="pricing" aria-labelledby="service-pricing-title">
-      <p className="text-overline text-[#de5778]">{ui.pricingEyebrow}</p>
-          <h2 className="mt-cluster font-brand text-page-title text-ink max-lg:text-page-title-mobile" id="service-pricing-title">{ui.pricingTitle}</h2>
-      <p className="mt-cluster text-body-lg text-muted">{ui.pricingDescription}</p>
+      <p className="text-overline text-[#de5778]">{pricingEyebrow}</p>
+          <h2 className="mt-cluster font-brand text-page-title text-ink max-lg:text-page-title-mobile" id="service-pricing-title">{pricingTitle}</h2>
+      <p className="mt-cluster text-body-lg text-muted">{pricingDescription}</p>
       <div className="mt-section-gap-lg grid gap-cluster lg:grid-cols-3">
-        {service.pricing.map((tier) => <PriceCard key={tier.name} tier={tier} locale={locale} serviceTitle={service.title} serviceKey={service.serviceKey} contact={contact} />)}
+        {service.pricing.map((tier) => <PriceCard key={tier.name} tier={tier} locale={locale} serviceTitle={service.title} serviceKey={service.serviceKey} contact={contact} mostPopularLabel={mostPopularLabel} />)}
       </div>
     </section>
   );
@@ -272,6 +292,11 @@ export function ServicePricingSection({ service, contact }: { service: ServicePa
 export function ServiceFaqSection({ service }: { service: ServicePageContent }) {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
   const ui = serviceUi[service.locale ?? "en"];
+  const faqEyebrow = service.faqEyebrow?.trim() || ui.faqEyebrow;
+  const faqTitle = service.faqTitle?.trim() || ui.faqTitle;
+  const faqDescription = service.faqDescription?.trim() || ui.faqDescription;
+  const faqSupportLabel = service.faqSupportLabel?.trim() || ui.contentControl;
+  const faqSupportDescription = service.faqSupportDescription?.trim() || ui.contentControlDescription;
 
   if (!service.faqs.length) return null;
 
@@ -279,11 +304,11 @@ export function ServiceFaqSection({ service }: { service: ServicePageContent }) 
     <section className="mt-section-gap-xl border-t border-[#e0dee3] bg-page pt-section-y lg:mt-section-gap-xl lg:pt-section-y-xl" id="service-faq" aria-labelledby="service-faq-title">
       <div className="grid gap-section-gap lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-section-gap-xl">
         <div>
-          <p className="text-overline text-[#de5778]">{ui.faqEyebrow}</p>
-          <h2 className="mt-cluster font-brand text-page-title text-ink max-lg:text-page-title-mobile" id="service-faq-title">{ui.faqTitle}</h2>
-          <p className="mt-cluster max-w-[560px] text-body-lg text-muted">{ui.faqDescription}</p>
-          <p className="mt-section-gap-xl text-overline text-[#de5778]">{ui.contentControl}</p>
-          <p className="mt-cluster-sm max-w-[460px] text-body-xs text-muted">{ui.contentControlDescription}</p>
+          <p className="text-overline text-[#de5778]">{faqEyebrow}</p>
+          <h2 className="mt-cluster font-brand text-page-title text-ink max-lg:text-page-title-mobile" id="service-faq-title">{faqTitle}</h2>
+          <p className="mt-cluster max-w-[560px] text-body-lg text-muted">{faqDescription}</p>
+          <p className="mt-section-gap-xl text-overline text-[#de5778]">{faqSupportLabel}</p>
+          <p className="mt-cluster-sm max-w-[460px] text-body-xs text-muted">{faqSupportDescription}</p>
         </div>
 
         <div className="border-y border-[#e0dee3]">
@@ -319,17 +344,21 @@ export function ServiceFaqSection({ service }: { service: ServicePageContent }) 
 
 export function ServiceContactSection({ service, contact }: { service: ServicePageContent; contact?: PublicContactSettings | null }) {
   const ui = serviceUi[service.locale ?? "en"];
+  const contactEyebrow = service.contactEyebrow?.trim() || ui.readyEyebrow;
+  const contactTitle = service.contactTitle?.trim() || ui.contactTitle;
+  const contactDescription = service.contactDescription?.trim() || ui.contactDescription;
+  const contactButtonLabel = service.contactButtonLabel?.trim() || ui.contactButton;
   const whatsappHref = serviceWhatsAppUrl(contact, `Hello Limex, I’d like to discuss ${service.title}.`);
 
   return (
     <section className="mt-section-gap-xl flex flex-col gap-section-gap-lg rounded-nav bg-navy px-card-pad py-section-y text-white lg:mt-section-gap-xl lg:flex-row lg:items-center lg:justify-between lg:px-8 lg:py-section-y-xl" id="service-contact" aria-labelledby="service-contact-title">
       <div>
-        <p className="text-overline text-[#fac7cc]">{ui.readyEyebrow}</p>
-        <h2 className="mt-cluster max-w-[760px] font-brand text-page-title max-lg:text-page-title-mobile" id="service-contact-title">{ui.contactTitle}</h2>
-        <p className="mt-cluster max-w-[680px] text-body-sm text-[#c7cfe0]">{ui.contactDescription} {service.title.toLowerCase()}.</p>
+        <p className="text-overline text-[#fac7cc]">{contactEyebrow}</p>
+        <h2 className="mt-cluster max-w-[760px] font-brand text-page-title max-lg:text-page-title-mobile" id="service-contact-title">{contactTitle}</h2>
+        <p className="mt-cluster max-w-[680px] text-body-sm text-[#c7cfe0]">{contactDescription} {service.title.toLowerCase()}.</p>
       </div>
       <div className="flex shrink-0 flex-col gap-2 sm:flex-row lg:flex-col xl:flex-row">
-        <ContactModal serviceKey={service.serviceKey ?? service.title} initialMessage={`I’m interested in ${service.title}.`} variant="white" buttonClassName="min-h-button-lg min-w-[218px] justify-center text-body-xs" buttonLabel={ui.contactButton} />
+        <ContactModal serviceKey={service.serviceKey ?? service.title} initialMessage={`I’m interested in ${service.title}.`} variant="white" buttonClassName="min-h-button-lg min-w-[218px] justify-center text-body-xs" buttonLabel={contactButtonLabel} />
         {whatsappHref ? <a className="inline-flex min-h-button-lg min-w-[218px] items-center justify-center gap-2 rounded-pill border border-white/35 px-4 text-button font-semibold text-white transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-white/60 focus-visible:outline-offset-3" href={whatsappHref} target="_blank" rel="noreferrer"><img className="size-4" src="/figma/whatsapp-dot.svg" alt="" aria-hidden="true" />{ui.whatsappNow}<span aria-hidden="true">↗</span></a> : null}
       </div>
     </section>

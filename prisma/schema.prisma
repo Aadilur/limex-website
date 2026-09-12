@@ -142,6 +142,8 @@ model MediaAsset {
   updatedAt    DateTime       @updatedAt
   folder       MediaFolder    @relation(fields: [folderId], references: [id], onDelete: Cascade)
   blogMedia    BlogPostMedia?
+  serviceDraftProfiles     ServiceProfile[] @relation("ServiceDraftMedia")
+  servicePublishedProfiles ServiceProfile[] @relation("ServicePublishedMedia")
 
   @@index([folderId, createdAt])
   @@index([checksum])
@@ -275,6 +277,8 @@ model ServiceProfile {
   titleBn           String                  @default("") @db.VarChar(180)
   descriptionEn     String                  @db.VarChar(500)
   descriptionBn     String                  @default("") @db.VarChar(500)
+  mediaAssetId      String?                 @db.VarChar(191)
+  publishedMediaAssetId String?             @db.VarChar(191)
   detail            Json?
   publishedDetail   Json?
   status            String                  @default("LINK_ONLY") @db.VarChar(16)
@@ -285,10 +289,14 @@ model ServiceProfile {
   updatedAt         DateTime                @updatedAt
   menuItem          MenuItem?               @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
   menuLink          MenuLink?               @relation(fields: [menuLinkId], references: [id], onDelete: SetNull)
+  mediaAsset        MediaAsset?              @relation("ServiceDraftMedia", fields: [mediaAssetId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  publishedMediaAsset MediaAsset?            @relation("ServicePublishedMedia", fields: [publishedMediaAssetId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   revisions         ServiceProfileRevision[]
 
   @@index([status, updatedAt])
   @@index([status, publishedAt])
+  @@index([mediaAssetId])
+  @@index([publishedMediaAssetId])
 }
 
 model ServiceProfileRevision {

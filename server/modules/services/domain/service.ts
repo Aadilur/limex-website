@@ -10,6 +10,7 @@ import type {
   ServiceProfileInput,
 } from "../../../../src/lib/service-types.js";
 import { toolSlugs } from "../../../../src/lib/business-tools.js";
+import { htmlToPlainText, sanitizeBlogHtml } from "../../../../src/lib/blog-content.js";
 import type { MenuItem, MenuSection } from "../../admin/domain/menu.js";
 
 export type ServiceProfileStatus = "LINK_ONLY" | "DRAFT" | "PUBLISHED";
@@ -27,6 +28,8 @@ export type ServiceProfileRow = {
   titleBn: string;
   descriptionEn: string;
   descriptionBn: string;
+  mediaAssetId: string | null;
+  publishedMediaAssetId: string | null;
   detail: unknown;
   publishedDetail: unknown;
   status: string;
@@ -193,11 +196,31 @@ export function emptyServiceDetail(): ServiceDetailContent {
     overviewEyebrow: "OVERVIEW",
     overviewTitle: "A practical path forward",
     overviewDescription: "Share the scope of this service and the next step your customer should take.",
+    overviewDescriptionHtml: "",
     contentLabel: "THE LIMEX APPROACH",
     contentTitle: "Make the next step easier to understand.",
     contentDescription: "Add the key guidance, inclusions and expectations for this service.",
+    contentDescriptionHtml: "",
     contentLinkLabel: "Talk to an advisor",
     contentLinkHref: "#service-contact",
+    keyFactsLabel: "Key facts",
+    relatedOptionsLabel: "Related options",
+    toolsEyebrow: "Helpful tools",
+    toolsTitle: "Keep the next step close at hand.",
+    toolsDescription: "Link a calculator or document builder that helps customers move forward.",
+    pricingEyebrow: "Optional / pricing",
+    pricingTitle: "Show the right price for this service",
+    pricingDescription: "Use a starting price, package cards or a custom quote depending on the scope.",
+    mostPopularLabel: "Most popular",
+    faqEyebrow: "Optional / FAQ",
+    faqTitle: "Common questions",
+    faqDescription: "A few clear answers before you choose the next step.",
+    faqSupportLabel: "Still deciding?",
+    faqSupportDescription: "Talk to an advisor when the right path needs a little context.",
+    contactEyebrow: "Ready when you are",
+    contactTitle: "Need help choosing the right option?",
+    contactDescription: "A short conversation is enough to recommend the right path for",
+    contactButtonLabel: "Talk to an advisor",
     benefits: [],
     steps: [],
     facts: [],
@@ -292,11 +315,31 @@ export function normalizeServiceDetail(value: unknown): ServiceDetailContent {
     overviewEyebrow: cleanString(record.overviewEyebrow, base.overviewEyebrow),
     overviewTitle: cleanString(record.overviewTitle, base.overviewTitle),
     overviewDescription: cleanString(record.overviewDescription, base.overviewDescription),
+    overviewDescriptionHtml: sanitizeBlogHtml(record.overviewDescriptionHtml),
     contentLabel: cleanString(record.contentLabel, base.contentLabel),
     contentTitle: cleanString(record.contentTitle, base.contentTitle),
     contentDescription: cleanString(record.contentDescription, base.contentDescription),
+    contentDescriptionHtml: sanitizeBlogHtml(record.contentDescriptionHtml),
     contentLinkLabel: cleanString(record.contentLinkLabel, base.contentLinkLabel),
     contentLinkHref: cleanString(record.contentLinkHref, base.contentLinkHref),
+    keyFactsLabel: cleanString(record.keyFactsLabel, base.keyFactsLabel),
+    relatedOptionsLabel: cleanString(record.relatedOptionsLabel, base.relatedOptionsLabel),
+    toolsEyebrow: cleanString(record.toolsEyebrow, base.toolsEyebrow),
+    toolsTitle: cleanString(record.toolsTitle, base.toolsTitle),
+    toolsDescription: cleanString(record.toolsDescription, base.toolsDescription),
+    pricingEyebrow: cleanString(record.pricingEyebrow, base.pricingEyebrow),
+    pricingTitle: cleanString(record.pricingTitle, base.pricingTitle),
+    pricingDescription: cleanString(record.pricingDescription, base.pricingDescription),
+    mostPopularLabel: cleanString(record.mostPopularLabel, base.mostPopularLabel),
+    faqEyebrow: cleanString(record.faqEyebrow, base.faqEyebrow),
+    faqTitle: cleanString(record.faqTitle, base.faqTitle),
+    faqDescription: cleanString(record.faqDescription, base.faqDescription),
+    faqSupportLabel: cleanString(record.faqSupportLabel, base.faqSupportLabel),
+    faqSupportDescription: cleanString(record.faqSupportDescription, base.faqSupportDescription),
+    contactEyebrow: cleanString(record.contactEyebrow, base.contactEyebrow),
+    contactTitle: cleanString(record.contactTitle, base.contactTitle),
+    contactDescription: cleanString(record.contactDescription, base.contactDescription),
+    contactButtonLabel: cleanString(record.contactButtonLabel, base.contactButtonLabel),
     benefits: cleanStringList(record.benefits),
     steps: cleanSteps(record.steps),
     facts: cleanFacts(record.facts),
@@ -385,6 +428,8 @@ export function profileSnapshot(row: ServiceProfileRow, detail: ServiceDetailCon
     titleBn: row.titleBn,
     descriptionEn: row.descriptionEn,
     descriptionBn: row.descriptionBn,
+    mediaAssetId: row.mediaAssetId,
+    publishedMediaAssetId: row.publishedMediaAssetId,
     detail,
   };
 }

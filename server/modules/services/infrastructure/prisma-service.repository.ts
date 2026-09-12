@@ -13,6 +13,7 @@ import {
 } from "../domain/service.js";
 import { normalizeServiceDetail } from "../domain/service.js";
 import type { ServiceProfileInput } from "../../../../src/lib/service-types.js";
+import { htmlToPlainText } from "../../../../src/lib/blog-content.js";
 
 function asJson(value: unknown) {
   return value as Prisma.InputJsonValue;
@@ -31,6 +32,7 @@ function snapshotFromInput(input: ServiceProfileInput) {
     titleBn: input.titleBn,
     descriptionEn: input.descriptionEn,
     descriptionBn: input.descriptionBn,
+    mediaAssetId: input.mediaAssetId ?? null,
     detail: input.detail,
   };
 }
@@ -47,6 +49,8 @@ function snapshotFromRow(row: ServiceProfileRow, detail: unknown) {
     titleBn: row.titleBn,
     descriptionEn: row.descriptionEn,
     descriptionBn: row.descriptionBn,
+    mediaAssetId: row.mediaAssetId,
+    publishedMediaAssetId: row.publishedMediaAssetId,
     detail,
   };
 }
@@ -115,6 +119,7 @@ export class PrismaServiceRepository implements ServiceRepository {
           titleBn: input.titleBn,
           descriptionEn: input.descriptionEn,
           descriptionBn: input.descriptionBn,
+          mediaAssetId: input.mediaAssetId ?? null,
           detail: detail ? asJson(detail) : Prisma.JsonNull,
           status: detail ? "DRAFT" : "LINK_ONLY",
           revision: 1,
@@ -153,6 +158,7 @@ export class PrismaServiceRepository implements ServiceRepository {
           titleBn: input.titleBn,
           descriptionEn: input.descriptionEn,
           descriptionBn: input.descriptionBn,
+          ...(input.mediaAssetId !== undefined ? { mediaAssetId: input.mediaAssetId ?? null } : {}),
           ...(detail ? { detail: asJson(detail) } : {}),
           status: currentStatus(current.status, Boolean(detail ?? current.detail)),
           revision: nextRevision,
@@ -289,7 +295,12 @@ export class PrismaServiceRepository implements ServiceRepository {
       if (!current.detail) throw new ServiceSafetyError("Save the service detail content before publishing this page.");
 
       const detail = normalizeServiceDetail(current.detail);
-      if (!current.titleEn.trim() || !current.descriptionEn.trim() || !detail.overviewTitle.trim() || !detail.overviewDescription.trim()) {
+      const publishedDetail = {
+        ...detail,
+        mediaUrl: current.mediaAssetId ? "/api/media/" + current.mediaAssetId : detail.mediaUrl,
+      };
+      const overviewText = detail.overviewDescriptionHtml ? htmlToPlainText(detail.overviewDescriptionHtml) : detail.overviewDescription.trim();
+      if (!current.titleEn.trim() || !current.descriptionEn.trim() || !detail.overviewTitle.trim() || !overviewText) {
         throw new ServiceSafetyError("Add a service title, summary and overview before publishing.");
       }
 
@@ -298,7 +309,8 @@ export class PrismaServiceRepository implements ServiceRepository {
         where: { id, revision: expectedRevision },
         data: {
           detail: asJson(detail),
-          publishedDetail: asJson(detail),
+          publishedDetail: asJson(publishedDetail),
+          publishedMediaAssetId: current.mediaAssetId,
           status: "PUBLISHED",
           publishedRevision: nextRevision,
           publishedAt: new Date(),
@@ -312,7 +324,7 @@ export class PrismaServiceRepository implements ServiceRepository {
           profileId: id,
           version: nextRevision,
           kind: "PUBLISHED",
-          snapshot: asJson(snapshotFromInput({ serviceKey: current.serviceKey, slug: current.slug, label: "", description: "", href: "", icon: "", titleEn: current.titleEn, titleBn: current.titleBn, descriptionEn: current.descriptionEn, descriptionBn: current.descriptionBn, detail })),
+          snapshot: asJson(snapshotFromInput({ serviceKey: current.serviceKey, slug: current.slug, label: "", description: "", href: "", icon: "", titleEn: current.titleEn, titleBn: current.titleBn, descriptionEn: current.descriptionEn, descriptionBn: current.descriptionBn, mediaAssetId: current.mediaAssetId, detail })),
           createdBy: updatedBy,
         },
       });
@@ -335,6 +347,7 @@ export class PrismaServiceRepository implements ServiceRepository {
         data: {
           status: current.detail ? "DRAFT" : "LINK_ONLY",
           publishedDetail: Prisma.JsonNull,
+          publishedMediaAssetId: null,
           revision: nextRevision,
         },
       });

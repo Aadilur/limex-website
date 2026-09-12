@@ -31,13 +31,18 @@ type RichTextEditorProps = {
   value: string;
   onChange: (html: string, document: RichTextDocument) => void;
   placeholder?: string;
+  ariaLabel?: string;
+  compact?: boolean;
+  className?: string;
 };
 
 const inputClass =
   "min-h-10 w-full rounded-[10px] border border-[#ddd7ce] bg-[#fffdfa] px-3 text-[12px] text-[#14131c] outline-none transition-colors placeholder:text-[#aaa49b] focus:border-[#e44762] focus:ring-4 focus:ring-[#f54763]/10";
 
-const editorSurfaceClass = [
-  "min-h-[320px] px-5 py-5 text-[15px] leading-[1.75] text-[#383531] outline-none",
+function editorSurfaceClass(compact: boolean) {
+  return [
+  compact ? "min-h-[220px]" : "min-h-[320px]",
+  "px-5 py-5 text-[15px] leading-[1.75] text-[#383531] outline-none",
   "[&_p]:my-3 [&_p:first-child]:mt-0 [&_p:last-child]:mb-0",
   "[&_h2]:mb-3 [&_h2]:mt-7 [&_h2]:font-brand [&_h2]:text-[24px] [&_h2]:font-bold [&_h2]:leading-[1.15] [&_h2]:tracking-[-0.035em] [&_h2]:text-[#14131c]",
   "[&_h3]:mb-2 [&_h3]:mt-6 [&_h3]:font-brand [&_h3]:text-[19px] [&_h3]:font-bold [&_h3]:leading-[1.2] [&_h3]:tracking-[-0.025em] [&_h3]:text-[#14131c]",
@@ -48,7 +53,8 @@ const editorSurfaceClass = [
   "[&_hr]:my-7 [&_hr]:border-0 [&_hr]:border-t [&_hr]:border-[#e8e2da]",
   "[&_img]:my-5 [&_img]:max-h-[460px] [&_img]:max-w-full [&_img]:rounded-[12px] [&_img]:object-contain",
   "[&_.is-empty:first-child::before]:pointer-events-none [&_.is-empty:first-child::before]:float-left [&_.is-empty:first-child::before]:h-0 [&_.is-empty:first-child::before]:text-[#aaa49b] [&_.is-empty:first-child::before]:content-[attr(data-placeholder)]",
-].join(" ");
+  ].join(" ");
+}
 
 function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
@@ -241,7 +247,7 @@ function ImagePanel({
   );
 }
 
-export function RichTextEditor({ value, onChange, placeholder = "Start writing your article…" }: RichTextEditorProps) {
+export function RichTextEditor({ value, onChange, placeholder = "Start writing your article…", ariaLabel = "Article body", compact = false, className = "" }: RichTextEditorProps) {
   const [sourceMode, setSourceMode] = useState(false);
   const [selectionVersion, setSelectionVersion] = useState(0);
   const [linkPanelOpen, setLinkPanelOpen] = useState(false);
@@ -279,13 +285,13 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
   const editorProps = useMemo(
     () => ({
       attributes: {
-        class: editorSurfaceClass,
-        "aria-label": "Article body",
+        class: editorSurfaceClass(compact),
+        "aria-label": ariaLabel,
         role: "textbox",
         spellcheck: "true",
       },
     }),
-    [],
+    [ariaLabel, compact],
   );
 
   const editor = useEditor({
@@ -367,7 +373,7 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
   }
 
   return (
-    <div className="overflow-hidden rounded-[14px] border border-[#ddd7ce] bg-[#fffdfa] transition-colors focus-within:border-[#e44762] focus-within:ring-4 focus-within:ring-[#f54763]/10">
+    <div className={cn("overflow-hidden rounded-[14px] border border-[#ddd7ce] bg-[#fffdfa] transition-colors focus-within:border-[#e44762] focus-within:ring-4 focus-within:ring-[#f54763]/10", className)}>
       <div className="flex flex-wrap items-center gap-1 border-b border-[#eee9e2] bg-[#faf7f2] px-2 py-1.5" aria-label="Article formatting toolbar">
         <label className="sr-only" htmlFor="article-block-style">Text style</label>
         <select id="article-block-style" className="mr-1 h-8 rounded-[8px] bg-transparent px-2 text-[11px] font-bold text-[#4f4b47] outline-none transition-colors hover:bg-white focus:bg-white focus:ring-2 focus:ring-[#f54763]/20" value={activeStyle} onChange={(event) => updateBlockStyle(event.target.value as BlockStyle)} disabled={!editor || sourceMode}>
@@ -398,7 +404,7 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
       {panelError ? <p className="border-b border-[#f4c9d0] bg-[#fff5f6] px-3 py-2 text-[10px] font-semibold text-[#ad3148]" role="alert">{panelError}</p> : null}
       {linkPanelOpen && editor ? <LinkPanel editor={editor} value={linkUrl} onChange={setLinkUrl} onClose={() => setLinkPanelOpen(false)} onError={setPanelError} /> : null}
       {imagePanelOpen && editor ? <ImagePanel editor={editor} url={imageUrl} alt={imageAlt} onUrlChange={setImageUrl} onAltChange={setImageAlt} onClose={() => setImagePanelOpen(false)} onError={setPanelError} /> : null}
-      {sourceMode ? <textarea className="min-h-[320px] w-full resize-y border-0 bg-[#fffdfa] px-5 py-5 font-mono text-[12px] leading-[1.7] text-[#3f3b37] outline-none" value={value} onChange={(event) => onChange(event.target.value, { version: 1, html: event.target.value })} spellCheck={false} aria-label="Article HTML source" /> : editor ? <EditorContent editor={editor} /> : <div className="min-h-[320px] px-5 py-5 text-[13px] text-[#aaa49b]">Loading editor…</div>}
+      {sourceMode ? <textarea className={cn(compact ? "min-h-[220px]" : "min-h-[320px]", "w-full resize-y border-0 bg-[#fffdfa] px-5 py-5 font-mono text-[12px] leading-[1.7] text-[#3f3b37] outline-none")} value={value} onChange={(event) => onChange(event.target.value, { version: 1, html: event.target.value })} spellCheck={false} aria-label={`${ariaLabel} HTML source`} /> : editor ? <EditorContent editor={editor} /> : <div className={cn(compact ? "min-h-[220px]" : "min-h-[320px]", "px-5 py-5 text-[13px] text-[#aaa49b]")}>Loading editor…</div>}
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#eee9e2] px-4 py-2 text-[10px] text-[#9b958c]">
         <span>{wordCount.toLocaleString()} words · {characterCount.toLocaleString()} characters</span>
         <span>{sourceMode ? "HTML source" : "Visual editor"} · sanitized on save</span>
