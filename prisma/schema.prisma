@@ -202,6 +202,7 @@ model MenuItem {
   updatedAt   DateTime    @updatedAt
   group       MenuGroup   @relation(fields: [groupId], references: [id], onDelete: Cascade)
   links       MenuLink[]
+  serviceProfile ServiceProfile?
 
   @@unique([groupId, label])
   @@index([groupId, sortOrder])
@@ -219,6 +220,44 @@ model MenuLink {
   item      MenuItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
 
   @@index([itemId, sortOrder])
+}
+
+model ServiceProfile {
+  id                String                  @id @default(cuid())
+  serviceKey        String                  @unique @db.VarChar(180)
+  slug              String                  @unique @db.VarChar(180)
+  menuItemId        String?                 @unique
+  titleEn           String                  @db.VarChar(180)
+  titleBn           String                  @db.VarChar(180)
+  descriptionEn     String                  @db.VarChar(500)
+  descriptionBn     String                  @db.VarChar(500)
+  detail            Json?
+  publishedDetail   Json?
+  status            String                  @default("LINK_ONLY") @db.VarChar(16)
+  revision          Int                     @default(1)
+  publishedRevision Int?
+  publishedAt       DateTime?
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  menuItem          MenuItem?               @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
+  revisions         ServiceProfileRevision[]
+
+  @@index([status, updatedAt])
+  @@index([status, publishedAt])
+}
+
+model ServiceProfileRevision {
+  id          String        @id @default(cuid())
+  profileId   String
+  version     Int
+  kind        String        @default("DRAFT") @db.VarChar(16)
+  snapshot    Json
+  createdBy   String?       @db.VarChar(120)
+  createdAt   DateTime      @default(now())
+  profile     ServiceProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, version])
+  @@index([profileId, createdAt])
 }
 
 model AboutTeamMember {

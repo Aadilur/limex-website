@@ -1,16 +1,6 @@
-export type ServicePriceTier = {
-  name: string;
-  price: string;
-  description: string;
-  features: string[];
-  action: string;
-  featured?: boolean;
-};
+import type { ServiceDetailContent, ServiceDestination, ServiceFaq, ServicePriceTier } from "@/lib/service-types";
 
-export type ServiceFaq = {
-  question: string;
-  answer: string;
-};
+export type { ServiceDetailContent, ServiceDestination, ServiceFaq, ServicePriceTier } from "@/lib/service-types";
 
 export type ServicePageContent = {
   slug: string;
@@ -31,6 +21,13 @@ export type ServicePageContent = {
   contentTitle: string;
   contentDescription: string;
   contentLinkLabel: string;
+  contentLinkHref?: string;
+  destination?: ServiceDestination;
+  relatedLinks?: Array<{ id: string; label: string; href: string; isVisible: boolean; sortOrder: number }>;
+  mediaUrl?: string;
+  mediaAlt?: string;
+  benefits?: string[];
+  steps?: Array<{ title: string; description: string }>;
   facts: Array<{ label: string; value: string }>;
   pricing: ServicePriceTier[];
   faqs: ServiceFaq[];
@@ -48,6 +45,8 @@ export const trademarkRegistrationService: ServicePageContent = {
   serviceMode: "Online or offline",
   mediaTitle: "Trademark registration",
   mediaDescription: "A visual slot for your service story, filing flow or helpful explainer.",
+  mediaUrl: "",
+  mediaAlt: "",
   overviewEyebrow: "OVERVIEW / GUIDED FILING",
   overviewTitle: "What this service includes",
   overviewDescription: "A guided path from searching your mark to preparing a clean filing.",
@@ -55,6 +54,17 @@ export const trademarkRegistrationService: ServicePageContent = {
   contentTitle: "Make the filing decision with more clarity.",
   contentDescription: "We help you understand the relevant class, prepare the core information and move through the registration process with practical next steps at every stage.",
   contentLinkLabel: "View full requirements",
+  contentLinkHref: "#pricing",
+  benefits: [
+    "Clear class and filing direction",
+    "Application preparation and document review",
+    "Practical updates through the next steps",
+  ],
+  steps: [
+    { title: "Share your mark", description: "Tell us the brand name and what you plan to offer." },
+    { title: "Review the class", description: "We help you choose a sensible class direction." },
+    { title: "Prepare the filing", description: "Move forward with a clear application checklist." },
+  ],
   facts: [
     { label: "Delivery", value: "2 to 3 days" },
     { label: "Support level", value: "Guided throughout" },

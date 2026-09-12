@@ -6,6 +6,10 @@ import type { ServicePageContent, ServicePriceTier } from "./service-page-data";
 import { ContactModal } from "./contact-section";
 import { ActionButton, WaveLabel } from "./ui";
 
+function externalLinkProps(href: string) {
+  return /^https?:\/\//i.test(href) ? { target: "_blank" as const, rel: "noreferrer" } : {};
+}
+
 export function ServiceHeroSection({ service }: { service: ServicePageContent }) {
   return (
     <section className="bg-page py-cluster-sm lg:py-cluster" aria-labelledby="service-page-title">
@@ -15,7 +19,10 @@ export function ServiceHeroSection({ service }: { service: ServicePageContent })
           <p className="text-overline text-[#de5778]">{service.category}</p>
           <h1 className="mt-cluster max-w-[690px] font-brand text-page-title text-ink max-lg:text-page-title-mobile" id="service-page-title">{service.title}</h1>
           <p className="mt-cluster max-w-[620px] text-body-lg text-muted">{service.description}</p>
-          <ActionButton href="#service-contact" arrow="cta" className="mt-section-gap-lg min-h-button-lg w-[188px] pl-5 text-body-xs">{service.ctaLabel}</ActionButton>
+          <div className="mt-section-gap-lg flex flex-wrap items-center gap-cluster">
+            <ActionButton href="#service-contact" arrow="cta" className="min-h-button-lg w-[188px] pl-5 text-body-xs">{service.ctaLabel}</ActionButton>
+            {service.destination && service.destination.type !== "DETAIL" && service.destination.type !== "CONTACT" ? <a className="inline-flex min-h-control items-center gap-cluster-sm rounded-pill px-3 text-button font-semibold text-ink transition-colors hover:text-pink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3" href={service.destination.href} target={service.destination.isExternal ? "_blank" : undefined} rel={service.destination.isExternal ? "noreferrer" : undefined}>{service.destination.label}<span className="text-pink" aria-hidden="true">↗</span></a> : null}
+          </div>
 
           <dl className="mt-section-gap-xl grid max-w-[650px] grid-cols-1 gap-section-gap border-t border-[#e0dee3] pt-card-pad-sm sm:grid-cols-3 sm:gap-cluster">
             <div>
@@ -33,16 +40,17 @@ export function ServiceHeroSection({ service }: { service: ServicePageContent })
           </dl>
         </div>
 
-        <div className="relative min-h-[320px] overflow-hidden rounded-panel bg-[#f4eff9] sm:min-h-[360px]" aria-label={`${service.mediaTitle} media placeholder`}>
-          <img className="absolute -right-6 -top-8 size-[180px] animate-hero-float motion-reduce:animate-none" src="/figma/warm-glow.svg" alt="" aria-hidden="true" />
-          <img className="absolute bottom-[-10px] left-[-20px] size-[150px] animate-hero-float-reverse motion-reduce:animate-none" src="/figma/cool-glow.svg" alt="" aria-hidden="true" />
-          <img className="absolute bottom-[-30px] right-[-10px] size-[115px] animate-hero-float-slow motion-reduce:animate-none" src="/figma/center-glow.svg" alt="" aria-hidden="true" />
-          <p className="absolute left-6 top-5 text-overline text-[#de5778]">Media slot</p>
-          <div className="absolute left-1/2 top-1/2 w-[min(336px,calc(100%-48px))] -translate-x-1/2 -translate-y-1/2 rounded-card bg-white px-card-pad py-section-y">
-            <h2 className="font-brand text-section-title text-ink">{service.mediaTitle}</h2>
-            <p className="mt-cluster text-body-xs text-muted">{service.mediaDescription}</p>
+        <div className="relative min-h-[320px] overflow-hidden rounded-panel bg-[#f4eff9] sm:min-h-[360px]" aria-label={service.mediaTitle}>
+          {service.mediaUrl?.trim() ? <img className="absolute inset-0 size-full object-cover" src={service.mediaUrl} alt={service.mediaAlt || service.mediaTitle} /> : null}
+          <img className={`absolute -right-6 -top-8 size-[180px] animate-hero-float motion-reduce:animate-none ${service.mediaUrl?.trim() ? "opacity-25" : ""}`.trim()} src="/figma/warm-glow.svg" alt="" aria-hidden="true" />
+          <img className={`absolute bottom-[-10px] left-[-20px] size-[150px] animate-hero-float-reverse motion-reduce:animate-none ${service.mediaUrl?.trim() ? "opacity-25" : ""}`.trim()} src="/figma/cool-glow.svg" alt="" aria-hidden="true" />
+          <img className={`absolute bottom-[-30px] right-[-10px] size-[115px] animate-hero-float-slow motion-reduce:animate-none ${service.mediaUrl?.trim() ? "opacity-25" : ""}`.trim()} src="/figma/center-glow.svg" alt="" aria-hidden="true" />
+          {!service.mediaUrl?.trim() ? <p className="absolute left-6 top-5 text-overline text-[#de5778]">Media slot</p> : null}
+          <div className={`absolute left-1/2 top-1/2 w-[min(336px,calc(100%-48px))] -translate-x-1/2 -translate-y-1/2 rounded-card px-card-pad py-section-y ${service.mediaUrl?.trim() ? "bg-navy/85 text-white" : "bg-white"}`.trim()}>
+            <h2 className={`font-brand text-section-title ${service.mediaUrl?.trim() ? "text-white" : "text-ink"}`.trim()}>{service.mediaTitle}</h2>
+            <p className={`mt-cluster text-body-xs ${service.mediaUrl?.trim() ? "text-white/75" : "text-muted"}`.trim()}>{service.mediaDescription}</p>
           </div>
-          <p className="absolute bottom-5 right-6 text-micro font-medium text-muted">Optional CMS media</p>
+          {!service.mediaUrl?.trim() ? <p className="absolute bottom-5 right-6 text-micro font-medium text-muted">Optional CMS media</p> : null}
         </div>
       </div>
     </section>
@@ -52,7 +60,7 @@ export function ServiceHeroSection({ service }: { service: ServicePageContent })
 export function ServiceOverviewSection({ service }: { service: ServicePageContent }) {
   return (
     <section className="mt-section-gap-xl border-t border-[#e0dee3] bg-page pt-section-y lg:mt-section-gap-xl lg:pt-section-y-xl" id="service-overview" aria-labelledby="service-overview-title">
-      <div className="grid gap-section-gap lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.7fr)] lg:gap-section-gap-xl">
+      <div className={`grid gap-section-gap ${service.facts.length ? "lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.7fr)] lg:gap-section-gap-xl" : ""}`.trim()}>
         <div className="min-w-0">
           <p className="text-overline text-[#de5778]">{service.overviewEyebrow}</p>
           <h2 className="mt-cluster max-w-[760px] font-brand text-page-title text-ink max-lg:text-page-title-mobile" id="service-overview-title">{service.overviewTitle}</h2>
@@ -62,13 +70,34 @@ export function ServiceOverviewSection({ service }: { service: ServicePageConten
             <p className="text-overline text-[#de5778]">{service.contentLabel}</p>
             <h3 className="mt-cluster font-brand text-section-title text-ink">{service.contentTitle}</h3>
             <p className="mt-cluster max-w-[680px] text-body-sm text-muted">{service.contentDescription}</p>
-            <a className="mt-section-gap-lg inline-flex items-center gap-cluster-sm text-button font-bold text-ink transition-colors hover:text-pink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3" href="#pricing">
+            {service.contentLinkLabel ? <a className="mt-section-gap-lg inline-flex items-center gap-cluster-sm text-button font-bold text-ink transition-colors hover:text-pink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3" href={service.contentLinkHref || "#pricing"} {...externalLinkProps(service.contentLinkHref || "#pricing")}>
               {service.contentLinkLabel} <span className="text-pink" aria-hidden="true">↗</span>
-            </a>
+            </a> : null}
           </article>
+
+          {service.benefits?.length ? (
+            <div className="mt-section-gap-lg grid gap-cluster sm:grid-cols-2">
+              {service.benefits.map((benefit) => <p className="flex items-start gap-cluster-sm text-body-sm text-ink" key={benefit}><span className="mt-2 size-2 shrink-0 rounded-full bg-[#de4d73]" aria-hidden="true" />{benefit}</p>)}
+            </div>
+          ) : null}
+
+          {service.steps?.length ? (
+            <div className="mt-section-gap-xl grid gap-cluster sm:grid-cols-3">
+              {service.steps.map((step, index) => <div className="border-t border-[#e0dee3] pt-cluster" key={`${step.title}-${index}`}><span className="text-overline text-[#de5778]">{String(index + 1).padStart(2, "0")}</span><h3 className="mt-cluster-xs font-brand text-subheading-mobile text-ink">{step.title}</h3><p className="mt-cluster-xs text-body-xs text-muted">{step.description}</p></div>)}
+            </div>
+          ) : null}
+
+          {service.relatedLinks?.length ? (
+            <div className="mt-section-gap-xl border-t border-[#e0dee3] pt-section-y">
+              <p className="text-overline text-[#de5778]">Related options</p>
+              <div className="mt-cluster flex flex-wrap gap-2">
+                {service.relatedLinks.map((link) => <a className="inline-flex min-h-10 items-center gap-2 rounded-pill bg-white px-3.5 text-button font-semibold text-ink ring-1 ring-[#e0dee3] transition-colors hover:text-pink hover:ring-[#de5778]/40" href={link.href} {...externalLinkProps(link.href)} key={link.id}>{link.label}<span className="text-pink" aria-hidden="true">↗</span></a>)}
+              </div>
+            </div>
+          ) : null}
         </div>
 
-        <aside className="lg:pt-[166px]" aria-label="Service key facts">
+        {service.facts.length ? <aside className="lg:pt-[166px]" aria-label="Service key facts">
           <p className="text-overline text-[#de5778]">Key facts</p>
           <dl className="mt-cluster divide-y divide-[#e0dee3] border-y border-[#e0dee3]">
             {service.facts.map((fact) => (
@@ -78,7 +107,7 @@ export function ServiceOverviewSection({ service }: { service: ServicePageConten
               </div>
             ))}
           </dl>
-        </aside>
+        </aside> : null}
       </div>
     </section>
   );
@@ -108,6 +137,8 @@ function PriceCard({ tier }: { tier: ServicePriceTier }) {
 }
 
 export function ServicePricingSection({ service }: { service: ServicePageContent }) {
+  if (!service.pricing.length) return null;
+
   return (
     <section className="mt-section-gap-xl border-t border-[#e0dee3] bg-page pt-section-y lg:mt-section-gap-xl lg:pt-section-y-xl" id="pricing" aria-labelledby="service-pricing-title">
       <p className="text-overline text-[#de5778]">Optional / pricing</p>
@@ -122,6 +153,8 @@ export function ServicePricingSection({ service }: { service: ServicePageContent
 
 export function ServiceFaqSection({ service }: { service: ServicePageContent }) {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
+
+  if (!service.faqs.length) return null;
 
   return (
     <section className="mt-section-gap-xl border-t border-[#e0dee3] bg-page pt-section-y lg:mt-section-gap-xl lg:pt-section-y-xl" id="service-faq" aria-labelledby="service-faq-title">

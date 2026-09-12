@@ -1,13 +1,19 @@
 import type { Metadata } from "next";
 
-import { ServiceDetailPage } from "@/components/limex/service-detail-page";
-import { trademarkRegistrationService } from "@/components/limex/service-page-data";
+import { ServicesPage } from "@/components/limex/services-page";
 
 export const metadata: Metadata = {
-  title: "Trademark Registration | Limex",
-  description: "A clear, guided trademark registration service from Limex.",
+  title: "Services | Limex",
+  description: "Explore company registration, tax, trademark, compliance and business support services from Limex.",
+  alternates: { canonical: "/services" },
+  openGraph: {
+    type: "website",
+    title: "Services | Limex",
+    description: "Explore company registration, tax, trademark, compliance and business support services from Limex.",
+    url: "/services",
+  },
 };
 
-export default function ServicesRoute() {
-  return <ServiceDetailPage service={trademarkRegistrationService} />;
+export default async function ServicesRoute() {
+  return <ServicesPage />;
 }

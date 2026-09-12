@@ -1,0 +1,133 @@
+export const serviceDestinationTypes = ["DETAIL", "BLOG", "TOOL", "INTERNAL", "EXTERNAL", "CONTACT"] as const;
+export type ServiceDestinationType = (typeof serviceDestinationTypes)[number];
+
+export const serviceStatuses = ["LINK_ONLY", "DRAFT", "PUBLISHED"] as const;
+export type ServiceStatus = (typeof serviceStatuses)[number];
+
+export type ServiceFact = {
+  label: string;
+  value: string;
+};
+
+export type ServicePriceTier = {
+  name: string;
+  price: string;
+  description: string;
+  features: string[];
+  action: string;
+  featured?: boolean;
+};
+
+export type ServiceFaq = {
+  question: string;
+  answer: string;
+};
+
+export type ServiceStep = {
+  title: string;
+  description: string;
+};
+
+export type ServiceDetailContent = {
+  ctaLabel: string;
+  startingPrice: string;
+  deliveryTime: string;
+  serviceMode: string;
+  mediaTitle: string;
+  mediaDescription: string;
+  mediaUrl: string;
+  mediaAlt: string;
+  overviewEyebrow: string;
+  overviewTitle: string;
+  overviewDescription: string;
+  contentLabel: string;
+  contentTitle: string;
+  contentDescription: string;
+  contentLinkLabel: string;
+  contentLinkHref: string;
+  benefits: string[];
+  steps: ServiceStep[];
+  facts: ServiceFact[];
+  pricing: ServicePriceTier[];
+  faqs: ServiceFaq[];
+};
+
+export type ServiceDestination = {
+  type: ServiceDestinationType;
+  href: string;
+  label: string;
+  isExternal: boolean;
+};
+
+export type ServiceChildLink = {
+  id: string;
+  label: string;
+  href: string;
+  isVisible: boolean;
+  sortOrder: number;
+};
+
+export type PublicService = {
+  id: string;
+  serviceKey: string;
+  menuItemId: string | null;
+  slug: string;
+  title: string;
+  description: string;
+  category: string;
+  categoryKey: string;
+  groupLabel: string;
+  icon: string;
+  color: string;
+  surface: string;
+  href: string;
+  destination: ServiceDestination;
+  children: ServiceChildLink[];
+  status: ServiceStatus;
+  hasDetailPage: boolean;
+  sortOrder: number;
+  isVisible: boolean;
+  updatedAt: string | null;
+};
+
+export type PublicServiceDetail = PublicService & {
+  detail: ServiceDetailContent;
+};
+
+export type ServiceCategory = {
+  key: string;
+  label: string;
+  count: number;
+};
+
+export type PublicServiceCatalog = {
+  categories: ServiceCategory[];
+  items: PublicService[];
+};
+
+export type AdminService = PublicService & {
+  profileId: string | null;
+  titleEn: string;
+  titleBn: string;
+  descriptionEn: string;
+  descriptionBn: string;
+  revision: number;
+  publishedRevision: number | null;
+  publishedAt: string | null;
+  createdAt: string | null;
+  detail: ServiceDetailContent | null;
+};
+
+export type ServiceProfileInput = {
+  serviceKey?: string;
+  slug: string;
+  label: string;
+  description: string;
+  href: string;
+  icon: string;
+  titleEn: string;
+  titleBn: string;
+  descriptionEn: string;
+  descriptionBn: string;
+  detail: ServiceDetailContent | null;
+};

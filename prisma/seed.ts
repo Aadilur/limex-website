@@ -7,6 +7,8 @@ import { defaultLandingContent } from "../src/lib/landing-defaults.js";
 import { defaultMouTemplate, flattenTemplatePages, normalizeDocumentTemplateDraft } from "../src/lib/document-templates.js";
 import { defaultPartnershipDeed40Templates, isPartnershipDeedTemplate, upgradePartnershipDeedTemplate } from "../src/lib/partnership-deed-templates.js";
 import { defaultRentalDeedTemplates } from "../src/lib/rental-deed-templates.js";
+import { trademarkRegistrationService } from "../src/components/limex/service-page-data.js";
+import type { ServiceDetailContent } from "../src/lib/service-types.js";
 
 const prisma = new PrismaClient();
 
@@ -34,6 +36,109 @@ function articleService(article: BlogArticle) {
     .map((title) => services.find((service) => service.title === title))
     .filter((service): service is (typeof services)[number] => Boolean(service))
     .map((service, index) => ({ serviceKey: service.title, label: service.title, href: service.href, isPrimary: index === 0, sortOrder: index }));
+}
+
+function serviceSlug(sectionLabel: string, itemLabel: string, href: string) {
+  const linkedSlug = href.match(/^\/services\/([^/?#]+)/i)?.[1];
+  if (linkedSlug) return linkedSlug.toLowerCase();
+  return `${sectionLabel}-${itemLabel}`.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 160) || "service";
+}
+
+function detailSnapshot(service: typeof trademarkRegistrationService): ServiceDetailContent {
+  return {
+    ctaLabel: service.ctaLabel,
+    startingPrice: service.startingPrice,
+    deliveryTime: service.deliveryTime,
+    serviceMode: service.serviceMode,
+    mediaTitle: service.mediaTitle,
+    mediaDescription: service.mediaDescription,
+    mediaUrl: service.mediaUrl ?? "",
+    mediaAlt: service.mediaAlt ?? "",
+    overviewEyebrow: service.overviewEyebrow,
+    overviewTitle: service.overviewTitle,
+    overviewDescription: service.overviewDescription,
+    contentLabel: service.contentLabel,
+    contentTitle: service.contentTitle,
+    contentDescription: service.contentDescription,
+    contentLinkLabel: service.contentLinkLabel,
+    contentLinkHref: service.contentLinkHref ?? "#pricing",
+    benefits: service.benefits ?? [],
+    steps: service.steps ?? [],
+    facts: service.facts,
+    pricing: service.pricing,
+    faqs: service.faqs,
+  };
+}
+
+async function seedServiceProfiles() {
+  const sections = await prisma.menuSection.findMany({
+    include: { groups: { include: { items: true } } },
+  });
+
+  for (const section of sections) {
+    for (const group of section.groups) {
+      for (const item of group.items) {
+        const existing = await prisma.serviceProfile.findUnique({ where: { menuItemId: item.id } });
+        const isTrademarkProfile = item.label === "Trademark" || item.href === `/services/${trademarkRegistrationService.slug}`;
+        const detail = isTrademarkProfile ? detailSnapshot(trademarkRegistrationService) : null;
+        if (existing) {
+          // Repair only the original link-only trademark seed. Never replace a
+          // profile that an administrator has already started editing.
+          if (isTrademarkProfile && existing.status === "LINK_ONLY" && !existing.detail) {
+            await prisma.serviceProfile.update({
+              where: { id: existing.id },
+              data: {
+                slug: trademarkRegistrationService.slug,
+                detail: detail as unknown as Prisma.InputJsonValue,
+                publishedDetail: detail as unknown as Prisma.InputJsonValue,
+                status: "PUBLISHED",
+                publishedRevision: existing.revision + 1,
+                publishedAt: existing.createdAt,
+                revisions: { create: { version: existing.revision + 1, kind: "PUBLISHED", snapshot: { serviceKey: existing.serviceKey, slug: trademarkRegistrationService.slug, detail } as unknown as Prisma.InputJsonValue, createdBy: "seed" } },
+                revision: { increment: 1 },
+              },
+            });
+          }
+          continue;
+        }
+
+        const slug = detail ? trademarkRegistrationService.slug : serviceSlug(section.label, item.label, item.href);
+        await prisma.serviceProfile.create({
+          data: {
+            serviceKey: item.label,
+            slug,
+            menuItemId: item.id,
+            titleEn: item.label,
+            titleBn: item.label,
+            descriptionEn: item.description,
+            descriptionBn: item.description,
+            detail: detail ? detail as unknown as Prisma.InputJsonValue : Prisma.JsonNull,
+            publishedDetail: detail ? detail as unknown as Prisma.InputJsonValue : Prisma.JsonNull,
+            status: detail ? "PUBLISHED" : "LINK_ONLY",
+            revision: 1,
+            publishedRevision: detail ? 1 : null,
+            publishedAt: detail ? new Date() : null,
+            revisions: {
+              create: {
+                version: 1,
+                kind: detail ? "PUBLISHED" : "DRAFT",
+                snapshot: {
+                  serviceKey: item.label,
+                  slug,
+                  titleEn: item.label,
+                  titleBn: item.label,
+                  descriptionEn: item.description,
+                  descriptionBn: item.description,
+                  detail,
+                } as unknown as Prisma.InputJsonValue,
+                createdBy: "seed",
+              },
+            },
+          },
+        });
+      }
+    }
+  }
 }
 
 async function seedBlogPosts() {
@@ -180,6 +285,8 @@ async function main() {
       });
     }
   }
+
+  await seedServiceProfiles();
 
   await prisma.landingPage.upsert({
     where: { id: "home" },

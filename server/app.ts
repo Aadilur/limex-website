@@ -31,6 +31,9 @@ import { BlogService } from "./modules/blog/application/blog.service.js";
 import { PrismaBlogRepository } from "./modules/blog/infrastructure/prisma-blog.repository.js";
 import { createBlogRoutes } from "./modules/blog/interface/http/blog.routes.js";
 import { createRateLimiter } from "./shared/http/rate-limit.js";
+import { ServiceService } from "./modules/services/application/service.service.js";
+import { PrismaServiceRepository } from "./modules/services/infrastructure/prisma-service.repository.js";
+import { serviceRoutes } from "./modules/services/interface/http/service.routes.js";
 
 export async function buildApp() {
   const app = Fastify({
@@ -72,6 +75,7 @@ export async function buildApp() {
   const aboutService = new AboutService(new PrismaAboutRepository(prisma), new PrismaAboutReelRepository(prisma));
   const landingService = new LandingService(new PrismaLandingRepository(prisma));
   const blogService = new BlogService(new PrismaBlogRepository(prisma));
+  const serviceService = new ServiceService(new PrismaServiceRepository(prisma));
 
   await app.register(healthRoutes, { service: healthService });
   await app.register(userRoutes, { service: userService });
@@ -83,6 +87,7 @@ export async function buildApp() {
   await app.register(toolsRoutes);
   await app.register(templateRoutes);
   await app.register(createBlogRoutes(blogService));
+  await app.register(serviceRoutes, { service: serviceService });
 
   app.setErrorHandler((error, request, reply) => {
     if (error instanceof ZodError) {

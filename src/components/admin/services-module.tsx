@@ -694,6 +694,7 @@ export function ServicesModule() {
           <p className="mt-3 max-w-[620px] text-[14px] leading-[1.6] text-[#77736e]">Organize categories, services, links and icons from one focused workspace.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <a className="inline-flex min-h-10 items-center justify-center rounded-full bg-[#14131c] px-4 text-[12px] font-bold text-white transition-colors hover:bg-[#2d2c37]" href="/admin/services/pages">Service pages</a>
           <a className="inline-flex min-h-10 items-center justify-center rounded-full border border-[#d8d2c8] bg-white px-4 text-[12px] font-bold text-[#4f4b47] transition-colors hover:border-[#aaa197] hover:text-[#14131c]" href="/" target="_blank" rel="noreferrer">Preview website ↗</a>
           <button className="inline-flex min-h-10 items-center justify-center rounded-full bg-[#14131c] px-4 text-[12px] font-bold text-white transition-transform hover:-translate-y-px" type="button" onClick={() => window.location.reload()}>Refresh data</button>
         </div>

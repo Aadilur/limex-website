@@ -15,6 +15,7 @@ export type MenuItem = {
   icon: string;
   sortOrder: number;
   isVisible: boolean;
+  updatedAt: Date;
   links: MenuLink[];
 };
 

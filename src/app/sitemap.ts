@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 
 import { getPublicBlogIndexServer } from "@/lib/blog-server";
+import { getPublicServicesServer } from "@/lib/service-server";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,7 @@ async function loadAllBlogPages(locale: "en" | "bn") {
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? process.env.PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
-  const [articles, banglaArticles] = await Promise.all([loadAllBlogPages("en"), loadAllBlogPages("bn")]);
+  const [articles, banglaArticles, services] = await Promise.all([loadAllBlogPages("en"), loadAllBlogPages("bn"), getPublicServicesServer()]);
   const allArticles = [...articles, ...banglaArticles];
   const uniqueArticles = allArticles
     .filter(Boolean)
@@ -24,6 +25,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: baseUrl, changeFrequency: "weekly", priority: 1 },
     { url: `${baseUrl}/about`, changeFrequency: "monthly", priority: 0.7 },
     { url: `${baseUrl}/services`, changeFrequency: "weekly", priority: 0.8 },
+    ...services.items.filter((service) => service.hasDetailPage).map((service) => ({ url: `${baseUrl}/services/${service.slug}`, changeFrequency: "monthly" as const, priority: 0.75 })),
     { url: `${baseUrl}/business-tools`, changeFrequency: "weekly", priority: 0.8 },
     { url: `${baseUrl}/blog`, changeFrequency: "weekly", priority: 0.8 },
     { url: `${baseUrl}/bn/blog`, changeFrequency: "weekly", priority: 0.75 },

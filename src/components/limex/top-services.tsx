@@ -5,8 +5,10 @@ import { useEffect, useMemo, useState } from "react";
 import { createServicesFromNavigation, navigation, type NavItem, type Service } from "./data";
 import { ServiceIcon } from "./service-icons";
 import { getToneClasses } from "./styles";
-import { getPublicMenu } from "@/lib/menu-api";
 import type { LandingServiceItem } from "@/lib/landing-types";
+import { getPublicMenu } from "@/lib/menu-api";
+import { getPublicServices } from "@/lib/service-api";
+import type { PublicService } from "@/lib/service-types";
 
 const priorityServices = [
   { title: "Company Formation", displayTitle: "Company registration" },
@@ -66,6 +68,22 @@ function toPriorityService(service: LandingServiceItem): PriorityService {
   };
 }
 
+function hydratePriorityService(service: PriorityService, liveServices: PublicService[]) {
+  const live = liveServices.find((candidate) => candidate.serviceKey === service.title || candidate.title === service.title || candidate.title === service.displayTitle);
+  if (!live) return service;
+
+  const tone = serviceToneByFilter[live.categoryKey === "ip-trademark" ? "Trademark" : live.categoryKey === "compliance-documentation" ? "Tax & compliance" : live.categoryKey === "business-tools" ? "Business tools" : "Startup"];
+  return {
+    ...service,
+    title: live.title,
+    description: live.description,
+    href: live.href,
+    icon: live.icon as PriorityService["icon"],
+    color: tone.color,
+    surface: tone.surface,
+  };
+}
+
 function FeaturedServiceLink({ service }: { service: PriorityService }) {
   const tone = getToneClasses(service.color, service.surface);
 
@@ -89,19 +107,32 @@ function FeaturedServiceLink({ service }: { service: PriorityService }) {
 
 export function TopServices({ featuredServices }: { featuredServices?: LandingServiceItem[] }) {
   const [menuNavigation, setMenuNavigation] = useState(navigation);
+  const [liveServices, setLiveServices] = useState<PublicService[]>([]);
   const topServices = useMemo(
-    () => featuredServices?.map(toPriorityService) ?? selectPriorityServices(menuNavigation),
-    [featuredServices, menuNavigation],
+    () => (featuredServices?.map(toPriorityService) ?? selectPriorityServices(menuNavigation)).map((service) => hydratePriorityService(service, liveServices)),
+    [featuredServices, liveServices, menuNavigation],
   );
   const mobileServices = useMemo(
-    () => featuredServices?.map(toPriorityService) ?? selectPriorityServices(menuNavigation, mobilePriorityServices),
-    [featuredServices, menuNavigation],
+    () => (featuredServices?.map(toPriorityService) ?? selectPriorityServices(menuNavigation, mobilePriorityServices)).map((service) => hydratePriorityService(service, liveServices)),
+    [featuredServices, liveServices, menuNavigation],
   );
 
   useEffect(() => {
-    if (featuredServices) return undefined;
-
     let cancelled = false;
+
+    void getPublicServices()
+      .then((catalog) => {
+        if (!cancelled) setLiveServices(catalog.items);
+      })
+      .catch(() => {
+        // Keep the server-rendered service links if the service API is unavailable.
+      });
+
+    if (featuredServices) {
+      return () => {
+        cancelled = true;
+      };
+    }
 
     void getPublicMenu()
       .then((managedItems) => {

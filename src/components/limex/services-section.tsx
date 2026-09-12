@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { serviceFilters, type ServiceFilter } from "./data";
 import { ServiceIcon } from "./service-icons";
@@ -8,6 +8,8 @@ import { getToneClasses } from "./styles";
 import { ActionButton, SectionTitle } from "./ui";
 import { defaultLandingContent } from "@/lib/landing-defaults";
 import type { LandingServiceItem, ServicesContent } from "@/lib/landing-types";
+import { getPublicServices } from "@/lib/service-api";
+import type { PublicService } from "@/lib/service-types";
 
 const MAX_VISIBLE_SERVICES = 8;
 
@@ -48,14 +50,54 @@ function ServiceCard({ service }: { service: LandingServiceItem }) {
 
 export function ServicesSection({ content = defaultLandingContent.services }: { content?: ServicesContent }) {
   const [selectedFilter, setSelectedFilter] = useState<ServiceFilter>("All services");
+  const [liveServices, setLiveServices] = useState<PublicService[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void getPublicServices()
+      .then((catalog) => {
+        if (!cancelled) setLiveServices(catalog.items);
+      })
+      .catch(() => {
+        // Keep the server-rendered landing content if the service API is unavailable.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const hydratedItems = useMemo(() => content.items.map((service) => {
+    const live = liveServices.find((candidate) => candidate.serviceKey === service.serviceKey || candidate.title === service.title);
+    if (!live) return service;
+
+    const filter: LandingServiceItem["filter"] = live.categoryKey === "ip-trademark"
+      ? "Trademark"
+      : live.categoryKey === "compliance-documentation"
+        ? "Tax & compliance"
+        : live.categoryKey === "business-tools"
+          ? "Business tools"
+          : "Startup";
+
+    return {
+      ...service,
+      title: live.title,
+      description: live.description,
+      href: live.href,
+      icon: live.icon as LandingServiceItem["icon"],
+      filter,
+    };
+  }), [content.items, liveServices]);
+
   const filteredServices = useMemo(() => {
-    const visibleServices = content.items.filter((service) => service.isVisible);
+    const visibleServices = hydratedItems.filter((service) => service.isVisible);
     if (selectedFilter === "All services") return visibleServices.slice(0, MAX_VISIBLE_SERVICES);
 
     return visibleServices
       .filter((service) => service.filter === selectedFilter)
       .slice(0, MAX_VISIBLE_SERVICES);
-  }, [content.items, selectedFilter]);
+  }, [hydratedItems, selectedFilter]);
 
   return (
     <section className="scroll-mt-5 bg-page px-4 py-8 pb-8 sm:px-page-gutter sm:py-section-y lg:rounded-panel lg:px-section-gutter-lg lg:py-10 lg:pb-8" id="services" aria-labelledby="services-title">

@@ -8,7 +8,8 @@ import { getAdminSession, logoutAdmin } from "@/lib/menu-api";
 const adminNavigation = [
   { label: "Overview", href: "/admin" },
   { label: "Landing", href: "/admin/landing" },
-  { label: "Services & menu", href: "/admin/services" },
+  { label: "Menu structure", href: "/admin/services" },
+  { label: "Service pages", href: "/admin/services/pages" },
   { label: "About us", href: "/admin/about" },
   { label: "Business tools", href: "/admin/tools" },
   { label: "Blog", href: "/admin/blog" },
@@ -34,7 +35,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       <div className="pt-7">
         <nav className="mt-3 space-y-1" aria-label="Admin navigation">
           {adminNavigation.map((item) => {
-            const active = item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href);
+            const active = item.href === "/admin" ? pathname === "/admin" : item.href === "/admin/services" ? pathname === "/admin/services" : pathname.startsWith(item.href);
 
             return (
               <a
