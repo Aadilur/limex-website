@@ -14,29 +14,29 @@ const approachPoints = [
 
 export function AboutHero() {
   return (
-    <section className="grid gap-section-gap-lg lg:grid-cols-[minmax(0,1.42fr)_minmax(340px,0.92fr)] lg:items-stretch lg:gap-section-gap" aria-labelledby="about-title">
-      <div className="flex min-h-[260px] flex-col items-start justify-center">
+    <section className="grid gap-cluster-lg lg:grid-cols-[minmax(0,1.42fr)_minmax(340px,0.92fr)] lg:items-stretch lg:gap-section-gap" aria-labelledby="about-title">
+      <div className="flex min-h-[224px] flex-col items-start justify-center lg:min-h-[236px]">
         <h1 className="max-w-[760px] font-brand text-page-title text-ink max-lg:text-page-title-mobile" id="about-title">
           Business clarity, built around people.
         </h1>
         <p className="mt-cluster max-w-[650px] text-body-sm text-muted">
           We make the work behind your business easier to understand—and easier to move forward.
         </p>
-        <div className="mt-section-gap-lg">
+        <div className="mt-cluster-lg">
           <ActionButton href="#team" variant="dark" arrow="text" className="min-h-control min-w-[148px] px-4 text-button">
             Meet the team
           </ActionButton>
         </div>
       </div>
 
-      <aside className="rounded-card border border-white bg-white px-card-pad py-card-pad lg:min-h-[246px]" id="approach" aria-labelledby="approach-title">
-        <h2 className="font-brand text-subheading text-[#393939]" id="approach-title">Clear from the first conversation.</h2>
-        <ul className="mt-section-gap-lg space-y-2.5">
+      <aside className="rounded-card border border-warm bg-[#faf9f6] px-card-pad-sm py-card-pad-sm lg:min-h-[236px] lg:px-card-pad" id="approach" aria-labelledby="approach-title">
+        <h2 className="font-brand text-subheading text-ink" id="approach-title">Clear from the first conversation.</h2>
+        <ul className="mt-cluster-lg space-y-2">
           {approachPoints.map((point) => (
             <li className="flex items-start gap-cluster-sm" key={point.label}>
               <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-[#fce0e3] text-[10px] font-bold text-pink" aria-hidden="true">✓</span>
               <span className="min-w-0">
-                <strong className="block text-footer text-[#393939]">{point.label}</strong>
+                <strong className="block text-footer text-ink">{point.label}</strong>
                 <span className="mt-0.5 block text-micro text-muted">{point.description}</span>
               </span>
             </li>
@@ -55,7 +55,7 @@ const trustMetrics = [
 
 export function AboutTrustStrip() {
   return (
-    <section className="mt-[clamp(38px,4vw,56px)] grid gap-cluster-lg rounded-nav border border-warm bg-white px-card-pad-sm py-card-pad-sm lg:grid-cols-[240px_repeat(3,minmax(0,1fr))] lg:gap-0 lg:px-card-pad lg:py-card-pad-sm" aria-label="About Limex trust metrics">
+    <section className="mt-[clamp(28px,3vw,44px)] grid gap-cluster-lg rounded-nav border border-warm bg-[#f7f4ef] px-card-pad-sm py-card-pad-sm lg:grid-cols-[208px_repeat(3,minmax(0,1fr))] lg:gap-0 lg:px-5 lg:py-4" aria-label="About Limex trust metrics">
       <div className="flex flex-col justify-center gap-cluster-xs">
         <p className="text-footer font-text text-ink">A simple rhythm for important work.</p>
       </div>
@@ -107,7 +107,7 @@ function TeamMemberPhoto({ member, index, onError }: { member: AboutTeamMember; 
   return (
     <div className={`grid size-full place-items-center ${teamPhotoTones[index % teamPhotoTones.length]}`.trim()} aria-hidden="true">
       <div className="flex flex-col items-center">
-        <span className="font-brand text-[30px] font-bold leading-none tracking-[-0.07em]">{teamInitials(member.name)}</span>
+        <span className="font-brand text-[34px] font-bold leading-none tracking-[-0.07em]">{teamInitials(member.name)}</span>
         <span className="mt-1 text-[7px] font-bold uppercase tracking-[0.16em] opacity-75">Photo</span>
       </div>
     </div>
@@ -116,14 +116,14 @@ function TeamMemberPhoto({ member, index, onError }: { member: AboutTeamMember; 
 
 function TeamMemberCard({ member, index, onImageError }: { member: AboutTeamMember; index: number; onImageError: () => void }) {
   return (
-    <article className="group flex min-h-[104px] items-center gap-3.5 py-2 transition-transform duration-300 hover:-translate-y-0.5 sm:min-h-[112px] sm:gap-4">
-      <div className="size-[80px] shrink-0 overflow-hidden rounded-[18px] sm:size-[88px]">
+    <article className="group flex min-h-[124px] items-center gap-4 rounded-[20px] bg-[#f7f4ef] px-3 py-3 transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#f3efe8] sm:min-h-[132px] sm:px-3.5">
+      <div className="size-[92px] shrink-0 overflow-hidden rounded-[17px] sm:size-[100px] sm:rounded-[18px]">
         <TeamMemberPhoto member={member} index={index} onError={onImageError} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[9px] font-bold uppercase tracking-[0.12em] text-pink">{member.title}</p>
-        <h3 className="mt-1 truncate font-brand text-[18px] font-bold leading-[1.1] tracking-[-0.04em] text-ink">{member.name}</h3>
-        <p className="mt-1.5 line-clamp-2 text-[11px] leading-[1.45] text-muted">{member.description}</p>
+        <p className="truncate text-overline text-pink">{member.title}</p>
+        <h3 className="mt-1 truncate font-brand text-card-title text-ink">{member.name}</h3>
+        <p className="mt-1.5 line-clamp-2 text-micro leading-[1.45] text-muted">{member.description}</p>
       </div>
     </article>
   );
@@ -162,7 +162,7 @@ export function AboutTeamSection() {
   }
 
   return (
-    <section className="mt-[clamp(38px,4vw,56px)] rounded-panel border border-warm bg-white p-card-pad-sm lg:p-section-y" id="team" aria-labelledby="team-title">
+    <section className="mt-[clamp(28px,3vw,44px)] rounded-panel border border-warm bg-page p-card-pad-sm lg:px-8 lg:py-7" id="team" aria-labelledby="team-title">
       <div className="flex flex-col gap-cluster-sm sm:flex-row sm:items-start sm:justify-between">
         <SectionTitle
           id="team-title"
@@ -172,9 +172,9 @@ export function AboutTeamSection() {
           size="compact"
         />
       </div>
-      <div className="mt-section-gap grid gap-x-6 gap-y-7 sm:grid-cols-2 lg:gap-x-8 lg:gap-y-8">
-        {loading ? [0, 1, 2].map((index) => <div className="animate-pulse overflow-hidden rounded-[20px] border border-[#eee9e2] bg-[#faf9f6]" key={index}><div className="aspect-[1.18] bg-[#f1eee8]" /><div className="space-y-2 p-cluster"><div className="h-2.5 w-24 rounded-full bg-[#e8e1d8]" /><div className="h-5 w-36 rounded-full bg-[#e8e1d8]" /><div className="h-3 w-full rounded-full bg-[#eee9e2]" /></div></div>) : members.length ? members.map((member, index) => <TeamMemberCard key={member.id} member={member} index={index} onImageError={() => handleImageError(member.id)} />) : (
-          <div className="rounded-[18px] border border-dashed border-[#d8d1c7] bg-[#faf9f6] px-5 py-10 text-center sm:col-span-2 lg:col-span-3">
+      <div className="mt-section-gap-lg grid gap-3 sm:grid-cols-2 lg:grid-cols-3 lg:gap-4">
+        {loading ? [0, 1, 2].map((index) => <div className="flex min-h-[124px] animate-pulse items-center gap-4 rounded-[20px] bg-[#f7f4ef] px-3 py-3" key={index}><div className="size-[92px] shrink-0 rounded-[17px] bg-[#ebe7df] sm:size-[100px]" /><div className="min-w-0 flex-1 space-y-2"><div className="h-2.5 w-24 rounded-full bg-[#e8e1d8]" /><div className="h-5 w-36 rounded-full bg-[#e8e1d8]" /><div className="h-3 w-full rounded-full bg-[#eee9e2]" /></div></div>) : members.length ? members.map((member, index) => <TeamMemberCard key={member.id} member={member} index={index} onImageError={() => handleImageError(member.id)} />) : (
+          <div className="rounded-[18px] border border-dashed border-[#d8d1c7] bg-[#f7f4ef] px-5 py-10 text-center sm:col-span-2 lg:col-span-3">
             <p className="font-brand text-subheading font-bold text-ink">The people behind Limex are on their way.</p>
             <p className="mt-1.5 text-micro text-muted">{loadError ? "Please check back soon." : "Our team profiles are being updated."}</p>
           </div>
@@ -312,7 +312,7 @@ export function AboutReelsSection() {
   }
 
   return (
-    <section className="mt-[clamp(38px,4vw,56px)] rounded-panel border border-[#e0dcd4] bg-[#f7f4ef] p-card-pad-sm lg:p-card-pad" aria-labelledby="about-reels-title">
+    <section className="mt-[clamp(28px,3vw,44px)] rounded-panel border border-[#e0dcd4] bg-[#f7f4ef] p-card-pad-sm lg:p-card-pad" aria-labelledby="about-reels-title">
       <div className="flex flex-col gap-cluster-lg sm:flex-row sm:items-end sm:justify-between">
         <SectionTitle
           id="about-reels-title"
@@ -354,7 +354,7 @@ export function AboutReelsSection() {
 
 export function AboutContactCta() {
   return (
-    <section className="mt-[clamp(38px,4vw,56px)] flex flex-col gap-cluster-lg rounded-card bg-[#14131c] px-page-gutter py-card-pad-sm text-white sm:flex-row sm:items-center sm:justify-between lg:px-section-y lg:py-card-pad-sm" id="contact" aria-labelledby="about-contact-title">
+    <section className="mt-[clamp(28px,3vw,44px)] flex flex-col gap-cluster-lg rounded-card bg-[#14131c] px-page-gutter py-card-pad-sm text-white sm:flex-row sm:items-center sm:justify-between lg:px-section-y lg:py-card-pad-sm" id="contact" aria-labelledby="about-contact-title">
       <div>
         <h2 className="font-brand text-subheading" id="about-contact-title">Let’s make the next step simple.</h2>
       </div>
