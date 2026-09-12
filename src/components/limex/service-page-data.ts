@@ -34,6 +34,8 @@ export type ServicePageContent = {
   facts: Array<{ label: string; value: string }>;
   pricing: ServicePriceTier[];
   faqs: ServiceFaq[];
+  /** Ordered slugs from the managed business-tools catalogue. */
+  tools?: string[];
 };
 
 export const trademarkRegistrationService: ServicePageContent = {

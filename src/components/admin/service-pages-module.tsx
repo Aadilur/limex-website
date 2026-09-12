@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useState, type ChangeEvent, type ReactNode } from "react";
 
 import {
   assignAdminService,
   createAdminService,
+  getAdminService,
   getAdminServices,
   getAdminServiceMenuOptions,
   isServiceConflictError,
@@ -15,7 +16,8 @@ import {
   type AdminService,
   type AdminServiceMenuOption,
 } from "@/lib/service-api";
-import type { ServiceDetailContent, ServiceDestinationType, ServiceMenuTargetType, ServiceProfileInput } from "@/lib/service-types";
+import type { ServiceDetailContent, ServiceMenuTargetType, ServiceProfileInput } from "@/lib/service-types";
+import { businessTools } from "@/lib/business-tools";
 import { ServiceIcon } from "@/components/limex/service-icons";
 import type { ServiceIconName } from "@/components/limex/data";
 import { getToneClasses } from "@/components/limex/styles";
@@ -23,15 +25,6 @@ import { IconPicker, normalizeServiceIcon } from "./icon-picker";
 
 const fieldClass = "mt-2 min-h-11 w-full rounded-[13px] border border-[#d9d3ca] bg-white px-3.5 text-[13px] text-[#14131c] outline-none transition-colors placeholder:text-[#aaa49b] focus:border-[#e44762] focus:ring-4 focus:ring-[#f54763]/10";
 const textAreaClass = `${fieldClass} min-h-[90px] resize-y py-3 leading-[1.5]`;
-const destinationTypes: Array<{ value: ServiceDestinationType; label: string; hint: string }> = [
-  { value: "DETAIL", label: "Service detail page", hint: "Use the Limex service page for this service." },
-  { value: "BLOG", label: "Blog or guide", hint: "Send visitors to an article or guide." },
-  { value: "TOOL", label: "Business tool", hint: "Send visitors to a calculator or document builder." },
-  { value: "CONTACT", label: "Contact form", hint: "Open the contact flow with this service selected." },
-  { value: "INTERNAL", label: "Other internal page", hint: "Use any safe internal path." },
-  { value: "EXTERNAL", label: "External website", hint: "Open an approved HTTP or HTTPS destination." },
-];
-
 function emptyDetail(): ServiceDetailContent {
   return {
     ctaLabel: "Talk to an advisor",
@@ -55,6 +48,7 @@ function emptyDetail(): ServiceDetailContent {
     facts: [],
     pricing: [],
     faqs: [],
+    tools: [],
   };
 }
 
@@ -67,6 +61,7 @@ function cloneDetail(detail: ServiceDetailContent | null) {
     facts: detail.facts.map((fact) => ({ ...fact })),
     pricing: detail.pricing.map((tier) => ({ ...tier, features: [...tier.features] })),
     faqs: detail.faqs.map((faq) => ({ ...faq })),
+    tools: [...(detail.tools ?? [])],
   };
 }
 
@@ -76,9 +71,9 @@ function draftFromService(service: AdminService): ServiceProfileInput & { revisi
     profileId: service.profileId,
     serviceKey: service.serviceKey,
     slug: service.slug,
-    label: service.assignedMenu?.label ?? service.title,
-    description: service.description,
-    href: service.href || `/services/${service.slug}`,
+    label: service.titleEn || service.title,
+    description: service.descriptionEn || service.description,
+    href: `/services/${service.slug}`,
     icon: service.icon,
     titleEn: service.titleEn,
     titleBn: service.titleBn,
@@ -111,20 +106,22 @@ function dateLabel(value: string | null) {
   }
 }
 
-function Field({ label, value, onChange, placeholder, className = "", type = "text" }: { label: string; value: string; onChange: (event: ChangeEvent<HTMLInputElement>) => void; placeholder?: string; className?: string; type?: string }) {
+function Field({ label, value, onChange, placeholder, className = "", type = "text", required = false }: { label: string; value: string; onChange: (event: ChangeEvent<HTMLInputElement>) => void; placeholder?: string; className?: string; type?: string; required?: boolean }) {
+  const id = useId();
   return (
-    <label className={`block min-w-0 ${className}`.trim()}>
-      <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">{label}</span>
-      <input className={fieldClass} type={type} value={value} placeholder={placeholder} onChange={onChange} />
+    <label className={`block min-w-0 ${className}`.trim()} htmlFor={id}>
+      <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">{label}{required ? <span className="ml-1 text-[#e44762]" aria-hidden="true">*</span> : null}</span>
+      <input id={id} className={fieldClass} type={type} value={value} placeholder={placeholder} onChange={onChange} required={required} />
     </label>
   );
 }
 
-function TextAreaField({ label, value, onChange, placeholder, className = "" }: { label: string; value: string; onChange: (event: ChangeEvent<HTMLTextAreaElement>) => void; placeholder?: string; className?: string }) {
+function TextAreaField({ label, value, onChange, placeholder, className = "", required = false }: { label: string; value: string; onChange: (event: ChangeEvent<HTMLTextAreaElement>) => void; placeholder?: string; className?: string; required?: boolean }) {
+  const id = useId();
   return (
-    <label className={`block min-w-0 ${className}`.trim()}>
-      <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">{label}</span>
-      <textarea className={textAreaClass} value={value} placeholder={placeholder} onChange={onChange} />
+    <label className={`block min-w-0 ${className}`.trim()} htmlFor={id}>
+      <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">{label}{required ? <span className="ml-1 text-[#e44762]" aria-hidden="true">*</span> : null}</span>
+      <textarea id={id} className={textAreaClass} value={value} placeholder={placeholder} onChange={onChange} required={required} />
     </label>
   );
 }
@@ -139,20 +136,6 @@ function StatusPill({ service }: { service: AdminService }) {
   return <span className={`inline-flex min-h-7 items-center rounded-full px-2.5 text-[10px] font-bold uppercase tracking-[0.09em] ${classes}`.trim()}>{label}</span>;
 }
 
-function destinationLabel(type: ServiceDestinationType) {
-  return destinationTypes.find((item) => item.value === type)?.label ?? "Internal page";
-}
-
-function destinationTypeFromHref(href: string): ServiceDestinationType {
-  const normalized = href.trim();
-  if (normalized.startsWith("/services/")) return "DETAIL";
-  if (normalized.startsWith("/blog/") || normalized.startsWith("/bn/blog/")) return "BLOG";
-  if (normalized.startsWith("/business-tools/")) return "TOOL";
-  if (normalized === "#contact" || normalized.startsWith("#contact-")) return "CONTACT";
-  if (/^https?:\/\//i.test(normalized)) return "EXTERNAL";
-  return "INTERNAL";
-}
-
 function DetailEditor({ detail, onChange }: { detail: ServiceDetailContent; onChange: (next: ServiceDetailContent) => void }) {
   const update = <K extends keyof ServiceDetailContent>(key: K, value: ServiceDetailContent[K]) => onChange({ ...detail, [key]: value });
   const addBenefit = () => update("benefits", [...detail.benefits, ""]);
@@ -160,6 +143,11 @@ function DetailEditor({ detail, onChange }: { detail: ServiceDetailContent; onCh
   const addStep = () => update("steps", [...detail.steps, { title: "", description: "" }]);
   const addPricing = () => update("pricing", [...detail.pricing, { name: "New package", price: "Let's talk", description: "", features: [], action: "Book now", whatsappLabel: "Discuss on WhatsApp" }]);
   const addFaq = () => update("faqs", [...detail.faqs, { question: "", answer: "" }]);
+  const selectedTools = detail.tools ?? [];
+  const addTool = (slug: string) => {
+    if (!slug || selectedTools.includes(slug)) return;
+    update("tools", [...selectedTools, slug]);
+  };
 
   return (
     <div className="space-y-3">
@@ -176,6 +164,36 @@ function DetailEditor({ detail, onChange }: { detail: ServiceDetailContent; onCh
           <Field label="Media URL" value={detail.mediaUrl} onChange={(event) => update("mediaUrl", event.target.value)} placeholder="/api/... or https://…" />
           <TextAreaField className="sm:col-span-2" label="Media description" value={detail.mediaDescription} onChange={(event) => update("mediaDescription", event.target.value)} />
           <Field className="sm:col-span-2" label="Media alt text" value={detail.mediaAlt} onChange={(event) => update("mediaAlt", event.target.value)} placeholder="Describe the image for accessibility" />
+        </div>
+      </details>
+
+      <details className="group rounded-[17px] bg-[#faf9f6] px-4 py-3">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[13px] font-bold text-[#29252a] [&::-webkit-details-marker]:hidden">
+          <span>Helpful tools <span className="ml-1 text-[11px] font-medium text-[#9b958c]">{selectedTools.length}</span></span><span className="text-[18px] font-normal text-[#a59d93] transition-transform group-open:rotate-45">+</span>
+        </summary>
+        <div className="mt-4">
+          <label className="block min-w-0">
+            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Add a calculator or builder</span>
+            <select className={fieldClass} value="" onChange={(event) => addTool(event.target.value)}>
+              <option value="">Choose a tool…</option>
+              <optgroup label="Calculators">
+                {businessTools.filter((tool) => tool.group === "calculator" && !selectedTools.includes(tool.slug)).map((tool) => <option key={tool.slug} value={tool.slug}>{tool.title}</option>)}
+              </optgroup>
+              <optgroup label="Document builders">
+                {businessTools.filter((tool) => tool.group === "builder" && !selectedTools.includes(tool.slug)).map((tool) => <option key={tool.slug} value={tool.slug}>{tool.title}</option>)}
+              </optgroup>
+            </select>
+          </label>
+          {selectedTools.length ? <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            {selectedTools.map((slug) => {
+              const tool = businessTools.find((candidate) => candidate.slug === slug);
+              if (!tool) return null;
+              return <div className="flex min-w-0 items-center justify-between gap-2 rounded-[12px] bg-white px-3 py-2.5 ring-1 ring-[#e5dfd7]" key={slug}>
+                <span className="min-w-0"><span className="block truncate text-[12px] font-semibold text-[#3f3b37]">{tool.title}</span><span className="mt-0.5 block text-[10px] uppercase tracking-[0.08em] text-[#a19a91]">{tool.group === "calculator" ? "Calculator" : "Document builder"}</span></span>
+                <button className="grid size-8 shrink-0 place-items-center rounded-full text-[17px] text-[#b34b60] hover:bg-[#fce7ea]" type="button" aria-label={`Remove ${tool.title}`} onClick={() => update("tools", selectedTools.filter((candidate) => candidate !== slug))}>×</button>
+              </div>;
+            })}
+          </div> : <p className="mt-2 text-[11px] text-[#9b958c]">No tools attached. This section stays hidden on the public page until you add one.</p>}
         </div>
       </details>
 
@@ -298,24 +316,17 @@ function ServiceEditor({ service, menuOptions, onSaved }: { service: AdminServic
     setDraft((current) => ({
       ...current,
       slug: value,
-      href: current.href.startsWith("/services/") ? `/services/${value}` : current.href,
+      href: `/services/${value}`,
     }));
   };
 
-  const destination = destinationTypeFromHref(draft.href);
   const detail = draft.detail;
   const hasUnsavedChanges = JSON.stringify(draft) !== JSON.stringify(draftFromService(service));
-  const chooseDestination = (type: ServiceDestinationType) => {
-    const defaults: Record<ServiceDestinationType, string> = {
-      DETAIL: `/services/${draft.slug}`,
-      BLOG: "/blog/",
-      TOOL: "/business-tools/",
-      CONTACT: "#contact",
-      INTERNAL: "/",
-      EXTERNAL: "https://",
-    };
-    update("href", defaults[type]);
-  };
+  const menuGroups = useMemo(() => {
+    const groups = new Map<string, AdminServiceMenuOption[]>();
+    for (const option of menuOptions) groups.set(option.sectionLabel, [...(groups.get(option.sectionLabel) ?? []), option]);
+    return [...groups.entries()];
+  }, [menuOptions]);
 
   async function save() {
     if (saving) return;
@@ -327,12 +338,16 @@ function ServiceEditor({ service, menuOptions, onSaved }: { service: AdminServic
         setError("Create the service before saving its details.");
         return;
       }
+      if (!draft.titleEn.trim() || !draft.slug.trim()) {
+        setError("Add an English service title and a unique URL slug before saving.");
+        return;
+      }
       const saved = await updateAdminService(service.profileId, {
         serviceKey: draft.serviceKey,
         slug: draft.slug,
-        label: draft.label,
-        description: draft.description,
-        href: draft.href,
+        label: draft.titleEn,
+        description: draft.descriptionEn,
+        href: `/services/${draft.slug}`,
         icon: normalizeServiceIcon(draft.icon),
         titleEn: draft.titleEn,
         titleBn: draft.titleBn,
@@ -405,13 +420,13 @@ function ServiceEditor({ service, menuOptions, onSaved }: { service: AdminServic
       <div className="flex flex-col gap-4 border-b border-[#eee9e2] px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-5">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2"><p className="text-[11px] font-bold uppercase tracking-[0.14em] text-accent">Service page</p><StatusPill service={service} /></div>
-          <h2 className="mt-2 truncate font-brand text-[25px] font-bold tracking-[-0.04em] text-[#14131c]" id="service-editor-title">{service.title}</h2>
+          <h2 className="mt-2 truncate font-brand text-[25px] font-bold tracking-[-0.04em] text-[#14131c]" id="service-editor-title">{draft.titleEn || "Untitled service"}</h2>
           <p className="mt-1 text-[11px] text-[#9b958c]">{service.assignedMenu ? `${service.assignedMenu.sectionLabel} · ${service.assignedMenu.groupLabel}` : "Not assigned to a menu"} · Updated {dateLabel(service.updatedAt)}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
           {service.hasDetailPage ? <a className="inline-flex min-h-10 items-center justify-center rounded-full bg-white px-3.5 text-[11px] font-bold text-[#4f4b47] ring-1 ring-[#d8d2c8] hover:ring-[#aaa197]" href={`/services/${service.slug}`} target="_blank" rel="noreferrer">Preview ↗</a> : null}
           <SaveButton disabled={saving || !service.profileId} onClick={() => void save()}>{saving ? "Saving…" : "Save draft"}</SaveButton>
-          {service.status === "PUBLISHED" ? <button className="min-h-10 rounded-full px-3 text-[11px] font-bold text-[#a34b5c] hover:bg-[#fce7ea] disabled:opacity-50" type="button" disabled={saving} onClick={() => void unpublish()}>Unpublish</button> : <button className="min-h-10 rounded-full px-3 text-[11px] font-bold text-[#29634d] hover:bg-[#e3f4e8] disabled:opacity-50" type="button" disabled={saving || !service.profileId} onClick={() => void publish()}>Publish</button>}
+          {service.status === "PUBLISHED" ? <button className="min-h-10 rounded-full px-3 text-[11px] font-bold text-[#a34b5c] hover:bg-[#fce7ea] disabled:opacity-50" type="button" disabled={saving} onClick={() => void unpublish()}>Unpublish</button> : detailOpen ? <button className="min-h-10 rounded-full px-3 text-[11px] font-bold text-[#29634d] hover:bg-[#e3f4e8] disabled:opacity-50" type="button" disabled={saving || !service.profileId} onClick={() => void publish()}>Publish</button> : null}
         </div>
       </div>
 
@@ -423,42 +438,38 @@ function ServiceEditor({ service, menuOptions, onSaved }: { service: AdminServic
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Menu assignment</p>
-              <p className="mt-1 max-w-[560px] text-[12px] leading-[1.5] text-[#8d877f]">Attach this service to one real menu entry. The list includes every top-level menu item across all sections; child links are not mixed in.</p>
+              <p className="mt-1 max-w-[560px] text-[12px] leading-[1.5] text-[#8d877f]">Choose one real menu entry. Every parent item and nested link is grouped by section; assignment changes only that entry&apos;s URL.</p>
             </div>
             <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${service.assignedMenu ? "bg-[#e1f2e7] text-[#29634d]" : "bg-white text-[#77736e] ring-1 ring-[#ded8cf]"}`.trim()}>{service.assignedMenu ? "Assigned" : "Unassigned"}</span>
           </div>
           <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end">
-            <label className="block min-w-0 flex-1"><span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Choose menu entry</span><select className={fieldClass} value={selectedMenuKey} disabled={saving || !menuOptions.length} onChange={(event) => setSelectedMenuKey(event.target.value)}><option value="">Not assigned</option>{menuOptions.map((option) => { const inUse = Boolean(option.assignedProfileId && option.assignedProfileId !== service.profileId); return <option key={`${option.targetType}:${option.id}`} value={`${option.targetType}:${option.id}`} disabled={inUse}>{option.pathLabel}{inUse ? " · already assigned" : ""}</option>; })}</select></label>
+            <label className="block min-w-0 flex-1"><span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Choose menu entry</span><select className={fieldClass} value={selectedMenuKey} disabled={saving || !menuOptions.length} onChange={(event) => setSelectedMenuKey(event.target.value)}><option value="">Not assigned</option>{menuGroups.map(([sectionLabel, options]) => <optgroup label={sectionLabel} key={sectionLabel}>{options.map((option) => { const inUse = Boolean(option.assignedProfileId && option.assignedProfileId !== service.profileId); return <option key={`${option.targetType}:${option.id}`} value={`${option.targetType}:${option.id}`} disabled={inUse}>{option.pathLabel}{inUse ? " · already assigned" : ""}</option>; })}</optgroup>)}</select></label>
             <button className="min-h-11 shrink-0 rounded-full bg-[#14131c] px-4 text-[12px] font-bold text-white transition-transform hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-45" type="button" disabled={saving || hasUnsavedChanges || selectedMenuKey === menuTargetKey(service.assignedMenu) || !menuOptions.length} onClick={() => void assignMenu()}>{selectedMenuKey ? "Attach to menu" : "Remove assignment"}</button>
           </div>
-          <p className="mt-2 text-[11px] text-[#9b958c]">{hasUnsavedChanges ? "Save the current draft before changing its menu assignment." : service.assignedMenu ? `Currently attached to ${service.assignedMenu.sectionLabel} / ${service.assignedMenu.groupLabel} / ${service.assignedMenu.label}.` : "This service can be drafted and published before it is placed in navigation."}</p>
+          <p className="mt-2 text-[11px] text-[#9b958c]">{hasUnsavedChanges ? "Save the current draft before changing its menu assignment." : service.assignedMenu ? `Currently attached to ${service.assignedMenu.sectionLabel} / ${service.assignedMenu.groupLabel} / ${service.assignedMenu.label}. Only its URL is managed here.` : "This service can be drafted and published before it is placed in navigation."}</p>
         </div>
 
         <div>
-          <div className="flex flex-wrap items-end justify-between gap-2"><div><p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Service identity</p><p className="mt-1 text-[12px] text-[#9b958c]">This is the reusable service record. When assigned, its name, summary and icon sync to the menu entry.</p></div><span className="text-[11px] text-[#9b958c]">Revision {draft.revision}</span></div>
+          <div className="flex flex-wrap items-end justify-between gap-2"><div><p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Service basics</p><p className="mt-1 text-[12px] text-[#9b958c]">Only the English title and URL slug are needed. Menu labels stay managed in Menu structure.</p></div><span className="text-[11px] text-[#9b958c]">Revision {draft.revision}</span></div>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <Field label="Menu title" value={draft.label} onChange={(event) => update("label", event.target.value)} />
-            <label className="block min-w-0"><span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Icon</span><div className="mt-2"><IconPicker value={draft.icon} onChange={(value) => update("icon", value)} disabled={saving} /></div></label>
-            <TextAreaField className="sm:col-span-2" label="Short description" value={draft.description} onChange={(event) => update("description", event.target.value)} />
+            <Field label="English service title" value={draft.titleEn} required onChange={(event) => update("titleEn", event.target.value)} placeholder="Limited company registration" />
+            <Field label="Public URL slug" value={draft.slug} required onChange={(event) => updateSlug(slugifyDraft(event.target.value))} placeholder="limited-company-registration" />
+            <div className="sm:col-span-2 rounded-[13px] bg-[#f8f6f2] px-3.5 py-3 text-[12px] text-[#77736e]">Public page: <strong className="font-semibold text-[#3f3c38]">/services/{draft.slug || "…"}</strong></div>
           </div>
+          <details className="group mt-4 rounded-[15px] bg-[#faf9f6] px-4 py-3">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[12px] font-bold text-[#4f4b47] [&::-webkit-details-marker]:hidden"><span>Optional localization and card settings</span><span className="text-[17px] font-normal text-[#a59d93] transition-transform group-open:rotate-45">+</span></summary>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <Field label="Bangla title" value={draft.titleBn} onChange={(event) => update("titleBn", event.target.value)} placeholder="লিমিটেড কোম্পানি নিবন্ধন" />
+              <label className="block min-w-0"><span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Service icon</span><div className="mt-2"><IconPicker value={draft.icon} onChange={(value) => update("icon", value)} disabled={saving} /></div></label>
+              <TextAreaField className="sm:col-span-2" label="English summary" value={draft.descriptionEn} onChange={(event) => update("descriptionEn", event.target.value)} placeholder="A short explanation for the service catalogue." />
+              <TextAreaField className="sm:col-span-2" label="Bangla summary" value={draft.descriptionBn} onChange={(event) => update("descriptionBn", event.target.value)} placeholder="সেবাটির সংক্ষিপ্ত বিবরণ" />
+            </div>
+          </details>
         </div>
 
         <div className="border-t border-[#eee9e2] pt-5">
-          <div className="flex flex-wrap items-end justify-between gap-2"><div><p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Where should this go?</p><p className="mt-1 text-[12px] text-[#9b958c]">The selected destination controls menu, landing and catalogue clicks.</p></div><span className="rounded-full bg-[#f4f1ec] px-2.5 py-1 text-[10px] font-bold text-[#77736e]">{destinationLabel(destination)}</span></div>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <label className="block min-w-0"><span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Destination type</span><select className={fieldClass} value={destination} onChange={(event) => chooseDestination(event.target.value as ServiceDestinationType)}>{destinationTypes.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
-            <Field label="Destination URL" value={draft.href} onChange={(event) => update("href", event.target.value)} placeholder="/blog/article or https://…" />
-          </div>
-          <p className="mt-2 text-[11px] text-[#9b958c]">{destinationTypes.find((item) => item.value === destination)?.hint}</p>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <Field label="Service page slug" value={draft.slug} onChange={(event) => updateSlug(event.target.value)} placeholder="company-formation" />
-            <div className="flex items-end"><span className="w-full rounded-[13px] bg-[#f8f6f2] px-3.5 py-3 text-[12px] text-[#77736e]">Public page: <strong className="font-semibold text-[#3f3c38]">/services/{draft.slug || "…"}</strong></span></div>
-          </div>
-        </div>
-
-        <div className="border-t border-[#eee9e2] pt-5">
-          <div className="flex flex-wrap items-end justify-between gap-2"><div><p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Detail page content</p><p className="mt-1 text-[12px] text-[#9b958c]">Optional. Turn this on when this service needs its own Limex page.</p></div><button className={`inline-flex min-h-9 items-center rounded-full px-3 text-[11px] font-bold transition-colors ${detailOpen ? "bg-[#e4f3e8] text-[#29634d]" : "bg-[#f4f1ec] text-[#77736e]"}`.trim()} type="button" onClick={() => { const nextOpen = !detailOpen; setDetailOpen(nextOpen); if (nextOpen) setDraft((current) => ({ ...current, href: current.href.startsWith("/services/") ? current.href : `/services/${current.slug}`, detail: current.detail ?? emptyDetail() })); }}>{detailOpen ? "Enabled" : "Create detail page"}</button></div>
-          {detailOpen ? <div className="mt-4"><div className="grid gap-4 sm:grid-cols-2"><Field label="English page title" value={draft.titleEn} onChange={(event) => update("titleEn", event.target.value)} /><Field label="Bangla page title" value={draft.titleBn} onChange={(event) => update("titleBn", event.target.value)} /><TextAreaField label="English page summary" value={draft.descriptionEn} onChange={(event) => update("descriptionEn", event.target.value)} /><TextAreaField label="Bangla page summary" value={draft.descriptionBn} onChange={(event) => update("descriptionBn", event.target.value)} /></div><div className="mt-4"><DetailEditor detail={detail ?? emptyDetail()} onChange={(next) => update("detail", next)} /></div></div> : <div className="mt-4 rounded-[14px] bg-[#faf9f6] px-4 py-3 text-[12px] text-[#817a72]">This service will continue to use its configured destination. No detail page will be published.</div>}
+          <div className="flex flex-wrap items-end justify-between gap-2"><div><p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Service page content</p><p className="mt-1 text-[12px] text-[#9b958c]">Optional while drafting. Add the sections below when this service needs a public detail page.</p></div>{service.detail || detailOpen ? <span className="inline-flex min-h-9 items-center rounded-full bg-[#e4f3e8] px-3 text-[11px] font-bold text-[#29634d]">Page content enabled</span> : <button className="inline-flex min-h-9 items-center rounded-full bg-[#f4f1ec] px-3 text-[11px] font-bold text-[#77736e] transition-colors hover:bg-[#ece7df]" type="button" onClick={() => { setDetailOpen(true); setDraft((current) => ({ ...current, href: `/services/${current.slug}`, detail: current.detail ?? emptyDetail() })); }}>Add page content</button>}</div>
+          {detailOpen ? <div className="mt-4"><DetailEditor detail={detail ?? emptyDetail()} onChange={(next) => update("detail", next)} /></div> : <div className="mt-4 rounded-[14px] bg-[#faf9f6] px-4 py-3 text-[12px] text-[#817a72]">Save the title and slug first. You can add detailed sections later, then publish the service page.</div>}
         </div>
       </div>
     </section>
@@ -467,34 +478,36 @@ function ServiceEditor({ service, menuOptions, onSaved }: { service: AdminServic
 
 export function ServicePagesModule() {
   const [services, setServices] = useState<AdminService[]>([]);
-  const [menuOptions, setMenuOptions] = useState<AdminServiceMenuOption[]>([]);
-  const [activeId, setActiveId] = useState("");
   const [query, setQuery] = useState("");
   const [scope, setScope] = useState<"all" | "assigned" | "unassigned">("all");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [createOpen, setCreateOpen] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [createError, setCreateError] = useState("");
-  const [newService, setNewService] = useState({ titleEn: "", titleBn: "", slug: "", descriptionEn: "", descriptionBn: "" });
+  const [error, setError] = useState("");
 
   useEffect(() => {
     let active = true;
     setLoading(true);
-    void Promise.all([getAdminServices(), getAdminServiceMenuOptions()])
-      .then(([items, options]) => {
-        if (!active) return;
-        setServices(items);
-        setMenuOptions(options);
-        setActiveId((current) => current || items[0]?.id || "");
+    void getAdminServices()
+      .then((items) => {
+        if (active) {
+          setServices(items);
+          setError("");
+        }
       })
       .catch((loadError) => {
         if (!active) return;
-        if (isUnauthorizedServiceError(loadError)) setError("Your admin session expired. Sign in again to manage services.");
-        else setError(loadError instanceof Error ? loadError.message : "Service data could not be loaded.");
+        if (isUnauthorizedServiceError(loadError)) {
+          window.location.assign("/admin/login");
+          return;
+        }
+        setError(loadError instanceof Error ? loadError.message : "Service data could not be loaded.");
       })
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   const filtered = useMemo(() => {
@@ -502,62 +515,48 @@ export function ServicePagesModule() {
     return services.filter((service) => {
       const assigned = Boolean(service.assignedMenu);
       const matchesScope = scope === "all" || (scope === "assigned" ? assigned : !assigned);
-      const searchable = `${service.title} ${service.description} ${service.titleEn} ${service.titleBn} ${service.category} ${service.groupLabel} ${service.assignedMenu?.sectionLabel ?? ""} ${service.assignedMenu?.groupLabel ?? ""}`.toLowerCase();
+      const searchable = [
+        service.title,
+        service.description,
+        service.titleEn,
+        service.titleBn,
+        service.category,
+        service.groupLabel,
+        service.assignedMenu?.sectionLabel ?? "",
+        service.assignedMenu?.groupLabel ?? "",
+      ].join(" ").toLowerCase();
       return matchesScope && (!needle || searchable.includes(needle));
     });
   }, [query, scope, services]);
-  const activeService = filtered.find((service) => service.id === activeId) ?? filtered[0] ?? null;
-
-  function updateService(next: AdminService) {
-    setServices((current) => current.map((service) => service.id === next.id ? next : service));
-    setMenuOptions((current) => current.map((option) => {
-      const optionKey = `${option.targetType}:${option.id}`;
-      const assignedKey = menuTargetKey(next.assignedMenu);
-      if (option.assignedProfileId === next.profileId) return { ...option, assignedProfileId: null, assignedProfileTitle: null };
-      if (optionKey === assignedKey) return { ...option, assignedProfileId: next.profileId, assignedProfileTitle: next.titleEn };
-      return option;
-    }));
-    setActiveId(next.id);
-  }
-
-  function updateNewService(key: keyof typeof newService, value: string) {
-    setCreateError("");
-    setNewService((current) => ({ ...current, [key]: value }));
-  }
 
   async function createService() {
     if (creating) return;
-    const titleEn = newService.titleEn.trim();
-    const titleBn = newService.titleBn.trim();
-    const descriptionEn = newService.descriptionEn.trim();
-    const descriptionBn = newService.descriptionBn.trim();
-    const slug = slugifyDraft(newService.slug || titleEn);
-    if (!titleEn || !titleBn || !descriptionEn || !descriptionBn || !slug) {
-      setCreateError("Add English and Bangla titles, both summaries and a valid URL slug.");
-      return;
-    }
     setCreating(true);
-    setCreateError("");
+    setError("");
+    const slug = "untitled-service-" + Date.now().toString(36);
+
     try {
       const created = await createAdminService({
-        serviceKey: `service:${slug}`,
+        serviceKey: "service:" + slug,
         slug,
-        label: titleEn,
-        description: descriptionEn,
-        href: `/services/${slug}`,
+        label: "Untitled service",
+        description: "",
+        href: "/services/" + slug,
         icon: "briefcase",
-        titleEn,
-        titleBn,
-        descriptionEn,
-        descriptionBn,
+        titleEn: "Untitled service",
+        titleBn: "",
+        descriptionEn: "",
+        descriptionBn: "",
         detail: null,
       });
-      setServices((current) => [created, ...current]);
-      setActiveId(created.id);
-      setCreateOpen(false);
-      setNewService({ titleEn: "", titleBn: "", slug: "", descriptionEn: "", descriptionBn: "" });
-    } catch (createRequestError) {
-      setCreateError(createRequestError instanceof Error ? createRequestError.message : "The service could not be created.");
+      const profileId = created.profileId ?? created.id;
+      window.location.assign("/admin/services/pages/" + encodeURIComponent(profileId));
+    } catch (createError) {
+      if (isUnauthorizedServiceError(createError)) {
+        window.location.assign("/admin/login");
+        return;
+      }
+      setError(createError instanceof Error ? createError.message : "The service could not be created.");
     } finally {
       setCreating(false);
     }
@@ -566,36 +565,144 @@ export function ServicePagesModule() {
   return (
     <div className="space-y-6">
       <section className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
-        <div><p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#e44762]">Content workspace</p><h1 className="mt-2 font-brand text-[38px] font-bold leading-[1] tracking-[-0.05em] text-[#14131c] sm:text-[48px]">Service pages</h1><p className="mt-3 max-w-[620px] text-[14px] leading-[1.6] text-[#77736e]">Create service pages independently, then place them in any menu entry when they are ready.</p></div>
-        <div className="flex flex-wrap items-center gap-2"><a className="inline-flex min-h-10 items-center justify-center rounded-full border border-[#d8d2c8] bg-white px-4 text-[12px] font-bold text-[#4f4b47] hover:border-[#aaa197]" href="/services" target="_blank" rel="noreferrer">Preview catalogue ↗</a><a className="inline-flex min-h-10 items-center justify-center rounded-full border border-[#d8d2c8] bg-transparent px-4 text-[12px] font-bold text-[#4f4b47] hover:border-[#aaa197]" href="/admin/services">Menu structure</a><button className="inline-flex min-h-10 items-center justify-center rounded-full bg-[#14131c] px-4 text-[12px] font-bold text-white transition-transform hover:-translate-y-px" type="button" onClick={() => { setCreateOpen((current) => !current); setCreateError(""); }}>{createOpen ? "Close" : "+ New service"}</button></div>
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#e44762]">Content workspace</p>
+          <h1 className="mt-2 font-brand text-[38px] font-bold leading-[1] tracking-[-0.05em] text-[#14131c] sm:text-[48px]">Service pages</h1>
+          <p className="mt-3 max-w-[620px] text-[14px] leading-[1.6] text-[#77736e]">Create a service page first. Its editor handles the title, unique slug, optional localization, page content and menu assignment.</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <a className="inline-flex min-h-10 items-center justify-center rounded-full border border-[#d8d2c8] bg-white px-4 text-[12px] font-bold text-[#4f4b47] hover:border-[#aaa197]" href="/services" target="_blank" rel="noreferrer">Preview catalogue ↗</a>
+          <a className="inline-flex min-h-10 items-center justify-center rounded-full border border-[#d8d2c8] bg-transparent px-4 text-[12px] font-bold text-[#4f4b47] hover:border-[#aaa197]" href="/admin/services">Menu structure</a>
+          <button className="inline-flex min-h-10 items-center justify-center rounded-full bg-[#14131c] px-4 text-[12px] font-bold text-white transition-transform hover:-translate-y-px disabled:cursor-wait disabled:opacity-55" type="button" disabled={creating} onClick={() => void createService()}>{creating ? "Creating…" : "+ New service"}</button>
+        </div>
       </section>
 
       {error ? <p className="rounded-[14px] bg-[#fff4f5] px-4 py-3 text-[13px] font-semibold text-[#ad3148]" role="alert">{error}</p> : null}
 
-      {createOpen ? <section className="rounded-[20px] bg-[#14131c] p-4 text-white sm:p-5" aria-labelledby="new-service-title">
-        <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#f08ca0]">New service record</p><h2 className="mt-1 font-brand text-[24px] font-bold tracking-[-0.04em]" id="new-service-title">Start with the essentials</h2><p className="mt-1 text-[12px] text-white/60">Create it first. You can attach it to a menu entry from the editor after it exists.</p></div><span className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-bold text-white/70">Standalone</span></div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <label className="block min-w-0"><span className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/65">English title</span><input className="mt-2 min-h-11 w-full rounded-[13px] bg-white/10 px-3.5 text-[13px] text-white outline-none placeholder:text-white/35 focus:bg-white/15 focus:ring-2 focus:ring-[#f08ca0]" value={newService.titleEn} placeholder="Limited company registration" onChange={(event) => updateNewService("titleEn", event.target.value)} /></label>
-          <label className="block min-w-0"><span className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/65">Bangla title</span><input className="mt-2 min-h-11 w-full rounded-[13px] bg-white/10 px-3.5 text-[13px] text-white outline-none placeholder:text-white/35 focus:bg-white/15 focus:ring-2 focus:ring-[#f08ca0]" value={newService.titleBn} placeholder="লিমিটেড কোম্পানি নিবন্ধন" onChange={(event) => updateNewService("titleBn", event.target.value)} /></label>
-          <label className="block min-w-0"><span className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/65">URL slug</span><input className="mt-2 min-h-11 w-full rounded-[13px] bg-white/10 px-3.5 text-[13px] text-white outline-none placeholder:text-white/35 focus:bg-white/15 focus:ring-2 focus:ring-[#f08ca0]" value={newService.slug} placeholder={slugifyDraft(newService.titleEn) || "limited-company-registration"} onChange={(event) => updateNewService("slug", event.target.value)} /></label>
-          <label className="block min-w-0 sm:col-span-2 lg:col-span-3"><span className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/65">Short summary <span className="font-normal text-white/40">(English)</span></span><textarea className="mt-2 min-h-[76px] w-full resize-y rounded-[13px] bg-white/10 px-3.5 py-3 text-[13px] leading-[1.5] text-white outline-none placeholder:text-white/35 focus:bg-white/15 focus:ring-2 focus:ring-[#f08ca0]" value={newService.descriptionEn} placeholder="A short explanation for the menu and service catalogue." onChange={(event) => updateNewService("descriptionEn", event.target.value)} /></label>
-          <label className="block min-w-0 sm:col-span-2 lg:col-span-3"><span className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/65">Short summary <span className="font-normal text-white/40">(Bangla, required)</span></span><textarea className="mt-2 min-h-[76px] w-full resize-y rounded-[13px] bg-white/10 px-3.5 py-3 text-[13px] leading-[1.5] text-white outline-none placeholder:text-white/35 focus:bg-white/15 focus:ring-2 focus:ring-[#f08ca0]" value={newService.descriptionBn} placeholder="সেবাটির সংক্ষিপ্ত বিবরণ" onChange={(event) => updateNewService("descriptionBn", event.target.value)} /></label>
-        </div>
-        {createError ? <p className="mt-3 rounded-[12px] bg-[#7c2940] px-3.5 py-2.5 text-[12px] font-semibold text-white" role="alert">{createError}</p> : null}
-        <div className="mt-4 flex flex-wrap items-center justify-end gap-2"><button className="min-h-10 rounded-full px-4 text-[12px] font-bold text-white/65 hover:bg-white/10" type="button" onClick={() => setCreateOpen(false)}>Cancel</button><button className="min-h-10 rounded-full bg-[#e44762] px-4 text-[12px] font-bold text-white transition-transform hover:-translate-y-px disabled:opacity-50" type="button" disabled={creating} onClick={() => void createService()}>{creating ? "Creating…" : "Create service"}</button></div>
-      </section> : null}
+      {loading ? <div className="rounded-[20px] bg-white/60 px-5 py-10 text-center text-[13px] text-[#77736e] ring-1 ring-[#ddd8cf]/80">Loading service pages…</div> : null}
 
-      {loading ? <div className="rounded-[20px] bg-white/60 px-5 py-10 text-center text-[13px] text-[#77736e] ring-1 ring-[#ddd8cf]/80">Loading service workspace…</div> : null}
+      {!loading && services.length ? (
+        <section className="overflow-hidden rounded-[22px] bg-white/65 ring-1 ring-[#ddd8cf]/80" aria-labelledby="service-records-title">
+          <div className="flex flex-col gap-4 border-b border-[#eee9e2] px-4 py-4 sm:flex-row sm:items-end sm:justify-between sm:px-5">
+            <div>
+              <div className="flex items-center gap-2">
+                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]" id="service-records-title">Service records</p>
+                <span className="rounded-full bg-[#f4f1ec] px-2.5 py-1 text-[10px] font-bold text-[#77736e]">{services.length}</span>
+              </div>
+              <p className="mt-1 text-[12px] text-[#9b958c]">Menu entries are only connection points. Open a record to edit its page.</p>
+            </div>
+            <div className="flex min-w-0 flex-col gap-2 sm:flex-row">
+              <input className={fieldClass.replace("mt-2 ", "mt-0 ")} type="search" aria-label="Find a service page" placeholder="Find a service…" value={query} onChange={(event) => setQuery(event.target.value)} />
+              <div className="flex gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {(["all", "assigned", "unassigned"] as const).map((item) => (
+                  <button className={"shrink-0 rounded-full px-2.5 py-1.5 text-[10px] font-bold " + (scope === item ? "bg-[#14131c] text-white" : "bg-[#f4f1ec] text-[#77736e]")} type="button" key={item} onClick={() => setScope(item)}>
+                    {item === "all" ? "All " + services.length : item === "assigned" ? "Assigned " + services.filter((service) => service.assignedMenu).length : "Unassigned " + services.filter((service) => !service.assignedMenu).length}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
 
-      {!loading && services.length ? <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(270px,0.34fr)_minmax(0,0.66fr)] xl:items-start">
-        <aside className="min-w-0 rounded-[22px] bg-white/60 p-3 ring-1 ring-[#ddd8cf]/80" aria-label="Service records">
-          <div className="px-2 pb-3"><div className="flex items-center justify-between gap-3"><p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Service records</p><span className="rounded-full bg-[#f4f1ec] px-2.5 py-1 text-[10px] font-bold text-[#77736e]">{services.length}</span></div><input className={`${fieldClass} mt-3`} type="search" placeholder="Find a service…" value={query} onChange={(event) => setQuery(event.target.value)} /></div>
-          <div className="flex gap-1.5 overflow-x-auto px-2 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{(["all", "assigned", "unassigned"] as const).map((item) => <button className={`shrink-0 rounded-full px-2.5 py-1.5 text-[10px] font-bold ${scope === item ? "bg-[#14131c] text-white" : "bg-[#f4f1ec] text-[#77736e]"}`.trim()} type="button" key={item} onClick={() => setScope(item)}>{item === "all" ? `All ${services.length}` : item === "assigned" ? `Assigned ${services.filter((service) => service.assignedMenu).length}` : `Unassigned ${services.filter((service) => !service.assignedMenu).length}`}</button>)}</div>
-          <div className="mt-2 divide-y divide-[#eee9e2]">{filtered.map((service) => { const tone = getToneClasses(service.color, service.surface); return <button className={`flex w-full items-center gap-3 px-2.5 py-3 text-left transition-colors ${service.id === activeService?.id ? "bg-[#fcecef]" : "hover:bg-[#faf9f6]"}`.trim()} type="button" key={service.id} onClick={() => setActiveId(service.id)}><span className={`grid size-9 shrink-0 place-items-center rounded-[11px] ${tone.surface} ${tone.text}`.trim()}><ServiceIcon name={normalizeServiceIcon(service.icon)} className="size-[18px]" /></span><span className="min-w-0 flex-1"><span className="block truncate text-[13px] font-bold text-[#29252a]">{service.title}</span><span className="mt-0.5 block truncate text-[11px] text-[#9b958c]">{service.assignedMenu ? `${service.assignedMenu.sectionLabel} · ${service.assignedMenu.groupLabel}` : "Not assigned to menu"}</span></span><span className="shrink-0"><StatusPill service={service} /></span></button>; })}{!filtered.length ? <p className="px-2.5 py-6 text-center text-[12px] text-[#9b958c]">No matching services.</p> : null}</div>
-        </aside>
-        {activeService ? <ServiceEditor key={`${activeService.id}-${activeService.revision}`} service={activeService} menuOptions={menuOptions} onSaved={updateService} /> : null}
-      </div> : null}
-      {!loading && !services.length && !error ? <div className="rounded-[20px] bg-white/60 px-5 py-10 text-center ring-1 ring-[#ddd8cf]/80"><p className="font-brand text-[22px] font-bold tracking-[-0.03em] text-[#29252a]">Your service workspace is ready.</p><p className="mx-auto mt-2 max-w-[460px] text-[13px] leading-[1.5] text-[#77736e]">Create a service record, build its page, then attach it to one of the {menuOptions.length || "available"} real menu entries.</p><button className="mt-4 min-h-10 rounded-full bg-[#14131c] px-4 text-[12px] font-bold text-white" type="button" onClick={() => setCreateOpen(true)}>+ Create first service</button></div> : null}
+          <div className="divide-y divide-[#eee9e2]">
+            {filtered.map((service) => {
+              const tone = getToneClasses(service.color, service.surface);
+              const href = "/admin/services/pages/" + encodeURIComponent(service.profileId ?? service.id);
+              return (
+                <a className="group flex min-w-0 items-center gap-3 px-4 py-4 text-left transition-colors hover:bg-[#faf9f6] sm:px-5" href={href} key={service.id}>
+                  <span className={"grid size-10 shrink-0 place-items-center rounded-[12px] " + tone.surface + " " + tone.text}>
+                    <ServiceIcon name={normalizeServiceIcon(service.icon)} className="size-[19px]" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className="truncate text-[14px] font-bold text-[#29252a] group-hover:text-[#e44762]">{service.titleEn || "Untitled service"}</span>
+                      <StatusPill service={service} />
+                    </span>
+                    <span className="mt-1 block truncate text-[11px] text-[#9b958c]">/services/{service.slug} · {service.assignedMenu ? service.assignedMenu.sectionLabel + " / " + service.assignedMenu.groupLabel : "Not assigned to menu"}</span>
+                  </span>
+                  <span className="hidden shrink-0 text-right sm:block">
+                    <span className="block text-[11px] font-semibold text-[#5f5a54]">{service.detail ? "Page content" : "Basic record"}</span>
+                    <span className="mt-0.5 block text-[10px] text-[#a09a91]">{service.assignedMenu ? "Menu connected" : "Ready to connect"}</span>
+                  </span>
+                  <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[#14131c] text-[14px] text-white transition-transform group-hover:-translate-y-px" aria-hidden="true">↗</span>
+                </a>
+              );
+            })}
+            {!filtered.length ? <p className="px-5 py-10 text-center text-[12px] text-[#9b958c]">No matching service pages.</p> : null}
+          </div>
+        </section>
+      ) : null}
+
+      {!loading && !services.length && !error ? (
+        <section className="rounded-[20px] bg-white/60 px-5 py-12 text-center ring-1 ring-[#ddd8cf]/80">
+          <p className="font-brand text-[24px] font-bold tracking-[-0.03em] text-[#29252a]">Your service workspace is ready.</p>
+          <p className="mx-auto mt-2 max-w-[460px] text-[13px] leading-[1.5] text-[#77736e]">Create a standalone service page, then attach it to any real menu entry from the editor.</p>
+          <button className="mt-4 min-h-10 rounded-full bg-[#14131c] px-4 text-[12px] font-bold text-white transition-transform hover:-translate-y-px disabled:opacity-55" type="button" disabled={creating} onClick={() => void createService()}>{creating ? "Creating…" : "+ Create first service"}</button>
+        </section>
+      ) : null}
+    </div>
+  );
+}
+
+export function ServicePageEditorModule({ id }: { id: string }) {
+  const [service, setService] = useState<AdminService | null>(null);
+  const [menuOptions, setMenuOptions] = useState<AdminServiceMenuOption[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError("");
+    void Promise.all([getAdminService(id), getAdminServiceMenuOptions()])
+      .then(([nextService, nextMenuOptions]) => {
+        if (!active) return;
+        setService(nextService);
+        setMenuOptions(nextMenuOptions);
+      })
+      .catch((loadError) => {
+        if (!active) return;
+        if (isUnauthorizedServiceError(loadError)) {
+          window.location.assign("/admin/login");
+          return;
+        }
+        setError(loadError instanceof Error ? loadError.message : "This service page could not be loaded.");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [id]);
+
+  function handleSaved(next: AdminService) {
+    setService(next);
+    setMenuOptions((current) => current.map((option) => {
+      const optionKey = option.targetType + ":" + option.id;
+      const assignedKey = menuTargetKey(next.assignedMenu);
+      if (option.assignedProfileId === next.profileId) return { ...option, assignedProfileId: null, assignedProfileTitle: null };
+      if (optionKey === assignedKey) return { ...option, assignedProfileId: next.profileId, assignedProfileTitle: next.titleEn };
+      return option;
+    }));
+  }
+
+  if (loading) {
+    return <div className="rounded-[20px] bg-white/60 px-5 py-12 text-center text-[13px] text-[#77736e] ring-1 ring-[#ddd8cf]/80">Loading service editor…</div>;
+  }
+
+  if (error || !service) {
+    return (
+      <div className="space-y-4">
+        <a className="text-[12px] font-semibold text-[#e44762] hover:text-[#14131c]" href="/admin/services/pages">← All service pages</a>
+        <p className="rounded-[14px] bg-[#fff4f5] px-4 py-3 text-[13px] font-semibold text-[#ad3148]" role="alert">{error || "This service page was not found."}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+      <a className="inline-flex min-h-9 items-center rounded-full bg-white px-3.5 text-[12px] font-bold text-[#5f5a54] ring-1 ring-[#d8d2c8] hover:text-[#e44762]" href="/admin/services/pages">← All service pages</a>
+      <ServiceEditor key={service.id + "-" + service.revision} service={service} menuOptions={menuOptions} onSaved={handleSaved} />
     </div>
   );
 }

@@ -79,8 +79,8 @@ function toPublicService(context: ServiceMenuContext, profile: ServiceProfileRow
     menuItemId: context.item.id,
     menuLinkId: null,
     slug: serviceSlug(context, profile),
-    title: locale === "bn" ? profile?.titleBn ?? context.item.label : profile?.titleEn ?? context.item.label,
-    description: locale === "bn" ? profile?.descriptionBn ?? context.item.description : profile?.descriptionEn ?? context.item.description,
+    title: locale === "bn" ? profile?.titleBn?.trim() || profile?.titleEn?.trim() || context.item.label : profile?.titleEn?.trim() || context.item.label,
+    description: locale === "bn" ? profile?.descriptionBn?.trim() || profile?.descriptionEn?.trim() || context.item.description : profile?.descriptionEn?.trim() || context.item.description,
     category: context.section.label,
     categoryKey: slugify(context.section.key || context.section.label),
     groupLabel: context.group.label,
@@ -114,8 +114,8 @@ function toPublicServiceTarget(target: ServiceMenuTarget, profile: ServiceProfil
     menuItemId: null,
     menuLinkId: target.menuLinkId,
     slug: profile.slug,
-    title: locale === "bn" ? profile.titleBn : profile.titleEn,
-    description: locale === "bn" ? profile.descriptionBn : profile.descriptionEn,
+    title: locale === "bn" ? profile.titleBn.trim() || profile.titleEn : profile.titleEn,
+    description: locale === "bn" ? profile.descriptionBn.trim() || profile.descriptionEn : profile.descriptionEn,
     icon: profile.icon || target.icon,
     href: destination.href,
     destination,
@@ -309,8 +309,8 @@ export class ServiceService {
     const viewContext = context ?? { section: fallbackSection, group: fallbackGroup, item: fallbackItem };
     const base = target?.targetType === "LINK" ? toPublicServiceTarget(target, profile, locale) : toPublicService(viewContext, profile, locale);
     const detail = normalizeServiceDetail(profile.publishedDetail);
-    const title = locale === "bn" ? profile.titleBn : profile.titleEn;
-    const description = locale === "bn" ? profile.descriptionBn : profile.descriptionEn;
+    const title = locale === "bn" ? profile.titleBn.trim() || profile.titleEn : profile.titleEn;
+    const description = locale === "bn" ? profile.descriptionBn.trim() || profile.descriptionEn : profile.descriptionEn;
 
     return {
       ...base,

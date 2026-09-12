@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import type { ServicePageContent, ServicePriceTier } from "./service-page-data";
 import type { PublicContactSettings } from "@/lib/contact-types";
+import { getTool, toolHref } from "@/lib/business-tools";
 import { ContactModal } from "./contact-section";
 import { ActionButton, Breadcrumbs, WaveLabel } from "./ui";
 
@@ -32,6 +33,7 @@ const serviceUi = {
     serviceMode: "Service mode",
     keyFacts: "Key facts",
     relatedOptions: "Related options",
+    helpfulTools: "Helpful tools",
     pricingEyebrow: "Optional / pricing",
     pricingTitle: "Show the right price for this service",
     pricingDescription: "Use a starting price, package cards or a custom quote depending on the scope.",
@@ -57,6 +59,7 @@ const serviceUi = {
     serviceMode: "সেবার মাধ্যম",
     keyFacts: "গুরুত্বপূর্ণ তথ্য",
     relatedOptions: "সম্পর্কিত সেবা",
+    helpfulTools: "সহায়ক টুল",
     pricingEyebrow: "ঐচ্ছিক / মূল্য",
     pricingTitle: "এই সেবার জন্য সঠিক মূল্য নির্ধারণ করুন",
     pricingDescription: "কাজের পরিধি অনুযায়ী প্রাথমিক মূল্য, প্যাকেজ বা কাস্টম কোট ব্যবহার করুন।",
@@ -134,6 +137,10 @@ export function ServiceHeroSection({ service }: { service: ServicePageContent })
 
 export function ServiceOverviewSection({ service }: { service: ServicePageContent }) {
   const ui = serviceUi[service.locale ?? "en"];
+  const helpfulTools = (service.tools ?? []).flatMap((slug) => {
+    const tool = getTool(slug);
+    return tool ? [tool] : [];
+  });
 
   return (
     <section className="mt-section-gap-xl border-t border-[#e0dee3] bg-page pt-section-y lg:mt-section-gap-xl lg:pt-section-y-xl" id="service-overview" aria-labelledby="service-overview-title">
@@ -169,6 +176,26 @@ export function ServiceOverviewSection({ service }: { service: ServicePageConten
               <p className="text-overline text-[#de5778]">{ui.relatedOptions}</p>
               <div className="mt-cluster flex flex-wrap gap-2">
                 {service.relatedLinks.map((link) => <a className="inline-flex min-h-10 items-center gap-2 rounded-pill bg-white px-3.5 text-button font-semibold text-ink ring-1 ring-[#e0dee3] transition-colors hover:text-pink hover:ring-[#de5778]/40" href={link.href} {...externalLinkProps(link.href)} key={link.id}>{link.label}<span className="text-pink" aria-hidden="true">↗</span></a>)}
+              </div>
+            </div>
+          ) : null}
+
+          {helpfulTools.length ? (
+            <div className="mt-section-gap-xl border-t border-[#e0dee3] pt-section-y">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-overline text-[#de5778]">{ui.helpfulTools}</p>
+                <span className="text-micro font-semibold text-muted">{helpfulTools.length}</span>
+              </div>
+              <div className="mt-cluster grid gap-cluster sm:grid-cols-2">
+                {helpfulTools.map((tool) => (
+                  <a className="group flex min-w-0 items-center justify-between gap-cluster rounded-card bg-white px-card-pad-sm py-cluster ring-1 ring-[#e0dee3] transition-colors hover:ring-[#de5778]/50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3" href={toolHref(tool.slug)} key={tool.slug}>
+                    <span className="min-w-0">
+                      <span className="block truncate text-body-xs font-semibold text-ink group-hover:text-pink">{tool.title}</span>
+                      <span className="mt-cluster-xs block truncate text-micro text-muted">{tool.description}</span>
+                    </span>
+                    <span className="shrink-0 text-pink" aria-hidden="true">↗</span>
+                  </a>
+                ))}
               </div>
             </div>
           ) : null}

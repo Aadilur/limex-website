@@ -53,6 +53,8 @@ export type ServiceDetailContent = {
   facts: ServiceFact[];
   pricing: ServicePriceTier[];
   faqs: ServiceFaq[];
+  /** Ordered slugs from the managed business-tools catalogue. */
+  tools?: string[];
 };
 
 export type ServiceDestination = {

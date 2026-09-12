@@ -21,4 +21,6 @@ WHERE `status` = 'LINK_ONLY'
   AND `detail` IS NULL
   AND `publishedDetail` IS NULL
   AND `revision` = 1
-  AND `publishedRevision` IS NULL;
+  AND `publishedRevision` IS NULL
+  AND `menuItemId` IS NOT NULL
+  AND `menuLinkId` IS NULL;

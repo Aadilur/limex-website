@@ -160,17 +160,18 @@ export class PrismaServiceRepository implements ServiceRepository {
       });
       if (!result.count) throw new ServiceConflictError();
 
-      // An assigned service still keeps the menu entry in sync, but an
-      // unassigned service never mutates the menu tree while it is edited.
+      // A service owns its page URL. The menu editor owns the menu label,
+      // description, icon, order and visibility, so editing a service only
+      // keeps the assigned target's href in sync.
       if (current.menuItemId) {
         await transaction.menuItem.update({
           where: { id: current.menuItemId },
-          data: { label: input.label, description: input.description, href: input.href, icon: input.icon },
+          data: { href: `/services/${input.slug}` },
         });
       } else if (current.menuLinkId) {
         await transaction.menuLink.update({
           where: { id: current.menuLinkId },
-          data: { label: input.label, href: input.href },
+          data: { href: `/services/${input.slug}` },
         });
       }
 
@@ -201,20 +202,20 @@ export class PrismaServiceRepository implements ServiceRepository {
       const sameTarget = current.menuItemId === menuItemId && current.menuLinkId === menuLinkId;
 
       if (!sameTarget && current.menuItemId && current.menuSnapshot) {
-        const snapshot = current.menuSnapshot as { targetType?: string; targetId?: string; label?: string; description?: string; href?: string; icon?: string };
+        const snapshot = current.menuSnapshot as { targetType?: string; targetId?: string; href?: string };
         if (snapshot.targetType === "ITEM" && snapshot.targetId === current.menuItemId) {
           const oldMenuItem = await transaction.menuItem.findUnique({ where: { id: current.menuItemId } });
-          if (oldMenuItem && oldMenuItem.href === `/services/${current.slug}` && oldMenuItem.label === current.titleEn) {
-            await transaction.menuItem.update({ where: { id: oldMenuItem.id }, data: { label: snapshot.label ?? oldMenuItem.label, description: snapshot.description ?? oldMenuItem.description, href: snapshot.href ?? oldMenuItem.href, icon: snapshot.icon ?? oldMenuItem.icon } });
+          if (oldMenuItem && oldMenuItem.href === `/services/${current.slug}`) {
+            await transaction.menuItem.update({ where: { id: oldMenuItem.id }, data: { href: snapshot.href ?? oldMenuItem.href } });
           }
         }
       }
       if (!sameTarget && current.menuLinkId && current.menuSnapshot) {
-        const snapshot = current.menuSnapshot as { targetType?: string; targetId?: string; label?: string; href?: string };
+        const snapshot = current.menuSnapshot as { targetType?: string; targetId?: string; href?: string };
         if (snapshot.targetType === "LINK" && snapshot.targetId === current.menuLinkId) {
           const oldMenuLink = await transaction.menuLink.findUnique({ where: { id: current.menuLinkId } });
-          if (oldMenuLink && oldMenuLink.href === `/services/${current.slug}` && oldMenuLink.label === current.titleEn) {
-            await transaction.menuLink.update({ where: { id: oldMenuLink.id }, data: { label: snapshot.label ?? oldMenuLink.label, href: snapshot.href ?? oldMenuLink.href } });
+          if (oldMenuLink && oldMenuLink.href === `/services/${current.slug}`) {
+            await transaction.menuLink.update({ where: { id: oldMenuLink.id }, data: { href: snapshot.href ?? oldMenuLink.href } });
           }
         }
       }
@@ -223,7 +224,7 @@ export class PrismaServiceRepository implements ServiceRepository {
       if (menuItemId) {
         const menuItem = await transaction.menuItem.findUnique({ where: { id: menuItemId } });
         if (!menuItem) throw new ServiceNotFoundError("That menu entry no longer exists. Refresh the menu list and try again.");
-        menuSnapshot = { targetType: "ITEM", targetId: menuItem.id, label: menuItem.label, description: menuItem.description, href: menuItem.href, icon: menuItem.icon };
+        menuSnapshot = { targetType: "ITEM", targetId: menuItem.id, href: menuItem.href };
         const assigned = await transaction.serviceProfile.findUnique({ where: { menuItemId } });
         if (assigned && assigned.id !== id) {
           const legacyAssigned = isLegacySeedProfile(toRow(assigned));
@@ -239,7 +240,7 @@ export class PrismaServiceRepository implements ServiceRepository {
       if (menuLinkId) {
         const menuLink = await transaction.menuLink.findUnique({ where: { id: menuLinkId } });
         if (!menuLink) throw new ServiceNotFoundError("That menu link no longer exists. Refresh the menu list and try again.");
-        menuSnapshot = { targetType: "LINK", targetId: menuLink.id, label: menuLink.label, href: menuLink.href };
+        menuSnapshot = { targetType: "LINK", targetId: menuLink.id, href: menuLink.href };
         const assigned = await transaction.serviceProfile.findUnique({ where: { menuLinkId } });
         if (assigned && assigned.id !== id) throw new ServiceConflictError("That menu link is already assigned to another service. Detach it there before reassigning it.");
       }
@@ -254,12 +255,12 @@ export class PrismaServiceRepository implements ServiceRepository {
       if (menuItemId) {
         await transaction.menuItem.update({
           where: { id: menuItemId },
-          data: { label: current.titleEn, description: current.descriptionEn, href: `/services/${current.slug}`, icon: current.icon },
+          data: { href: `/services/${current.slug}` },
         });
       } else if (menuLinkId) {
         await transaction.menuLink.update({
           where: { id: menuLinkId },
-          data: { label: current.titleEn, href: `/services/${current.slug}` },
+          data: { href: `/services/${current.slug}` },
         });
       }
 

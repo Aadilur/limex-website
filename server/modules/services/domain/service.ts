@@ -9,6 +9,7 @@ import type {
   ServiceMenuTargetType,
   ServiceProfileInput,
 } from "../../../../src/lib/service-types.js";
+import { toolSlugs } from "../../../../src/lib/business-tools.js";
 import type { MenuItem, MenuSection } from "../../admin/domain/menu.js";
 
 export type ServiceProfileStatus = "LINK_ONLY" | "DRAFT" | "PUBLISHED";
@@ -37,7 +38,20 @@ export type ServiceProfileRow = {
 };
 
 export function isLegacySeedProfile(profile: ServiceProfileRow) {
-  return profile.origin === "SEED";
+  if (profile.origin === "SEED") return true;
+
+  // Deployments that created the old menu-backed profiles before the
+  // standalone-service migration have the new column's default (`ADMIN`).
+  // Recognise only an untouched, first-revision parent-menu placeholder so a
+  // newly created standalone draft can never disappear from the admin list.
+  return profile.origin === "ADMIN"
+    && profile.menuItemId !== null
+    && profile.menuLinkId === null
+    && profile.status === "LINK_ONLY"
+    && profile.detail === null
+    && profile.publishedDetail === null
+    && profile.revision === 1
+    && profile.publishedRevision === null;
 }
 
 export type ServiceMenuContext = {
@@ -189,6 +203,7 @@ export function emptyServiceDetail(): ServiceDetailContent {
     facts: [],
     pricing: [],
     faqs: [],
+    tools: [],
   };
 }
 
@@ -202,6 +217,13 @@ function cleanString(value: unknown, fallback = "") {
 
 function cleanStringList(value: unknown) {
   return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string").map((item) => item.trim()).filter(Boolean).slice(0, 30) : [];
+}
+
+function cleanToolSlugs(value: unknown) {
+  const allowed = new Set<string>(toolSlugs);
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string" && allowed.has(item)).slice(0, 8)
+    : [];
 }
 
 function cleanFacts(value: unknown) {
@@ -280,6 +302,7 @@ export function normalizeServiceDetail(value: unknown): ServiceDetailContent {
     facts: cleanFacts(record.facts),
     pricing: cleanPricing(record.pricing),
     faqs: cleanFaqs(record.faqs),
+    tools: cleanToolSlugs(record.tools),
   };
 }
 

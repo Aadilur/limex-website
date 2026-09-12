@@ -272,9 +272,9 @@ model ServiceProfile {
   icon              String                  @default("briefcase") @db.VarChar(80)
   origin            String                  @default("ADMIN") @db.VarChar(16)
   titleEn           String                  @db.VarChar(180)
-  titleBn           String                  @db.VarChar(180)
+  titleBn           String                  @default("") @db.VarChar(180)
   descriptionEn     String                  @db.VarChar(500)
-  descriptionBn     String                  @db.VarChar(500)
+  descriptionBn     String                  @default("") @db.VarChar(500)
   detail            Json?
   publishedDetail   Json?
   status            String                  @default("LINK_ONLY") @db.VarChar(16)

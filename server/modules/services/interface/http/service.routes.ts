@@ -11,10 +11,10 @@ import {
   isSafeServiceHref,
 } from "../../domain/service.js";
 import type { ServiceService } from "../../application/service.service.js";
+import { toolSlugs } from "../../../../../src/lib/business-tools.js";
 
 const idParamsSchema = z.object({ id: z.string().trim().min(1).max(191) });
 const slugParamsSchema = z.object({ slug: z.string().trim().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/) });
-const hrefSchema = z.string().trim().min(1).max(1000).refine(isSafeServiceHref, "Use an internal path, hash link, HTTP or HTTPS URL.");
 const optionalHrefSchema = z.string().trim().max(1000).refine((value) => !value || isSafeServiceHref(value), "Use an internal path, hash link, HTTP or HTTPS URL.").default("");
 const iconSchema = z.string().trim().min(1).max(80).default("briefcase");
 const text = (max: number) => z.string().trim().max(max).default("");
@@ -51,19 +51,20 @@ const detailSchema = z.object({
     featured: z.boolean().optional(),
   })).max(6).default([]),
   faqs: z.array(z.object({ question: requiredText(300), answer: requiredText(1600) })).max(30).default([]),
+  tools: z.array(z.enum(toolSlugs)).max(8).default([]),
 }).strict();
 
 const profileSchema = z.object({
   serviceKey: z.string().trim().max(180).optional(),
   slug: z.string().trim().min(1).max(160).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
-  label: requiredText(180),
+  label: text(180),
   description: text(500),
-  href: hrefSchema,
+  href: optionalHrefSchema,
   icon: iconSchema,
   titleEn: requiredText(180),
-  titleBn: requiredText(180),
-  descriptionEn: requiredText(500),
-  descriptionBn: requiredText(500),
+  titleBn: text(180),
+  descriptionEn: text(500),
+  descriptionBn: text(500),
   detail: detailSchema.nullable().default(null),
 }).strict();
 
@@ -78,6 +79,24 @@ const assignmentBodySchema = z.object({
   menuTarget: z.object({ targetType: z.enum(["ITEM", "LINK"]), targetId: z.string().trim().min(1).max(191) }).nullable(),
   expectedRevision: z.number().int().positive(),
 }).strict();
+
+function normalizeProfileInput(input: z.infer<typeof profileSchema>) {
+  const slug = input.slug.trim();
+  const titleEn = input.titleEn.trim();
+  const descriptionEn = input.descriptionEn.trim();
+
+  return {
+    ...input,
+    serviceKey: input.serviceKey?.trim() || undefined,
+    label: input.label.trim() || titleEn,
+    description: input.description.trim() || descriptionEn,
+    href: input.href.trim() || `/services/${slug}`,
+    titleEn,
+    titleBn: input.titleBn.trim(),
+    descriptionEn,
+    descriptionBn: input.descriptionBn.trim(),
+  };
+}
 
 function sendKnownServiceError(error: unknown, reply: FastifyReply) {
   if (error instanceof ServiceConflictError) return reply.code(409).send({ error: error.message });
@@ -131,7 +150,7 @@ export async function serviceRoutes(app: FastifyInstance, options: { service: Se
     if (!session) return;
     try {
       const input = createBodySchema.parse(request.body);
-      return { data: await options.service.createService(input.profile, session.username) };
+      return { data: await options.service.createService(normalizeProfileInput(input.profile), session.username) };
     } catch (error) {
       return sendKnownServiceError(error, reply);
     }
@@ -154,7 +173,7 @@ export async function serviceRoutes(app: FastifyInstance, options: { service: Se
     try {
       const { id } = idParamsSchema.parse(request.params);
       const input = updateBodySchema.parse(request.body);
-      const data = await options.service.saveService(id, input.profile, input.expectedRevision, session.username);
+      const data = await options.service.saveService(id, normalizeProfileInput(input.profile), input.expectedRevision, session.username);
       return { data };
     } catch (error) {
       return sendKnownServiceError(error, reply);
