@@ -11,7 +11,6 @@ import type {
 import {
   createTeamImageKey,
   deleteStoredObject,
-  signStoredObject,
   uploadStoredObject,
   type ImageUpload,
 } from "../../../shared/storage/object-storage.js";
@@ -121,7 +120,7 @@ export class AboutService {
       name: member.name,
       title: member.title,
       description: member.description,
-      imageUrl: member.imageKey ? await signStoredObject(member.imageKey) : null,
+      imageUrl: member.imageKey ? "/api/about/team/" + member.id + "/image" : null,
       sortOrder: member.sortOrder,
       isVisible: member.isVisible,
     };
@@ -155,6 +154,12 @@ export class AboutService {
 
   public async getAdminTeam(): Promise<AboutTeamMemberResponse[]> {
     return this.toResponses(await this.members.findAll());
+  }
+
+  public async getTeamImageKey(id: string) {
+    const member = await this.members.findById(id);
+    if (!member) throw new AboutTeamMemberNotFoundError();
+    return member.imageKey;
   }
 
   public async getPublicReels(): Promise<AboutReelResponse[]> {

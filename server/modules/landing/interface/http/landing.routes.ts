@@ -9,7 +9,9 @@ import {
   getStoredObject,
   isSupportedLandingLogoType,
   LANDING_LOGO_CACHE_CONTROL,
+  MEDIA_REDIRECT_CACHE_CONTROL,
   MAX_LANDING_LOGO_BYTES,
+  signStoredObject,
   uploadStoredObject,
   type ImageUpload,
 } from "../../../../shared/storage/object-storage.js";
@@ -320,6 +322,11 @@ export async function landingRoutes(app: FastifyInstance, options: { service: La
     if (!parsed.success) return reply.code(404).send({ error: "Logo not found." });
 
     const asset = parsed.data;
+    const signedUrl = await signStoredObject(createLandingLogoKey(asset));
+    if (signedUrl) {
+      reply.header("Cache-Control", MEDIA_REDIRECT_CACHE_CONTROL);
+      return reply.code(302).redirect(signedUrl);
+    }
     const stored = await getStoredObject(createLandingLogoKey(asset));
     if (!stored) return reply.code(404).send({ error: "Logo not found." });
 

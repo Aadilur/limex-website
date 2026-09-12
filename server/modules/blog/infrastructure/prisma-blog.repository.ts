@@ -11,7 +11,7 @@ import {
 
 const treeInclude: Prisma.BlogPostInclude = {
   translations: { orderBy: { locale: "asc" as const } },
-  media: { orderBy: { createdAt: "asc" as const } },
+  media: { orderBy: { createdAt: "asc" as const }, include: { mediaAsset: true } },
   services: { orderBy: [{ sortOrder: "asc" as const }, { id: "asc" as const }] },
 };
 

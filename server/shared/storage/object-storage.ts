@@ -10,6 +10,8 @@ export const MAX_BLOG_IMAGE_BYTES = 5 * 1024 * 1024;
 export const SIGNED_IMAGE_TTL_SECONDS = 60 * 60;
 export const LANDING_LOGO_CACHE_CONTROL = "public, max-age=31536000, immutable";
 export const BLOG_MEDIA_CACHE_CONTROL = "public, max-age=31536000, immutable";
+export const MEDIA_ASSET_CACHE_CONTROL = "public, max-age=31536000, immutable";
+export const MEDIA_REDIRECT_CACHE_CONTROL = "no-store, max-age=0";
 
 export const teamImageTypes = {
   "image/jpeg": ".jpg",
@@ -91,6 +93,10 @@ export function createLandingLogoAsset(hash: string, contentType: LandingLogoCon
 
 export function createBlogMediaKey(postId: string, hash: string, contentType: BlogImageContentType) {
   return `blog/${postId}/${hash}${blogImageTypes[contentType]}`;
+}
+
+export function createMediaObjectKey(folderId: string, contentType: TeamImageContentType) {
+  return "media/" + folderId + "/" + randomUUID() + teamImageTypes[contentType];
 }
 
 export async function uploadStoredObject(key: string, image: ImageUpload, options?: { cacheControl?: string }) {

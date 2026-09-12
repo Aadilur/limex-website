@@ -10,7 +10,10 @@ import {
 } from "../../application/about.service.js";
 import {
   MAX_TEAM_IMAGE_BYTES,
+  MEDIA_REDIRECT_CACHE_CONTROL,
+  getStoredObject,
   isSupportedTeamImageType,
+  signStoredObject,
   type ImageUpload,
 } from "../../../../shared/storage/object-storage.js";
 import { requireAdminSession } from "../../../../shared/auth/admin-session.js";
@@ -123,6 +126,27 @@ async function ensureAdmin(request: FastifyRequest, reply: FastifyReply) {
 }
 
 export async function aboutRoutes(app: FastifyInstance, options: AboutRoutesOptions) {
+  app.get("/api/about/team/:id/image", async (request, reply) => {
+    try {
+      const { id } = idParamsSchema.parse(request.params);
+      const imageKey = await options.service.getTeamImageKey(id);
+      if (!imageKey) return reply.code(404).send({ error: "Profile image not found." });
+      const signedUrl = await signStoredObject(imageKey);
+      if (signedUrl) {
+        reply.header("Cache-Control", MEDIA_REDIRECT_CACHE_CONTROL);
+        return reply.code(302).redirect(signedUrl);
+      }
+      const stored = await getStoredObject(imageKey);
+      if (!stored) return reply.code(404).send({ error: "Profile image not found." });
+      reply.header("Cache-Control", "private, no-store");
+      reply.header("Content-Type", stored.contentType);
+      if (stored.contentLength !== undefined) reply.header("Content-Length", String(stored.contentLength));
+      return reply.send(stored.body);
+    } catch (error) {
+      return sendKnownAboutError(error, reply);
+    }
+  });
+
   app.get("/api/about/team", async (_request, reply) => {
     reply.header("Cache-Control", "no-store");
     return { data: await options.service.getPublicTeam() };

@@ -4,6 +4,8 @@ export type CompressedImage = {
   file: File;
   originalBytes: number;
   compressedBytes: number;
+  width: number;
+  height: number;
 };
 
 function loadImage(file: File): Promise<{ source: CanvasImageSource; width: number; height: number }> {
@@ -60,7 +62,13 @@ export async function compressImageToWebp(file: File, maxDimension = 1600, quali
 
     const baseName = file.name.replace(/\.[^/.]+$/, "").trim() || "logo";
     const compressedFile = new File([blob], `${baseName}.webp`, { type: "image/webp", lastModified: Date.now() });
-    return { file: compressedFile, originalBytes: file.size, compressedBytes: compressedFile.size };
+    return {
+      file: compressedFile,
+      originalBytes: file.size,
+      compressedBytes: compressedFile.size,
+      width: canvas.width,
+      height: canvas.height,
+    };
   } finally {
     decoded.close();
   }

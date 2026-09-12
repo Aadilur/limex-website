@@ -11,6 +11,7 @@ const adminNavigation = [
   { label: "Menu structure", href: "/admin/services" },
   { label: "Service pages", href: "/admin/services/pages" },
   { label: "About us", href: "/admin/about" },
+  { label: "Media library", href: "/admin/media" },
   { label: "Business tools", href: "/admin/tools" },
   { label: "Blog", href: "/admin/blog" },
   { label: "Enquiries & bookings", href: "/admin/inquiries" },

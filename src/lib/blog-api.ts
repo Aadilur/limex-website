@@ -30,8 +30,10 @@ export type BlogTranslation = {
 
 export type BlogMedia = {
   id: string;
+  mediaAssetId?: string | null;
   kind: "IMAGE" | string;
   url: string;
+  publicUrl?: string;
   objectKey?: string;
   contentType: string;
   byteSize: number;

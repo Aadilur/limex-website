@@ -93,6 +93,7 @@ model BlogPostTranslation {
 model BlogPostMedia {
   id          String   @id @default(cuid())
   postId      String
+  mediaAssetId String? @unique @db.VarChar(191)
   kind        String   @default("IMAGE") @db.VarChar(16)
   objectKey   String   @unique @db.VarChar(500)
   contentType String   @db.VarChar(80)
@@ -104,8 +105,46 @@ model BlogPostMedia {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   post        BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  mediaAsset  MediaAsset? @relation(fields: [mediaAssetId], references: [id], onDelete: Restrict)
 
   @@index([postId, kind])
+}
+
+model MediaFolder {
+  id        String        @id @default(cuid())
+  parentId  String?
+  name      String        @db.VarChar(120)
+  isSystem  Boolean       @default(false)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  parent    MediaFolder?  @relation("MediaFolderTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children  MediaFolder[] @relation("MediaFolderTree")
+  assets    MediaAsset[]
+
+  @@unique([parentId, name])
+  @@index([parentId])
+}
+
+model MediaAsset {
+  id           String         @id @default(cuid())
+  folderId     String
+  objectKey    String         @unique @db.VarChar(500)
+  originalName String         @db.VarChar(255)
+  displayName  String         @db.VarChar(255)
+  contentType  String         @db.VarChar(80)
+  byteSize     Int
+  width        Int?
+  height       Int?
+  checksum     String         @db.VarChar(64)
+  altText      String?        @db.VarChar(240)
+  caption      String?        @db.VarChar(300)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  folder       MediaFolder    @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  blogMedia    BlogPostMedia?
+
+  @@index([folderId, createdAt])
+  @@index([checksum])
 }
 
 model BlogPostService {

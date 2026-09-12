@@ -34,6 +34,9 @@ import { createRateLimiter } from "./shared/http/rate-limit.js";
 import { ServiceService } from "./modules/services/application/service.service.js";
 import { PrismaServiceRepository } from "./modules/services/infrastructure/prisma-service.repository.js";
 import { serviceRoutes } from "./modules/services/interface/http/service.routes.js";
+import { MediaService } from "./modules/media/application/media.service.js";
+import { PrismaMediaRepository } from "./modules/media/infrastructure/prisma-media.repository.js";
+import { mediaRoutes } from "./modules/media/interface/http/media.routes.js";
 
 export async function buildApp() {
   const app = Fastify({
@@ -76,6 +79,7 @@ export async function buildApp() {
   const landingService = new LandingService(new PrismaLandingRepository(prisma));
   const blogService = new BlogService(new PrismaBlogRepository(prisma));
   const serviceService = new ServiceService(new PrismaServiceRepository(prisma));
+  const mediaService = new MediaService(new PrismaMediaRepository(prisma));
 
   await app.register(healthRoutes, { service: healthService });
   await app.register(userRoutes, { service: userService });
@@ -86,7 +90,8 @@ export async function buildApp() {
   await app.register(landingRoutes, { service: landingService });
   await app.register(toolsRoutes);
   await app.register(templateRoutes);
-  await app.register(createBlogRoutes(blogService));
+  await app.register(mediaRoutes, { service: mediaService });
+  await app.register(createBlogRoutes(blogService, mediaService));
   await app.register(serviceRoutes, { service: serviceService });
 
   app.setErrorHandler((error, request, reply) => {

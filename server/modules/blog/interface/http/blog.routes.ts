@@ -14,12 +14,11 @@ import {
 } from "../../../../../src/lib/blog-content.js";
 import {
   BLOG_MEDIA_CACHE_CONTROL,
+  MEDIA_REDIRECT_CACHE_CONTROL,
   MAX_BLOG_IMAGE_BYTES,
-  createBlogMediaKey,
-  deleteStoredObject,
   getStoredObject,
   isSupportedBlogImageType,
-  uploadStoredObject,
+  signStoredObject,
   type ImageUpload,
 } from "../../../../shared/storage/object-storage.js";
 import { getYouTubeVideoId } from "../../../about/domain/youtube.js";
@@ -27,6 +26,7 @@ import { getAdminSession, requireAdminSession } from "../../../../shared/auth/ad
 import { prisma } from "../../../../shared/database/prisma.js";
 import { BlogConflictError, BlogInputError, BlogNotFoundError, BlogSafetyError, type BlogPostInput } from "../../domain/blog.js";
 import { BlogService } from "../../application/blog.service.js";
+import { MediaService } from "../../../media/application/media.service.js";
 
 const blankToNull = (value: unknown) => typeof value === "string" && value.trim() === "" ? null : value;
 const idSchema = z.object({ id: z.string().trim().min(1).max(191) });
@@ -141,11 +141,12 @@ function sendKnownError(error: unknown, reply: FastifyReply) {
   throw error;
 }
 
-type ParsedBlogImage = { image: ImageUpload; width?: number; height?: number; altText?: string; caption?: string };
+type ParsedBlogImage = { image: ImageUpload; originalName: string; width?: number; height?: number; altText?: string; caption?: string };
 
 async function readBlogImage(request: FastifyRequest): Promise<ParsedBlogImage> {
   if (!request.isMultipart()) throw new BlogInputError("Choose an image to upload.");
   let image: ImageUpload | undefined;
+  let originalName = "uploaded-image";
   let width: number | undefined;
   let height: number | undefined;
   let altText: string | undefined;
@@ -158,6 +159,7 @@ async function readBlogImage(request: FastifyRequest): Promise<ParsedBlogImage> 
       if (!body.byteLength) throw new BlogInputError("The selected image is empty.");
       if (body.byteLength > MAX_BLOG_IMAGE_BYTES) throw new BlogInputError("The image must be 5 MB or smaller.");
       image = { body, contentType: part.mimetype };
+      originalName = part.filename || originalName;
       continue;
     }
     if (part.fieldname === "width") width = Number(part.value) || undefined;
@@ -166,10 +168,10 @@ async function readBlogImage(request: FastifyRequest): Promise<ParsedBlogImage> 
     if (part.fieldname === "caption") caption = String(part.value).trim().slice(0, 300);
   }
   if (!image) throw new BlogInputError("Choose an image to upload.");
-  return { image, width, height, altText, caption };
+  return { image, originalName, width, height, altText, caption };
 }
 
-export function createBlogRoutes(blogService: BlogService) {
+export function createBlogRoutes(blogService: BlogService, mediaService: MediaService) {
   return async function blogRoutes(app: FastifyInstance) {
     app.get("/api/blog/posts", async (request, reply) => {
       const input = z.object({
@@ -197,6 +199,11 @@ export function createBlogRoutes(blogService: BlogService) {
       const media = await prisma.blogPostMedia.findUnique({ where: { id }, include: { post: { select: { status: true } } } });
       if (!media || media.kind !== "IMAGE") return reply.code(404).send({ error: "Image not found." });
       if (media.post.status !== "PUBLISHED" && !getAdminSession(request)) return reply.code(404).send({ error: "Image not found." });
+      const signedUrl = await signStoredObject(media.objectKey);
+      if (signedUrl) {
+        reply.header("Cache-Control", MEDIA_REDIRECT_CACHE_CONTROL);
+        return reply.code(302).redirect(signedUrl);
+      }
       const stored = await getStoredObject(media.objectKey);
       if (!stored) return reply.code(404).send({ error: "Image not found." });
       const etag = `"${createHash("sha1").update(media.objectKey).digest("hex").slice(0, 24)}"`;
@@ -310,18 +317,41 @@ export function createBlogRoutes(blogService: BlogService) {
       if (!requireAdminSession(request, reply)) return;
       try {
         const { id } = idSchema.parse(request.params);
-        const post = await prisma.blogPost.findUnique({ where: { id }, select: { id: true } });
+        const post = await prisma.blogPost.findUnique({
+          where: { id },
+          select: {
+            id: true,
+            slug: true,
+          },
+        });
         if (!post) return reply.code(404).send({ error: "Article not found." });
         const parsed = await readBlogImage(request);
-        const hash = createHash("sha256").update(parsed.image.body).digest("hex");
-        const objectKey = createBlogMediaKey(id, hash, parsed.image.contentType);
-        await uploadStoredObject(objectKey, parsed.image, { cacheControl: BLOG_MEDIA_CACHE_CONTROL });
-        const media = await prisma.blogPostMedia.upsert({
-          where: { objectKey },
-          update: { altText: parsed.altText ?? null, caption: parsed.caption ?? null, width: parsed.width ?? null, height: parsed.height ?? null },
-          create: { postId: id, objectKey, contentType: parsed.image.contentType, byteSize: parsed.image.body.byteLength, width: parsed.width ?? null, height: parsed.height ?? null, altText: parsed.altText ?? null, caption: parsed.caption ?? null },
+        const uploaded = await mediaService.uploadBlogImage({
+          postId: id,
+          postSlug: post.slug,
+          image: parsed.image,
+          originalName: parsed.originalName,
+          width: parsed.width,
+          height: parsed.height,
+          altText: parsed.altText,
+          caption: parsed.caption,
         });
-        return reply.code(201).send({ data: { id: media.id, url: `/api/blog/media/${media.id}`, kind: media.kind, contentType: media.contentType, byteSize: media.byteSize, width: media.width, height: media.height, altText: media.altText ?? "", caption: media.caption ?? "" } });
+        const asset = uploaded.asset;
+        return reply.code(201).send({
+          data: {
+            id: uploaded.blogMediaId,
+            mediaAssetId: asset.id,
+            url: asset.url,
+            publicUrl: asset.publicUrl,
+            kind: "IMAGE",
+            contentType: asset.contentType,
+            byteSize: asset.byteSize,
+            width: asset.width,
+            height: asset.height,
+            altText: asset.altText,
+            caption: asset.caption,
+          },
+        });
       } catch (error) { return sendKnownError(error, reply); }
     });
 
@@ -329,15 +359,17 @@ export function createBlogRoutes(blogService: BlogService) {
       if (!requireAdminSession(request, reply)) return;
       try {
         const { id } = idSchema.parse(request.params);
-        const media = await prisma.blogPostMedia.findUnique({ where: { id } });
+        const media = await prisma.blogPostMedia.findUnique({
+          where: { id },
+          select: { id: true, postId: true, mediaAssetId: true, objectKey: true },
+        });
         if (!media) return reply.code(404).send({ error: "Image not found." });
         const post = await prisma.blogPost.findUnique({ where: { id: media.postId }, select: { coverMediaId: true, publishedSnapshot: true } });
         const publishedSnapshot = post?.publishedSnapshot && typeof post.publishedSnapshot === "object" && !Array.isArray(post.publishedSnapshot)
           ? post.publishedSnapshot as Record<string, unknown>
           : null;
         if (post?.coverMediaId === id || publishedSnapshot?.coverMediaId === id) return reply.code(400).send({ error: "Choose another cover image before removing this one." });
-        await prisma.blogPostMedia.delete({ where: { id } });
-        try { await deleteStoredObject(media.objectKey); } catch (cleanupError) { console.error(`Unable to remove blog image object ${media.objectKey}.`, cleanupError); }
+        await mediaService.deleteBlogMedia(id);
         return { data: { deleted: true } };
       } catch (error) { return sendKnownError(error, reply); }
     });
