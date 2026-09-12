@@ -1,4 +1,4 @@
-import { feeSources, money, taxActUrl, taxCategoryLabels, type ToolDefinition, type ToolValues, type ToolsConfig } from "@/lib/business-tools";
+import { capitalFeeBandRate, feeSources, money, taxActUrl, taxCategoryLabels, type ToolDefinition, type ToolValues, type ToolsConfig } from "@/lib/business-tools";
 import styles from "./tools.module.css";
 
 export function ToolRules({ tool, config, year, values }: { tool: ToolDefinition; config: ToolsConfig | null; year: string; values?: ToolValues }) {
@@ -21,7 +21,7 @@ export function ToolRules({ tool, config, year, values }: { tool: ToolDefinition
         : index === 0
           ? `Up to ${money(band.upto)}`
           : `Above ${money(previousLimit ?? 0)} · up to ${money(band.upto)}`;
-      const fee = band.feePerUnit === 0 ? money(0) : `${money(band.feePerUnit)} per ${money(band.unit)} or part`;
+      const fee = capitalFeeBandRate(band);
       return <tr key={`capital-${index}`}><td>Authorised capital · {range}</td><td>{fee}</td></tr>;
     });
     return <div className={styles.rules}>
@@ -44,10 +44,25 @@ export function ToolRules({ tool, config, year, values }: { tool: ToolDefinition
     <section className={styles.ruleCard}><h2 className={styles.panelTitle}>Choose the protection you need</h2><p>Enter the brand name, applicant type, mark type, filing stage and Nice classes. Goods generally use classes 1–34 and services use classes 35–45; repeated class numbers are counted once.</p><p>Search, application, publication, registration and renewal are separate stages. The calculator uses the government amount per selected class and does not check availability.</p></section>
     <section className={styles.ruleCard}><h2 className={styles.panelTitle}>Keep the estimate transparent</h2><p>Government fees and Limex support are shown separately. Add other charges only when they are confirmed for the filing.</p><p><a className={styles.textLink} href={fee.sourceUrl} target="_blank" rel="noreferrer">DPDT reference ↗</a> · Settings version {config.version}</p></section>
   </div>;
-  if (tool.slug === "rjsc") return <div className={styles.rules}>
-    <section className={styles.ruleCard}><h2 className={styles.panelTitle}>Select the RJSC service</h2><p>Use this standalone estimate for company registration, name clearance, annual return, director or shareholder changes, share transfer, office changes or capital increases. Entity type and capital are context for the authority’s assessment.</p></section>
-    <section className={styles.ruleCard}><h2 className={styles.panelTitle}>Registration is not availability</h2><p>RJSC charges vary by service and filing details. A blank assessment remains pending and a request lets Limex confirm the right fee with you.</p><p><a className={styles.textLink} href={fee.sourceUrl} target="_blank" rel="noreferrer">RJSC fee calculator ↗</a> · Settings version {config.version}</p></section>
-  </div>;
+  if (tool.slug === "rjsc") {
+    const companyFees = config.settings.companyRegistration;
+    const selectedEntity = values?.entity;
+    const usesPublishedRegistrationSchedule = values?.serviceType === "Company registration" && ["Private limited company", "One-person company"].includes(selectedEntity ?? "");
+    const capitalFeeRows = companyFees.capitalFeeBands.map((band, index) => {
+      const previousLimit = companyFees.capitalFeeBands[index - 1]?.upto;
+      const range = band.upto === null
+        ? `Above ${money(previousLimit ?? 0)}`
+        : index === 0
+          ? `Up to ${money(band.upto)}`
+          : `Above ${money(previousLimit ?? 0)} · up to ${money(band.upto)}`;
+      return <tr key={`rjsc-capital-${index}`}><td>{range}</td><td>{capitalFeeBandRate(band)}</td></tr>;
+    });
+    return <div className={styles.rules}>
+      <section className={styles.ruleCard}><h2 className={styles.panelTitle}>Select the RJSC service</h2><p>Use this standalone estimate for company registration, name clearance, annual return, director or shareholder changes, share transfer, office changes or capital increases. Private-company registration uses the published capital schedule; other service types may need the authority assessment.</p>{usesPublishedRegistrationSchedule ? <p>Your selected {selectedEntity} registration will calculate filing, MoA, AoA and authorised-capital charges from the schedule below. Leave the assessment override blank unless it is a separate additional charge.</p> : null}</section>
+      {usesPublishedRegistrationSchedule ? <section className={styles.ruleCard}><h2 className={styles.panelTitle}>Authorised capital fee bands</h2><div className={styles.tableWrap}><table className={styles.table}><thead><tr><th scope="col">Authorised capital</th><th scope="col">Capital fee</th></tr></thead><tbody>{capitalFeeRows}</tbody></table></div><p>Each partial unit counts as one full unit. For example, capital above ৳10 lakh is charged at ৳80 per ৳1 lakh or part up to ৳50 lakh, then ৳130 per ৳1 lakh or part above ৳50 lakh.</p></section> : null}
+      <section className={styles.ruleCard}><h2 className={styles.panelTitle}>Registration is not availability</h2><p>RJSC charges vary by service and filing details. A blank assessment remains pending and a request lets Limex confirm the right fee with you.</p><p><a className={styles.textLink} href={fee.sourceUrl} target="_blank" rel="noreferrer">RJSC fee calculator ↗</a> · Reference date {companyFees.effectiveDate} · Settings version {config.version}</p></section>
+    </div>;
+  }
   if (tool.slug === "irc-erc") return <div className={styles.rules}>
     <section className={styles.ruleCard}><h2 className={styles.panelTitle}>Match the certificate to the trade</h2><p>Choose Commercial IRC, Industrial IRC or ERC, then select import, export or both and new registration or renewal. IRC applications need the annual import ceiling shown on the relevant assessment.</p><p>Chamber membership, bank fees, late fees and other approvals are not added automatically. Keep them in the assessed or other-charge fields only when confirmed.</p></section>
     <section className={styles.ruleCard}><h2 className={styles.panelTitle}>Confirm with CCI&amp;E</h2><p><a className={styles.textLink} href={fee.sourceUrl} target="_blank" rel="noreferrer">CCI&amp;E reference ↗</a> · Settings version {config.version}</p></section>

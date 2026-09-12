@@ -7,9 +7,20 @@ import { renderTemplateDocx } from "../src/lib/document-template-docx.js";
 import { renderTemplatePrintHtml } from "../src/lib/document-template-print.js";
 import { addPartnershipPartnerSlot, defaultPartnershipDeed40BanglaTemplate, defaultPartnershipDeed40EnglishTemplate, partnershipDeedMaxPartners, partnershipPartnerVisibility, upgradePartnershipDeedTemplate } from "../src/lib/partnership-deed-templates.js";
 import { defaultRentalDeedBanglaTemplate, defaultRentalDeedEnglishTemplate } from "../src/lib/rental-deed-templates.js";
+import { sanitizeBlogHtml } from "../src/lib/blog-content.js";
 
 const settings = defaultToolsSettings;
 function calculate(slug: ToolSlug, values: ToolValues) { return calculateTool(slug, { ...initialToolValues(calculatorFields(slug, settings)), ...values }, settings).result; }
+test("blog HTML keeps scoped responsive guide styles", () => {
+  const source = "<style>.blog-guide-block { width: 100%; margin: 48px 0; } .blog-guide-step { display: grid; grid-template-columns: 60px 1fr; } @media (max-width: 600px) { .blog-guide-step { gap: 12px; } }</style><div class=\"blog-guide-block\"><section class=\"blog-guide-step\"><div class=\"blog-guide-step-number\">01</div><h3>Choose the right structure</h3></section></div>";
+  const html = sanitizeBlogHtml(source);
+  assert.match(html, /<style>\.blog-rich-text \.blog-guide-block\{/);
+  assert.match(html, /class="blog-guide-block"/);
+  assert.match(html, /<section class="blog-guide-step">/);
+  assert.match(html, /grid-template-columns: 60px 1fr/);
+  assert.match(html, /@media \(max-width: 600px\)\{\.blog-rich-text \.blog-guide-step\{gap: 12px\}\}/);
+  assert.doesNotMatch(html, /<script|onclick=|url\s*\(/i);
+});
 test("catalogue contains seven distinct calculators and six builders", () => {
   assert.equal(businessTools.filter((tool) => tool.group === "calculator").length, 7); assert.equal(businessTools.filter((tool) => tool.group === "builder").length, 6); assert.equal(new Set(businessTools.map((tool) => tool.slug)).size, 13);
 });
@@ -272,6 +283,12 @@ test("company setup applies the published RJSC schedule", () => {
   assert.equal(nextBand.rows.find((row) => row.label === "Authorised share capital fee")?.amount, 80);
   assert.equal(nextBand.rows.some((row) => row.label.startsWith("Name clearance")), false);
   assert.equal(nextBand.rows.find((row) => row.label === "Articles of Association stamp")?.amount, 4000);
+  assert.equal(calculate("limited-company", { capital: "5000000", nameClearance: "Already have name clearance" }).rows.find((row) => row.label === "Authorised share capital fee")?.amount, 3200);
+  assert.equal(calculate("limited-company", { capital: "5000001", nameClearance: "Already have name clearance" }).rows.find((row) => row.label === "Authorised share capital fee")?.amount, 3330);
+  const rjscRegistration = calculate("rjsc", { entity: "Private limited company", serviceType: "Company registration", capital: "5000001", governmentFee: "", extras: "" });
+  assert.equal(rjscRegistration.rows.find((row) => row.label === "RJSC filing fee · 6 documents")?.amount, 1200);
+  assert.equal(rjscRegistration.rows.find((row) => row.label === "Authorised share capital fee")?.amount, 3330);
+  assert.match(rjscRegistration.notes[1] ?? "", /above ৳ 5,000,000/);
 });
 test("admin can change fees and rules with one consistent calculation engine", () => {
   const custom = structuredClone(settings); custom.fees.trademark.serviceFee = 1000;

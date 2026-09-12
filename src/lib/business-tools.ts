@@ -30,7 +30,7 @@ export const taxGuideUrl = "https://nbr.gov.bd/uploads/publications/আয়কর
 export const taxActUrl = "https://nbr.gov.bd/uploads/acts/Income_tax_act_2023.pdf";
 export const feeSources: Record<string, string> = {
   "income-tax": taxGuideUrl, vat: "https://nbr.gov.bd/faq/vat-faq", rjsc: "https://app.roc.gov.bd/psp/fee_calculator",
-  "limited-company": "https://app1.roc.gov.bd/psp/RJSC_Fees", "trade-license": "https://objectstorage.ap-dcc-gazipur-1.oraclecloud15.com/n/axvjbnqprylg/b/V2Ministry/o/office-bangladesh/2024/12/3fd15d371e6d410c84ab1d3022364c18.pdf", trademark: "https://dpdt.gov.bd/pages/static-pages/6922e14d933eb65569e2b677", "irc-erc": "https://olm.ccie.gov.bd/",
+  "limited-company": "https://app.roc.gov.bd/psp/rjsc_fees", "trade-license": "https://objectstorage.ap-dcc-gazipur-1.oraclecloud15.com/n/axvjbnqprylg/b/V2Ministry/o/office-bangladesh/2024/12/3fd15d371e6d410c84ab1d3022364c18.pdf", trademark: "https://dpdt.gov.bd/pages/static-pages/6922e14d933eb65569e2b677", "irc-erc": "https://olm.ccie.gov.bd/",
 };
 const nonNegative = z.number().finite().min(0).max(1e12);
 const nullableFee = nonNegative.nullable();
@@ -49,6 +49,7 @@ export const taxYearSchema = z.object({
   minimumTax: nonNegative, newTaxpayerMinimum: nonNegative, childAllowance: nonNegative, sourceUrl: publicUrl,
 }).strict().refine((value) => value.bands.every((band, i) => (band.width === null) === (i === value.bands.length - 1)), "Only the final tax band must have an unlimited (null) width.");
 const upperBound = nonNegative.positive().nullable();
+export type CapitalFeeBand = { upto: number | null; unit: number; feePerUnit: number };
 const capitalFeeBandSchema = z.object({ upto: upperBound, unit: nonNegative.positive(), feePerUnit: nonNegative }).strict();
 const stampFeeBandSchema = z.object({ upto: upperBound, amount: nonNegative }).strict();
 const orderedBands = <T extends { upto: number | null }>(bands: T[]) => bands.at(-1)?.upto === null && bands.slice(0, -1).every((band, index, finiteBands) => band.upto !== null && (index === 0 || band.upto > (finiteBands[index - 1]?.upto ?? 0)));
@@ -404,7 +405,13 @@ export const defaultToolsSettings: ToolsSettings = {
     filingFee: 1200,
     moaStamp: 1000,
     aoaStampBands: [{ upto: 1000000, amount: 2000 }, { upto: 30000000, amount: 4000 }, { upto: null, amount: 10000 }],
-    capitalFeeBands: [{ upto: 1000000, unit: 1, feePerUnit: 0 }, { upto: 5000000, unit: 100000, feePerUnit: 80 }, { upto: null, unit: 100000, feePerUnit: 130 }],
+    capitalFeeBands: [
+      { upto: 20000, unit: 1, feePerUnit: 0 },
+      { upto: 50000, unit: 10000, feePerUnit: 0 },
+      { upto: 1000000, unit: 10000, feePerUnit: 0 },
+      { upto: 5000000, unit: 100000, feePerUnit: 80 },
+      { upto: null, unit: 100000, feePerUnit: 130 },
+    ],
     sourceUrl: feeSources["limited-company"],
     effectiveDate: "2026-09-05",
     note: "Reviewed against the current RJSC fee schedule: name clearance is ৳500 per proposed name; filing is ৳1,200; MoA stamp is ৳1,000; AoA stamp is ৳2,000 up to ৳10 lakh, ৳4,000 up to ৳3 crore and ৳10,000 above; authorized-capital fees are nil up to ৳10 lakh, then ৳80 per ৳1 lakh or part up to ৳50 lakh and ৳130 per ৳1 lakh or part above that. Confirm the final assessment before filing.",
@@ -465,7 +472,12 @@ export function calculatorFields(slug: ToolSlug, settings: ToolsSettings): ToolF
   ];
   if (slug === "rjsc") {
     const fee = settings.fees.rjsc;
-    const governmentFee = { ...assessedFee, defaultValue: fee.governmentFee === null ? "" : String(fee.governmentFee) };
+    const governmentFee = {
+      ...assessedFee,
+      label: "Government assessment / additional charge (৳)",
+      hint: "Leave blank for private or one-person company registration so the published capital schedule is used. Use this for public companies, other RJSC services or a separate assessed charge.",
+      defaultValue: fee.governmentFee === null ? "" : String(fee.governmentFee),
+    };
     return [
       { key: "entity", label: "Entity type", kind: "select", options: options("Private limited company", "One-person company", "Public limited company", "Foreign branch"), defaultValue: "Private limited company" },
       { key: "serviceType", label: "RJSC service", kind: "select", options: options("Company registration", "Name clearance", "Annual return filing", "Director / shareholder change", "Share transfer / allotment", "Registered office change", "Capital increase"), defaultValue: "Company registration" },
@@ -545,7 +557,28 @@ export function validateFields(fields: ToolField[], raw: unknown): ToolValues {
 }
 export type CalculationResult = { title: string; total: number; complete: boolean; rows: { label: string; amount: number | null }[]; notes: string[]; sourceUrl: string; year?: string; slabs?: { label: string; rate: number; income: number; tax: number }[] };
 const round = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
-function feeFromBands(value: number, bands: { upto: number | null; unit: number; feePerUnit: number }[]) {
+export function getCapitalFeeBand(value: number, bands: CapitalFeeBand[]) {
+  const index = bands.findIndex((band) => band.upto === null || value <= band.upto);
+  const resolvedIndex = index >= 0 ? index : Math.max(0, bands.length - 1);
+  return {
+    band: bands[resolvedIndex]!,
+    index: resolvedIndex,
+    previousLimit: resolvedIndex > 0 ? bands[resolvedIndex - 1]?.upto ?? 0 : 0,
+  };
+}
+
+export function capitalFeeBandRange(value: number, bands: CapitalFeeBand[]) {
+  const { band, index, previousLimit } = getCapitalFeeBand(value, bands);
+  if (band.upto === null) return `above ${money(previousLimit)}`;
+  if (index === 0) return `up to ${money(band.upto)}`;
+  return `above ${money(previousLimit)} and up to ${money(band.upto)}`;
+}
+
+export function capitalFeeBandRate(band: CapitalFeeBand) {
+  return band.feePerUnit === 0 ? "No additional fee" : `${money(band.feePerUnit)} per ${money(band.unit)} or part`;
+}
+
+export function calculateAuthorisedCapitalFee(value: number, bands: CapitalFeeBand[]) {
   let total = 0;
   let previous = 0;
   for (const band of bands) {
@@ -604,12 +637,30 @@ export function calculateTool(slug: ToolSlug, input: unknown, settings: ToolsSet
       { label: "RJSC filing fee · 6 documents", amount: schedule.filingFee },
       { label: "Memorandum of Association stamp", amount: schedule.moaStamp },
       { label: "Articles of Association stamp", amount: amountFromBands(capital, schedule.aoaStampBands) },
-      { label: "Authorised share capital fee", amount: feeFromBands(capital, schedule.capitalFeeBands) },
+      { label: "Authorised share capital fee", amount: calculateAuthorisedCapitalFee(capital, schedule.capitalFeeBands) },
       ...(nameCount ? [{ label: `Name clearance · ${nameCount} proposed name${nameCount === 1 ? "" : "s"}`, amount: round(nameCount * schedule.nameClearanceFee) }] : []),
       { label: "Limex professional service", amount: settings.fees["limited-company"].serviceFee },
     ];
     const complete = rows.every((row) => row.amount !== null);
-    return { values, result: { title: complete ? "Estimated company setup cost" : "Known company setup costs", total: round(rows.reduce((sum, row) => sum + (row.amount ?? 0), 0)), complete, rows, sourceUrl: schedule.sourceUrl, notes: [schedule.note, "Government rows follow the published RJSC schedule. The Limex professional service fee is editable by an administrator. Final assessment can vary by entity, filing scope and any additional authority charge."] } };
+    const capitalFee = calculateAuthorisedCapitalFee(capital, schedule.capitalFeeBands);
+    return { values, result: { title: complete ? "Estimated company setup cost" : "Known company setup costs", total: round(rows.reduce((sum, row) => sum + (row.amount ?? 0), 0)), complete, rows, sourceUrl: schedule.sourceUrl, notes: [schedule.note, `Your authorised capital of ${money(capital)} falls ${capitalFeeBandRange(capital, schedule.capitalFeeBands)}. The calculated RJSC capital fee is ${money(capitalFee)}.`, "Government rows follow the published RJSC schedule. The Limex professional service fee is editable by an administrator. Final assessment can vary by entity, filing scope and any additional authority charge."] } };
+  }
+
+  if (slug === "rjsc" && values.serviceType === "Company registration" && ["Private limited company", "One-person company"].includes(values.entity)) {
+    const schedule = settings.companyRegistration;
+    const capital = n("capital");
+    const capitalFee = calculateAuthorisedCapitalFee(capital, schedule.capitalFeeBands);
+    const rows: CalculationResult["rows"] = [
+      { label: "RJSC filing fee · 6 documents", amount: schedule.filingFee },
+      { label: "Memorandum of Association stamp", amount: schedule.moaStamp },
+      { label: "Articles of Association stamp", amount: amountFromBands(capital, schedule.aoaStampBands) },
+      { label: "Authorised share capital fee", amount: capitalFee },
+      ...(values.governmentFee !== undefined && values.governmentFee !== "" ? [{ label: "Additional government assessment", amount: n("governmentFee") }] : []),
+      ...(values.extras !== undefined && values.extras !== "" ? [{ label: "Other confirmed charges", amount: n("extras") }] : []),
+      { label: "Limex support", amount: settings.fees.rjsc.serviceFee },
+    ];
+    const complete = rows.every((row) => row.amount !== null);
+    return { values, result: { title: complete ? "Estimated RJSC registration cost" : "Known RJSC registration costs", total: round(rows.reduce((sum, row) => sum + (row.amount ?? 0), 0)), complete, rows, sourceUrl: schedule.sourceUrl, notes: [schedule.note, `For ${values.entity} registration, ${money(capital)} falls ${capitalFeeBandRange(capital, schedule.capitalFeeBands)} and produces an RJSC capital fee of ${money(capitalFee)}. Leave the government-assessment field blank unless you have a separate additional charge; do not enter the full RJSC total there or it will be counted twice.`, "This schedule covers the private-company registration components. Public-company filing has a different document count and should follow the authority assessment."] } };
   }
 
   if (slug === "trade-license" && ["Dhaka North City Corporation", "Dhaka South City Corporation"].includes(values.authority)) {

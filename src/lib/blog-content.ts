@@ -6,11 +6,11 @@ export type BlogLocale = (typeof blogLocales)[number];
 const allowedTags = new Set([
   "p", "br", "h2", "h3", "h4", "strong", "b", "em", "i", "u", "s",
   "ul", "ol", "li", "blockquote", "a", "img", "hr", "table", "thead",
-  "tbody", "tr", "th", "td", "figure", "figcaption",
+  "tbody", "tr", "th", "td", "figure", "figcaption", "div", "section", "span", "style",
 ]);
 const voidTags = new Set(["br", "hr", "img"]);
-const dangerousBlocks = /<(script|style|iframe|object|embed|svg|math|template|textarea|input|button|select|option|form|meta|link)[^>]*>[\s\S]*?<\/\1\s*>/gi;
-const dangerousSelfClosing = /<\/?(?:script|style|iframe|object|embed|svg|math|template|textarea|input|button|select|option|form|meta|link)\b[^>]*>/gi;
+const dangerousBlocks = /<(script|iframe|object|embed|svg|math|template|textarea|input|button|select|option|form|meta|link)[^>]*>[\s\S]*?<\/\1\s*>/gi;
+const dangerousSelfClosing = /<\/?(?:script|iframe|object|embed|svg|math|template|textarea|input|button|select|option|form|meta|link)\b[^>]*>/gi;
 const attributePattern = /([:\w-]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
 
 function safeUrl(value: string, kind: "href" | "src") {
@@ -20,6 +20,20 @@ function safeUrl(value: string, kind: "href" | "src") {
   if (trimmed.startsWith("/") || trimmed.startsWith("#") || trimmed.startsWith("mailto:") || trimmed.startsWith("tel:")) return trimmed;
   return /^https?:\/\//i.test(trimmed) ? trimmed : kind === "href" ? "#" : null;
 }
+
+const blogClassPattern = /^blog-[a-z0-9]+(?:-[a-z0-9]+)*$/i;
+const blogIdPattern = /^blog-[a-z0-9]+(?:-[a-z0-9]+)*$/i;
+const allowedCssProperties = new Set([
+  "align-content", "align-items", "align-self", "aspect-ratio", "background", "background-color",
+  "border", "border-bottom", "border-color", "border-radius", "border-style", "border-top", "border-width",
+  "box-sizing", "bottom", "color", "column-gap", "content", "display", "flex", "flex-basis", "flex-direction",
+  "flex-grow", "flex-shrink", "font-family", "font-size", "font-style", "font-weight", "gap", "grid-template-columns",
+  "grid-template-rows", "height", "justify-content", "justify-items", "left", "letter-spacing", "line-height", "margin",
+  "margin-bottom", "margin-left", "margin-right", "margin-top", "max-height", "max-width", "min-height", "min-width",
+  "object-fit", "object-position", "opacity", "order", "overflow", "overflow-wrap", "padding", "padding-bottom",
+  "padding-left", "padding-right", "padding-top", "position", "right", "text-align", "text-decoration", "top",
+  "transform", "transition", "width", "z-index",
+]);
 
 export function isSafeBlogNavigationUrl(value: unknown) {
   if (typeof value !== "string") return false;
@@ -31,6 +45,85 @@ export function isSafeBlogNavigationUrl(value: unknown) {
   } catch {
     return false;
   }
+}
+
+function sanitizeCssDeclarations(value: string) {
+  return value
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .split(";")
+    .map((declaration) => {
+      const separator = declaration.indexOf(":");
+      if (separator < 1) return "";
+      const property = declaration.slice(0, separator).trim().toLowerCase();
+      const rawValue = declaration.slice(separator + 1).trim();
+      if (!allowedCssProperties.has(property) || !rawValue) return "";
+      if (/url\s*\(|expression\s*\(|javascript\s*:|vbscript\s*:|behavior\s*:|-moz-binding|@import|<|>|[{}]/i.test(rawValue)) return "";
+      const safeValue = rawValue.replace(/\s*!important\b/gi, "").trim();
+      return safeValue ? property + ": " + safeValue : "";
+    })
+    .filter(Boolean)
+    .join("; ");
+}
+
+function findClosingBrace(source: string, openIndex: number) {
+  let depth = 0;
+  let quote = "";
+  for (let index = openIndex; index < source.length; index += 1) {
+    const character = source[index];
+    if (quote) {
+      if (character === quote && source[index - 1] !== "\\") quote = "";
+      continue;
+    }
+    if (character === "\"" || character === "'") {
+      quote = character;
+      continue;
+    }
+    if (character === "{") depth += 1;
+    if (character === "}" && --depth === 0) return index;
+  }
+  return -1;
+}
+
+function splitCssSelectors(value: string) {
+  const selectors: string[] = [];
+  let start = 0;
+  let parentheses = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    if (value[index] === "(") parentheses += 1;
+    if (value[index] === ")") parentheses = Math.max(0, parentheses - 1);
+    if (value[index] === "," && parentheses === 0) {
+      selectors.push(value.slice(start, index));
+      start = index + 1;
+    }
+  }
+  selectors.push(value.slice(start));
+  return selectors;
+}
+
+function sanitizeBlogStyles(value: string): string {
+  let output = "";
+  let cursor = 0;
+  while (cursor < value.length) {
+    const openIndex = value.indexOf("{", cursor);
+    if (openIndex < 0) break;
+    const closeIndex = findClosingBrace(value, openIndex);
+    if (closeIndex < 0) break;
+    const prelude = value.slice(cursor, openIndex).trim();
+    const body = value.slice(openIndex + 1, closeIndex);
+    if (/^@media\s+(?:screen\s+and\s+)?\((?:max|min)-(?:width|height)\s*:\s*\d+(?:\.\d+)?(?:px|rem|em)\)\s*$/i.test(prelude)) {
+      const nested = sanitizeBlogStyles(body);
+      if (nested) output += prelude + "{" + nested + "}";
+    } else if (!prelude.startsWith("@")) {
+      const selectors = splitCssSelectors(prelude)
+        .map((selector) => selector.trim().replace(/\s+/g, " "))
+        .filter((selector) => selector && /\.blog-[a-z0-9_-]+/i.test(selector) && !/(?:^|\s)(?:html|body)\b|:root|[{};]/i.test(selector))
+        .map((selector) => selector.startsWith(".blog-rich-text") ? selector : ".blog-rich-text " + selector);
+      const declarations = sanitizeCssDeclarations(body);
+      if (selectors.length && declarations) output += selectors.join(", ") + "{" + declarations + "}";
+    }
+    cursor = closeIndex + 1;
+  }
+  return output;
 }
 
 function sanitizeTag(match: string, closingSlash: string | undefined, tagName: string, rawAttributes: string) {
@@ -69,6 +162,21 @@ function sanitizeTag(match: string, closingSlash: string | undefined, tagName: s
       attributes.push(`title="${escapeAttribute(value.slice(0, 240))}"`);
     }
   }
+  for (const attribute of rawAttributes.matchAll(attributePattern)) {
+    const name = attribute[1]?.toLowerCase();
+    const value = attribute[2] ?? attribute[3] ?? attribute[4] ?? "";
+    if (name === "class") {
+      const classes = value.split(/\s+/).filter((className) => blogClassPattern.test(className)).slice(0, 24);
+      if (classes.length) attributes.push("class=\"" + escapeAttribute(classes.join(" ")) + "\"");
+    } else if (name === "style") {
+      const declarations = sanitizeCssDeclarations(value);
+      if (declarations) attributes.push("style=\"" + escapeAttribute(declarations) + "\"");
+    } else if (name === "id" && blogIdPattern.test(value)) {
+      attributes.push("id=\"" + escapeAttribute(value) + "\"");
+    } else if (name === "data-blog-block" && /^[a-z0-9_-]{1,80}$/i.test(value)) {
+      attributes.push("data-blog-block=\"" + escapeAttribute(value) + "\"");
+    }
+  }
   if (tag === "a" && attributes.some((attribute) => attribute.startsWith("target=\"_blank\"")) && !attributes.some((attribute) => attribute.startsWith("rel="))) {
     attributes.push(`rel="noopener noreferrer"`);
   }
@@ -81,7 +189,13 @@ function escapeAttribute(value: string) {
 
 export function sanitizeBlogHtml(value: unknown) {
   const source = typeof value === "string" ? value : "";
-  const withoutDangerousBlocks = source.replace(dangerousBlocks, "").replace(dangerousSelfClosing, "").replace(/<!--[\s\S]*?-->/g, "");
+  const withSafeStyles = source
+    .replace(/<style\b[^>]*>(?![\s\S]*?<\/style\s*>)[\s\S]*$/gi, "")
+    .replace(/<style\b[^>]*>([\s\S]*?)<\/style\s*>/gi, (_match, css: string) => {
+      const safeCss = sanitizeBlogStyles(css);
+      return safeCss ? "<style>" + safeCss + "</style>" : "";
+    })
+  const withoutDangerousBlocks = withSafeStyles.replace(dangerousBlocks, "").replace(dangerousSelfClosing, "").replace(/<!--[\s\S]*?-->/g, "");
   return withoutDangerousBlocks.replace(/<\/?([a-zA-Z0-9-]+)([^>]*)>/g, (match, tagName: string, rawAttributes: string) => {
     const closingSlash = match.startsWith("</") ? "/" : undefined;
     return sanitizeTag(match, closingSlash, tagName, rawAttributes);

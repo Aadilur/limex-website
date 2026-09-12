@@ -21,6 +21,7 @@ try {
   const loaded = await call("/api/tools/config"); assert.equal(loaded.response.status, 200); const config = loaded.payload.data as ToolsConfig;
   assert.equal(config.settings.companyRegistration.nameClearanceFee, 500);
   assert.equal(config.settings.companyRegistration.filingFee, 1200);
+  assert.equal(config.settings.companyRegistration.capitalFeeBands.length, 5);
   assert.ok(config.settings.tradeLicense.dncc.tariffRows.length >= 100);
   assert.ok(config.settings.tradeLicense.dscc.tariffRows.length >= 100);
   assert.equal(config.settings.tradeLicense.dncc.signboardRates.identificationPerSqFt, 80);
