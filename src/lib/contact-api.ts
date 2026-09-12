@@ -7,8 +7,8 @@ export function getPublicContactSettings(): Promise<PublicContactSettings> {
   return request<PublicContactSettings>("/api/contact-settings", { cache: "no-store" });
 }
 
-export function getAdminContactSettings(): Promise<AdminContactSettings> {
-  return request<AdminContactSettings>("/api/admin/contact-settings", { cache: "no-store" });
+export function getAdminContactSettings(): Promise<AdminContactSettings | null> {
+  return request<AdminContactSettings | null>("/api/admin/contact-settings", { cache: "no-store" });
 }
 
 export function updateAdminContactSettings(input: ContactSettingsInput, expectedRevision: number): Promise<AdminContactSettings> {

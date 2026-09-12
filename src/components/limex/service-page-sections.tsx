@@ -11,6 +11,17 @@ function externalLinkProps(href: string) {
   return /^https?:\/\//i.test(href) ? { target: "_blank" as const, rel: "noreferrer" } : {};
 }
 
+function serviceWhatsAppUrl(contact: PublicContactSettings | null | undefined, message: string) {
+  if (!contact?.whatsappUrl) return null;
+  try {
+    const url = new URL(contact.whatsappUrl);
+    url.searchParams.set("text", message);
+    return url.toString();
+  } catch {
+    return contact.whatsappUrl;
+  }
+}
+
 const serviceUi = {
   en: {
     switchLabel: "বাংলা",
@@ -179,8 +190,9 @@ export function ServiceOverviewSection({ service }: { service: ServicePageConten
   );
 }
 
-function PriceCard({ tier, locale, serviceTitle, contact }: { tier: ServicePriceTier; locale: "en" | "bn"; serviceTitle: string; contact?: PublicContactSettings | null }) {
+function PriceCard({ tier, locale, serviceTitle, serviceKey, contact }: { tier: ServicePriceTier; locale: "en" | "bn"; serviceTitle: string; serviceKey?: string; contact?: PublicContactSettings | null }) {
   const ui = serviceUi[locale];
+  const whatsappHref = serviceWhatsAppUrl(contact, `Hello Limex, I’d like to discuss ${serviceTitle}${tier.name ? ` · ${tier.name}` : ""}.`);
 
   return (
     <article className={`relative flex min-h-[292px] flex-col rounded-nav border bg-white p-card-pad ${tier.featured ? "border-[#de4d73]" : "border-[#e0dee3]"}`.trim()}>
@@ -198,14 +210,14 @@ function PriceCard({ tier, locale, serviceTitle, contact }: { tier: ServicePrice
       </ul>
       <div className="mt-auto grid gap-2 pt-5">
         <ContactModal
-          serviceKey={serviceTitle}
+          serviceKey={serviceKey ?? serviceTitle}
           initialMessage={`I’m interested in ${serviceTitle}${tier.name ? ` · ${tier.name}` : ""}.`}
           variant={tier.featured ? "dark" : "soft"}
           buttonClassName="min-h-control-sm w-full justify-between px-3.5 text-micro"
           buttonLabel={tier.action || ui.bookNow}
         />
-        {contact?.whatsappUrl ? <a className="inline-flex min-h-control-sm items-center justify-between rounded-pill px-3.5 text-micro font-semibold text-[#29634d] ring-1 ring-[#b8d9c3] transition-colors hover:bg-[#e6f5eb] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3" href={contact.whatsappUrl} target="_blank" rel="noreferrer">
-          <span>{tier.whatsappLabel || ui.whatsappNow}</span>
+        {whatsappHref ? <a className="inline-flex min-h-control-sm items-center justify-between gap-2 rounded-pill px-3.5 text-micro font-semibold text-[#29634d] ring-1 ring-[#b8d9c3] transition-colors hover:bg-[#e6f5eb] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3" href={whatsappHref} target="_blank" rel="noreferrer">
+          <span className="flex min-w-0 items-center gap-2"><img className="size-4 shrink-0" src="/figma/whatsapp-dot.svg" alt="" aria-hidden="true" /><span className="truncate">{tier.whatsappLabel || ui.whatsappNow}</span></span>
           <span aria-hidden="true">↗</span>
         </a> : null}
       </div>
@@ -224,7 +236,7 @@ export function ServicePricingSection({ service, contact }: { service: ServicePa
           <h2 className="mt-cluster font-brand text-page-title text-ink max-lg:text-page-title-mobile" id="service-pricing-title">{ui.pricingTitle}</h2>
       <p className="mt-cluster text-body-lg text-muted">{ui.pricingDescription}</p>
       <div className="mt-section-gap-lg grid gap-cluster lg:grid-cols-3">
-        {service.pricing.map((tier) => <PriceCard key={tier.name} tier={tier} locale={locale} serviceTitle={service.title} contact={contact} />)}
+        {service.pricing.map((tier) => <PriceCard key={tier.name} tier={tier} locale={locale} serviceTitle={service.title} serviceKey={service.serviceKey} contact={contact} />)}
       </div>
     </section>
   );
@@ -280,6 +292,7 @@ export function ServiceFaqSection({ service }: { service: ServicePageContent }) 
 
 export function ServiceContactSection({ service, contact }: { service: ServicePageContent; contact?: PublicContactSettings | null }) {
   const ui = serviceUi[service.locale ?? "en"];
+  const whatsappHref = serviceWhatsAppUrl(contact, `Hello Limex, I’d like to discuss ${service.title}.`);
 
   return (
     <section className="mt-section-gap-xl flex flex-col gap-section-gap-lg rounded-nav bg-navy px-card-pad py-section-y text-white lg:mt-section-gap-xl lg:flex-row lg:items-center lg:justify-between lg:px-8 lg:py-section-y-xl" id="service-contact" aria-labelledby="service-contact-title">
@@ -289,8 +302,8 @@ export function ServiceContactSection({ service, contact }: { service: ServicePa
         <p className="mt-cluster max-w-[680px] text-body-sm text-[#c7cfe0]">{ui.contactDescription} {service.title.toLowerCase()}.</p>
       </div>
       <div className="flex shrink-0 flex-col gap-2 sm:flex-row lg:flex-col xl:flex-row">
-        <ContactModal serviceKey={service.title} variant="white" buttonClassName="min-h-button-lg min-w-[218px] justify-center text-body-xs" buttonLabel={ui.contactButton} />
-        {contact?.whatsappUrl ? <a className="inline-flex min-h-button-lg min-w-[218px] items-center justify-center gap-2 rounded-pill border border-white/35 px-4 text-button font-semibold text-white transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-white/60 focus-visible:outline-offset-3" href={contact.whatsappUrl} target="_blank" rel="noreferrer">{ui.whatsappNow}<span aria-hidden="true">↗</span></a> : null}
+        <ContactModal serviceKey={service.serviceKey ?? service.title} initialMessage={`I’m interested in ${service.title}.`} variant="white" buttonClassName="min-h-button-lg min-w-[218px] justify-center text-body-xs" buttonLabel={ui.contactButton} />
+        {whatsappHref ? <a className="inline-flex min-h-button-lg min-w-[218px] items-center justify-center gap-2 rounded-pill border border-white/35 px-4 text-button font-semibold text-white transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-white/60 focus-visible:outline-offset-3" href={whatsappHref} target="_blank" rel="noreferrer"><img className="size-4" src="/figma/whatsapp-dot.svg" alt="" aria-hidden="true" />{ui.whatsappNow}<span aria-hidden="true">↗</span></a> : null}
       </div>
     </section>
   );

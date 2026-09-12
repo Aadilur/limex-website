@@ -50,7 +50,9 @@ export class ContactSafetyError extends Error {
 
 export function buildWhatsAppUrl(number: string, message: string) {
   const digits = number.replace(/[^0-9]/g, "");
-  if (digits.length < 8) return null;
+  // wa.me expects an international number without the leading +. A local
+  // number beginning with 0 would otherwise create a broken public action.
+  if (digits.length < 8 || digits.startsWith("0")) return null;
   const text = message.trim();
   return `https://wa.me/${digits}${text ? `?text=${encodeURIComponent(text)}` : ""}`;
 }

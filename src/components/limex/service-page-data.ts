@@ -4,6 +4,7 @@ export type { ServiceDetailContent, ServiceDestination, ServiceFaq, ServicePrice
 
 export type ServicePageContent = {
   slug: string;
+  serviceKey?: string;
   locale?: ServiceLocale;
   breadcrumb: string;
   breadcrumbItems?: Array<{ label: string; href?: string }>;

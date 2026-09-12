@@ -87,11 +87,12 @@ export function AdminDashboard() {
           </div>
           <span className="grid size-10 place-items-center rounded-[12px] bg-[#f3f1ec] text-[16px] text-[#e44762]" aria-hidden="true">✦</span>
         </div>
-        <div className="mt-5 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-5 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
           <a className="flex min-h-12 items-center justify-between rounded-[14px] bg-[#fff0f2] px-4 text-[13px] font-bold text-[#ad3148] transition-colors hover:bg-[#fce0e3]" href="/admin/landing">Manage landing <span aria-hidden="true">↗</span></a>
           <a className="flex min-h-12 items-center justify-between rounded-[14px] bg-[#f8f6f2] px-4 text-[13px] font-bold text-[#3f3c38] transition-colors hover:bg-[#f1ede6]" href="/admin/services">Edit sections and services <span className="text-[#e44762]" aria-hidden="true">↗</span></a>
           <a className="flex min-h-12 items-center justify-between rounded-[14px] bg-[#e9f4ed] px-4 text-[13px] font-bold text-[#29634d] transition-colors hover:bg-[#ddf0e4]" href="/" target="_blank" rel="noreferrer">Preview public menu <span aria-hidden="true">↗</span></a>
           <a className="flex min-h-12 items-center justify-between rounded-[14px] bg-[#f4effa] px-4 text-[13px] font-bold text-[#5c4aa6] transition-colors hover:bg-[#ebe3f6]" href="/admin/about">Manage About us <span aria-hidden="true">↗</span></a>
+          <a className="flex min-h-12 items-center justify-between rounded-[14px] bg-[#e9f4ed] px-4 text-[13px] font-bold text-[#29634d] transition-colors hover:bg-[#ddf0e4]" href="/admin/contact">Contact settings <span aria-hidden="true">↗</span></a>
         </div>
       </section>
     </div>

@@ -12,6 +12,7 @@ function toPageContent(service: ServicePageContent | PublicServiceDetail, locale
   return {
     ...service.detail,
     slug: service.slug,
+    serviceKey: service.serviceKey,
     locale,
     breadcrumb: locale === "bn" ? `হোম / সেবাসমূহ / ${service.title}` : `Home / Services / ${service.title}`,
     breadcrumbItems: [
