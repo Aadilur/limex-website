@@ -26,8 +26,10 @@ export class PrismaMenuRepository implements MenuRepository {
             items: {
               orderBy: { sortOrder: "asc" },
               include: {
+                serviceProfile: { select: { slug: true, publishedDetail: true } },
                 links: {
                   orderBy: { sortOrder: "asc" },
+                  include: { serviceProfile: { select: { slug: true, publishedDetail: true } } },
                 },
               },
             },

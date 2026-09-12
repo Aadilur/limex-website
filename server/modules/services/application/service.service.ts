@@ -1,19 +1,25 @@
 import type { MenuItem, MenuSection } from "../../admin/domain/menu.js";
 import {
   destinationFromHref,
+  isSafeServiceHref,
+  isLegacySeedProfile,
   normalizeServiceDetail,
   profileStatus,
   serviceContexts,
+  serviceMenuTargets,
   sectionTone,
   slugify,
   ServiceInputError,
   ServiceNotFoundError,
   type ServiceMenuContext,
+  type ServiceMenuAssignment,
+  type ServiceMenuTarget,
   type ServiceProfileRow,
   type ServiceRepository,
 } from "../domain/service.js";
 import type {
   AdminService,
+  AdminServiceMenuOption,
   PublicService,
   PublicServiceCatalog,
   PublicServiceDetail,
@@ -33,6 +39,15 @@ function contextByMenuItemId(contexts: ServiceMenuContext[], menuItemId: string 
 
 function profileByMenuItemId(profiles: ServiceProfileRow[], menuItemId: string) {
   return profiles.find((profile) => profile.menuItemId === menuItemId) ?? null;
+}
+
+function profileByMenuLinkId(profiles: ServiceProfileRow[], menuLinkId: string) {
+  return profiles.find((profile) => profile.menuLinkId === menuLinkId) ?? null;
+}
+
+function targetMatchesProfile(target: ServiceMenuTarget, profile: ServiceProfileRow) {
+  return (profile.menuItemId !== null && target.menuItemId === profile.menuItemId)
+    || (profile.menuLinkId !== null && target.menuLinkId === profile.menuLinkId);
 }
 
 function hasPublishedDetail(profile: ServiceProfileRow | null) {
@@ -62,13 +77,14 @@ function toPublicService(context: ServiceMenuContext, profile: ServiceProfileRow
     id: profile?.id ?? `menu-${context.item.id}`,
     serviceKey: profile?.serviceKey ?? context.item.label,
     menuItemId: context.item.id,
+    menuLinkId: null,
     slug: serviceSlug(context, profile),
     title: locale === "bn" ? profile?.titleBn ?? context.item.label : profile?.titleEn ?? context.item.label,
     description: locale === "bn" ? profile?.descriptionBn ?? context.item.description : profile?.descriptionEn ?? context.item.description,
     category: context.section.label,
     categoryKey: slugify(context.section.key || context.section.label),
     groupLabel: context.group.label,
-    icon: context.item.icon || "briefcase",
+    icon: profile?.icon || context.item.icon || "briefcase",
     color: tone.color,
     surface: tone.surface,
     href: destination.href,
@@ -88,48 +104,81 @@ function toPublicService(context: ServiceMenuContext, profile: ServiceProfileRow
   };
 }
 
-function toAdminService(context: ServiceMenuContext, profile: ServiceProfileRow | null): AdminService {
-  const tone = sectionTone(context.section);
-  const destination = destinationFromHref(context.item.href);
+function toPublicServiceTarget(target: ServiceMenuTarget, profile: ServiceProfileRow, locale: ServiceLocale): PublicService {
+  const base = toPublicService({ section: target.section, group: target.group, item: target.item }, profile, locale);
+  const hasDetailPage = hasPublishedDetail(profile);
+  const destination = publicDestination(target.href, hasDetailPage);
+  return {
+    ...base,
+    id: profile.id,
+    menuItemId: null,
+    menuLinkId: target.menuLinkId,
+    slug: profile.slug,
+    title: locale === "bn" ? profile.titleBn : profile.titleEn,
+    description: locale === "bn" ? profile.descriptionBn : profile.descriptionEn,
+    icon: profile.icon || target.icon,
+    href: destination.href,
+    destination,
+    children: [],
+    sortOrder: target.sortOrder,
+    isVisible: target.isVisible,
+    updatedAt: profile.updatedAt.toISOString(),
+  };
+}
+
+function toAdminService(target: ServiceMenuTarget, profile: ServiceProfileRow | null): AdminService {
+  const tone = sectionTone(target.section);
+  const destination = destinationFromHref(target.href);
   const status = profile ? profileStatus(profile.status) : "LINK_ONLY";
 
   return {
-    id: profile?.id ?? `menu-${context.item.id}`,
+    id: profile?.id ?? `menu-${target.id}`,
     profileId: profile?.id ?? null,
-    serviceKey: profile?.serviceKey ?? context.item.label,
-    menuItemId: context.item.id,
-    slug: profile?.slug ?? serviceSlug(context, profile),
-    title: context.item.label,
-    description: context.item.description,
-    category: context.section.label,
-    categoryKey: slugify(context.section.key || context.section.label),
-    groupLabel: context.group.label,
-    icon: context.item.icon || "briefcase",
+    serviceKey: profile?.serviceKey ?? target.label,
+    menuItemId: target.menuItemId,
+    menuLinkId: target.menuLinkId,
+    slug: profile?.slug ?? slugFromHref(target.href) ?? slugify(`${target.section.key}-${target.label}`),
+    title: profile?.titleEn ?? target.label,
+    description: profile?.descriptionEn ?? target.description,
+    category: target.section.label,
+    categoryKey: slugify(target.section.key || target.section.label),
+    groupLabel: target.group.label,
+    icon: profile?.icon || target.icon || "briefcase",
     color: tone.color,
     surface: tone.surface,
-    href: context.item.href,
+    href: target.href,
     destination,
-    children: context.item.links.map((link) => ({
+    assignedMenu: profile ? {
+      id: target.id,
+      targetType: target.targetType,
+      label: target.label,
+      sectionLabel: target.section.label,
+      groupLabel: target.group.label,
+      parentLabel: target.parentLabel,
+      href: target.href,
+      isVisible: target.isVisible,
+    } : null,
+    children: target.targetType === "ITEM" ? target.item.links.map((link) => ({
       id: link.id,
       label: link.label,
       href: link.href,
       isVisible: link.isVisible,
       sortOrder: link.sortOrder,
-    })),
+    })) : [],
     status,
     hasDetailPage: Boolean(profile?.detail),
-    sortOrder: context.item.sortOrder,
-    isVisible: context.item.isVisible,
-    updatedAt: profile?.updatedAt.toISOString() ?? context.item.updatedAt.toISOString(),
+    sortOrder: target.sortOrder,
+    isVisible: target.isVisible,
+    updatedAt: profile?.updatedAt.toISOString() ?? target.item.updatedAt.toISOString(),
     revision: profile?.revision ?? 0,
     publishedRevision: profile?.publishedRevision ?? null,
     publishedAt: profile?.publishedAt?.toISOString() ?? null,
     createdAt: profile?.createdAt.toISOString() ?? null,
     detail: profile?.detail ? normalizeServiceDetail(profile.detail) : null,
-    titleEn: profile?.titleEn ?? context.item.label,
-    titleBn: profile?.titleBn ?? context.item.label,
-    descriptionEn: profile?.descriptionEn ?? context.item.description,
-    descriptionBn: profile?.descriptionBn ?? context.item.description,
+    titleEn: profile?.titleEn ?? target.label,
+    titleBn: profile?.titleBn ?? target.label,
+    descriptionEn: profile?.descriptionEn ?? target.description,
+    descriptionBn: profile?.descriptionBn ?? target.description,
   } as AdminService & { titleEn: string; titleBn: string; descriptionEn: string; descriptionBn: string };
 }
 
@@ -141,13 +190,15 @@ function toDetachedAdminService(profile: ServiceProfileRow): AdminService {
     profileId: profile.id,
     serviceKey: profile.serviceKey,
     menuItemId: null,
+    menuLinkId: null,
+    assignedMenu: null,
     slug: profile.slug,
     title: profile.titleEn,
     description: profile.descriptionEn,
-    category: "Archived menu services",
-    categoryKey: "archived-menu-services",
-    groupLabel: "Detached",
-    icon: "briefcase",
+    category: "Unassigned services",
+    categoryKey: "unassigned-services",
+    groupLabel: "Ready to assign",
+    icon: profile.icon || "briefcase",
     color: "#5c4aa6",
     surface: "#f2effb",
     href: destination.href,
@@ -156,7 +207,7 @@ function toDetachedAdminService(profile: ServiceProfileRow): AdminService {
     status: profileStatus(profile.status),
     hasDetailPage: Boolean(detail),
     sortOrder: 999,
-    isVisible: false,
+    isVisible: true,
     updatedAt: profile.updatedAt.toISOString(),
     revision: profile.revision,
     publishedRevision: profile.publishedRevision,
@@ -189,6 +240,12 @@ export class ServiceService {
     const [sections, profiles] = await Promise.all([this.services.findMenuTree(), this.services.findProfiles()]);
     const contexts = serviceContexts(sections);
     const items = contexts.map((context) => toPublicService(context, profileByMenuItemId(profiles, context.item.id)));
+    const linkServices = serviceMenuTargets(sections).flatMap((target) => {
+      if (target.targetType !== "LINK") return [];
+      const profile = profileByMenuLinkId(profiles, target.id);
+      return profile ? [toPublicServiceTarget(target, profile, "en")] : [];
+    });
+    items.push(...linkServices);
     const categoryMap = new Map<string, { key: string; label: string; count: number }>();
 
     for (const item of items) {
@@ -206,7 +263,9 @@ export class ServiceService {
 
     const sections = await this.services.findMenuTree();
     const contexts = serviceContexts(sections, true);
-    const context = contextByMenuItemId(contexts, profile.menuItemId);
+    const targets = serviceMenuTargets(sections, true);
+    const target = targets.find((candidate) => targetMatchesProfile(candidate, profile)) ?? null;
+    const context = target?.targetType === "ITEM" ? contextByMenuItemId(contexts, profile.menuItemId) : null;
     const fallbackSection = sections[0] ?? {
       id: "services",
       key: "services",
@@ -241,14 +300,14 @@ export class ServiceService {
       description: profile.descriptionEn,
       href: `/services/${profile.slug}`,
       marker: "",
-      icon: "briefcase",
+      icon: profile.icon || "briefcase",
       sortOrder: 0,
       isVisible: true,
       links: [],
       updatedAt: profile.updatedAt,
     };
     const viewContext = context ?? { section: fallbackSection, group: fallbackGroup, item: fallbackItem };
-    const base = toPublicService(viewContext, profile, locale);
+    const base = target?.targetType === "LINK" ? toPublicServiceTarget(target, profile, locale) : toPublicService(viewContext, profile, locale);
     const detail = normalizeServiceDetail(profile.publishedDetail);
     const title = locale === "bn" ? profile.titleBn : profile.titleEn;
     const description = locale === "bn" ? profile.descriptionBn : profile.descriptionEn;
@@ -267,29 +326,64 @@ export class ServiceService {
 
   public async getAdminCatalog(): Promise<AdminService[]> {
     const [sections, profiles] = await Promise.all([this.services.findMenuTree(), this.services.findProfiles()]);
-    const contexts = serviceContexts(sections, true);
-    const knownProfileIds = new Set<string>();
-    const items = contexts.map((context) => {
-      const profile = profileByMenuItemId(profiles, context.item.id);
-      if (profile) knownProfileIds.add(profile.id);
-      return withProfileFields(toAdminService(context, profile), profile);
+    const targets = serviceMenuTargets(sections, true);
+    const visibleProfiles = profiles.filter((profile) => !isLegacySeedProfile(profile));
+    return visibleProfiles.map((profile) => {
+      const target = targets.find((candidate) => targetMatchesProfile(candidate, profile));
+      return target ? withProfileFields(toAdminService(target, profile), profile) : toDetachedAdminService(profile);
     });
-    const detached = profiles.filter((profile) => !knownProfileIds.has(profile.id) && profile.menuItemId === null).map(toDetachedAdminService);
-    return [...items, ...detached];
   }
 
-  public async getAdminService(menuItemId: string): Promise<AdminService> {
-    const [sections, profile] = await Promise.all([this.services.findMenuTree(), this.services.findProfileByMenuItemId(menuItemId)]);
-    const context = serviceContexts(sections, true).find((candidate) => candidate.item.id === menuItemId);
-    if (!context) throw new ServiceNotFoundError();
-    return withProfileFields(toAdminService(context, profile), profile);
+  public async getAdminMenuOptions(): Promise<AdminServiceMenuOption[]> {
+    const [sections, profiles] = await Promise.all([this.services.findMenuTree(), this.services.findProfiles()]);
+    const targets = serviceMenuTargets(sections, true);
+    return targets.map((target) => {
+      const profile = target.targetType === "ITEM" ? profileByMenuItemId(profiles, target.id) : profileByMenuLinkId(profiles, target.id);
+      return {
+        id: target.id,
+        targetType: target.targetType,
+        label: target.label,
+        sectionLabel: target.section.label,
+        groupLabel: target.group.label,
+        parentLabel: target.parentLabel,
+        href: target.href,
+        isVisible: target.isVisible,
+        pathLabel: target.parentLabel ? `${target.section.label} / ${target.group.label} / ${target.parentLabel} / ${target.label}` : `${target.section.label} / ${target.group.label} / ${target.label}`,
+        icon: target.icon,
+        sortOrder: target.sortOrder,
+        assignedProfileId: profile && !isLegacySeedProfile(profile) ? profile.id : null,
+        assignedProfileTitle: profile && !isLegacySeedProfile(profile) ? profile.titleEn : null,
+      };
+    });
   }
 
-  public async saveService(menuItemId: string, input: ServiceProfileInput, expectedRevision: number | null, username: string) {
+  public async getAdminService(profileId: string): Promise<AdminService> {
+    const [sections, profile] = await Promise.all([this.services.findMenuTree(), this.services.findProfileById(profileId)]);
+    if (!profile) throw new ServiceNotFoundError();
+    const target = serviceMenuTargets(sections, true).find((candidate) => targetMatchesProfile(candidate, profile));
+    return target ? withProfileFields(toAdminService(target, profile), profile) : toDetachedAdminService(profile);
+  }
+
+  private validateInput(input: ServiceProfileInput) {
     if (!input.slug.trim() || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(input.slug)) throw new ServiceInputError("Use a lowercase URL slug with letters, numbers and hyphens.");
-    if (!input.href.trim()) throw new ServiceInputError("Choose a destination for this service.");
-    await this.services.upsertProfile(menuItemId, input, expectedRevision, username);
-    return this.getAdminService(menuItemId);
+    if (!input.href.trim() || !isSafeServiceHref(input.href)) throw new ServiceInputError("Choose a valid destination for this service.");
+  }
+
+  public async createService(input: ServiceProfileInput, username: string) {
+    this.validateInput(input);
+    const saved = await this.services.createProfile(input, username);
+    return this.getAdminService(saved.id);
+  }
+
+  public async saveService(profileId: string, input: ServiceProfileInput, expectedRevision: number, username: string) {
+    this.validateInput(input);
+    const saved = await this.services.updateProfile(profileId, input, expectedRevision, username);
+    return this.getAdminService(saved.id);
+  }
+
+  public async assignService(profileId: string, target: ServiceMenuAssignment | null, expectedRevision: number, username: string) {
+    const saved = await this.services.assignProfile(profileId, target, expectedRevision, username);
+    return this.getAdminService(saved.id);
   }
 
   public async publishService(profileId: string, expectedRevision: number, username: string) {

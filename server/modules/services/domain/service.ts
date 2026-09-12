@@ -6,6 +6,7 @@ import type {
   ServiceDetailContent,
   ServiceDestination,
   ServiceDestinationType,
+  ServiceMenuTargetType,
   ServiceProfileInput,
 } from "../../../../src/lib/service-types.js";
 import type { MenuItem, MenuSection } from "../../admin/domain/menu.js";
@@ -17,6 +18,10 @@ export type ServiceProfileRow = {
   serviceKey: string;
   slug: string;
   menuItemId: string | null;
+  menuLinkId: string | null;
+  menuSnapshot: unknown;
+  icon: string;
+  origin: string;
   titleEn: string;
   titleBn: string;
   descriptionEn: string;
@@ -31,10 +36,37 @@ export type ServiceProfileRow = {
   updatedAt: Date;
 };
 
+export function isLegacySeedProfile(profile: ServiceProfileRow) {
+  return profile.origin === "SEED";
+}
+
 export type ServiceMenuContext = {
   section: MenuSection;
   group: MenuSection["groups"][number];
   item: MenuItem;
+};
+
+export type ServiceMenuTarget = {
+  targetType: ServiceMenuTargetType;
+  id: string;
+  label: string;
+  description: string;
+  href: string;
+  icon: string;
+  marker: string;
+  sortOrder: number;
+  isVisible: boolean;
+  section: MenuSection;
+  group: MenuSection["groups"][number];
+  item: MenuItem;
+  menuItemId: string | null;
+  menuLinkId: string | null;
+  parentLabel: string | null;
+};
+
+export type ServiceMenuAssignment = {
+  targetType: ServiceMenuTargetType;
+  targetId: string;
 };
 
 export type ServiceRepository = {
@@ -43,7 +75,9 @@ export type ServiceRepository = {
   findProfileByMenuItemId(menuItemId: string): Promise<ServiceProfileRow | null>;
   findProfileById(id: string): Promise<ServiceProfileRow | null>;
   findProfileBySlug(slug: string): Promise<ServiceProfileRow | null>;
-  upsertProfile(menuItemId: string, input: ServiceProfileInput, expectedRevision: number | null, updatedBy: string): Promise<ServiceProfileRow>;
+  createProfile(input: ServiceProfileInput, updatedBy: string): Promise<ServiceProfileRow>;
+  updateProfile(id: string, input: ServiceProfileInput, expectedRevision: number, updatedBy: string): Promise<ServiceProfileRow>;
+  assignProfile(id: string, target: ServiceMenuAssignment | null, expectedRevision: number, updatedBy: string): Promise<ServiceProfileRow>;
   publishProfile(id: string, expectedRevision: number, updatedBy: string): Promise<ServiceProfileRow>;
   unpublishProfile(id: string, expectedRevision: number, updatedBy: string): Promise<ServiceProfileRow>;
 };
@@ -266,6 +300,49 @@ export function serviceContexts(sections: MenuSection[], includeHidden = false):
   });
 }
 
+export function serviceMenuTargets(sections: MenuSection[], includeHidden = false): ServiceMenuTarget[] {
+  return serviceContexts(sections, includeHidden).flatMap((context) => {
+    const itemTarget: ServiceMenuTarget = {
+      targetType: "ITEM",
+      id: context.item.id,
+      label: context.item.label,
+      description: context.item.description,
+      href: context.item.href,
+      icon: context.item.icon || "briefcase",
+      marker: context.item.marker,
+      sortOrder: context.item.sortOrder,
+      isVisible: context.item.isVisible,
+      section: context.section,
+      group: context.group,
+      item: context.item,
+      menuItemId: context.item.id,
+      menuLinkId: null,
+      parentLabel: null,
+    };
+    const linkTargets = context.item.links.flatMap((link): ServiceMenuTarget[] => {
+      if (!includeHidden && !link.isVisible) return [];
+      return [{
+        targetType: "LINK",
+        id: link.id,
+        label: link.label,
+        description: "",
+        href: link.href,
+        icon: context.item.icon || "briefcase",
+        marker: context.item.marker,
+        sortOrder: link.sortOrder,
+        isVisible: link.isVisible,
+        section: context.section,
+        group: context.group,
+        item: context.item,
+        menuItemId: null,
+        menuLinkId: link.id,
+        parentLabel: context.item.label,
+      }];
+    });
+    return [itemTarget, ...linkTargets];
+  });
+}
+
 export function sectionTone(section: MenuSection) {
   const label = `${section.key} ${section.label}`.toLowerCase();
   if (label.includes("trademark") || label.includes("intellectual")) return { color: "#b83652", surface: "#fff0f2" };
@@ -279,6 +356,8 @@ export function profileSnapshot(row: ServiceProfileRow, detail: ServiceDetailCon
     serviceKey: row.serviceKey,
     slug: row.slug,
     menuItemId: row.menuItemId,
+    menuLinkId: row.menuLinkId,
+    icon: row.icon,
     titleEn: row.titleEn,
     titleBn: row.titleBn,
     descriptionEn: row.descriptionEn,

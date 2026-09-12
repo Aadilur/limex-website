@@ -3,15 +3,19 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from "react";
 
 import {
+  assignAdminService,
+  createAdminService,
   getAdminServices,
+  getAdminServiceMenuOptions,
   isServiceConflictError,
   isUnauthorizedServiceError,
   publishAdminService,
   unpublishAdminService,
   updateAdminService,
   type AdminService,
+  type AdminServiceMenuOption,
 } from "@/lib/service-api";
-import type { ServiceDetailContent, ServiceDestinationType, ServiceProfileInput } from "@/lib/service-types";
+import type { ServiceDetailContent, ServiceDestinationType, ServiceMenuTargetType, ServiceProfileInput } from "@/lib/service-types";
 import { ServiceIcon } from "@/components/limex/service-icons";
 import type { ServiceIconName } from "@/components/limex/data";
 import { getToneClasses } from "@/components/limex/styles";
@@ -72,9 +76,9 @@ function draftFromService(service: AdminService): ServiceProfileInput & { revisi
     profileId: service.profileId,
     serviceKey: service.serviceKey,
     slug: service.slug,
-    label: service.title,
+    label: service.assignedMenu?.label ?? service.title,
     description: service.description,
-    href: service.href,
+    href: service.href || `/services/${service.slug}`,
     icon: service.icon,
     titleEn: service.titleEn,
     titleBn: service.titleBn,
@@ -82,6 +86,20 @@ function draftFromService(service: AdminService): ServiceProfileInput & { revisi
     descriptionBn: service.descriptionBn,
     detail: cloneDetail(service.detail),
   };
+}
+
+function slugifyDraft(value: string) {
+  return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 160);
+}
+
+function menuTargetKey(target: { id: string; targetType: ServiceMenuTargetType } | null) {
+  return target ? `${target.targetType}:${target.id}` : "";
+}
+
+function menuTargetFromKey(value: string): { targetType: ServiceMenuTargetType; targetId: string } | null {
+  const [targetType, ...idParts] = value.split(":");
+  if ((targetType !== "ITEM" && targetType !== "LINK") || !idParts.length) return null;
+  return { targetType, targetId: idParts.join(":") };
 }
 
 function dateLabel(value: string | null) {
@@ -116,7 +134,7 @@ function SaveButton({ children = "Save draft", disabled, onClick }: { children?:
 }
 
 function StatusPill({ service }: { service: AdminService }) {
-  const label = service.status === "PUBLISHED" ? "Published" : service.status === "DRAFT" ? "Draft" : "Link only";
+  const label = service.status === "PUBLISHED" ? "Published" : service.status === "DRAFT" ? "Draft" : service.assignedMenu ? "Link only" : "Unassigned";
   const classes = service.status === "PUBLISHED" ? "bg-[#e1f2e7] text-[#29634d]" : service.status === "DRAFT" ? "bg-[#fff0e0] text-[#a45e24]" : "bg-[#f0edf7] text-[#655493]";
   return <span className={`inline-flex min-h-7 items-center rounded-full px-2.5 text-[10px] font-bold uppercase tracking-[0.09em] ${classes}`.trim()}>{label}</span>;
 }
@@ -252,16 +270,18 @@ function DetailEditor({ detail, onChange }: { detail: ServiceDetailContent; onCh
   );
 }
 
-function ServiceEditor({ service, onSaved }: { service: AdminService; onSaved: (next: AdminService) => void }) {
+function ServiceEditor({ service, menuOptions, onSaved }: { service: AdminService; menuOptions: AdminServiceMenuOption[]; onSaved: (next: AdminService) => void }) {
   const [draft, setDraft] = useState(() => draftFromService(service));
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [detailOpen, setDetailOpen] = useState(Boolean(service.detail));
+  const [selectedMenuKey, setSelectedMenuKey] = useState(menuTargetKey(service.assignedMenu));
 
   useEffect(() => {
     setDraft(draftFromService(service));
     setDetailOpen(Boolean(service.detail));
+    setSelectedMenuKey(menuTargetKey(service.assignedMenu));
     setMessage("");
     setError("");
   }, [service.id, service.revision]);
@@ -284,6 +304,7 @@ function ServiceEditor({ service, onSaved }: { service: AdminService; onSaved: (
 
   const destination = destinationTypeFromHref(draft.href);
   const detail = draft.detail;
+  const hasUnsavedChanges = JSON.stringify(draft) !== JSON.stringify(draftFromService(service));
   const chooseDestination = (type: ServiceDestinationType) => {
     const defaults: Record<ServiceDestinationType, string> = {
       DETAIL: `/services/${draft.slug}`,
@@ -302,11 +323,11 @@ function ServiceEditor({ service, onSaved }: { service: AdminService; onSaved: (
     setMessage("");
     setError("");
     try {
-      if (!service.menuItemId) {
-        setError("This service is detached from the menu. Reconnect it before saving.");
+      if (!service.profileId) {
+        setError("Create the service before saving its details.");
         return;
       }
-      const saved = await updateAdminService(service.menuItemId, {
+      const saved = await updateAdminService(service.profileId, {
         serviceKey: draft.serviceKey,
         slug: draft.slug,
         label: draft.label,
@@ -324,6 +345,24 @@ function ServiceEditor({ service, onSaved }: { service: AdminService; onSaved: (
     } catch (saveError) {
       if (isServiceConflictError(saveError)) setError("This service changed elsewhere. Reload it before saving again.");
       else setError(saveError instanceof Error ? saveError.message : "The service could not be saved.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function assignMenu() {
+    if (!service.profileId || saving) return;
+    setSaving(true);
+    setMessage("");
+    setError("");
+    try {
+      const saved = await assignAdminService(service.profileId, menuTargetFromKey(selectedMenuKey), service.revision);
+      onSaved(saved);
+      setSelectedMenuKey(menuTargetKey(saved.assignedMenu));
+      setMessage(saved.assignedMenu ? "Service attached to the menu." : "Service detached. Its page content is still safe.");
+    } catch (assignmentError) {
+      if (isServiceConflictError(assignmentError)) setError(assignmentError instanceof Error ? assignmentError.message : "That menu entry is already in use.");
+      else setError(assignmentError instanceof Error ? assignmentError.message : "The menu assignment could not be changed.");
     } finally {
       setSaving(false);
     }
@@ -367,11 +406,11 @@ function ServiceEditor({ service, onSaved }: { service: AdminService; onSaved: (
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2"><p className="text-[11px] font-bold uppercase tracking-[0.14em] text-accent">Service page</p><StatusPill service={service} /></div>
           <h2 className="mt-2 truncate font-brand text-[25px] font-bold tracking-[-0.04em] text-[#14131c]" id="service-editor-title">{service.title}</h2>
-          <p className="mt-1 text-[11px] text-[#9b958c]">{service.category} · {service.groupLabel} · Updated {dateLabel(service.updatedAt)}</p>
+          <p className="mt-1 text-[11px] text-[#9b958c]">{service.assignedMenu ? `${service.assignedMenu.sectionLabel} · ${service.assignedMenu.groupLabel}` : "Not assigned to a menu"} · Updated {dateLabel(service.updatedAt)}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
           {service.hasDetailPage ? <a className="inline-flex min-h-10 items-center justify-center rounded-full bg-white px-3.5 text-[11px] font-bold text-[#4f4b47] ring-1 ring-[#d8d2c8] hover:ring-[#aaa197]" href={`/services/${service.slug}`} target="_blank" rel="noreferrer">Preview ↗</a> : null}
-          <SaveButton disabled={saving || !service.menuItemId} onClick={() => void save()}>{saving ? "Saving…" : "Save draft"}</SaveButton>
+          <SaveButton disabled={saving || !service.profileId} onClick={() => void save()}>{saving ? "Saving…" : "Save draft"}</SaveButton>
           {service.status === "PUBLISHED" ? <button className="min-h-10 rounded-full px-3 text-[11px] font-bold text-[#a34b5c] hover:bg-[#fce7ea] disabled:opacity-50" type="button" disabled={saving} onClick={() => void unpublish()}>Unpublish</button> : <button className="min-h-10 rounded-full px-3 text-[11px] font-bold text-[#29634d] hover:bg-[#e3f4e8] disabled:opacity-50" type="button" disabled={saving || !service.profileId} onClick={() => void publish()}>Publish</button>}
         </div>
       </div>
@@ -380,8 +419,23 @@ function ServiceEditor({ service, onSaved }: { service: AdminService; onSaved: (
       {error ? <p className="mx-4 mt-4 rounded-[12px] bg-[#fff4f5] px-3.5 py-2.5 text-[12px] font-semibold text-[#ad3148] sm:mx-5" role="alert">{error}</p> : null}
 
       <div className="space-y-5 p-4 sm:p-5">
+        <div className="rounded-[16px] bg-[#f8f6f2] p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Menu assignment</p>
+              <p className="mt-1 max-w-[560px] text-[12px] leading-[1.5] text-[#8d877f]">Attach this service to one real menu entry. The list includes every top-level menu item across all sections; child links are not mixed in.</p>
+            </div>
+            <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${service.assignedMenu ? "bg-[#e1f2e7] text-[#29634d]" : "bg-white text-[#77736e] ring-1 ring-[#ded8cf]"}`.trim()}>{service.assignedMenu ? "Assigned" : "Unassigned"}</span>
+          </div>
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end">
+            <label className="block min-w-0 flex-1"><span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Choose menu entry</span><select className={fieldClass} value={selectedMenuKey} disabled={saving || !menuOptions.length} onChange={(event) => setSelectedMenuKey(event.target.value)}><option value="">Not assigned</option>{menuOptions.map((option) => { const inUse = Boolean(option.assignedProfileId && option.assignedProfileId !== service.profileId); return <option key={`${option.targetType}:${option.id}`} value={`${option.targetType}:${option.id}`} disabled={inUse}>{option.pathLabel}{inUse ? " · already assigned" : ""}</option>; })}</select></label>
+            <button className="min-h-11 shrink-0 rounded-full bg-[#14131c] px-4 text-[12px] font-bold text-white transition-transform hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-45" type="button" disabled={saving || hasUnsavedChanges || selectedMenuKey === menuTargetKey(service.assignedMenu) || !menuOptions.length} onClick={() => void assignMenu()}>{selectedMenuKey ? "Attach to menu" : "Remove assignment"}</button>
+          </div>
+          <p className="mt-2 text-[11px] text-[#9b958c]">{hasUnsavedChanges ? "Save the current draft before changing its menu assignment." : service.assignedMenu ? `Currently attached to ${service.assignedMenu.sectionLabel} / ${service.assignedMenu.groupLabel} / ${service.assignedMenu.label}.` : "This service can be drafted and published before it is placed in navigation."}</p>
+        </div>
+
         <div>
-          <div className="flex flex-wrap items-end justify-between gap-2"><div><p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Catalogue basics</p><p className="mt-1 text-[12px] text-[#9b958c]">This copy appears in the menu and service catalogue.</p></div><span className="text-[11px] text-[#9b958c]">Revision {draft.revision}</span></div>
+          <div className="flex flex-wrap items-end justify-between gap-2"><div><p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Service identity</p><p className="mt-1 text-[12px] text-[#9b958c]">This is the reusable service record. When assigned, its name, summary and icon sync to the menu entry.</p></div><span className="text-[11px] text-[#9b958c]">Revision {draft.revision}</span></div>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <Field label="Menu title" value={draft.label} onChange={(event) => update("label", event.target.value)} />
             <label className="block min-w-0"><span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Icon</span><div className="mt-2"><IconPicker value={draft.icon} onChange={(value) => update("icon", value)} disabled={saving} /></div></label>
@@ -413,19 +467,25 @@ function ServiceEditor({ service, onSaved }: { service: AdminService; onSaved: (
 
 export function ServicePagesModule() {
   const [services, setServices] = useState<AdminService[]>([]);
+  const [menuOptions, setMenuOptions] = useState<AdminServiceMenuOption[]>([]);
   const [activeId, setActiveId] = useState("");
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState("all");
+  const [scope, setScope] = useState<"all" | "assigned" | "unassigned">("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState("");
+  const [newService, setNewService] = useState({ titleEn: "", titleBn: "", slug: "", descriptionEn: "", descriptionBn: "" });
 
   useEffect(() => {
     let active = true;
     setLoading(true);
-    void getAdminServices()
-      .then((items) => {
+    void Promise.all([getAdminServices(), getAdminServiceMenuOptions()])
+      .then(([items, options]) => {
         if (!active) return;
         setServices(items);
+        setMenuOptions(options);
         setActiveId((current) => current || items[0]?.id || "");
       })
       .catch((loadError) => {
@@ -437,37 +497,105 @@ export function ServicePagesModule() {
     return () => { active = false; };
   }, []);
 
-  const categories = useMemo(() => [...new Map(services.map((service) => [service.categoryKey, service.category])).entries()].map(([key, label]) => ({ key, label })), [services]);
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    return services.filter((service) => (category === "all" || service.categoryKey === category) && (!needle || `${service.title} ${service.description} ${service.category} ${service.groupLabel}`.toLowerCase().includes(needle)));
-  }, [category, query, services]);
+    return services.filter((service) => {
+      const assigned = Boolean(service.assignedMenu);
+      const matchesScope = scope === "all" || (scope === "assigned" ? assigned : !assigned);
+      const searchable = `${service.title} ${service.description} ${service.titleEn} ${service.titleBn} ${service.category} ${service.groupLabel} ${service.assignedMenu?.sectionLabel ?? ""} ${service.assignedMenu?.groupLabel ?? ""}`.toLowerCase();
+      return matchesScope && (!needle || searchable.includes(needle));
+    });
+  }, [query, scope, services]);
   const activeService = filtered.find((service) => service.id === activeId) ?? filtered[0] ?? null;
 
   function updateService(next: AdminService) {
-    setServices((current) => current.map((service) => service.id === next.id || (service.menuItemId && service.menuItemId === next.menuItemId) ? next : service));
+    setServices((current) => current.map((service) => service.id === next.id ? next : service));
+    setMenuOptions((current) => current.map((option) => {
+      const optionKey = `${option.targetType}:${option.id}`;
+      const assignedKey = menuTargetKey(next.assignedMenu);
+      if (option.assignedProfileId === next.profileId) return { ...option, assignedProfileId: null, assignedProfileTitle: null };
+      if (optionKey === assignedKey) return { ...option, assignedProfileId: next.profileId, assignedProfileTitle: next.titleEn };
+      return option;
+    }));
     setActiveId(next.id);
+  }
+
+  function updateNewService(key: keyof typeof newService, value: string) {
+    setCreateError("");
+    setNewService((current) => ({ ...current, [key]: value }));
+  }
+
+  async function createService() {
+    if (creating) return;
+    const titleEn = newService.titleEn.trim();
+    const titleBn = newService.titleBn.trim();
+    const descriptionEn = newService.descriptionEn.trim();
+    const descriptionBn = newService.descriptionBn.trim();
+    const slug = slugifyDraft(newService.slug || titleEn);
+    if (!titleEn || !titleBn || !descriptionEn || !descriptionBn || !slug) {
+      setCreateError("Add English and Bangla titles, both summaries and a valid URL slug.");
+      return;
+    }
+    setCreating(true);
+    setCreateError("");
+    try {
+      const created = await createAdminService({
+        serviceKey: `service:${slug}`,
+        slug,
+        label: titleEn,
+        description: descriptionEn,
+        href: `/services/${slug}`,
+        icon: "briefcase",
+        titleEn,
+        titleBn,
+        descriptionEn,
+        descriptionBn,
+        detail: null,
+      });
+      setServices((current) => [created, ...current]);
+      setActiveId(created.id);
+      setCreateOpen(false);
+      setNewService({ titleEn: "", titleBn: "", slug: "", descriptionEn: "", descriptionBn: "" });
+    } catch (createRequestError) {
+      setCreateError(createRequestError instanceof Error ? createRequestError.message : "The service could not be created.");
+    } finally {
+      setCreating(false);
+    }
   }
 
   return (
     <div className="space-y-6">
       <section className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
-        <div><p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#e44762]">Content workspace</p><h1 className="mt-2 font-brand text-[38px] font-bold leading-[1] tracking-[-0.05em] text-[#14131c] sm:text-[48px]">Service pages</h1><p className="mt-3 max-w-[620px] text-[14px] leading-[1.6] text-[#77736e]">Manage catalogue copy, icons, destinations and optional detail pages from one focused workspace.</p></div>
-        <div className="flex flex-wrap items-center gap-2"><a className="inline-flex min-h-10 items-center justify-center rounded-full border border-[#d8d2c8] bg-white px-4 text-[12px] font-bold text-[#4f4b47] hover:border-[#aaa197]" href="/services" target="_blank" rel="noreferrer">Preview catalogue ↗</a><a className="inline-flex min-h-10 items-center justify-center rounded-full bg-[#14131c] px-4 text-[12px] font-bold text-white hover:bg-[#2d2c37]" href="/admin/services">Menu structure</a></div>
+        <div><p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#e44762]">Content workspace</p><h1 className="mt-2 font-brand text-[38px] font-bold leading-[1] tracking-[-0.05em] text-[#14131c] sm:text-[48px]">Service pages</h1><p className="mt-3 max-w-[620px] text-[14px] leading-[1.6] text-[#77736e]">Create service pages independently, then place them in any menu entry when they are ready.</p></div>
+        <div className="flex flex-wrap items-center gap-2"><a className="inline-flex min-h-10 items-center justify-center rounded-full border border-[#d8d2c8] bg-white px-4 text-[12px] font-bold text-[#4f4b47] hover:border-[#aaa197]" href="/services" target="_blank" rel="noreferrer">Preview catalogue ↗</a><a className="inline-flex min-h-10 items-center justify-center rounded-full border border-[#d8d2c8] bg-transparent px-4 text-[12px] font-bold text-[#4f4b47] hover:border-[#aaa197]" href="/admin/services">Menu structure</a><button className="inline-flex min-h-10 items-center justify-center rounded-full bg-[#14131c] px-4 text-[12px] font-bold text-white transition-transform hover:-translate-y-px" type="button" onClick={() => { setCreateOpen((current) => !current); setCreateError(""); }}>{createOpen ? "Close" : "+ New service"}</button></div>
       </section>
 
       {error ? <p className="rounded-[14px] bg-[#fff4f5] px-4 py-3 text-[13px] font-semibold text-[#ad3148]" role="alert">{error}</p> : null}
-      {loading ? <div className="rounded-[20px] bg-white/60 px-5 py-10 text-center text-[13px] text-[#77736e] ring-1 ring-[#ddd8cf]/80">Loading service catalogue…</div> : null}
+
+      {createOpen ? <section className="rounded-[20px] bg-[#14131c] p-4 text-white sm:p-5" aria-labelledby="new-service-title">
+        <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#f08ca0]">New service record</p><h2 className="mt-1 font-brand text-[24px] font-bold tracking-[-0.04em]" id="new-service-title">Start with the essentials</h2><p className="mt-1 text-[12px] text-white/60">Create it first. You can attach it to a menu entry from the editor after it exists.</p></div><span className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-bold text-white/70">Standalone</span></div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <label className="block min-w-0"><span className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/65">English title</span><input className="mt-2 min-h-11 w-full rounded-[13px] bg-white/10 px-3.5 text-[13px] text-white outline-none placeholder:text-white/35 focus:bg-white/15 focus:ring-2 focus:ring-[#f08ca0]" value={newService.titleEn} placeholder="Limited company registration" onChange={(event) => updateNewService("titleEn", event.target.value)} /></label>
+          <label className="block min-w-0"><span className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/65">Bangla title</span><input className="mt-2 min-h-11 w-full rounded-[13px] bg-white/10 px-3.5 text-[13px] text-white outline-none placeholder:text-white/35 focus:bg-white/15 focus:ring-2 focus:ring-[#f08ca0]" value={newService.titleBn} placeholder="লিমিটেড কোম্পানি নিবন্ধন" onChange={(event) => updateNewService("titleBn", event.target.value)} /></label>
+          <label className="block min-w-0"><span className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/65">URL slug</span><input className="mt-2 min-h-11 w-full rounded-[13px] bg-white/10 px-3.5 text-[13px] text-white outline-none placeholder:text-white/35 focus:bg-white/15 focus:ring-2 focus:ring-[#f08ca0]" value={newService.slug} placeholder={slugifyDraft(newService.titleEn) || "limited-company-registration"} onChange={(event) => updateNewService("slug", event.target.value)} /></label>
+          <label className="block min-w-0 sm:col-span-2 lg:col-span-3"><span className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/65">Short summary <span className="font-normal text-white/40">(English)</span></span><textarea className="mt-2 min-h-[76px] w-full resize-y rounded-[13px] bg-white/10 px-3.5 py-3 text-[13px] leading-[1.5] text-white outline-none placeholder:text-white/35 focus:bg-white/15 focus:ring-2 focus:ring-[#f08ca0]" value={newService.descriptionEn} placeholder="A short explanation for the menu and service catalogue." onChange={(event) => updateNewService("descriptionEn", event.target.value)} /></label>
+          <label className="block min-w-0 sm:col-span-2 lg:col-span-3"><span className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/65">Short summary <span className="font-normal text-white/40">(Bangla, required)</span></span><textarea className="mt-2 min-h-[76px] w-full resize-y rounded-[13px] bg-white/10 px-3.5 py-3 text-[13px] leading-[1.5] text-white outline-none placeholder:text-white/35 focus:bg-white/15 focus:ring-2 focus:ring-[#f08ca0]" value={newService.descriptionBn} placeholder="সেবাটির সংক্ষিপ্ত বিবরণ" onChange={(event) => updateNewService("descriptionBn", event.target.value)} /></label>
+        </div>
+        {createError ? <p className="mt-3 rounded-[12px] bg-[#7c2940] px-3.5 py-2.5 text-[12px] font-semibold text-white" role="alert">{createError}</p> : null}
+        <div className="mt-4 flex flex-wrap items-center justify-end gap-2"><button className="min-h-10 rounded-full px-4 text-[12px] font-bold text-white/65 hover:bg-white/10" type="button" onClick={() => setCreateOpen(false)}>Cancel</button><button className="min-h-10 rounded-full bg-[#e44762] px-4 text-[12px] font-bold text-white transition-transform hover:-translate-y-px disabled:opacity-50" type="button" disabled={creating} onClick={() => void createService()}>{creating ? "Creating…" : "Create service"}</button></div>
+      </section> : null}
+
+      {loading ? <div className="rounded-[20px] bg-white/60 px-5 py-10 text-center text-[13px] text-[#77736e] ring-1 ring-[#ddd8cf]/80">Loading service workspace…</div> : null}
 
       {!loading && services.length ? <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(270px,0.34fr)_minmax(0,0.66fr)] xl:items-start">
-        <aside className="min-w-0 rounded-[22px] bg-white/60 p-3 ring-1 ring-[#ddd8cf]/80" aria-label="Service catalogue">
-          <div className="px-2 pb-3"><div className="flex items-center justify-between gap-3"><p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Catalogue</p><span className="rounded-full bg-[#f4f1ec] px-2.5 py-1 text-[10px] font-bold text-[#77736e]">{services.length}</span></div><input className={`${fieldClass} mt-3`} type="search" placeholder="Find a service…" value={query} onChange={(event) => setQuery(event.target.value)} /></div>
-          <div className="flex gap-1.5 overflow-x-auto px-2 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"><button className={`shrink-0 rounded-full px-2.5 py-1.5 text-[10px] font-bold ${category === "all" ? "bg-[#14131c] text-white" : "bg-[#f4f1ec] text-[#77736e]"}`.trim()} type="button" onClick={() => setCategory("all")}>All</button>{categories.map((item) => <button className={`shrink-0 rounded-full px-2.5 py-1.5 text-[10px] font-bold ${category === item.key ? "bg-[#14131c] text-white" : "bg-[#f4f1ec] text-[#77736e]"}`.trim()} type="button" key={item.key} onClick={() => setCategory(item.key)}>{item.label}</button>)}</div>
-          <div className="mt-2 divide-y divide-[#eee9e2]">{filtered.map((service) => { const tone = getToneClasses(service.color, service.surface); return <button className={`flex w-full items-center gap-3 px-2.5 py-3 text-left transition-colors ${service.id === activeService?.id ? "bg-[#fcecef]" : "hover:bg-[#faf9f6]"}`.trim()} type="button" key={service.id} onClick={() => setActiveId(service.id)}><span className={`grid size-9 shrink-0 place-items-center rounded-[11px] ${tone.surface} ${tone.text}`.trim()}><ServiceIcon name={normalizeServiceIcon(service.icon)} className="size-[18px]" /></span><span className="min-w-0 flex-1"><span className="block truncate text-[13px] font-bold text-[#29252a]">{service.title}</span><span className="mt-0.5 block truncate text-[11px] text-[#9b958c]">{service.category}</span></span><span className="shrink-0"><StatusPill service={service} /></span></button>; })}{!filtered.length ? <p className="px-2.5 py-6 text-center text-[12px] text-[#9b958c]">No matching services.</p> : null}</div>
+        <aside className="min-w-0 rounded-[22px] bg-white/60 p-3 ring-1 ring-[#ddd8cf]/80" aria-label="Service records">
+          <div className="px-2 pb-3"><div className="flex items-center justify-between gap-3"><p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Service records</p><span className="rounded-full bg-[#f4f1ec] px-2.5 py-1 text-[10px] font-bold text-[#77736e]">{services.length}</span></div><input className={`${fieldClass} mt-3`} type="search" placeholder="Find a service…" value={query} onChange={(event) => setQuery(event.target.value)} /></div>
+          <div className="flex gap-1.5 overflow-x-auto px-2 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{(["all", "assigned", "unassigned"] as const).map((item) => <button className={`shrink-0 rounded-full px-2.5 py-1.5 text-[10px] font-bold ${scope === item ? "bg-[#14131c] text-white" : "bg-[#f4f1ec] text-[#77736e]"}`.trim()} type="button" key={item} onClick={() => setScope(item)}>{item === "all" ? `All ${services.length}` : item === "assigned" ? `Assigned ${services.filter((service) => service.assignedMenu).length}` : `Unassigned ${services.filter((service) => !service.assignedMenu).length}`}</button>)}</div>
+          <div className="mt-2 divide-y divide-[#eee9e2]">{filtered.map((service) => { const tone = getToneClasses(service.color, service.surface); return <button className={`flex w-full items-center gap-3 px-2.5 py-3 text-left transition-colors ${service.id === activeService?.id ? "bg-[#fcecef]" : "hover:bg-[#faf9f6]"}`.trim()} type="button" key={service.id} onClick={() => setActiveId(service.id)}><span className={`grid size-9 shrink-0 place-items-center rounded-[11px] ${tone.surface} ${tone.text}`.trim()}><ServiceIcon name={normalizeServiceIcon(service.icon)} className="size-[18px]" /></span><span className="min-w-0 flex-1"><span className="block truncate text-[13px] font-bold text-[#29252a]">{service.title}</span><span className="mt-0.5 block truncate text-[11px] text-[#9b958c]">{service.assignedMenu ? `${service.assignedMenu.sectionLabel} · ${service.assignedMenu.groupLabel}` : "Not assigned to menu"}</span></span><span className="shrink-0"><StatusPill service={service} /></span></button>; })}{!filtered.length ? <p className="px-2.5 py-6 text-center text-[12px] text-[#9b958c]">No matching services.</p> : null}</div>
         </aside>
-        {activeService ? <ServiceEditor key={`${activeService.id}-${activeService.revision}`} service={activeService} onSaved={updateService} /> : null}
+        {activeService ? <ServiceEditor key={`${activeService.id}-${activeService.revision}`} service={activeService} menuOptions={menuOptions} onSaved={updateService} /> : null}
       </div> : null}
-      {!loading && !services.length && !error ? <div className="rounded-[20px] bg-white/60 px-5 py-10 text-center text-[13px] text-[#77736e] ring-1 ring-[#ddd8cf]/80">No menu services are available yet. Add a service from the menu structure first.</div> : null}
+      {!loading && !services.length && !error ? <div className="rounded-[20px] bg-white/60 px-5 py-10 text-center ring-1 ring-[#ddd8cf]/80"><p className="font-brand text-[22px] font-bold tracking-[-0.03em] text-[#29252a]">Your service workspace is ready.</p><p className="mx-auto mt-2 max-w-[460px] text-[13px] leading-[1.5] text-[#77736e]">Create a service record, build its page, then attach it to one of the {menuOptions.length || "available"} real menu entries.</p><button className="mt-4 min-h-10 rounded-full bg-[#14131c] px-4 text-[12px] font-bold text-white" type="button" onClick={() => setCreateOpen(true)}>+ Create first service</button></div> : null}
     </div>
   );
 }

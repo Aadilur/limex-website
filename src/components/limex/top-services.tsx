@@ -137,7 +137,7 @@ export function TopServices({ featuredServices }: { featuredServices?: LandingSe
 
     void getPublicMenu()
       .then((managedItems) => {
-        if (!cancelled) setMenuNavigation(hydrateServiceNavigation(managedItems));
+        if (!cancelled) setMenuNavigation(hydrateServiceNavigation(managedItems, "en", false));
       })
       .catch(() => {
         // Keep the bundled menu available when the API is unavailable.

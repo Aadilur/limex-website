@@ -4,6 +4,7 @@ export type MenuLink = {
   href: string;
   sortOrder: number;
   isVisible: boolean;
+  serviceProfile?: { slug: string; publishedDetail: unknown } | null;
 };
 
 export type MenuItem = {
@@ -17,6 +18,7 @@ export type MenuItem = {
   isVisible: boolean;
   updatedAt: Date;
   links: MenuLink[];
+  serviceProfile?: { slug: string; publishedDetail: unknown } | null;
 };
 
 export type MenuGroup = {

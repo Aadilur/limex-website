@@ -1,6 +1,7 @@
 export const serviceDestinationTypes = ["DETAIL", "BLOG", "TOOL", "INTERNAL", "EXTERNAL", "CONTACT"] as const;
 export type ServiceDestinationType = (typeof serviceDestinationTypes)[number];
 export type ServiceLocale = "en" | "bn";
+export type ServiceMenuTargetType = "ITEM" | "LINK";
 
 export const serviceStatuses = ["LINK_ONLY", "DRAFT", "PUBLISHED"] as const;
 export type ServiceStatus = (typeof serviceStatuses)[number];
@@ -73,6 +74,7 @@ export type PublicService = {
   id: string;
   serviceKey: string;
   menuItemId: string | null;
+  menuLinkId: string | null;
   slug: string;
   title: string;
   description: string;
@@ -109,6 +111,7 @@ export type PublicServiceCatalog = {
 
 export type AdminService = PublicService & {
   profileId: string | null;
+  assignedMenu: AdminServiceMenuAssignment | null;
   titleEn: string;
   titleBn: string;
   descriptionEn: string;
@@ -118,6 +121,25 @@ export type AdminService = PublicService & {
   publishedAt: string | null;
   createdAt: string | null;
   detail: ServiceDetailContent | null;
+};
+
+export type AdminServiceMenuAssignment = {
+  id: string;
+  targetType: ServiceMenuTargetType;
+  label: string;
+  sectionLabel: string;
+  groupLabel: string;
+  parentLabel: string | null;
+  href: string;
+  isVisible: boolean;
+};
+
+export type AdminServiceMenuOption = AdminServiceMenuAssignment & {
+  pathLabel: string;
+  icon: string;
+  sortOrder: number;
+  assignedProfileId: string | null;
+  assignedProfileTitle: string | null;
 };
 
 export type ServiceProfileInput = {

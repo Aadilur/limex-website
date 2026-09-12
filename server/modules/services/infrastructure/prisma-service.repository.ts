@@ -5,8 +5,10 @@ import {
   ServiceConflictError,
   ServiceNotFoundError,
   ServiceSafetyError,
+  isLegacySeedProfile,
   type ServiceProfileRow,
   type ServiceProfileStatus,
+  type ServiceMenuAssignment,
   type ServiceRepository,
 } from "../domain/service.js";
 import { normalizeServiceDetail } from "../domain/service.js";
@@ -24,11 +26,28 @@ function snapshotFromInput(input: ServiceProfileInput) {
   return {
     serviceKey: input.serviceKey ?? "",
     slug: input.slug,
+    icon: input.icon,
     titleEn: input.titleEn,
     titleBn: input.titleBn,
     descriptionEn: input.descriptionEn,
     descriptionBn: input.descriptionBn,
     detail: input.detail,
+  };
+}
+
+function snapshotFromRow(row: ServiceProfileRow, detail: unknown) {
+  return {
+    serviceKey: row.serviceKey,
+    slug: row.slug,
+    menuItemId: row.menuItemId,
+    menuLinkId: row.menuLinkId,
+    menuSnapshot: row.menuSnapshot,
+    icon: row.icon,
+    titleEn: row.titleEn,
+    titleBn: row.titleBn,
+    descriptionEn: row.descriptionEn,
+    descriptionBn: row.descriptionBn,
+    detail,
   };
 }
 
@@ -79,84 +98,183 @@ export class PrismaServiceRepository implements ServiceRepository {
     return row ? toRow(row) : null;
   }
 
-  public async upsertProfile(menuItemId: string, input: ServiceProfileInput, expectedRevision: number | null, updatedBy: string): Promise<ServiceProfileRow> {
+  public async createProfile(input: ServiceProfileInput, updatedBy: string): Promise<ServiceProfileRow> {
     return this.client.$transaction(async (transaction) => {
-      const menuItem = await transaction.menuItem.findUnique({ where: { id: menuItemId } });
-      if (!menuItem) throw new ServiceNotFoundError("The menu service no longer exists. Refresh the service list before saving.");
+      const detail = input.detail ? normalizeServiceDetail(input.detail) : null;
+      const serviceKey = input.serviceKey?.trim() || `service:${input.slug}`;
+      const created = await transaction.serviceProfile.create({
+        data: {
+          serviceKey,
+          slug: input.slug,
+          menuItemId: null,
+          menuLinkId: null,
+          menuSnapshot: Prisma.JsonNull,
+          icon: input.icon,
+          origin: "ADMIN",
+          titleEn: input.titleEn,
+          titleBn: input.titleBn,
+          descriptionEn: input.descriptionEn,
+          descriptionBn: input.descriptionBn,
+          detail: detail ? asJson(detail) : Prisma.JsonNull,
+          status: detail ? "DRAFT" : "LINK_ONLY",
+          revision: 1,
+          revisions: {
+            create: {
+              version: 1,
+              kind: "DRAFT",
+              snapshot: asJson(snapshotFromInput({ ...input, serviceKey, detail })),
+              createdBy: updatedBy,
+            },
+          },
+        },
+      });
+      return toRow(created);
+    });
+  }
 
-      const current = await transaction.serviceProfile.findUnique({ where: { menuItemId } });
-      const currentRevision = current?.revision ?? 0;
-      if (expectedRevision !== null && expectedRevision !== currentRevision) {
-        throw new ServiceConflictError();
-      }
-      if (expectedRevision === null && current) {
-        throw new ServiceConflictError("This service already has a profile. Reload before saving.");
-      }
+  public async updateProfile(id: string, input: ServiceProfileInput, expectedRevision: number, updatedBy: string): Promise<ServiceProfileRow> {
+    return this.client.$transaction(async (transaction) => {
+      const current = await transaction.serviceProfile.findUnique({ where: { id } });
+      if (!current) throw new ServiceNotFoundError();
+      if (expectedRevision !== current.revision) throw new ServiceConflictError();
       if (current?.detail && !input.detail) {
         throw new ServiceSafetyError("The detail content was missing from this save, so the existing service page was kept safe.");
       }
 
-      const nextRevision = currentRevision + 1;
+      const nextRevision = current.revision + 1;
       const detail = input.detail ? normalizeServiceDetail(input.detail) : null;
-      let profileId: string;
-      if (current) {
-        const result = await transaction.serviceProfile.updateMany({
-          where: { id: current.id, revision: currentRevision },
-          data: {
-            serviceKey: input.serviceKey ?? current.serviceKey,
-            slug: input.slug,
-            titleEn: input.titleEn,
-            titleBn: input.titleBn,
-            descriptionEn: input.descriptionEn,
-            descriptionBn: input.descriptionBn,
-            ...(detail ? { detail: asJson(detail) } : {}),
-            status: currentStatus(current.status, Boolean(detail ?? current.detail)),
-            revision: nextRevision,
-          },
-        });
-        if (!result.count) throw new ServiceConflictError();
-        profileId = current.id;
-      } else {
-        const created = await transaction.serviceProfile.create({
-          data: {
-            serviceKey: input.serviceKey ?? input.label,
-            slug: input.slug,
-            menuItemId,
-            titleEn: input.titleEn,
-            titleBn: input.titleBn,
-            descriptionEn: input.descriptionEn,
-            descriptionBn: input.descriptionBn,
-            detail: detail ? asJson(detail) : Prisma.JsonNull,
-            status: detail ? "DRAFT" : "LINK_ONLY",
-            revision: 1,
-          },
-        });
-        profileId = created.id;
-      }
-
-      // The menu item is the public destination source of truth. Updating it
-      // here keeps the mega menu, landing cards and service catalogue aligned.
-      await transaction.menuItem.update({
-        where: { id: menuItemId },
+      const result = await transaction.serviceProfile.updateMany({
+        where: { id, revision: expectedRevision },
         data: {
-          label: input.label,
-          description: input.description,
-          href: input.href,
+          serviceKey: input.serviceKey?.trim() || current.serviceKey,
+          slug: input.slug,
           icon: input.icon,
+          titleEn: input.titleEn,
+          titleBn: input.titleBn,
+          descriptionEn: input.descriptionEn,
+          descriptionBn: input.descriptionBn,
+          ...(detail ? { detail: asJson(detail) } : {}),
+          status: currentStatus(current.status, Boolean(detail ?? current.detail)),
+          revision: nextRevision,
         },
       });
+      if (!result.count) throw new ServiceConflictError();
+
+      // An assigned service still keeps the menu entry in sync, but an
+      // unassigned service never mutates the menu tree while it is edited.
+      if (current.menuItemId) {
+        await transaction.menuItem.update({
+          where: { id: current.menuItemId },
+          data: { label: input.label, description: input.description, href: input.href, icon: input.icon },
+        });
+      } else if (current.menuLinkId) {
+        await transaction.menuLink.update({
+          where: { id: current.menuLinkId },
+          data: { label: input.label, href: input.href },
+        });
+      }
 
       await transaction.serviceProfileRevision.create({
         data: {
-          profileId,
+          profileId: id,
           version: nextRevision,
           kind: "DRAFT",
-          snapshot: asJson(snapshotFromInput({ ...input, serviceKey: input.serviceKey ?? input.label, detail })),
+          snapshot: asJson(snapshotFromInput({ ...input, serviceKey: input.serviceKey ?? current.serviceKey, detail })),
           createdBy: updatedBy,
         },
       });
 
-      const saved = await transaction.serviceProfile.findUnique({ where: { id: profileId } });
+      const saved = await transaction.serviceProfile.findUnique({ where: { id } });
+      if (!saved) throw new ServiceNotFoundError();
+      return toRow(saved);
+    });
+  }
+
+  public async assignProfile(id: string, target: ServiceMenuAssignment | null, expectedRevision: number, updatedBy: string): Promise<ServiceProfileRow> {
+    return this.client.$transaction(async (transaction) => {
+      const current = await transaction.serviceProfile.findUnique({ where: { id } });
+      if (!current) throw new ServiceNotFoundError();
+      if (current.revision !== expectedRevision) throw new ServiceConflictError("This service changed in another session. Reload before changing its menu assignment.");
+
+      const menuItemId = target?.targetType === "ITEM" ? target.targetId : null;
+      const menuLinkId = target?.targetType === "LINK" ? target.targetId : null;
+      const sameTarget = current.menuItemId === menuItemId && current.menuLinkId === menuLinkId;
+
+      if (!sameTarget && current.menuItemId && current.menuSnapshot) {
+        const snapshot = current.menuSnapshot as { targetType?: string; targetId?: string; label?: string; description?: string; href?: string; icon?: string };
+        if (snapshot.targetType === "ITEM" && snapshot.targetId === current.menuItemId) {
+          const oldMenuItem = await transaction.menuItem.findUnique({ where: { id: current.menuItemId } });
+          if (oldMenuItem && oldMenuItem.href === `/services/${current.slug}` && oldMenuItem.label === current.titleEn) {
+            await transaction.menuItem.update({ where: { id: oldMenuItem.id }, data: { label: snapshot.label ?? oldMenuItem.label, description: snapshot.description ?? oldMenuItem.description, href: snapshot.href ?? oldMenuItem.href, icon: snapshot.icon ?? oldMenuItem.icon } });
+          }
+        }
+      }
+      if (!sameTarget && current.menuLinkId && current.menuSnapshot) {
+        const snapshot = current.menuSnapshot as { targetType?: string; targetId?: string; label?: string; href?: string };
+        if (snapshot.targetType === "LINK" && snapshot.targetId === current.menuLinkId) {
+          const oldMenuLink = await transaction.menuLink.findUnique({ where: { id: current.menuLinkId } });
+          if (oldMenuLink && oldMenuLink.href === `/services/${current.slug}` && oldMenuLink.label === current.titleEn) {
+            await transaction.menuLink.update({ where: { id: oldMenuLink.id }, data: { label: snapshot.label ?? oldMenuLink.label, href: snapshot.href ?? oldMenuLink.href } });
+          }
+        }
+      }
+
+      let menuSnapshot: Prisma.InputJsonValue | typeof Prisma.JsonNull = sameTarget && current.menuSnapshot ? asJson(current.menuSnapshot) : Prisma.JsonNull;
+      if (menuItemId) {
+        const menuItem = await transaction.menuItem.findUnique({ where: { id: menuItemId } });
+        if (!menuItem) throw new ServiceNotFoundError("That menu entry no longer exists. Refresh the menu list and try again.");
+        menuSnapshot = { targetType: "ITEM", targetId: menuItem.id, label: menuItem.label, description: menuItem.description, href: menuItem.href, icon: menuItem.icon };
+        const assigned = await transaction.serviceProfile.findUnique({ where: { menuItemId } });
+        if (assigned && assigned.id !== id) {
+          const legacyAssigned = isLegacySeedProfile(toRow(assigned));
+          if (!legacyAssigned) {
+            throw new ServiceConflictError("That menu entry is already assigned to another service. Detach it there before reassigning it.");
+          }
+          // Older deployments may not have applied the standalone-service
+          // migration yet. Release only an untouched placeholder here; never
+          // replace a profile that contains content or revision history.
+          await transaction.serviceProfile.update({ where: { id: assigned.id }, data: { menuItemId: null, origin: "SEED" } });
+        }
+      }
+      if (menuLinkId) {
+        const menuLink = await transaction.menuLink.findUnique({ where: { id: menuLinkId } });
+        if (!menuLink) throw new ServiceNotFoundError("That menu link no longer exists. Refresh the menu list and try again.");
+        menuSnapshot = { targetType: "LINK", targetId: menuLink.id, label: menuLink.label, href: menuLink.href };
+        const assigned = await transaction.serviceProfile.findUnique({ where: { menuLinkId } });
+        if (assigned && assigned.id !== id) throw new ServiceConflictError("That menu link is already assigned to another service. Detach it there before reassigning it.");
+      }
+
+      const nextRevision = current.revision + 1;
+      const result = await transaction.serviceProfile.updateMany({
+        where: { id, revision: expectedRevision },
+        data: { menuItemId, menuLinkId, menuSnapshot, revision: nextRevision },
+      });
+      if (!result.count) throw new ServiceConflictError("This service changed in another session. Reload before changing its menu assignment.");
+
+      if (menuItemId) {
+        await transaction.menuItem.update({
+          where: { id: menuItemId },
+          data: { label: current.titleEn, description: current.descriptionEn, href: `/services/${current.slug}`, icon: current.icon },
+        });
+      } else if (menuLinkId) {
+        await transaction.menuLink.update({
+          where: { id: menuLinkId },
+          data: { label: current.titleEn, href: `/services/${current.slug}` },
+        });
+      }
+
+      const row = toRow({ ...current, menuItemId, menuLinkId, menuSnapshot, revision: nextRevision });
+      await transaction.serviceProfileRevision.create({
+        data: {
+          profileId: id,
+          version: nextRevision,
+          kind: "DRAFT",
+          snapshot: asJson(snapshotFromRow(row, current.detail)),
+          createdBy: updatedBy,
+        },
+      });
+
+      const saved = await transaction.serviceProfile.findUnique({ where: { id } });
       if (!saved) throw new ServiceNotFoundError();
       return toRow(saved);
     });

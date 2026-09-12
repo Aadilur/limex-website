@@ -108,7 +108,7 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
           return managedItem ? [managedItem] : [];
         });
         const newManagedItems = managedItems.filter((item) => !staticManagedKeys.has(item.key ?? slugify(item.label)));
-        setMenuNavigation(hydrateServiceNavigation([...mergedNavigation.filter((item) => item.label === "Home"), ...mergedNavigation.filter(hasMegaMenu), ...newManagedItems, ...mergedNavigation.filter((item) => !hasMegaMenu(item) && item.label !== "Home")], navigationLocale));
+        setMenuNavigation([...mergedNavigation.filter((item) => item.label === "Home"), ...mergedNavigation.filter(hasMegaMenu), ...newManagedItems, ...mergedNavigation.filter((item) => !hasMegaMenu(item) && item.label !== "Home")]);
       })
       .catch(() => {
         // Keep the bundled navigation available when the API is unavailable.

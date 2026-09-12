@@ -69,10 +69,15 @@ const profileSchema = z.object({
 
 const updateBodySchema = z.object({
   profile: profileSchema,
-  expectedRevision: z.number().int().nonnegative().nullable(),
+  expectedRevision: z.number().int().positive(),
 }).strict();
 
+const createBodySchema = z.object({ profile: profileSchema }).strict();
 const revisionBodySchema = z.object({ expectedRevision: z.number().int().positive() }).strict();
+const assignmentBodySchema = z.object({
+  menuTarget: z.object({ targetType: z.enum(["ITEM", "LINK"]), targetId: z.string().trim().min(1).max(191) }).nullable(),
+  expectedRevision: z.number().int().positive(),
+}).strict();
 
 function sendKnownServiceError(error: unknown, reply: FastifyReply) {
   if (error instanceof ServiceConflictError) return reply.code(409).send({ error: error.message });
@@ -111,6 +116,27 @@ export async function serviceRoutes(app: FastifyInstance, options: { service: Se
     return { data: await options.service.getAdminCatalog() };
   });
 
+  app.get("/api/admin/services/menu-options", async (request, reply) => {
+    if (!adminSession(request, reply)) return;
+    reply.header("Cache-Control", "no-store");
+    try {
+      return { data: await options.service.getAdminMenuOptions() };
+    } catch (error) {
+      return sendKnownServiceError(error, reply);
+    }
+  });
+
+  app.post("/api/admin/services", async (request, reply) => {
+    const session = adminSession(request, reply);
+    if (!session) return;
+    try {
+      const input = createBodySchema.parse(request.body);
+      return { data: await options.service.createService(input.profile, session.username) };
+    } catch (error) {
+      return sendKnownServiceError(error, reply);
+    }
+  });
+
   app.get("/api/admin/services/:id", async (request, reply) => {
     if (!adminSession(request, reply)) return;
     try {
@@ -130,6 +156,18 @@ export async function serviceRoutes(app: FastifyInstance, options: { service: Se
       const input = updateBodySchema.parse(request.body);
       const data = await options.service.saveService(id, input.profile, input.expectedRevision, session.username);
       return { data };
+    } catch (error) {
+      return sendKnownServiceError(error, reply);
+    }
+  });
+
+  app.post("/api/admin/services/:id/assignment", async (request, reply) => {
+    const session = adminSession(request, reply);
+    if (!session) return;
+    try {
+      const { id } = idParamsSchema.parse(request.params);
+      const input = assignmentBodySchema.parse(request.body);
+      return { data: await options.service.assignService(id, input.menuTarget, input.expectedRevision, session.username) };
     } catch (error) {
       return sendKnownServiceError(error, reply);
     }

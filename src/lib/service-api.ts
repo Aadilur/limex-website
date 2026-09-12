@@ -2,14 +2,17 @@ import { ApiError, request } from "./menu-api";
 import { generatedServiceToPublic, getGeneratedService, mergeGeneratedServiceCatalog } from "./service-content";
 import type {
   AdminService,
+  AdminServiceMenuOption,
   PublicService,
   PublicServiceCatalog,
   PublicServiceDetail,
   ServiceProfileInput,
+  ServiceMenuTargetType,
 } from "./service-types";
 
 export type {
   AdminService,
+  AdminServiceMenuOption,
   PublicService,
   PublicServiceCatalog,
   PublicServiceDetail,
@@ -20,6 +23,7 @@ export type {
   ServiceFact,
   ServicePriceTier,
   ServiceProfileInput,
+  ServiceMenuTargetType,
   ServiceStatus,
   ServiceStep,
 } from "./service-types";
@@ -48,14 +52,32 @@ export function getAdminServices(): Promise<AdminService[]> {
   return request<AdminService[]>("/api/admin/services", { cache: "no-store" });
 }
 
-export function getAdminService(menuItemId: string): Promise<AdminService> {
-  return request<AdminService>(`/api/admin/services/${encodeURIComponent(menuItemId)}`, { cache: "no-store" });
+export function getAdminService(profileId: string): Promise<AdminService> {
+  return request<AdminService>(`/api/admin/services/${encodeURIComponent(profileId)}`, { cache: "no-store" });
 }
 
-export function updateAdminService(menuItemId: string, profile: ServiceProfileInput, expectedRevision: number | null): Promise<AdminService> {
-  return request<AdminService>(`/api/admin/services/${encodeURIComponent(menuItemId)}`, {
+export function getAdminServiceMenuOptions(): Promise<AdminServiceMenuOption[]> {
+  return request<AdminServiceMenuOption[]>("/api/admin/services/menu-options", { cache: "no-store" });
+}
+
+export function createAdminService(profile: ServiceProfileInput): Promise<AdminService> {
+  return request<AdminService>("/api/admin/services", {
+    method: "POST",
+    body: JSON.stringify({ profile }),
+  });
+}
+
+export function updateAdminService(profileId: string, profile: ServiceProfileInput, expectedRevision: number): Promise<AdminService> {
+  return request<AdminService>(`/api/admin/services/${encodeURIComponent(profileId)}`, {
     method: "PUT",
     body: JSON.stringify({ profile, expectedRevision }),
+  });
+}
+
+export function assignAdminService(profileId: string, menuTarget: { targetType: ServiceMenuTargetType; targetId: string } | null, expectedRevision: number): Promise<AdminService> {
+  return request<AdminService>(`/api/admin/services/${encodeURIComponent(profileId)}/assignment`, {
+    method: "POST",
+    body: JSON.stringify({ menuTarget, expectedRevision }),
   });
 }
 

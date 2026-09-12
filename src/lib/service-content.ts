@@ -390,6 +390,7 @@ export function generatedServiceToPublic(entry: GeneratedService, locale: Servic
     id: `generated-${entry.slug}`,
     serviceKey: entry.serviceKey,
     menuItemId: null,
+    menuLinkId: null,
     slug: entry.slug,
     title,
     description,
@@ -415,52 +416,27 @@ export function mergeGeneratedServiceCatalog(catalog: PublicServiceCatalog | nul
   const generatedByTitle = new Map(generatedServices.map((entry) => [entry.titleEn, entry]));
   const existing = catalog?.items ?? [];
   const generatedForItem = (item: PublicService) => generatedBySlug.get(item.slug) ?? generatedByTitle.get(item.title) ?? null;
-  const generatedChildrenForItem = (item: PublicService, generated: GeneratedService) => item.children.map((child) => {
-    const generatedChild = generatedServices.find((candidate) => candidate.parentLabel === generated.titleEn && (candidate.titleEn === child.label || candidate.titleBn === child.label));
-    if (!generatedChild) return child;
-    return {
-      ...child,
-      label: locale === "bn" ? generatedChild.titleBn : generatedChild.titleEn,
-      href: localizedServiceHref(generatedChild, locale),
-    };
-  });
   const items = existing.map((item) => {
     const generated = generatedForItem(item);
     if (!generated) return item;
-    const generatedItem = generatedServiceToPublic(generated, locale);
-    const children = generatedChildrenForItem(item, generated);
-    if (locale === "en" && item.hasDetailPage) {
-      return { ...item, children };
-    }
+    // A reachable API is the source of truth. Generated service content is a
+    // fallback for an unavailable API, never a way to turn an ordinary menu
+    // item into a published service page before an administrator creates and
+    // assigns one.
+    const children = item.children.map((child) => {
+      const generatedChild = generatedServices.find((candidate) => candidate.parentLabel === generated.titleEn && (candidate.titleEn === child.label || candidate.titleBn === child.label));
+      return generatedChild && locale === "bn" ? { ...child, label: generatedChild.titleBn } : child;
+    });
     return {
-      ...generatedItem,
-      id: item.id,
-      menuItemId: item.menuItemId,
-      updatedAt: item.updatedAt,
-      isVisible: item.isVisible,
+      ...item,
+      ...(locale === "bn" ? { title: generated.titleBn, description: generated.descriptionBn } : {}),
       children,
     };
   });
-  const existingSlugs = new Set(items.map((item) => item.slug));
-  const existingByGeneratedSlug = new Map(existing.map((item) => {
-    const generated = generatedForItem(item);
-    return generated ? [generated.slug, item] as const : null;
-  }).filter((item): item is readonly [string, PublicService] => Boolean(item)));
-  const generatedParentByChildSlug = new Map(generatedServices.filter((entry) => entry.isChild).map((entry) => [
-    entry.slug,
-    generatedServices.find((candidate) => candidate.titleEn === entry.parentLabel && candidate.sectionLabel === entry.sectionLabel && candidate.groupLabel === entry.groupLabel) ?? null,
-  ]));
-  const visibleGeneratedEntries = catalog
-    ? generatedServices.filter((entry) => {
-      const existingParent = existingByGeneratedSlug.get(entry.isChild ? generatedParentByChildSlug.get(entry.slug)?.slug ?? "" : entry.slug);
-      if (!existingParent?.isVisible) return false;
-      if (!entry.isChild) return true;
-      return Boolean(existingParent.children.some((child) => child.label === entry.titleEn || child.label === entry.titleBn));
-    })
-    : generatedServices;
-
-  for (const entry of visibleGeneratedEntries) {
-    if (!existingSlugs.has(entry.slug)) items.push(generatedServiceToPublic(entry, locale));
+  // Do not append generated records when the API responded. New service
+  // pages must be explicitly created and assigned in the admin workspace.
+  if (!catalog) {
+    for (const entry of generatedServices) items.push(generatedServiceToPublic(entry, locale));
   }
 
   const publicItems = items.filter((item) => item.isVisible);
@@ -473,7 +449,8 @@ export function mergeGeneratedServiceCatalog(catalog: PublicServiceCatalog | nul
   return { categories: [...categoryMap.values()], items: publicItems };
 }
 
-export function hydrateServiceNavigation(items: NavItem[], locale: ServiceLocale = "en") {
+export function hydrateServiceNavigation(items: NavItem[], locale: ServiceLocale = "en", useGeneratedServices = true) {
+  if (!useGeneratedServices) return items;
   return items.map((section) => {
     if (section.label === "Business Tools" || !section.megaGroups?.length) return section;
     return {

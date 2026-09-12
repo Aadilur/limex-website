@@ -56,6 +56,11 @@ function resolveTone(value: string): PublicMenuSection["tone"] {
   return value === "violet" || value === "teal" || value === "orange" ? value : "green";
 }
 
+function publicMenuHref(href: string, serviceProfile?: { slug: string; publishedDetail: unknown } | null) {
+  if (!serviceProfile || !href.trim().startsWith(`/services/${serviceProfile.slug}`)) return href;
+  return serviceProfile.publishedDetail ? href : "#contact";
+}
+
 function toPublicNavigation(sections: MenuSection[]): PublicMenuSection[] {
   return sections
     .filter((section) => section.isVisible)
@@ -72,11 +77,11 @@ function toPublicNavigation(sections: MenuSection[]): PublicMenuSection[] {
             .map((item) => ({
               label: item.label,
               description: item.description,
-              href: item.href,
+              href: publicMenuHref(item.href, item.serviceProfile),
               marker: item.marker,
               icon: item.icon,
               ...(item.links.some((link) => link.isVisible)
-                ? { children: item.links.filter((link) => link.isVisible).map(({ label, href }) => ({ label, href })) }
+                ? { children: item.links.filter((link) => link.isVisible).map((link) => ({ label: link.label, href: publicMenuHref(link.href, link.serviceProfile) })) }
                 : {}),
             })),
         }));
