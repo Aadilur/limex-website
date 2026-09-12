@@ -16,6 +16,7 @@ export type ServicePriceTier = {
   description: string;
   features: string[];
   action: string;
+  whatsappLabel?: string;
   featured?: boolean;
 };
 

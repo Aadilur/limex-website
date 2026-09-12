@@ -19,6 +19,7 @@ const optionalHrefSchema = z.string().trim().max(1000).refine((value) => !value 
 const iconSchema = z.string().trim().min(1).max(80).default("briefcase");
 const text = (max: number) => z.string().trim().max(max).default("");
 const requiredText = (max: number) => z.string().trim().min(1).max(max);
+const localeQuerySchema = z.object({ locale: z.enum(["en", "bn"]).default("en") }).strict();
 
 const detailSchema = z.object({
   ctaLabel: text(100),
@@ -46,6 +47,7 @@ const detailSchema = z.object({
     description: text(500),
     features: z.array(requiredText(180)).max(12).default([]),
     action: requiredText(100),
+    whatsappLabel: text(100),
     featured: z.boolean().optional(),
   })).max(6).default([]),
   faqs: z.array(z.object({ question: requiredText(300), answer: requiredText(1600) })).max(30).default([]),
@@ -96,7 +98,8 @@ export async function serviceRoutes(app: FastifyInstance, options: { service: Se
 
   app.get("/api/services/:slug", async (request, reply) => {
     const { slug } = slugParamsSchema.parse(request.params);
-    const service = await options.service.getPublicService(slug);
+    const { locale } = localeQuerySchema.parse(request.query);
+    const service = await options.service.getPublicService(slug, locale);
     if (!service) return reply.code(404).send({ error: "This service page is not published." });
     reply.header("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
     return { data: service };

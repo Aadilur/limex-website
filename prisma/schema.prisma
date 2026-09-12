@@ -299,6 +299,20 @@ model ServiceProfileRevision {
   @@index([profileId, createdAt])
 }
 
+model ContactSettings {
+  id               String   @id @default("default")
+  revision         Int      @default(1)
+  whatsappNumber   String   @db.VarChar(40)
+  whatsappDisplay  String   @db.VarChar(80)
+  whatsappMessage  String   @db.VarChar(500)
+  email            String   @db.VarChar(200)
+  phone            String   @db.VarChar(40)
+  address          String   @db.VarChar(300)
+  businessHours    String   @db.VarChar(240)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
 model AboutTeamMember {
   id          String   @id @default(cuid())
   name        String   @db.VarChar(120)

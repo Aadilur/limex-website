@@ -14,8 +14,8 @@ function ClientLogoSet({ logos, duplicate = false }: { logos: ClientsContent["lo
     >
       {logos.filter((logo) => logo.isVisible).map((client) => (
         <div className="flex h-9 w-[128px] shrink-0 items-center gap-cluster-xs overflow-hidden whitespace-nowrap text-body-xs font-display wide:text-body-sm" style={{ color: client.textColor || clientTextClasses[client.name] }} key={`${duplicate ? "copy" : "original"}-${client.id}`}>
-          <span className="grid size-8 shrink-0 place-items-center overflow-hidden">
-            {client.logoUrl ? <img className="max-h-7 max-w-8 object-contain" src={client.logoUrl} alt="" aria-hidden="true" /> : <span className="text-[10px] font-bold tracking-[0.04em]">{client.name.slice(0, 2).toUpperCase()}</span>}
+          <span className="flex h-8 shrink-0 items-center overflow-hidden">
+            {client.logoUrl ? <img className="h-7 w-auto object-contain" src={client.logoUrl} alt="" aria-hidden="true" /> : <span className="text-[10px] font-bold tracking-[0.04em]">{client.name.slice(0, 2).toUpperCase()}</span>}
           </span>
           <span>{client.name}</span>
         </div>

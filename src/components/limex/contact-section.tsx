@@ -7,6 +7,8 @@ import { ActionButton, CheckIcon, ChevronDownIcon } from "./ui";
 import { getPublicMenu, request } from "@/lib/menu-api";
 import { defaultLandingContent } from "@/lib/landing-defaults";
 import type { ContactContent } from "@/lib/landing-types";
+import { getPublicContactSettings } from "@/lib/contact-api";
+import type { PublicContactSettings } from "@/lib/contact-types";
 
 type ContactValues = {
   services: string[];
@@ -172,12 +174,13 @@ type ContactFormProps = {
   compact?: boolean;
   formId?: string;
   initialService?: string;
+  initialMessage?: string;
   source?: ContactRequestSource | null;
 };
 
-export function ContactForm({ content = defaultLandingContent.contact, compact = false, formId = "contact-form", initialService, source = null }: ContactFormProps) {
+export function ContactForm({ content = defaultLandingContent.contact, compact = false, formId = "contact-form", initialService, initialMessage, source = null }: ContactFormProps) {
   const [menuNavigation, setMenuNavigation] = useState<NavItem[]>(navigation);
-  const [values, setValues] = useState<ContactValues>(initialValues);
+  const [values, setValues] = useState<ContactValues>(() => ({ ...initialValues, message: initialMessage ?? "" }));
   const [submitted, setSubmitted] = useState(false);
   const [formError, setFormError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -366,6 +369,23 @@ export function ContactForm({ content = defaultLandingContent.contact, compact =
 }
 
 export function ContactSection({ content = defaultLandingContent.contact }: { content?: ContactContent }) {
+  const [contactDetails, setContactDetails] = useState<PublicContactSettings | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void getPublicContactSettings().then((settings) => {
+      if (!cancelled) setContactDetails(settings);
+    }).catch(() => {
+      // The landing copy remains a safe fallback when the contact settings are unavailable.
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const whatsappDisplay = contactDetails?.whatsappDisplay || content.whatsapp;
+  const email = contactDetails?.email || content.email;
+
   return (
     <section className="flex min-h-0 flex-col gap-cluster-sm bg-page px-page-gutter pt-section-gap-xl pb-page-gutter lg:grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:gap-cluster-lg lg:rounded-panel lg:px-page-gutter-lg lg:pt-section-gap-xl lg:pb-section-y-lg" id="contact" aria-labelledby="contact-title">
       <div className="flex min-h-0 flex-col items-center text-center lg:min-h-[560px] lg:justify-center lg:py-6">
@@ -383,15 +403,15 @@ export function ContactSection({ content = defaultLandingContent.contact }: { co
 
         <div className="relative mt-section-gap-lg w-full max-w-[360px] border-t border-[#ead2d7] pt-section-gap-lg lg:mt-section-gap-xl">
           <p className="text-body-xs font-text text-muted">{content.directLineLabel}</p>
-          <ActionButton href="#contact-form" variant="dark" className="mt-cluster w-max min-h-11 border-accent bg-accent hover:border-[#c53f62] hover:bg-[#c53f62]">{content.directCtaLabel}</ActionButton>
+          <ActionButton href={contactDetails?.whatsappUrl || "#contact-form"} variant="dark" className="mt-cluster w-max min-h-11 border-accent bg-accent hover:border-[#c53f62] hover:bg-[#c53f62]">{content.directCtaLabel}</ActionButton>
           <div className="mt-section-gap-lg grid w-full grid-cols-1 gap-cluster-lg text-center sm:grid-cols-2">
             <div className="flex flex-col gap-cluster-sm">
               <span className="text-overline text-accent">WHATSAPP</span>
-              <strong className="text-body-sm font-semibold text-ink">{content.whatsapp}</strong>
+              <strong className="text-body-sm font-semibold text-ink">{whatsappDisplay}</strong>
             </div>
             <div className="flex flex-col gap-cluster-sm">
               <span className="text-overline text-accent">EMAIL</span>
-              <strong className="break-words text-body-sm font-semibold text-ink sm:whitespace-nowrap">{content.email}</strong>
+              <strong className="break-words text-body-sm font-semibold text-ink sm:whitespace-nowrap">{email}</strong>
             </div>
           </div>
         </div>
@@ -407,11 +427,12 @@ type ContactModalProps = {
   buttonClassName?: string;
   buttonLabel?: string;
   content?: ContactContent;
+  initialMessage?: string;
   serviceKey?: string;
   variant?: "dark" | "light" | "outline" | "white" | "soft" | "ghost" | "ghost-muted";
 };
 
-export function ContactModal({ articleSlug, buttonClassName = "", buttonLabel = "Start a conversation", content = defaultLandingContent.contact, serviceKey, variant = "white" }: ContactModalProps) {
+export function ContactModal({ articleSlug, buttonClassName = "", buttonLabel = "Start a conversation", content = defaultLandingContent.contact, initialMessage, serviceKey, variant = "white" }: ContactModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const modalId = useId().replace(/:/g, "");
@@ -450,7 +471,7 @@ export function ContactModal({ articleSlug, buttonClassName = "", buttonLabel = 
                 </div>
                 <button ref={closeButtonRef} className="grid size-10 shrink-0 place-items-center rounded-full border border-[#d5d0c8] bg-white text-[22px] leading-none text-ink transition-colors hover:border-accent hover:text-accent focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2" type="button" aria-label="Close contact form" onClick={() => setIsOpen(false)}>×</button>
               </div>
-              <ContactForm content={content} compact formId={`${modalId}-form`} initialService={serviceKey} source={source} />
+              <ContactForm content={content} compact formId={`${modalId}-form`} initialService={serviceKey} initialMessage={initialMessage} source={source} />
             </div>
           </div>
         </div>

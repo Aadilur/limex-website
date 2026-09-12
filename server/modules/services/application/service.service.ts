@@ -18,6 +18,7 @@ import type {
   PublicServiceCatalog,
   PublicServiceDetail,
   ServiceDetailContent,
+  ServiceLocale,
   ServiceProfileInput,
 } from "../../../../src/lib/service-types.js";
 
@@ -52,7 +53,7 @@ function publicDestination(href: string, hasDetailPage: boolean) {
   return destination;
 }
 
-function toPublicService(context: ServiceMenuContext, profile: ServiceProfileRow | null): PublicService {
+function toPublicService(context: ServiceMenuContext, profile: ServiceProfileRow | null, locale: ServiceLocale = "en"): PublicService {
   const tone = sectionTone(context.section);
   const hasDetailPage = hasPublishedDetail(profile);
   const destination = publicDestination(context.item.href, hasDetailPage);
@@ -62,8 +63,8 @@ function toPublicService(context: ServiceMenuContext, profile: ServiceProfileRow
     serviceKey: profile?.serviceKey ?? context.item.label,
     menuItemId: context.item.id,
     slug: serviceSlug(context, profile),
-    title: context.item.label,
-    description: context.item.description,
+    title: locale === "bn" ? profile?.titleBn ?? context.item.label : profile?.titleEn ?? context.item.label,
+    description: locale === "bn" ? profile?.descriptionBn ?? context.item.description : profile?.descriptionEn ?? context.item.description,
     category: context.section.label,
     categoryKey: slugify(context.section.key || context.section.label),
     groupLabel: context.group.label,
@@ -199,7 +200,7 @@ export class ServiceService {
     return { categories: [...categoryMap.values()], items };
   }
 
-  public async getPublicService(slug: string): Promise<PublicServiceDetail | null> {
+  public async getPublicService(slug: string, locale: ServiceLocale = "en"): Promise<PublicServiceDetail | null> {
     const profile = await this.services.findProfileBySlug(slug);
     if (!profile || !hasPublishedDetail(profile)) return null;
 
@@ -247,13 +248,15 @@ export class ServiceService {
       updatedAt: profile.updatedAt,
     };
     const viewContext = context ?? { section: fallbackSection, group: fallbackGroup, item: fallbackItem };
-    const base = toPublicService(viewContext, profile);
+    const base = toPublicService(viewContext, profile, locale);
     const detail = normalizeServiceDetail(profile.publishedDetail);
+    const title = locale === "bn" ? profile.titleBn : profile.titleEn;
+    const description = locale === "bn" ? profile.descriptionBn : profile.descriptionEn;
 
     return {
       ...base,
-      title: profile.titleEn,
-      description: profile.descriptionEn,
+      title,
+      description,
       href: `/services/${profile.slug}`,
       destination: destinationFromHref(`/services/${profile.slug}`),
       status: "PUBLISHED",

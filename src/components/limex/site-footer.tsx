@@ -4,27 +4,39 @@ import { useEffect, useState } from "react";
 
 import { ActionButton, LogoLockup } from "./ui";
 import { defaultLandingContent, getPublicLanding, withLandingFallback } from "@/lib/landing-api";
+import { getPublicContactSettings } from "@/lib/contact-api";
+import type { PublicContactSettings } from "@/lib/contact-types";
 import type { FooterContent } from "@/lib/landing-types";
 
 export function SiteFooter({ content }: { content?: FooterContent }) {
   const [footer, setFooter] = useState<FooterContent>(content ?? defaultLandingContent.footer);
+  const [contact, setContact] = useState<PublicContactSettings | null>(null);
 
   useEffect(() => {
-    if (content) return undefined;
-
     let cancelled = false;
-    void getPublicLanding()
-      .then((landing) => {
-        if (!cancelled) setFooter(withLandingFallback(landing).footer);
-      })
-      .catch(() => {
-        // Keep the bundled footer available when the API is unavailable.
-      });
+    if (!content) {
+      void getPublicLanding()
+        .then((landing) => {
+          if (!cancelled) setFooter(withLandingFallback(landing).footer);
+        })
+        .catch(() => {
+          // Keep the bundled footer available when the API is unavailable.
+        });
+    }
+    void getPublicContactSettings().then((settings) => {
+      if (!cancelled) setContact(settings);
+    }).catch(() => {
+      // Keep landing footer details available when contact settings are unavailable.
+    });
 
     return () => {
       cancelled = true;
     };
   }, [content]);
+
+  const contactEmail = contact?.email || footer.contactEmail;
+  const contactPhone = contact?.phone || footer.contactPhone;
+  const contactLocation = contact?.address || footer.location;
 
   return (
     <footer className="min-h-0 rounded-panel-mobile bg-navy px-page-gutter pb-section-y-lg pt-section-y-lg text-white lg:min-h-[440px] lg:rounded-panel lg:px-page-gutter-lg lg:pb-6" aria-label="Footer">
@@ -46,9 +58,9 @@ export function SiteFooter({ content }: { content?: FooterContent }) {
         ))}
         <div className="flex flex-col gap-cluster-sm pl-0 lg:pl-5">
           <h3 className="mb-cluster-sm text-micro font-bold uppercase tracking-eyebrow text-soft-muted">{footer.contactTitle}</h3>
-          <a className="text-footer text-white transition-colors hover:text-[#fac7cc]" href={`mailto:${footer.contactEmail}`}>{footer.contactEmail}</a>
-          <a className="text-footer text-white transition-colors hover:text-[#fac7cc]" href={`tel:${footer.contactPhone}`}>{footer.contactPhone}</a>
-          <span className="text-footer text-soft-muted">{footer.location}</span>
+          <a className="text-footer text-white transition-colors hover:text-[#fac7cc]" href={`mailto:${contactEmail}`}>{contactEmail}</a>
+          {contactPhone ? <a className="text-footer text-white transition-colors hover:text-[#fac7cc]" href={`tel:${contactPhone}`}>{contactPhone}</a> : null}
+          <span className="text-footer text-soft-muted">{contactLocation}</span>
         </div>
       </div>
       <div className="mt-section-y-xl flex flex-col items-start justify-between gap-cluster-lg border-t border-[#33384d] pt-cluster-lg text-body-xs text-soft-muted lg:flex-row lg:items-center">

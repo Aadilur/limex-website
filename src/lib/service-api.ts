@@ -30,27 +30,9 @@ export function getPublicServices(): Promise<PublicServiceCatalog> {
 
 export function getPublicService(slug: string, locale: "en" | "bn" = "en"): Promise<PublicServiceDetail | null> {
   const generated = getGeneratedService(slug);
-  if (locale === "bn" && generated) {
-    return Promise.resolve({
-      ...generatedServiceToPublic(generated, locale),
-      detail: generated.detailBn,
-    });
-  }
 
-  return request<PublicServiceDetail | null>(`/api/services/${encodeURIComponent(slug)}`, { cache: "no-store" })
+  return request<PublicServiceDetail | null>(`/api/services/${encodeURIComponent(slug)}?locale=${locale}`, { cache: "no-store" })
     .then((service) => {
-      if (!service && generated) {
-        return {
-          ...generatedServiceToPublic(generated, locale),
-          detail: locale === "bn" ? generated.detailBn : generated.detailEn,
-        };
-      }
-      if (service && locale === "bn" && generated) {
-        return {
-          ...generatedServiceToPublic(generated, locale),
-          detail: generated.detailBn,
-        };
-      }
       return service;
     })
     .catch((error) => {

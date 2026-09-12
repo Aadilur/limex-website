@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import type { ServicePageContent, ServicePriceTier } from "./service-page-data";
+import type { PublicContactSettings } from "@/lib/contact-types";
 import { ContactModal } from "./contact-section";
 import { ActionButton, Breadcrumbs, WaveLabel } from "./ui";
 
@@ -33,6 +34,8 @@ const serviceUi = {
     contactTitle: "Need help choosing the right option?",
     contactDescription: "A short conversation is enough to recommend the right path for",
     contactButton: "Talk to an advisor",
+    bookNow: "Book now",
+    whatsappNow: "Discuss on WhatsApp",
   },
   bn: {
     switchLabel: "English",
@@ -56,6 +59,8 @@ const serviceUi = {
     contactTitle: "সঠিক সেবা বেছে নিতে সাহায্য চান?",
     contactDescription: "আপনার জন্য উপযুক্ত পথ ঠিক করতে একটি সংক্ষিপ্ত কথোপকথনই যথেষ্ট—",
     contactButton: "পরামর্শ নিন",
+    bookNow: "এখনই বুক করুন",
+    whatsappNow: "WhatsApp-এ আলোচনা করুন",
   },
 } as const;
 
@@ -174,7 +179,7 @@ export function ServiceOverviewSection({ service }: { service: ServicePageConten
   );
 }
 
-function PriceCard({ tier, locale }: { tier: ServicePriceTier; locale: "en" | "bn" }) {
+function PriceCard({ tier, locale, serviceTitle, contact }: { tier: ServicePriceTier; locale: "en" | "bn"; serviceTitle: string; contact?: PublicContactSettings | null }) {
   const ui = serviceUi[locale];
 
   return (
@@ -191,15 +196,24 @@ function PriceCard({ tier, locale }: { tier: ServicePriceTier; locale: "en" | "b
           </li>
         ))}
       </ul>
-      <a className={`mt-auto flex min-h-control-sm items-center justify-between rounded-pill px-3.5 text-micro font-semibold transition-transform hover:-translate-y-px focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3 ${tier.featured ? "bg-[#de4d73] text-white" : "bg-[#f2edf7] text-ink"}`.trim()} href="#service-contact">
-        <span>{tier.action}</span>
-        <span aria-hidden="true">↗</span>
-      </a>
+      <div className="mt-auto grid gap-2 pt-5">
+        <ContactModal
+          serviceKey={serviceTitle}
+          initialMessage={`I’m interested in ${serviceTitle}${tier.name ? ` · ${tier.name}` : ""}.`}
+          variant={tier.featured ? "dark" : "soft"}
+          buttonClassName="min-h-control-sm w-full justify-between px-3.5 text-micro"
+          buttonLabel={tier.action || ui.bookNow}
+        />
+        {contact?.whatsappUrl ? <a className="inline-flex min-h-control-sm items-center justify-between rounded-pill px-3.5 text-micro font-semibold text-[#29634d] ring-1 ring-[#b8d9c3] transition-colors hover:bg-[#e6f5eb] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3" href={contact.whatsappUrl} target="_blank" rel="noreferrer">
+          <span>{tier.whatsappLabel || ui.whatsappNow}</span>
+          <span aria-hidden="true">↗</span>
+        </a> : null}
+      </div>
     </article>
   );
 }
 
-export function ServicePricingSection({ service }: { service: ServicePageContent }) {
+export function ServicePricingSection({ service, contact }: { service: ServicePageContent; contact?: PublicContactSettings | null }) {
   if (!service.pricing.length) return null;
   const locale = service.locale ?? "en";
   const ui = serviceUi[locale];
@@ -210,7 +224,7 @@ export function ServicePricingSection({ service }: { service: ServicePageContent
           <h2 className="mt-cluster font-brand text-page-title text-ink max-lg:text-page-title-mobile" id="service-pricing-title">{ui.pricingTitle}</h2>
       <p className="mt-cluster text-body-lg text-muted">{ui.pricingDescription}</p>
       <div className="mt-section-gap-lg grid gap-cluster lg:grid-cols-3">
-        {service.pricing.map((tier) => <PriceCard key={tier.name} tier={tier} locale={locale} />)}
+        {service.pricing.map((tier) => <PriceCard key={tier.name} tier={tier} locale={locale} serviceTitle={service.title} contact={contact} />)}
       </div>
     </section>
   );
@@ -264,7 +278,7 @@ export function ServiceFaqSection({ service }: { service: ServicePageContent }) 
   );
 }
 
-export function ServiceContactSection({ service }: { service: ServicePageContent }) {
+export function ServiceContactSection({ service, contact }: { service: ServicePageContent; contact?: PublicContactSettings | null }) {
   const ui = serviceUi[service.locale ?? "en"];
 
   return (
@@ -274,7 +288,10 @@ export function ServiceContactSection({ service }: { service: ServicePageContent
         <h2 className="mt-cluster max-w-[760px] font-brand text-page-title max-lg:text-page-title-mobile" id="service-contact-title">{ui.contactTitle}</h2>
         <p className="mt-cluster max-w-[680px] text-body-sm text-[#c7cfe0]">{ui.contactDescription} {service.title.toLowerCase()}.</p>
       </div>
-      <ContactModal serviceKey={service.title} variant="white" buttonClassName="min-h-button-lg w-[218px] shrink-0 justify-center text-body-xs" buttonLabel={ui.contactButton} />
+      <div className="flex shrink-0 flex-col gap-2 sm:flex-row lg:flex-col xl:flex-row">
+        <ContactModal serviceKey={service.title} variant="white" buttonClassName="min-h-button-lg min-w-[218px] justify-center text-body-xs" buttonLabel={ui.contactButton} />
+        {contact?.whatsappUrl ? <a className="inline-flex min-h-button-lg min-w-[218px] items-center justify-center gap-2 rounded-pill border border-white/35 px-4 text-button font-semibold text-white transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-white/60 focus-visible:outline-offset-3" href={contact.whatsappUrl} target="_blank" rel="noreferrer">{ui.whatsappNow}<span aria-hidden="true">↗</span></a> : null}
+      </div>
     </section>
   );
 }

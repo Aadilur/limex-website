@@ -1,5 +1,6 @@
 import type { ServicePageContent } from "./service-page-data";
 import type { PublicServiceDetail } from "@/lib/service-types";
+import type { PublicContactSettings } from "@/lib/contact-types";
 import { ServiceContactSection, ServiceFaqSection, ServiceHeroSection, ServiceOverviewSection, ServicePricingSection } from "./service-page-sections";
 import { pageContentClass, pageLayoutClass, pageShellClass } from "./layout";
 import { SiteFooter } from "./site-footer";
@@ -26,7 +27,7 @@ function toPageContent(service: ServicePageContent | PublicServiceDetail, locale
   };
 }
 
-export function ServiceDetailPage({ service, locale = "en" }: { service: ServicePageContent | PublicServiceDetail; locale?: "en" | "bn" }) {
+export function ServiceDetailPage({ service, locale = "en", contact }: { service: ServicePageContent | PublicServiceDetail; locale?: "en" | "bn"; contact?: PublicContactSettings | null }) {
   const pageContent = toPageContent(service, locale);
 
   return (
@@ -36,9 +37,9 @@ export function ServiceDetailPage({ service, locale = "en" }: { service: Service
         <div className={pageContentClass}>
           <ServiceHeroSection service={pageContent} />
           <ServiceOverviewSection service={pageContent} />
-          <ServicePricingSection service={pageContent} />
+          <ServicePricingSection service={pageContent} contact={contact} />
           <ServiceFaqSection service={pageContent} />
-          <ServiceContactSection service={pageContent} />
+          <ServiceContactSection service={pageContent} contact={contact} />
         </div>
       </section>
       <SiteFooter />

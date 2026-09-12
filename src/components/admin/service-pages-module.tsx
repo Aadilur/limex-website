@@ -140,6 +140,7 @@ function DetailEditor({ detail, onChange }: { detail: ServiceDetailContent; onCh
   const addBenefit = () => update("benefits", [...detail.benefits, ""]);
   const addFact = () => update("facts", [...detail.facts, { label: "", value: "" }]);
   const addStep = () => update("steps", [...detail.steps, { title: "", description: "" }]);
+  const addPricing = () => update("pricing", [...detail.pricing, { name: "New package", price: "Let's talk", description: "", features: [], action: "Book now", whatsappLabel: "Discuss on WhatsApp" }]);
   const addFaq = () => update("faqs", [...detail.faqs, { question: "", answer: "" }]);
 
   return (
@@ -208,6 +209,38 @@ function DetailEditor({ detail, onChange }: { detail: ServiceDetailContent; onCh
 
       <details className="group rounded-[17px] bg-[#faf9f6] px-4 py-3">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[13px] font-bold text-[#29252a] [&::-webkit-details-marker]:hidden">
+          <span>Pricing and booking <span className="ml-1 text-[11px] font-medium text-[#9b958c]">{detail.pricing.length}</span></span><span className="text-[18px] font-normal text-[#a59d93] transition-transform group-open:rotate-45">+</span>
+        </summary>
+        <div className="mt-4 space-y-3">
+          <p className="max-w-[620px] text-[11px] leading-[1.5] text-[#8b857e]">Add up to six packages. Each package gets a booking button, and a WhatsApp discussion link appears automatically when a WhatsApp number is configured in Contact settings.</p>
+          {detail.pricing.map((tier, index) => (
+            <article className="relative rounded-[15px] bg-white p-3 ring-1 ring-[#e5dfd7]" key={`pricing-${index}`}>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#9b958c]">Package {String(index + 1).padStart(2, "0")}</p>
+                <button className="grid size-8 place-items-center rounded-full text-[17px] text-[#b34b60] hover:bg-[#fce7ea]" type="button" aria-label={`Remove package ${index + 1}`} onClick={() => update("pricing", detail.pricing.filter((_, itemIndex) => itemIndex !== index))}>×</button>
+              </div>
+              <div className="mt-2 grid gap-3 sm:grid-cols-2">
+                <Field label="Package name" value={tier.name} onChange={(event) => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, name: event.target.value } : item))} />
+                <Field label="Price" value={tier.price} onChange={(event) => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, price: event.target.value } : item))} placeholder="From BDT 5,000" />
+                <Field label="Book button label" value={tier.action} onChange={(event) => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, action: event.target.value } : item))} />
+                <Field label="WhatsApp label" value={tier.whatsappLabel ?? ""} onChange={(event) => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, whatsappLabel: event.target.value } : item))} placeholder="Discuss on WhatsApp" />
+                <TextAreaField className="sm:col-span-2" label="Package description" value={tier.description} onChange={(event) => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, description: event.target.value } : item))} placeholder="What this option is best for" />
+              </div>
+              <div className="mt-3">
+                <div className="flex items-center justify-between gap-3"><p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Included features <span className="ml-1 font-medium text-[#9b958c]">{tier.features.length}</span></p><button className="text-[11px] font-bold text-accent" type="button" onClick={() => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, features: [...item.features, ""] } : item))}>+ Add</button></div>
+                <div className="mt-2 space-y-2">
+                  {tier.features.map((feature, featureIndex) => <div className="flex items-center gap-2" key={`pricing-${index}-feature-${featureIndex}`}><input className={`${fieldClass} mt-0`} value={feature} placeholder="Included outcome or deliverable" onChange={(event) => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, features: item.features.map((candidate, candidateIndex) => candidateIndex === featureIndex ? event.target.value : candidate) } : item))} /><button className="grid size-10 shrink-0 place-items-center rounded-full text-[18px] text-[#b34b60] hover:bg-[#fce7ea]" type="button" aria-label="Remove package feature" onClick={() => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, features: item.features.filter((_, candidateIndex) => candidateIndex !== featureIndex) } : item))}>×</button></div>)}
+                </div>
+              </div>
+              <label className="mt-3 inline-flex items-center gap-2 text-[11px] font-semibold text-[#5f5a54]"><input className="size-4 accent-[#de4d73]" type="checkbox" checked={Boolean(tier.featured)} onChange={(event) => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, featured: event.target.checked } : item))} />Mark as most popular</label>
+            </article>
+          ))}
+          {detail.pricing.length < 6 ? <button className="min-h-9 rounded-full bg-white px-3.5 text-[11px] font-bold text-[#5a554f] ring-1 ring-[#ddd7ce] hover:ring-[#aaa197]" type="button" onClick={addPricing}>+ Add pricing package</button> : <p className="text-[11px] text-[#9b958c]">Six pricing packages is the maximum.</p>}
+        </div>
+      </details>
+
+      <details className="group rounded-[17px] bg-[#faf9f6] px-4 py-3">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[13px] font-bold text-[#29252a] [&::-webkit-details-marker]:hidden">
           <span>FAQs <span className="ml-1 text-[11px] font-medium text-[#9b958c]">{detail.faqs.length}</span></span><span className="text-[18px] font-normal text-[#a59d93] transition-transform group-open:rotate-45">+</span>
         </summary>
         <div className="mt-4 space-y-3">
@@ -237,6 +270,16 @@ function ServiceEditor({ service, onSaved }: { service: AdminService; onSaved: (
     setMessage("");
     setError("");
     setDraft((current) => ({ ...current, [key]: value }));
+  };
+
+  const updateSlug = (value: string) => {
+    setMessage("");
+    setError("");
+    setDraft((current) => ({
+      ...current,
+      slug: value,
+      href: current.href.startsWith("/services/") ? `/services/${value}` : current.href,
+    }));
   };
 
   const destination = destinationTypeFromHref(draft.href);
@@ -354,13 +397,13 @@ function ServiceEditor({ service, onSaved }: { service: AdminService; onSaved: (
           </div>
           <p className="mt-2 text-[11px] text-[#9b958c]">{destinationTypes.find((item) => item.value === destination)?.hint}</p>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <Field label="Service page slug" value={draft.slug} onChange={(event) => update("slug", event.target.value)} placeholder="company-formation" />
+            <Field label="Service page slug" value={draft.slug} onChange={(event) => updateSlug(event.target.value)} placeholder="company-formation" />
             <div className="flex items-end"><span className="w-full rounded-[13px] bg-[#f8f6f2] px-3.5 py-3 text-[12px] text-[#77736e]">Public page: <strong className="font-semibold text-[#3f3c38]">/services/{draft.slug || "…"}</strong></span></div>
           </div>
         </div>
 
         <div className="border-t border-[#eee9e2] pt-5">
-          <div className="flex flex-wrap items-end justify-between gap-2"><div><p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Detail page content</p><p className="mt-1 text-[12px] text-[#9b958c]">Optional. Turn this on when this service needs its own Limex page.</p></div><button className={`inline-flex min-h-9 items-center rounded-full px-3 text-[11px] font-bold transition-colors ${detailOpen ? "bg-[#e4f3e8] text-[#29634d]" : "bg-[#f4f1ec] text-[#77736e]"}`.trim()} type="button" onClick={() => { setDetailOpen((open) => !open); if (!detail && !detailOpen) update("detail", emptyDetail()); }}>{detailOpen ? "Enabled" : "Create detail page"}</button></div>
+          <div className="flex flex-wrap items-end justify-between gap-2"><div><p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Detail page content</p><p className="mt-1 text-[12px] text-[#9b958c]">Optional. Turn this on when this service needs its own Limex page.</p></div><button className={`inline-flex min-h-9 items-center rounded-full px-3 text-[11px] font-bold transition-colors ${detailOpen ? "bg-[#e4f3e8] text-[#29634d]" : "bg-[#f4f1ec] text-[#77736e]"}`.trim()} type="button" onClick={() => { const nextOpen = !detailOpen; setDetailOpen(nextOpen); if (nextOpen) setDraft((current) => ({ ...current, href: current.href.startsWith("/services/") ? current.href : `/services/${current.slug}`, detail: current.detail ?? emptyDetail() })); }}>{detailOpen ? "Enabled" : "Create detail page"}</button></div>
           {detailOpen ? <div className="mt-4"><div className="grid gap-4 sm:grid-cols-2"><Field label="English page title" value={draft.titleEn} onChange={(event) => update("titleEn", event.target.value)} /><Field label="Bangla page title" value={draft.titleBn} onChange={(event) => update("titleBn", event.target.value)} /><TextAreaField label="English page summary" value={draft.descriptionEn} onChange={(event) => update("descriptionEn", event.target.value)} /><TextAreaField label="Bangla page summary" value={draft.descriptionBn} onChange={(event) => update("descriptionBn", event.target.value)} /></div><div className="mt-4"><DetailEditor detail={detail ?? emptyDetail()} onChange={(next) => update("detail", next)} /></div></div> : <div className="mt-4 rounded-[14px] bg-[#faf9f6] px-4 py-3 text-[12px] text-[#817a72]">This service will continue to use its configured destination. No detail page will be published.</div>}
         </div>
       </div>

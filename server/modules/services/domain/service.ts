@@ -203,6 +203,7 @@ function cleanPricing(value: unknown) {
       description: cleanString(record?.description),
       features: cleanStringList(record?.features).slice(0, 12),
       action: cleanString(record?.action, "Get started"),
+      ...(cleanString(record?.whatsappLabel) ? { whatsappLabel: cleanString(record?.whatsappLabel) } : {}),
       ...(record?.featured === true ? { featured: true } : {}),
     }];
   }).slice(0, 6);

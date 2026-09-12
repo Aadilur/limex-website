@@ -133,16 +133,17 @@ export async function getPublicServicesServer(locale: ServiceLocale = "en") {
 
 export async function getPublicServiceServer(slug: string, locale: ServiceLocale = "en") {
   const generated = getGeneratedService(slug);
-  if (locale === "bn" && generated) return { ...generatedServiceToPublic(generated, locale), detail: generated.detailBn };
 
-  const result = await fetchBackend<PublicServiceDetail>(`/api/services/${encodeURIComponent(slug)}`);
+  const result = await fetchBackend<PublicServiceDetail>(`/api/services/${encodeURIComponent(slug)}?locale=${locale}`);
   if (result.value) return result.value;
+  // A reachable backend returning 404 means the profile is not published.
+  // Do not let bundled fallback content bypass the publish gate.
+  if (result.notFound) return null;
   if (generated) {
     return {
       ...generatedServiceToPublic(generated, locale),
       detail: locale === "bn" ? generated.detailBn : generated.detailEn,
     };
   }
-  if (result.notFound) return null;
   return slug === trademarkRegistrationService.slug ? fallbackDetail() : null;
 }

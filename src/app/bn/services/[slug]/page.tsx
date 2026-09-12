@@ -3,15 +3,16 @@ import { notFound } from "next/navigation";
 
 import { ServiceDetailPage } from "@/components/limex/service-detail-page";
 import { getPublicServiceServer } from "@/lib/service-server";
-import { generatedServices } from "@/lib/service-content";
+import { getPublicContactServer } from "@/lib/contact-server";
 
 type ServiceRouteProps = {
   params: Promise<{ slug: string }>;
 };
 
-export function generateStaticParams() {
-  return generatedServices.map((service) => ({ slug: service.slug }));
-}
+// Service profiles and contact actions are admin-managed. Render the route at
+// request time so a publish or contact-setting change is visible immediately.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function generateMetadata({ params }: ServiceRouteProps): Promise<Metadata> {
   const { slug } = await params;
@@ -30,6 +31,7 @@ export async function generateMetadata({ params }: ServiceRouteProps): Promise<M
 export default async function BanglaServiceRoute({ params }: ServiceRouteProps) {
   const { slug } = await params;
   const service = await getPublicServiceServer(slug, "bn");
+  const contact = await getPublicContactServer();
 
   if (!service) notFound();
 
@@ -48,7 +50,7 @@ export default async function BanglaServiceRoute({ params }: ServiceRouteProps) 
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />
-      <ServiceDetailPage service={service} locale="bn" />
+      <ServiceDetailPage service={service} locale="bn" contact={contact} />
     </>
   );
 }

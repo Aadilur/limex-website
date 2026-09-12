@@ -15,6 +15,7 @@ const adminNavigation = [
   { label: "Business tools", href: "/admin/tools" },
   { label: "Blog", href: "/admin/blog" },
   { label: "Enquiries & bookings", href: "/admin/inquiries" },
+  { label: "Contact settings", href: "/admin/contact" },
 ];
 
 function LimexMark() {

@@ -298,6 +298,22 @@ async function main() {
   });
   await ensureLandingTestVideo();
 
+  await prisma.contactSettings.upsert({
+    where: { id: "default" },
+    update: {},
+    create: {
+      id: "default",
+      revision: 1,
+      whatsappNumber: "",
+      whatsappDisplay: defaultLandingContent.contact.whatsapp,
+      whatsappMessage: "Hello Limex, I would like to discuss a service.",
+      email: defaultLandingContent.contact.email,
+      phone: "",
+      address: defaultLandingContent.footer.location,
+      businessHours: "Sunday–Thursday · 9:00 AM–6:00 PM (Dhaka)",
+    },
+  });
+
   for (const [sortOrder, template] of [defaultMouTemplate, ...defaultRentalDeedTemplates, ...defaultPartnershipDeed40Templates].entries()) {
     const existing = await prisma.documentTemplate.findUnique({ where: { slug: template.slug } });
     if (!existing) {
