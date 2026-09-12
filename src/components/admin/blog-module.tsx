@@ -119,6 +119,8 @@ function payloadFromDraft(draft: BlogEditorDraft): BlogPostInput {
     ...draft,
     translations: [draft.translations.en, draft.translations.bn].map((translation) => {
       const bodyHtml = sanitizeBlogHtml(translation.bodyHtml);
+      // Keep the structured TipTap document when it is available. The HTML
+      // fallback is only for older articles that predate the visual editor.
       return { ...translation, bodyHtml, bodyJson: translation.bodyJson ?? { version: 1, html: bodyHtml } };
     }),
   };

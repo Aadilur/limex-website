@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import ImageExtension from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
@@ -250,6 +250,7 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
   const [imageUrl, setImageUrl] = useState("");
   const [imageAlt, setImageAlt] = useState("");
   const [panelError, setPanelError] = useState("");
+  const initialContent = useRef(value || "");
 
   const extensions = useMemo(
     () => [
@@ -271,19 +272,33 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
     [placeholder],
   );
 
-  const editor = useEditor({
-    immediatelyRender: false,
-    extensions,
-    content: value || "",
-    editorProps: {
+  // Keep editor options referentially stable. TipTap compares non-callback
+  // options between renders; recreating editorProps after every selection
+  // update can make it re-apply the view props and collapse a live selection.
+  const editorProps = useMemo(
+    () => ({
       attributes: {
         class: editorSurfaceClass,
         "aria-label": "Article body",
         role: "textbox",
         spellcheck: "true",
       },
+    }),
+    [],
+  );
+
+  const editor = useEditor({
+    immediatelyRender: false,
+    // Let TipTap refresh its view after transactions; stable editorProps below
+    // prevents that refresh from replacing the browser's active selection.
+    shouldRerenderOnTransaction: true,
+    extensions,
+    content: initialContent.current,
+    editorProps,
+    onUpdate: ({ editor: nextEditor }) => {
+      onChange(nextEditor.getHTML(), nextEditor.getJSON());
+      setSelectionVersion((current) => current + 1);
     },
-    onUpdate: ({ editor: nextEditor }) => onChange(nextEditor.getHTML(), nextEditor.getJSON()),
     onSelectionUpdate: () => setSelectionVersion((current) => current + 1),
   });
 
@@ -325,7 +340,10 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
   }
 
   function toggleSourceMode() {
-    if (sourceMode && editor) editor.commands.setContent(value || "", false);
+    if (sourceMode && editor) {
+      editor.commands.setContent(value || "", false);
+      setSelectionVersion((current) => current + 1);
+    }
     setPanelError("");
     setLinkPanelOpen(false);
     setImagePanelOpen(false);
@@ -366,8 +384,8 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
           <ToolbarButton label="Add or edit link" icon="link" active={linkPanelOpen || (editor?.isActive("link") ?? false)} disabled={!editor || sourceMode} onClick={openLinkPanel} />
           <ToolbarButton label="Insert image" icon="image" active={imagePanelOpen} disabled={!editor || sourceMode} onClick={openImagePanel} />
           <ToolbarDivider />
-          <ToolbarButton label="Undo" icon="undo" disabled={!editor || sourceMode || !editor?.can().chain().focus().undo().run()} onClick={() => editor?.chain().focus().undo().run()} />
-          <ToolbarButton label="Redo" icon="redo" disabled={!editor || sourceMode || !editor?.can().chain().focus().redo().run()} onClick={() => editor?.chain().focus().redo().run()} />
+          <ToolbarButton label="Undo" icon="undo" disabled={!editor || sourceMode || !editor?.can().undo()} onClick={() => editor?.chain().focus().undo().run()} />
+          <ToolbarButton label="Redo" icon="redo" disabled={!editor || sourceMode || !editor?.can().redo()} onClick={() => editor?.chain().focus().redo().run()} />
           <button className={cn("ml-1 rounded-[8px] px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-[#77736e] transition-colors hover:bg-white hover:text-[#e44762]", sourceMode && "bg-white text-[#e44762]")} type="button" aria-pressed={sourceMode} onClick={toggleSourceMode}>{sourceMode ? "Visual editor" : "HTML source"}</button>
         </div>
       </div>
