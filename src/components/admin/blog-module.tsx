@@ -273,6 +273,55 @@ function ServiceConnections({ draft, catalog, updateDraft }: { draft: BlogEditor
   return <EditorPanel title="Service connection" description="Connect the article to the services readers may need. These links also preselect the blog booking form."><div className="grid gap-2">{catalog.map((service, index) => { const selected = draft.services.some((item) => item.serviceKey === service.serviceKey); const current = draft.services.find((item) => item.serviceKey === service.serviceKey); const inputId = `blog-service-${index}`; return <div className={`flex items-center gap-3 rounded-[12px] px-3 py-2.5 transition-colors ${selected ? "bg-[#fcecef]" : "bg-[#faf9f6] hover:bg-[#f7f4ef]"}`} key={service.serviceKey}><input className="size-4 shrink-0 accent-[#e44762]" id={inputId} type="checkbox" checked={selected} onChange={(event) => toggleService(service, event.target.checked)} /><label className="min-w-0 flex-1 cursor-pointer" htmlFor={inputId}><span className="block text-[13px] font-semibold text-[#2d2925]">{service.label}</span><span className="mt-0.5 block truncate text-[10px] text-[#9b958c]">{service.href}</span></label>{selected ? <button className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold transition-colors ${current?.isPrimary ? "bg-[#e44762] text-white" : "bg-white text-[#77736e] hover:bg-[#f3eee7]"}`} type="button" onClick={() => updateDraft({ services: draft.services.map((item) => ({ ...item, isPrimary: item.serviceKey === service.serviceKey })) })}>{current?.isPrimary ? "Primary" : "Make primary"}</button> : null}</div>; })}</div>{draft.services.length ? <div className="mt-5 rounded-[13px] bg-[#f7f4ef] px-3.5 py-3"><p className="text-[11px] font-bold uppercase tracking-[0.1em] text-[#77736e]">Connected services</p><div className="mt-2 flex flex-wrap gap-2">{draft.services.map((service) => <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-[#4f4b47]" key={service.serviceKey}>{service.label}{service.isPrimary ? " · primary" : ""}</span>)}</div></div> : <p className="mt-5 rounded-[13px] bg-[#f7f4ef] px-3.5 py-3 text-[12px] text-[#817a72]">No service connected. The general contact action will be used.</p>}</EditorPanel>;
 }
 
+function BlogEditorActions({
+  post,
+  isDirty,
+  saving,
+  onHistory,
+  onSave,
+  onPublish,
+  onUnpublish,
+}: {
+  post: AdminBlogPost;
+  isDirty: boolean;
+  saving: boolean;
+  onHistory: () => void;
+  onSave: () => void;
+  onPublish: () => void;
+  onUnpublish: () => void;
+}) {
+  const isPublished = post.status === "PUBLISHED";
+  const hasUnpublishedChanges = isPublished && post.publishedRevision !== post.revision;
+  const statusLabel = saving ? "Saving changes…" : isDirty ? "Unsaved changes" : hasUnpublishedChanges ? "Saved draft · not published" : isPublished ? "Published and up to date" : "All changes saved";
+  const statusDescription = isDirty
+    ? isPublished
+      ? "Save your draft edits first, then publish when they are ready."
+      : "Save your work before leaving this article."
+    : hasUnpublishedChanges
+      ? "Your latest saved edits are private until you publish them."
+    : isPublished
+      ? "The public article is using the latest saved version."
+      : "This article is safely saved as a draft.";
+
+  return (
+    <section className="sticky top-[76px] z-20 flex flex-col gap-3 rounded-[16px] border border-[#e1dcd4] bg-[#fffdfa]/95 p-3 shadow-[0_8px_24px_rgba(44,36,31,0.08)] backdrop-blur sm:flex-row sm:items-center sm:justify-between" aria-label="Article publishing actions">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className={`inline-flex min-h-6 items-center rounded-full px-2.5 text-[10px] font-bold uppercase tracking-[0.08em] ${isDirty ? "bg-[#fff1da] text-[#9a5e22]" : "bg-[#e8f4ec] text-[#29634d]"}`.trim()}>{statusLabel}</span>
+          <span className="text-[11px] text-[#a09a91]">Revision {post.revision}</span>
+        </div>
+        <p className="mt-1 text-[11px] leading-[1.4] text-[#817a72]">{statusDescription}</p>
+      </div>
+      <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
+        <button className="min-h-10 flex-1 rounded-full border border-[#d8d2c8] bg-white px-3.5 text-[12px] font-bold text-[#4f4b47] transition-colors hover:border-[#aaa197] disabled:cursor-not-allowed disabled:opacity-55 sm:flex-none" type="button" onClick={onHistory} disabled={saving}>History</button>
+        <button className="min-h-10 flex-1 rounded-full bg-[#fce0e3] px-4 text-[12px] font-bold text-[#ad3148] transition-colors hover:bg-[#f8cbd2] disabled:cursor-not-allowed disabled:opacity-55 sm:flex-none" type="button" onClick={onSave} disabled={saving || !isDirty} title={isDirty ? "Save your article changes" : "There are no unsaved changes"}>{saving ? "Saving…" : isDirty ? "Save changes" : "Saved"}</button>
+        {isPublished ? <button className="min-h-10 flex-1 rounded-full border border-[#f1c6ce] bg-[#fff8f8] px-3.5 text-[12px] font-bold text-[#ad3148] transition-colors hover:bg-[#fce0e3] disabled:cursor-not-allowed disabled:opacity-55 sm:flex-none" type="button" onClick={onUnpublish} disabled={saving}>Unpublish</button> : null}
+        <button className="min-h-10 flex-1 rounded-full bg-[#14131c] px-4 text-[12px] font-bold text-white transition-colors hover:bg-[#e44762] disabled:cursor-not-allowed disabled:opacity-55 sm:flex-none" type="button" onClick={onPublish} disabled={saving}>{saving ? "Working…" : isPublished ? "Publish changes" : "Publish draft"}</button>
+      </div>
+    </section>
+  );
+}
+
 export function BlogEditorModule({ id }: { id: string }) {
   const [post, setPost] = useState<AdminBlogPost | null>(null);
   const [draft, setDraft] = useState<BlogEditorDraft | null>(null);
@@ -408,7 +457,8 @@ export function BlogEditorModule({ id }: { id: string }) {
   const selectedMedia = media.find((item) => item.id === draft.coverMediaId);
 
   return <div className="space-y-5">
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"><div className="min-w-0"><a className="text-[12px] font-semibold text-[#e44762] hover:text-[#14131c]" href="/admin/blog">← All articles</a><div className="mt-3 flex flex-wrap items-center gap-2"><StatusPill status={post.status} />{post.status === "PUBLISHED" && post.publishedRevision !== post.revision ? <span className="inline-flex min-h-6 items-center rounded-full bg-[#fff1da] px-2.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[#9a5e22]">unpublished changes</span> : null}<span className="text-[11px] text-[#a09a91]">Revision {post.revision}</span>{isDirty ? <span className="inline-flex min-h-6 items-center rounded-full bg-[#fff1da] px-2.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[#9a5e22]">unsaved changes</span> : null}{post.publishedSlug ? <a className="text-[11px] font-semibold text-[#77736e] hover:text-[#e44762]" href={`/blog/${post.publishedSlug}`} target="_blank" rel="noreferrer">Open public page ↗</a> : null}</div><h1 className="mt-2 truncate font-brand text-[30px] font-bold tracking-[-0.045em] text-[#14131c] sm:text-[38px]">{currentTranslation.title || "Untitled article"}</h1><p className="mt-1 truncate text-[12px] text-[#817a72]">/{draft.slug}</p></div><div className="flex flex-wrap items-center gap-2"><button className="min-h-10 rounded-full border border-[#d8d2c8] bg-white px-3.5 text-[12px] font-bold text-[#4f4b47] transition-colors hover:border-[#aaa197] disabled:opacity-60" type="button" onClick={() => void openHistory()} disabled={saving}>History</button><button className="min-h-10 rounded-full border border-[#d8d2c8] bg-white px-4 text-[12px] font-bold text-[#4f4b47] transition-colors hover:border-[#aaa197] disabled:opacity-60" type="button" onClick={() => void persist()} disabled={saving}>Save draft</button>{post.status === "PUBLISHED" ? <button className="min-h-10 rounded-full border border-[#f1c6ce] bg-[#fff8f8] px-4 text-[12px] font-bold text-[#ad3148] transition-colors hover:bg-[#fce0e3] disabled:opacity-60" type="button" onClick={() => void unpublish()} disabled={saving}>Unpublish</button> : <button className="min-h-10 rounded-full bg-[#14131c] px-4 text-[12px] font-bold text-white transition-colors hover:bg-[#e44762] disabled:opacity-60" type="button" onClick={() => void publish()} disabled={saving}>Publish</button>}</div></div>
+    <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"><div className="min-w-0"><a className="text-[12px] font-semibold text-[#e44762] hover:text-[#14131c]" href="/admin/blog">← All articles</a><div className="mt-3 flex flex-wrap items-center gap-2"><StatusPill status={post.status} />{post.status === "PUBLISHED" && post.publishedRevision !== post.revision ? <span className="inline-flex min-h-6 items-center rounded-full bg-[#fff1da] px-2.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[#9a5e22]">unpublished changes</span> : null}<span className="text-[11px] text-[#a09a91]">Revision {post.revision}</span>{isDirty ? <span className="inline-flex min-h-6 items-center rounded-full bg-[#fff1da] px-2.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[#9a5e22]">unsaved changes</span> : null}{post.publishedSlug ? <a className="text-[11px] font-semibold text-[#77736e] hover:text-[#e44762]" href={`/blog/${post.publishedSlug}`} target="_blank" rel="noreferrer">Open public page ↗</a> : null}</div><h1 className="mt-2 truncate font-brand text-[30px] font-bold tracking-[-0.045em] text-[#14131c] sm:text-[38px]">{currentTranslation.title || "Untitled article"}</h1><p className="mt-1 truncate text-[12px] text-[#817a72]">/{draft.slug}</p></div></div>
+    <BlogEditorActions post={post} isDirty={isDirty} saving={saving} onHistory={() => void openHistory()} onSave={() => void persist()} onPublish={() => void publish()} onUnpublish={() => void unpublish()} />
     {notice ? <p className="text-[12px] font-semibold text-[#29634d]" role="status">{notice}</p> : null}
     {error ? <p className="rounded-[13px] bg-[#fff3f4] px-3.5 py-3 text-[12px] font-semibold text-[#ad3148]" role="alert">{error}</p> : null}
     <div className="flex gap-1 overflow-x-auto border-b border-[#ded8cf] pb-px [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="tablist" aria-label="Article editor sections">{tabs.map((item) => <button className={`min-h-10 shrink-0 border-b-2 px-3 text-[12px] font-bold transition-colors ${tab === item.value ? "border-[#e44762] text-[#e44762]" : "border-transparent text-[#77736e] hover:text-[#14131c]"}`.trim()} type="button" role="tab" aria-selected={tab === item.value} onClick={() => setTab(item.value)} key={item.value}>{item.label}</button>)}</div>

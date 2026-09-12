@@ -56,22 +56,35 @@ function BlogCover({ article, variant = "card" }: { article: BlogArticle; varian
   const isFeatured = variant === "featured";
   const isHero = variant === "hero";
   const isThumb = variant === "thumb";
-  const coverWidthClass = isThumb ? "" : "w-full";
+  const isCard = variant === "card";
+  const isRelated = variant === "related";
+  const coverWidthClass = isThumb ? "" : isCard ? "w-[112px] shrink-0 sm:w-full" : isRelated ? "w-[112px] shrink-0 lg:w-full" : "w-full";
   const coverClass = isFeatured
     ? "aspect-[2/1] rounded-[16px]"
     : isHero
-      ? "aspect-[852/430] rounded-[28px]"
+      ? "aspect-[16/9] rounded-[20px] lg:aspect-[852/430] lg:rounded-[28px]"
       : isThumb
         ? "size-20 rounded-[16px]"
-        : variant === "related"
-          ? "aspect-[852/430] rounded-t-[22px]"
-          : "aspect-[852/430] rounded-t-[22px]";
+        : isRelated
+          ? "aspect-square rounded-l-[22px] lg:aspect-[852/430] lg:rounded-l-none lg:rounded-t-[22px]"
+          : isCard
+            ? "aspect-square rounded-l-[22px] sm:aspect-[852/430] sm:rounded-l-none sm:rounded-t-[22px]"
+            : "aspect-[852/430] rounded-t-[22px]";
   const paperClass = isThumb
     ? "left-8 top-[31px] h-[42px] w-[34px] rounded-[8px]"
-    : isHero
-      ? "right-[12%] top-[18%] h-[42%] w-[30%] rounded-[20px]"
-      : "right-7 top-[42px] h-[82px] w-[118px] rounded-[16px]";
-  const lineClass = isThumb ? "left-[7px]" : "left-4";
+      : isHero
+        ? "right-[12%] top-[18%] h-[42%] w-[30%] rounded-[20px]"
+      : isCard
+        ? "right-3 top-3 h-[58px] w-[76px] rounded-[10px] sm:right-7 sm:top-[42px] sm:h-[82px] sm:w-[118px] sm:rounded-[16px]"
+        : isRelated
+          ? "right-3 top-3 h-[58px] w-[76px] rounded-[10px] lg:right-7 lg:top-[42px] lg:h-[82px] lg:w-[118px] lg:rounded-[16px]"
+          : "right-7 top-[42px] h-[82px] w-[118px] rounded-[16px]";
+  const lineClass = isThumb ? "left-[7px]" : isCard ? "left-3 sm:left-4" : isRelated ? "left-3 lg:left-4" : "left-4";
+  const lineOneClass = isCard ? "w-[42px] sm:w-[70px]" : isRelated ? "w-[42px] lg:w-[70px]" : "w-[70px]";
+  const lineTwoClass = isCard ? "w-[34px] sm:w-[54px]" : isRelated ? "w-[34px] lg:w-[54px]" : "w-[54px]";
+  const lineThreeClass = isCard ? "w-[50px] sm:w-[82px]" : isRelated ? "w-[50px] lg:w-[82px]" : "w-[82px]";
+  const coverSlotClass = isCard ? "hidden sm:block" : isRelated ? "hidden lg:block" : "block";
+  const coverNumberClass = isCard ? "text-[34px] sm:text-page-title" : isRelated ? "text-[34px] lg:text-page-title" : "text-page-title";
 
   return (
     <div className={`relative shrink-0 overflow-hidden ${tone.surface} ${coverWidthClass} ${coverClass}`.trim()} aria-hidden={coverUrl ? undefined : true}>
@@ -94,12 +107,12 @@ function BlogCover({ article, variant = "card" }: { article: BlogArticle; varian
           <span className="absolute left-6 top-[34px] h-0.5 w-[124px] rounded-full bg-white/70" />
           <span className="absolute left-6 top-[42px] h-0.5 w-[76px] rounded-full bg-white/55" />
           <span className={`absolute ${paperClass} overflow-hidden bg-white/80`.trim()}>
-            <span className={`absolute ${lineClass} top-5 h-0.5 w-[70px] rounded-full bg-pink/70`.trim()} />
-            <span className={`absolute ${lineClass} top-[30px] h-0.5 w-[54px] rounded-full bg-muted/45`.trim()} />
-            <span className={`absolute ${lineClass} top-10 h-0.5 w-[82px] rounded-full bg-muted/30`.trim()} />
+            <span className={`absolute ${lineClass} top-5 h-0.5 ${lineOneClass} rounded-full bg-pink/70`.trim()} />
+            <span className={`absolute ${lineClass} top-[30px] h-0.5 ${lineTwoClass} rounded-full bg-muted/45`.trim()} />
+            <span className={`absolute ${lineClass} top-10 h-0.5 ${lineThreeClass} rounded-full bg-muted/30`.trim()} />
           </span>
-          {!isThumb && !isHero ? <span className={`absolute bottom-6 left-6 text-overline ${tone.text}`.trim()}>COVER SLOT</span> : null}
-          {!isThumb ? <strong className={`absolute bottom-2 right-7 text-page-title ${tone.text}`.trim()}>{article.coverNumber}</strong> : null}
+          {!isThumb && !isHero ? <span className={`absolute bottom-6 left-6 ${coverSlotClass} text-overline ${tone.text}`.trim()}>COVER SLOT</span> : null}
+          {!isThumb ? <strong className={`absolute bottom-2 right-7 ${coverNumberClass} ${tone.text}`.trim()}>{article.coverNumber}</strong> : null}
         </>
       )}
       {isHero && !coverUrl ? <span className={`absolute bottom-7 left-7 text-meta ${tone.text}`.trim()}>ARTICLE COVER</span> : null}
@@ -110,16 +123,16 @@ function BlogCover({ article, variant = "card" }: { article: BlogArticle; varian
 function BlogArticleCard({ article, locale = "en" }: { article: BlogArticle; locale?: BlogLocale }) {
   return (
     <a
-      className="group flex h-full min-h-0 flex-col overflow-hidden rounded-card border border-[#e5e0d6] bg-white transition-transform duration-200 hover:-translate-y-1 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3"
+      className="group flex h-full min-h-0 flex-row overflow-hidden rounded-card border border-[#e5e0d6] bg-white transition-transform duration-200 hover:-translate-y-1 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3 sm:flex-col"
       href={blogHref(article.slug, locale)}
     >
       <BlogCover article={article} />
-      <div className="flex min-h-0 flex-1 flex-col items-start gap-cluster-xs overflow-hidden px-card-pad-sm pb-4 pt-cluster lg:gap-cluster-sm lg:px-card-pad lg:pb-5 lg:pt-cluster-lg">
-        <p className="line-clamp-1 text-overline text-pink">{categoryLabel(article.category)} <span className="px-1">·</span> {article.date}</p>
-        <h3 className="line-clamp-2 font-brand text-subheading text-ink">{article.title}</h3>
-        <p className="line-clamp-3 text-body-sm text-muted">{article.summary}</p>
-        {article.relatedServices?.length ? <p className="line-clamp-1 text-micro font-semibold text-[#6d806e]">Related: {article.relatedServices.slice(0, 2).map((service) => service.label).join(" · ")}</p> : null}
-        <span className="mt-auto pt-3 text-body-sm font-semibold text-pink transition-transform duration-200 group-hover:translate-x-0.5">Read more <span aria-hidden="true">↗</span></span>
+      <div className="flex min-w-0 min-h-0 flex-1 flex-col items-start gap-1.5 overflow-hidden px-3.5 py-3.5 sm:gap-cluster-sm sm:px-card-pad sm:pb-5 sm:pt-cluster-lg">
+        <p className="line-clamp-1 text-[10px] font-bold uppercase tracking-[0.1em] text-pink sm:text-overline">{categoryLabel(article.category)} <span className="px-1">·</span> {article.date}</p>
+        <h3 className="line-clamp-2 font-brand text-[16px] font-bold leading-[1.22] tracking-[-0.02em] text-ink sm:text-subheading">{article.title}</h3>
+        <p className="line-clamp-2 text-[13px] leading-[1.45] text-muted sm:line-clamp-3 sm:text-body-sm">{article.summary}</p>
+        {article.relatedServices?.length ? <p className="hidden line-clamp-1 text-micro font-semibold text-[#6d806e] sm:block">Related: {article.relatedServices.slice(0, 2).map((service) => service.label).join(" · ")}</p> : null}
+        <span className="mt-auto pt-1.5 text-[13px] font-semibold text-pink transition-transform duration-200 group-hover:translate-x-0.5 sm:pt-3 sm:text-body-sm">Read more <span aria-hidden="true">↗</span></span>
       </div>
     </a>
   );
@@ -128,15 +141,15 @@ function BlogArticleCard({ article, locale = "en" }: { article: BlogArticle; loc
 export function BlogRelatedArticleCard({ article, locale = "en" }: { article: BlogArticle; locale?: BlogLocale }) {
   return (
     <a
-      className="group flex h-full min-h-0 flex-col overflow-hidden rounded-card bg-white transition-transform duration-200 hover:-translate-y-1 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3"
+      className="group flex h-full min-h-0 flex-row overflow-hidden rounded-card bg-white transition-transform duration-200 hover:-translate-y-1 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3 lg:flex-col"
       href={blogHref(article.slug, locale)}
     >
       <BlogCover article={article} variant="related" />
-      <div className="flex min-h-0 flex-1 flex-col gap-cluster-xs overflow-hidden px-card-pad pb-3 pt-cluster-lg">
-        <p className="line-clamp-1 text-overline text-pink">{categoryLabel(article.category)} <span className="px-1">·</span> {article.date}</p>
-        <h3 className="line-clamp-2 font-brand text-subheading text-ink">{article.title}</h3>
-        <p className="line-clamp-3 text-body-sm text-muted">{article.summary}</p>
-        <span className="mt-auto text-body-xs font-semibold text-pink">Read more <span aria-hidden="true">↗</span></span>
+      <div className="flex min-w-0 min-h-0 flex-1 flex-col gap-1.5 overflow-hidden px-3.5 py-3.5 lg:gap-cluster-xs lg:px-card-pad lg:pb-3 lg:pt-cluster-lg">
+        <p className="line-clamp-1 text-[10px] font-bold uppercase tracking-[0.1em] text-pink lg:text-overline">{categoryLabel(article.category)} <span className="px-1">·</span> {article.date}</p>
+        <h3 className="line-clamp-2 font-brand text-[16px] font-bold leading-[1.22] tracking-[-0.02em] text-ink lg:text-subheading">{article.title}</h3>
+        <p className="line-clamp-2 text-[13px] leading-[1.45] text-muted lg:line-clamp-3 lg:text-body-sm">{article.summary}</p>
+        <span className="mt-auto text-[13px] font-semibold text-pink lg:text-body-xs">Read more <span aria-hidden="true">↗</span></span>
       </div>
     </a>
   );
@@ -196,40 +209,40 @@ export function BlogIndexContent({ initialData, locale = "en" }: { initialData?:
 
   return (
     <>
-      <section className="bg-page px-page-gutter pb-section-y lg:px-page-gutter-lg lg:pb-10" aria-labelledby="blog-page-title">
+      <section className="bg-page px-page-gutter pb-6 lg:px-page-gutter-lg lg:pb-10" aria-labelledby="blog-page-title">
         <p className="text-footer font-text text-muted">Home <span className="px-1">/</span> Blog</p>
-        <div className="mt-section-y flex flex-col gap-section-gap lg:flex-row lg:items-start lg:justify-between lg:gap-section-gap-lg">
+        <div className="mt-6 flex flex-col gap-6 lg:mt-section-y lg:flex-row lg:items-start lg:justify-between lg:gap-section-gap-lg">
           <div className="max-w-[730px]">
             <p className="text-label text-pink">INSIGHTS &amp; GUIDES</p>
-            <h1 className="mt-cluster-sm max-w-[730px] font-brand text-page-title text-ink max-lg:text-page-title-mobile">Practical guidance for growing with confidence</h1>
-            <p className="mt-cluster max-w-[670px] text-body-lg text-muted">Clear, useful articles on registration, tax, compliance and building your business.</p>
-            <p className="mt-cluster text-body-sm font-text text-ink">New guides added every week</p>
+            <h1 className="mt-cluster-sm max-w-[730px] font-brand text-[36px] leading-[1.04] tracking-[-0.04em] text-ink sm:text-page-title-mobile lg:text-page-title">Practical guidance for growing with confidence</h1>
+            <p className="mt-3 max-w-[670px] text-body-sm text-muted sm:text-body-lg">Clear, useful articles on registration, tax, compliance and building your business.</p>
+            <p className="mt-cluster hidden text-body-sm font-text text-ink sm:block">New guides added every week</p>
           </div>
-          <div className="w-full rounded-nav bg-white p-card-pad-sm lg:max-w-[440px] lg:p-card-pad">
+          <div className="w-full rounded-nav bg-white p-3.5 lg:max-w-[440px] lg:p-card-pad">
             <div className="mb-cluster flex items-center justify-between gap-3">
               <p className="text-label text-pink">SEARCH THE JOURNAL</p>
-              <a className="shrink-0 text-body-xs font-semibold text-pink hover:text-ink" href={locale === "bn" ? "/blog" : "/bn/blog"}>{locale === "bn" ? "English" : "বাংলা"}</a>
+              <a className="shrink-0 text-[13px] font-semibold text-pink hover:text-ink sm:text-body-xs" href={locale === "bn" ? "/blog" : "/bn/blog"}>{locale === "bn" ? "English" : "বাংলা"}</a>
             </div>
             <BlogSearchField id="blog-hero-search" value={query} onChange={(event) => setQuery(event.target.value)} />
           </div>
         </div>
       </section>
 
-      {featured ? <section className="bg-page px-page-gutter py-section-y lg:px-page-gutter-lg lg:py-10" aria-labelledby="featured-guide-title">
+      {featured ? <section className="bg-page px-page-gutter py-6 lg:px-page-gutter-lg lg:py-10" aria-labelledby="featured-guide-title">
         <div className="flex items-center justify-between gap-5">
-          <h2 className="font-brand text-section-title text-ink" id="featured-guide-title">Featured guide</h2>
-          <a className="shrink-0 whitespace-nowrap text-right text-body-sm font-semibold text-pink transition-colors hover:text-ink" href="#latest">View all posts <span aria-hidden="true">↗</span></a>
+          <h2 className="font-brand text-section-title-mobile text-ink lg:text-section-title" id="featured-guide-title">Featured guide</h2>
+          <a className="shrink-0 whitespace-nowrap text-right text-[13px] font-semibold text-pink transition-colors hover:text-ink sm:text-body-sm" href="#latest">View all posts <span aria-hidden="true">↗</span></a>
         </div>
         <a
-          className="group mt-6 grid gap-6 rounded-[22px] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3 lg:grid-cols-[minmax(0,500px)_minmax(0,1fr)] lg:items-center lg:gap-8"
+          className="group mt-4 grid gap-4 rounded-[22px] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3 lg:mt-6 lg:grid-cols-[minmax(0,500px)_minmax(0,1fr)] lg:items-center lg:gap-8"
           href={blogHref(featured.slug, locale)}
         >
           <BlogCover article={featured} variant="featured" />
-          <div className="flex min-w-0 flex-col gap-3">
-            <p className="text-meta font-semibold text-pink">{categoryLabel(featured.category)} <span className="px-1">·</span> {featured.readTime}</p>
-            <h2 className="font-brand text-section-title text-ink">{featured.title}</h2>
-            <p className="max-w-[630px] text-body-lg text-muted">{featured.summary}</p>
-            <div className="mt-cluster-sm flex flex-wrap items-center justify-between gap-cluster-sm text-body-sm">
+          <div className="flex min-w-0 flex-col gap-2.5 lg:gap-3">
+            <p className="text-[11px] font-semibold tracking-[0.04em] text-pink lg:text-meta">{categoryLabel(featured.category)} <span className="px-1">·</span> {featured.readTime}</p>
+            <h2 className="font-brand text-[24px] font-bold leading-[1.15] tracking-[-0.03em] text-ink lg:text-section-title">{featured.title}</h2>
+            <p className="max-w-[630px] text-body-sm text-muted lg:text-body-lg">{featured.summary}</p>
+            <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2 text-body-xs lg:mt-cluster-sm lg:gap-cluster-sm lg:text-body-sm">
               <span className="text-muted">{featured.date} <span className="px-1">·</span> By {featured.author}</span>
               <span className="font-semibold text-pink transition-transform duration-200 group-hover:translate-x-0.5">Read the guide <span aria-hidden="true">↗</span></span>
             </div>
@@ -237,22 +250,22 @@ export function BlogIndexContent({ initialData, locale = "en" }: { initialData?:
         </a>
       </section> : null}
 
-      <section className="bg-page px-page-gutter py-section-y lg:px-page-gutter-lg lg:py-10" id="latest" aria-labelledby="latest-journal-title">
-        <div className="flex flex-col gap-section-gap lg:flex-row lg:items-start lg:justify-between lg:gap-section-gap-lg">
+      <section className="bg-page px-page-gutter py-6 lg:px-page-gutter-lg lg:py-10" id="latest" aria-labelledby="latest-journal-title">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between lg:gap-section-gap-lg">
           <div>
-            <h2 className="font-brand text-section-title text-ink" id="latest-journal-title">Latest from the journal</h2>
-            <p className="mt-cluster-sm text-body-lg text-muted">Short, practical reads for your next business decision.</p>
+            <h2 className="font-brand text-section-title-mobile text-ink lg:text-section-title" id="latest-journal-title">Latest from the journal</h2>
+            <p className="mt-2 text-body-sm text-muted lg:mt-cluster-sm lg:text-body-lg">Short, practical reads for your next business decision.</p>
           </div>
-          <div className="w-full lg:max-w-[392px]">
+          <div className="hidden w-full lg:block lg:max-w-[392px]">
             <BlogSearchField id="blog-latest-search" value={query} onChange={(event) => setQuery(event.target.value)} />
           </div>
         </div>
-        <div className="mt-6 flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="group" aria-label="Filter blog posts">
+        <div className="mt-4 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:mt-6 lg:gap-3" role="group" aria-label="Filter blog posts">
           {filters.map((filter) => {
             const active = activeFilter === filter.value;
             return (
               <button
-                className={`inline-flex h-[34px] shrink-0 items-center rounded-pill border px-4 text-body-xs font-text transition-colors focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2 ${active ? "border-ink bg-ink text-white" : "border-[#e0e0e5] bg-white text-muted hover:border-pink/45 hover:text-ink"}`.trim()}
+                className={`inline-flex h-8 shrink-0 items-center rounded-pill border px-3 text-[13px] font-text transition-colors focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2 lg:h-[34px] lg:px-4 lg:text-body-xs ${active ? "border-ink bg-ink text-white" : "border-[#e0e0e5] bg-white text-muted hover:border-pink/45 hover:text-ink"}`.trim()}
                 key={filter.value}
                 type="button"
                 aria-pressed={active}
@@ -263,13 +276,13 @@ export function BlogIndexContent({ initialData, locale = "en" }: { initialData?:
             );
           })}
         </div>
-        <p className="mt-section-gap-lg text-footer font-text text-muted" aria-live="polite">Showing {visibleArticles.length} {visibleArticles.length === 1 ? "guide" : "guides"}</p>
+        <p className="mt-4 text-footer font-text text-muted lg:mt-section-gap-lg" aria-live="polite">Showing {visibleArticles.length} {visibleArticles.length === 1 ? "guide" : "guides"}</p>
         {visibleArticles.length ? (
-          <div className="mt-4 grid grid-cols-1 gap-5 lg:grid-cols-3 lg:gap-8">
+          <div className="mt-3 grid grid-cols-1 gap-3.5 sm:gap-4 lg:mt-4 lg:grid-cols-3 lg:gap-8">
             {visibleArticles.map((article) => <BlogArticleCard article={article} locale={locale} key={article.slug} />)}
           </div>
         ) : (
-          <div className="mt-section-gap-lg rounded-card border border-[#e5e0d6] bg-white px-card-pad py-10 text-center">
+          <div className="mt-6 rounded-card border border-[#e5e0d6] bg-white px-4 py-8 text-center lg:mt-section-gap-lg lg:px-card-pad lg:py-10">
             <p className="text-body-lg font-semibold text-ink">No guides match that search.</p>
             <button className="mt-cluster text-body-sm font-semibold text-pink hover:text-ink" type="button" onClick={() => { setQuery(""); setActiveFilter("all"); }}>Clear filters</button>
           </div>
@@ -298,7 +311,7 @@ function BlogBody({ article }: { article: BlogArticle }) {
   if (article.bodyHtml) {
     return (
       <div
-        className="blog-rich-text mt-5 text-body-lg text-muted [&_a]:font-semibold [&_a]:text-pink [&_a]:underline [&_blockquote]:my-6 [&_blockquote]:border-l-4 [&_blockquote]:border-pink [&_blockquote]:pl-5 [&_blockquote]:italic [&_h2]:mt-8 [&_h2]:font-brand [&_h2]:text-section-title [&_h2]:text-ink [&_h3]:mt-6 [&_h3]:font-brand [&_h3]:text-subheading [&_h3]:text-ink [&_hr]:my-8 [&_img]:my-6 [&_img]:max-h-[520px] [&_img]:w-full [&_img]:rounded-[20px] [&_img]:object-cover [&_li]:ml-5 [&_li]:list-disc [&_li]:py-1 [&_ol_li]:list-decimal [&_p]:mb-4 [&_p:last-child]:mb-0 [&_strong]:font-bold [&_table]:my-6 [&_table]:w-full [&_td]:border [&_td]:border-[#e5e0d6] [&_td]:p-2 [&_th]:border [&_th]:border-[#e5e0d6] [&_th]:bg-[#f7f4ef] [&_th]:p-2"
+        className="blog-rich-text mt-5 text-[17px] leading-[1.68] text-muted lg:text-body-lg [&_a]:font-semibold [&_a]:text-pink [&_a]:underline [&_blockquote]:my-5 [&_blockquote]:border-l-4 [&_blockquote]:border-pink [&_blockquote]:pl-4 [&_blockquote]:italic lg:[&_blockquote]:my-6 lg:[&_blockquote]:pl-5 [&_h2]:mt-7 [&_h2]:font-brand [&_h2]:text-section-title-mobile [&_h2]:text-ink lg:[&_h2]:mt-8 lg:[&_h2]:text-section-title [&_h3]:mt-5 [&_h3]:font-brand [&_h3]:text-subheading-mobile [&_h3]:text-ink lg:[&_h3]:mt-6 lg:[&_h3]:text-subheading [&_hr]:my-6 lg:[&_hr]:my-8 [&_img]:my-5 [&_img]:max-h-[520px] [&_img]:w-full [&_img]:rounded-[14px] [&_img]:object-cover lg:[&_img]:my-6 lg:[&_img]:rounded-[20px] [&_li]:ml-5 [&_li]:list-disc [&_li]:py-1 [&_ol_li]:list-decimal [&_p]:mb-4 [&_p:last-child]:mb-0 [&_strong]:font-bold [&_table]:my-5 [&_table]:w-full lg:[&_table]:my-6 [&_td]:border [&_td]:border-[#e5e0d6] [&_td]:p-2 [&_th]:border [&_th]:border-[#e5e0d6] [&_th]:bg-[#f7f4ef] [&_th]:p-2"
         dangerouslySetInnerHTML={{ __html: sanitizeBlogHtml(article.bodyHtml) }}
       />
     );
@@ -321,11 +334,11 @@ function BlogRelatedServices({ article }: { article: BlogArticle }) {
   if (!article.relatedServices?.length) return null;
 
   return (
-    <div className="mt-section-gap-lg flex flex-col gap-cluster-sm" aria-label="Related services">
+    <div className="mt-6 flex flex-col gap-2 lg:mt-section-gap-lg lg:gap-cluster-sm" aria-label="Related services">
       <p className="text-meta font-semibold text-pink">RELATED SERVICES</p>
       <div className="flex flex-wrap gap-2">
         {article.relatedServices.slice(0, 4).map((service) => (
-          <a className="inline-flex min-h-9 items-center gap-2 rounded-pill border border-[#dfd8cf] bg-white px-3.5 text-body-xs font-semibold text-ink transition-colors hover:border-pink/50 hover:text-pink" href={blogServiceHref(article, service)} key={`${service.serviceKey}-${service.sortOrder}`}>
+          <a className="inline-flex min-h-8 items-center gap-1.5 rounded-pill border border-[#dfd8cf] bg-white px-3 text-[13px] font-semibold text-ink transition-colors hover:border-pink/50 hover:text-pink lg:min-h-9 lg:gap-2 lg:px-3.5 lg:text-body-xs" href={blogServiceHref(article, service)} key={`${service.serviceKey}-${service.sortOrder}`}>
             <span>{service.label}</span>
             <span className="text-pink" aria-hidden="true">↗</span>
           </a>
@@ -356,44 +369,44 @@ export function BlogDetailContent({ article, relatedArticles, locale = "en" }: {
 
   return (
     <>
-      <section className="bg-page px-page-gutter pb-section-y lg:px-page-gutter-lg lg:pb-10" aria-labelledby="article-title">
-        <div className="flex flex-col items-start gap-cluster-sm text-footer font-text text-muted sm:flex-row sm:items-center sm:justify-between sm:gap-cluster-lg">
+      <section className="bg-page px-page-gutter pb-6 lg:px-page-gutter-lg lg:pb-10" aria-labelledby="article-title">
+        <div className="flex flex-col items-start gap-2 text-footer font-text text-muted sm:flex-row sm:items-center sm:justify-between sm:gap-cluster-lg">
           <p>Home <span className="px-1">/</span> Blog <span className="px-1">/</span> {article.category}</p>
           <div className="flex flex-wrap items-center gap-3">
             <a className="shrink-0 text-body-xs font-semibold text-pink hover:text-ink" href={locale === "bn" ? "/bn/blog" : "/blog"}>← Back to all posts</a>
             <a className="shrink-0 text-body-xs font-semibold text-pink hover:text-ink" href={locale === "bn" ? "/blog" : "/bn/blog"}>{locale === "bn" ? "English" : "বাংলা"}</a>
           </div>
         </div>
-        <div className="mt-section-gap-xl max-w-[960px]">
-          <p className="text-meta font-semibold text-pink">{categoryLabel(article.category)} <span className="px-1">·</span> {article.readTime}</p>
-          <h1 className="mt-section-gap-lg max-w-[950px] font-brand text-page-title text-ink max-lg:text-page-title-mobile" id="article-title">{article.title}</h1>
-          <p className="mt-section-gap-lg max-w-[760px] text-body-lg text-muted">{article.summary}</p>
+        <div className="mt-6 max-w-[960px] lg:mt-section-gap-xl">
+          <p className="text-[11px] font-semibold tracking-[0.04em] text-pink lg:text-meta">{categoryLabel(article.category)} <span className="px-1">·</span> {article.readTime}</p>
+          <h1 className="mt-4 max-w-[950px] font-brand text-[36px] font-bold leading-[1.04] tracking-[-0.04em] text-ink sm:text-page-title-mobile lg:mt-section-gap-lg lg:text-page-title" id="article-title">{article.title}</h1>
+          <p className="mt-4 max-w-[760px] text-[17px] leading-[1.58] text-muted lg:mt-section-gap-lg lg:text-body-lg">{article.summary}</p>
         </div>
-        <div className="mt-section-y flex flex-wrap items-center justify-between gap-cluster border-b border-[#e5e3e5] pb-card-pad text-body-sm text-muted">
+        <div className="mt-6 flex flex-col items-start gap-3 border-b border-[#e5e3e5] pb-4 text-body-sm text-muted sm:flex-row sm:items-center sm:justify-between lg:mt-section-y lg:gap-cluster lg:pb-card-pad">
           <p>{article.date} <span className="px-1">·</span> By {article.author}{article.updatedDate ? ` · Updated ${article.updatedDate}` : ""}</p>
-          <button className="inline-flex min-h-[44px] items-center rounded-pill border border-[#e5e0d6] bg-white px-6 text-body-xs font-semibold text-pink transition-colors hover:border-pink/45 hover:text-ink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2" type="button" onClick={handleShare}>
+          <button className="inline-flex min-h-10 w-full items-center justify-center rounded-pill border border-[#e5e0d6] bg-white px-4 text-[13px] font-semibold text-pink transition-colors hover:border-pink/45 hover:text-ink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2 sm:w-auto sm:px-6 sm:text-body-xs" type="button" onClick={handleShare}>
             {shareState === "copied" ? "Link copied ✓" : "Share this guide ↗"}
           </button>
         </div>
       </section>
 
-      <section className="bg-page px-page-gutter py-section-y lg:px-page-gutter-lg lg:py-10" aria-labelledby="article-content-label">
-        <p className="text-meta font-semibold text-pink" id="article-content-label">04 <span className="px-1">/</span> ARTICLE CONTENT</p>
-        <div className="mt-section-gap-lg grid gap-section-gap lg:grid-cols-[minmax(0,820px)_336px] lg:gap-section-gap-lg">
+      <section className="bg-page px-page-gutter py-6 lg:px-page-gutter-lg lg:py-10" aria-labelledby="article-content-label">
+        <p className="text-[11px] font-semibold tracking-[0.04em] text-pink lg:text-meta" id="article-content-label">04 <span className="px-1">/</span> ARTICLE CONTENT</p>
+        <div className="mt-6 grid gap-6 lg:mt-section-gap-lg lg:grid-cols-[minmax(0,820px)_336px] lg:gap-section-gap-lg">
           <article className="min-w-0">
             <BlogCover article={article} variant="hero" />
             {article.coverCaption ? <p className="mt-cluster text-body-xs text-muted">{article.coverCaption}</p> : null}
             <BlogRelatedServices article={article} />
-            {article.intro ? <p className="mt-section-gap-lg text-subheading text-ink">{article.intro}</p> : null}
-            {article.atAGlance ? <div className="mt-section-gap-lg flex gap-cluster rounded-panel-mobile border border-[#e5e0d6] bg-white px-card-pad-sm py-card-pad-sm">
-              <span className="h-[70px] w-1 shrink-0 rounded-sm bg-pink" aria-hidden="true" />
+            {article.intro ? <p className="mt-6 text-[20px] leading-[1.35] text-ink lg:mt-section-gap-lg lg:text-subheading">{article.intro}</p> : null}
+            {article.atAGlance ? <div className="mt-6 flex gap-3 rounded-[16px] border border-[#e5e0d6] bg-white px-4 py-3.5 lg:mt-section-gap-lg lg:gap-cluster lg:rounded-panel-mobile lg:px-card-pad-sm lg:py-card-pad-sm">
+              <span className="h-auto min-h-[52px] w-1 shrink-0 rounded-sm bg-pink" aria-hidden="true" />
               <div>
                 <p className="text-meta font-semibold text-pink">AT A GLANCE</p>
                 <p className="mt-cluster-sm text-body-sm font-text text-ink">{article.atAGlance}</p>
               </div>
             </div> : null}
             <BlogBody article={article} />
-            <div className="mt-section-y rounded-card bg-navy px-card-pad py-card-pad text-white">
+            <div className="mt-8 rounded-[18px] bg-navy px-4 py-4 text-white lg:mt-section-y lg:rounded-card lg:px-card-pad lg:py-card-pad">
               <p className="text-meta font-semibold text-[#f5b8c7]">GET SUPPORT</p>
               <p className="mt-cluster-sm max-w-[620px] font-brand text-subheading">Want a clear next step for your business?</p>
               {primaryService ? <p className="mt-cluster-sm max-w-[620px] text-body-sm text-white/65">We can help with {primaryService.label.toLowerCase()} and the next steps around it.</p> : null}
@@ -404,47 +417,47 @@ export function BlogDetailContent({ article, relatedArticles, locale = "en" }: {
             </div>
           </article>
 
-          <aside className="flex min-w-0 flex-col gap-section-gap" aria-label="More from the journal">
+          <aside className="flex min-w-0 flex-col gap-5 lg:gap-section-gap" aria-label="More from the journal">
             {article.sidebarVideo?.videoId ? (
-              <div className="rounded-card border border-[#e5e0d6] bg-white px-card-pad py-card-pad">
+              <div className="rounded-[18px] border border-[#e5e0d6] bg-white px-4 py-4 lg:rounded-card lg:px-card-pad lg:py-card-pad">
                 <p className="text-meta font-semibold text-pink">WATCH THE TUTORIAL</p>
-                <div className="mt-cluster aspect-video overflow-hidden rounded-[16px] bg-[#f3f1ec]">
+                <div className="mt-3 aspect-video overflow-hidden rounded-[12px] bg-[#f3f1ec] lg:mt-cluster lg:rounded-[16px]">
                   <iframe className="size-full" src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(article.sidebarVideo.videoId)}?rel=0&playsinline=1`} title={article.sidebarVideo.title} loading="lazy" referrerPolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
                 </div>
                 <p className="mt-cluster-sm text-body-sm font-semibold text-ink">{article.sidebarVideo.title}</p>
               </div>
             ) : null}
-            {visibleRelatedArticles.length ? <div className="rounded-card border border-[#e5e0d6] bg-white px-card-pad py-card-pad">
+            {visibleRelatedArticles.length ? <div className="rounded-[18px] border border-[#e5e0d6] bg-white px-4 py-4 lg:rounded-card lg:px-card-pad lg:py-card-pad">
               <h2 className="text-meta font-semibold text-pink">MORE FROM THE JOURNAL</h2>
-              <div className="mt-section-gap-lg flex flex-col gap-cluster">
+              <div className="mt-5 flex flex-col gap-3 lg:mt-section-gap-lg lg:gap-cluster">
                 {visibleRelatedArticles.map((relatedArticle, index) => (
                   <div key={relatedArticle.slug}>
-                    {index ? <div className="mb-4 h-px bg-[#e5e3e5]" /> : null}
+                    {index ? <div className="mb-3 h-px bg-[#e5e3e5] lg:mb-4" /> : null}
                     <BlogSidebarArticleItem article={relatedArticle} locale={locale} />
                   </div>
                 ))}
               </div>
             </div> : null}
-            <div className="rounded-card bg-navy px-card-pad py-card-pad text-white">
+            <div className="rounded-[18px] bg-navy px-4 py-4 text-white lg:rounded-card lg:px-card-pad lg:py-card-pad">
               <p className="text-meta font-semibold text-[#f5b8c7]">NEED A HAND?</p>
               <h2 className="mt-cluster font-brand text-subheading">Have a question about your next step?</h2>
               <p className="mt-cluster-sm text-body-sm text-soft-muted">Talk to our team before you move forward.</p>
-              <ContactModal articleSlug={article.slug} buttonClassName="mt-cluster-lg w-full justify-center" buttonLabel="Ask a question" serviceKey={primaryService?.serviceKey} />
+              <ContactModal articleSlug={article.slug} buttonClassName="mt-5 w-full justify-center lg:mt-cluster-lg" buttonLabel="Ask a question" serviceKey={primaryService?.serviceKey} />
             </div>
           </aside>
         </div>
       </section>
 
-      {visibleRelatedArticles.length ? <section className="bg-page px-page-gutter py-section-y lg:px-page-gutter-lg lg:py-10" aria-labelledby="more-practical-reads-title">
+      {visibleRelatedArticles.length ? <section className="bg-page px-page-gutter py-6 lg:px-page-gutter-lg lg:py-10" aria-labelledby="more-practical-reads-title">
         <div className="flex flex-col gap-cluster-sm lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-meta font-semibold text-pink">05 <span className="px-1">/</span> MORE TO READ</p>
-            <h2 className="mt-cluster-sm font-brand text-section-title text-ink" id="more-practical-reads-title">More practical reads</h2>
-            <p className="mt-cluster-sm text-body text-muted">Keep exploring the journal for your next business decision.</p>
+            <h2 className="mt-cluster-sm font-brand text-section-title-mobile text-ink lg:text-section-title" id="more-practical-reads-title">More practical reads</h2>
+            <p className="mt-cluster-sm text-body-sm text-muted lg:text-body">Keep exploring the journal for your next business decision.</p>
           </div>
           <a className="text-body-sm font-semibold text-pink hover:text-ink" href={locale === "bn" ? "/bn/blog" : "/blog"}>View all posts <span aria-hidden="true">↗</span></a>
         </div>
-        <div className="mt-section-gap-lg grid grid-cols-1 gap-cluster lg:grid-cols-3 lg:gap-section-gap">
+        <div className="mt-6 grid grid-cols-1 gap-3 lg:mt-section-gap-lg lg:grid-cols-3 lg:gap-section-gap">
           {visibleRelatedArticles.map((relatedArticle) => <BlogRelatedArticleCard article={relatedArticle} locale={locale} key={relatedArticle.slug} />)}
         </div>
       </section> : null}
