@@ -1,10 +1,12 @@
-import type { ServiceDetailContent, ServiceDestination, ServiceFaq, ServicePriceTier } from "@/lib/service-types";
+import type { ServiceDetailContent, ServiceDestination, ServiceFaq, ServiceLocale, ServicePriceTier } from "@/lib/service-types";
 
 export type { ServiceDetailContent, ServiceDestination, ServiceFaq, ServicePriceTier } from "@/lib/service-types";
 
 export type ServicePageContent = {
   slug: string;
+  locale?: ServiceLocale;
   breadcrumb: string;
+  breadcrumbItems?: Array<{ label: string; href?: string }>;
   category: string;
   title: string;
   description: string;

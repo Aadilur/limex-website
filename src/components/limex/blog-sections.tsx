@@ -13,7 +13,7 @@ import {
 } from "./blog-data";
 import { getBlogToneClasses } from "./styles";
 import { ContactModal } from "./contact-section";
-import { ActionButton, SearchIcon } from "./ui";
+import { ActionButton, Breadcrumbs, SearchIcon } from "./ui";
 import { getPublicBlogIndex, type BlogIndexResponse, type BlogLocale } from "@/lib/blog-api";
 import { sanitizeBlogHtml } from "@/lib/blog-content";
 
@@ -209,8 +209,8 @@ export function BlogIndexContent({ initialData, locale = "en" }: { initialData?:
 
   return (
     <>
-      <section className="bg-page px-page-gutter pb-6 lg:px-page-gutter-lg lg:pb-10" aria-labelledby="blog-page-title">
-        <p className="text-footer font-text text-muted">Home <span className="px-1">/</span> Blog</p>
+      <section className="bg-page px-0 pb-6 lg:px-page-gutter-lg lg:pb-10" aria-labelledby="blog-page-title">
+        <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Blog" }]} />
         <div className="mt-6 flex flex-col gap-6 lg:mt-section-y lg:flex-row lg:items-start lg:justify-between lg:gap-section-gap-lg">
           <div className="max-w-[730px]">
             <p className="text-label text-pink">INSIGHTS &amp; GUIDES</p>
@@ -228,7 +228,7 @@ export function BlogIndexContent({ initialData, locale = "en" }: { initialData?:
         </div>
       </section>
 
-      {featured ? <section className="bg-page px-page-gutter py-6 lg:px-page-gutter-lg lg:py-10" aria-labelledby="featured-guide-title">
+      {featured ? <section className="bg-page px-0 py-6 lg:px-page-gutter-lg lg:py-10" aria-labelledby="featured-guide-title">
         <div className="flex items-center justify-between gap-5">
           <h2 className="font-brand text-section-title-mobile text-ink lg:text-section-title" id="featured-guide-title">Featured guide</h2>
           <a className="shrink-0 whitespace-nowrap text-right text-[13px] font-semibold text-pink transition-colors hover:text-ink sm:text-body-sm" href="#latest">View all posts <span aria-hidden="true">↗</span></a>
@@ -250,7 +250,7 @@ export function BlogIndexContent({ initialData, locale = "en" }: { initialData?:
         </a>
       </section> : null}
 
-      <section className="bg-page px-page-gutter py-6 lg:px-page-gutter-lg lg:py-10" id="latest" aria-labelledby="latest-journal-title">
+      <section className="bg-page px-0 py-6 lg:px-page-gutter-lg lg:py-10" id="latest" aria-labelledby="latest-journal-title">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between lg:gap-section-gap-lg">
           <div>
             <h2 className="font-brand text-section-title-mobile text-ink lg:text-section-title" id="latest-journal-title">Latest from the journal</h2>
@@ -369,9 +369,9 @@ export function BlogDetailContent({ article, relatedArticles, locale = "en" }: {
 
   return (
     <>
-      <section className="bg-page px-page-gutter pb-6 lg:px-page-gutter-lg lg:pb-10" aria-labelledby="article-title">
+      <section className="bg-page px-0 pb-6 lg:px-page-gutter-lg lg:pb-10" aria-labelledby="article-title">
         <div className="flex flex-col items-start gap-2 text-footer font-text text-muted sm:flex-row sm:items-center sm:justify-between sm:gap-cluster-lg">
-          <p>Home <span className="px-1">/</span> Blog <span className="px-1">/</span> {article.category}</p>
+          <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Blog", href: locale === "bn" ? "/bn/blog" : "/blog" }, { label: article.category }]} />
           <div className="flex flex-wrap items-center gap-3">
             <a className="shrink-0 text-body-xs font-semibold text-pink hover:text-ink" href={locale === "bn" ? "/bn/blog" : "/blog"}>← Back to all posts</a>
             <a className="shrink-0 text-body-xs font-semibold text-pink hover:text-ink" href={locale === "bn" ? "/blog" : "/bn/blog"}>{locale === "bn" ? "English" : "বাংলা"}</a>
@@ -390,7 +390,7 @@ export function BlogDetailContent({ article, relatedArticles, locale = "en" }: {
         </div>
       </section>
 
-      <section className="bg-page px-page-gutter py-6 lg:px-page-gutter-lg lg:py-10" aria-labelledby="article-content-label">
+      <section className="bg-page px-0 py-6 lg:px-page-gutter-lg lg:py-10" aria-labelledby="article-content-label">
         <p className="text-[11px] font-semibold tracking-[0.04em] text-pink lg:text-meta" id="article-content-label">04 <span className="px-1">/</span> ARTICLE CONTENT</p>
         <div className="mt-6 grid gap-6 lg:mt-section-gap-lg lg:grid-cols-[minmax(0,820px)_336px] lg:gap-section-gap-lg">
           <article className="min-w-0">
@@ -448,7 +448,7 @@ export function BlogDetailContent({ article, relatedArticles, locale = "en" }: {
         </div>
       </section>
 
-      {visibleRelatedArticles.length ? <section className="bg-page px-page-gutter py-6 lg:px-page-gutter-lg lg:py-10" aria-labelledby="more-practical-reads-title">
+      {visibleRelatedArticles.length ? <section className="bg-page px-0 py-6 lg:px-page-gutter-lg lg:py-10" aria-labelledby="more-practical-reads-title">
         <div className="flex flex-col gap-cluster-sm lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-meta font-semibold text-pink">05 <span className="px-1">/</span> MORE TO READ</p>

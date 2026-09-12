@@ -100,7 +100,7 @@ export function ServicesSection({ content = defaultLandingContent.services }: { 
   }, [hydratedItems, selectedFilter]);
 
   return (
-    <section className="scroll-mt-5 bg-page px-4 py-8 pb-8 sm:px-page-gutter sm:py-section-y lg:rounded-panel lg:px-section-gutter-lg lg:py-10 lg:pb-8" id="services" aria-labelledby="services-title">
+    <section className="scroll-mt-5 bg-page px-page-gutter py-8 pb-8 sm:px-page-gutter sm:py-section-y lg:rounded-panel lg:px-section-gutter-lg lg:py-10 lg:pb-8" id="services" aria-labelledby="services-title">
       <div className="flex flex-col gap-cluster-lg lg:flex-row lg:items-start lg:justify-between lg:gap-cluster-lg">
         <SectionTitle
           id="services-title"

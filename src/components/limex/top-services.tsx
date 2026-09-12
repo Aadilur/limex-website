@@ -8,6 +8,7 @@ import { getToneClasses } from "./styles";
 import type { LandingServiceItem } from "@/lib/landing-types";
 import { getPublicMenu } from "@/lib/menu-api";
 import { getPublicServices } from "@/lib/service-api";
+import { hydrateServiceNavigation } from "@/lib/service-content";
 import type { PublicService } from "@/lib/service-types";
 
 const priorityServices = [
@@ -106,7 +107,7 @@ function FeaturedServiceLink({ service }: { service: PriorityService }) {
 }
 
 export function TopServices({ featuredServices }: { featuredServices?: LandingServiceItem[] }) {
-  const [menuNavigation, setMenuNavigation] = useState(navigation);
+  const [menuNavigation, setMenuNavigation] = useState(() => hydrateServiceNavigation(navigation));
   const [liveServices, setLiveServices] = useState<PublicService[]>([]);
   const topServices = useMemo(
     () => (featuredServices?.map(toPriorityService) ?? selectPriorityServices(menuNavigation)).map((service) => hydratePriorityService(service, liveServices)),
@@ -136,7 +137,7 @@ export function TopServices({ featuredServices }: { featuredServices?: LandingSe
 
     void getPublicMenu()
       .then((managedItems) => {
-        if (!cancelled) setMenuNavigation(managedItems);
+        if (!cancelled) setMenuNavigation(hydrateServiceNavigation(managedItems));
       })
       .catch(() => {
         // Keep the bundled menu available when the API is unavailable.

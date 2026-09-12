@@ -8,6 +8,7 @@ import { getAdminTemplatePreview, getPublishedTemplate } from "@/lib/template-ap
 import { renderTemplateDocx } from "@/lib/document-template-docx";
 import { renderTemplatePrintHtml } from "@/lib/document-template-print";
 import { DocumentTemplatePaper } from "./document-template-paper";
+import { Breadcrumbs } from "./ui";
 
 const inputClass = "h-11 w-full rounded-[12px] border border-[#d9d3c9] bg-[#fcfbf8] px-3.5 text-[13px] text-[#242129] outline-none transition-colors placeholder:text-[#a19a91] focus:border-[#e44762] focus:ring-4 focus:ring-[#f8d9de]";
 const areaClass = "min-h-28 w-full resize-y rounded-[12px] border border-[#d9d3c9] bg-[#fcfbf8] px-3.5 py-3 text-[13px] leading-[1.5] text-[#242129] outline-none transition-colors placeholder:text-[#a19a91] focus:border-[#e44762] focus:ring-4 focus:ring-[#f8d9de]";
@@ -146,7 +147,7 @@ export function TemplateWorkspace({ slug, preview = false }: { slug: string; pre
   if (!template) return <div className="rounded-[24px] border border-[#f0c7ce] bg-[#fff8f8] p-6 text-[13px] font-semibold text-[#c53e59]">{error || "This template is not available."}</div>;
 
   return <div className="min-w-0 space-y-6">
-    <nav className="flex flex-wrap items-center gap-2 text-[12px] font-semibold text-[#817970]" aria-label="Breadcrumb"><Link className="transition-colors hover:text-[#e44762]" href="/business-tools">Business tools</Link><span aria-hidden="true">/</span><span className="text-[#242129]">{template.title}</span></nav>
+    <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Business tools", href: "/business-tools" }, { label: template.title }]} />
     <header className="max-w-[760px]"><p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#e44762]">{preview ? "Draft preview" : "Business document template"}</p><h1 className="mt-2 font-brand text-[32px] font-bold leading-[1.05] tracking-[-0.045em] text-[#17151c] sm:text-[46px]">{template.title}</h1><p className="mt-3 text-[14px] leading-[1.7] text-[#756e66]">{template.description} Fill in the fields, review the document, then print, save as PDF, or download an editable Word file.</p></header>
     {serviceCta?.enabled && serviceCta.href ? <section className="flex flex-col gap-4 rounded-[18px] bg-[#edf7f0] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5" aria-label="Related service"><div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#2d7650]">Related service</p><h2 className="mt-1 font-brand text-[18px] font-bold tracking-[-0.02em] text-[#17211c]">{serviceCta.title}</h2><p className="mt-1 max-w-[680px] text-[12px] leading-[1.5] text-[#5c7063]">{serviceCta.description}</p></div><Link href={serviceCta.href} className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-full bg-[#2d7650] px-4 text-[12px] font-bold text-white transition-colors hover:bg-[#245940]">{serviceCta.linkLabel}<span className="ml-2" aria-hidden="true">↗</span></Link></section> : null}
     <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,0.84fr)_minmax(420px,1.16fr)]">

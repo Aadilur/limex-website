@@ -87,7 +87,7 @@ const config: Config = {
         meta: "0.04em",
       },
       spacing: {
-        "page-gutter": "20px",
+        "page-gutter": "14px",
         "page-gutter-lg": "42px",
         "page-gutter-xl": "72px",
         "section-gutter-lg": "56px",

@@ -15,21 +15,21 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: ServiceRouteProps): Promise<Metadata> {
   const { slug } = await params;
-  const service = await getPublicServiceServer(slug);
+  const service = await getPublicServiceServer(slug, "bn");
 
   return service
     ? {
       title: `${service.title} | Limex`,
       description: service.description,
-      alternates: { canonical: `/services/${service.slug}` },
-      openGraph: { type: "website", title: `${service.title} | Limex`, description: service.description, url: `/services/${service.slug}` },
+      alternates: { canonical: `/bn/services/${service.slug}` },
+      openGraph: { type: "website", title: `${service.title} | Limex`, description: service.description, url: `/bn/services/${service.slug}` },
     }
-    : { title: "Service | Limex" };
+    : { title: "সেবা | Limex" };
 }
 
-export default async function ServiceRoute({ params }: ServiceRouteProps) {
+export default async function BanglaServiceRoute({ params }: ServiceRouteProps) {
   const { slug } = await params;
-  const service = await getPublicServiceServer(slug);
+  const service = await getPublicServiceServer(slug, "bn");
 
   if (!service) notFound();
 
@@ -40,14 +40,15 @@ export default async function ServiceRoute({ params }: ServiceRouteProps) {
     name: service.title,
     description: service.description,
     serviceType: service.category,
-    url: `${baseUrl}/services/${service.slug}`,
+    inLanguage: "bn-BD",
+    url: `${baseUrl}/bn/services/${service.slug}`,
     provider: { "@type": "Organization", name: "Limex" },
   };
 
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />
-      <ServiceDetailPage service={service} locale="en" />
+      <ServiceDetailPage service={service} locale="bn" />
     </>
   );
 }

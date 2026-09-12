@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { calculatorFields, initialToolValues, money, validateFields, type CalculationResult, type ToolDefinition, type ToolsConfig, type ToolValues } from "@/lib/business-tools";
 import { createDocumentDraft, documentFields, documentText, type DocumentDraft } from "@/lib/business-documents";
@@ -9,6 +8,7 @@ import { ServiceIcon } from "./service-icons";
 import { ToolFields } from "./tool-fields";
 import { ToolRules } from "./tool-rules";
 import { ToolServiceRequest } from "./tool-service-request";
+import { Breadcrumbs } from "./ui";
 import styles from "./tools.module.css";
 
 function downloadText(text: string, filename: string) {
@@ -67,7 +67,7 @@ export function ToolWorkspace({ tool }: { tool: ToolDefinition }) {
     const print = popup.document.createElement("button"); print.textContent = "Print / Save as PDF"; print.onclick = () => popup.print(); popup.document.body.prepend(print); popup.focus(); popup.print();
   }
   return <div className={styles.workspace}>
-    <nav className={styles.breadcrumb} aria-label="Breadcrumb"><Link href="/">Home</Link><span aria-hidden="true">/</span><Link href="/business-tools">Business tools</Link><span aria-hidden="true">/</span><span aria-current="page">{tool.title}</span></nav>
+    <Breadcrumbs className="mb-5 lg:mb-[30px]" items={[{ label: "Home", href: "/" }, { label: "Business tools", href: "/business-tools" }, { label: tool.title }]} />
     <header className={styles.workspaceIntro}><h1 className={styles.heading}>{tool.title}{tool.slug === "income-tax" ? " calculator" : ""}</h1><p>{tool.description}</p></header>
     <div className={styles.tabs} aria-label="Tool views"><button type="button" className={styles.tab} aria-pressed={tab === "tool"} onClick={() => setTab("tool")}>{isBuilder ? "Build your document" : "Calculator"}</button><button type="button" className={styles.tab} aria-pressed={tab === "rules"} onClick={() => setTab("rules")}>{isBuilder ? "Before you begin" : "Rules & details"}</button></div>
     {tab === "rules" ? <ToolRules tool={tool} config={config} year={values.year} values={values} /> : <>

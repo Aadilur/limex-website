@@ -1,4 +1,34 @@
 import type { MouseEventHandler, ReactNode } from "react";
+import Link from "next/link";
+
+export type BreadcrumbItem = {
+  label: string;
+  href?: string;
+};
+
+export function Breadcrumbs({ items, className = "" }: { items: BreadcrumbItem[]; className?: string }) {
+  if (!items.length) return null;
+
+  return (
+    <nav className={`flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-footer font-text text-muted ${className}`.trim()} aria-label="Breadcrumb">
+      {items.map((item, index) => {
+        const isCurrent = index === items.length - 1;
+        return (
+          <span className="inline-flex min-w-0 max-w-full items-center gap-x-2" key={`${item.label}-${index}`}>
+            {index > 0 ? <span className="shrink-0 text-[#b1aaa8]" aria-hidden="true">/</span> : null}
+            {item.href && !isCurrent ? (
+              <Link className="break-words transition-colors hover:text-pink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2" href={item.href}>
+                {item.label}
+              </Link>
+            ) : (
+              <span className="break-words text-ink" aria-current={isCurrent ? "page" : undefined}>{item.label}</span>
+            )}
+          </span>
+        );
+      })}
+    </nav>
+  );
+}
 
 type ActionButtonProps = {
   children: ReactNode;

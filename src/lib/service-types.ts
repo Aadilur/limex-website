@@ -1,5 +1,6 @@
 export const serviceDestinationTypes = ["DETAIL", "BLOG", "TOOL", "INTERNAL", "EXTERNAL", "CONTACT"] as const;
 export type ServiceDestinationType = (typeof serviceDestinationTypes)[number];
+export type ServiceLocale = "en" | "bn";
 
 export const serviceStatuses = ["LINK_ONLY", "DRAFT", "PUBLISHED"] as const;
 export type ServiceStatus = (typeof serviceStatuses)[number];

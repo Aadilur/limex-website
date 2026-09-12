@@ -63,7 +63,7 @@ export function TrustMetricsSection({ content = defaultLandingContent.metrics }:
 
 export function HowItWorksSection({ content = defaultLandingContent.process }: { content?: ProcessContent }) {
   return (
-    <section className="relative min-h-0 bg-page px-4 py-8 pb-8 sm:px-page-gutter sm:py-section-y lg:rounded-panel lg:px-section-gutter-lg lg:py-section-y-xl lg:pb-section-y-lg" id="process" aria-labelledby="process-title">
+    <section className="relative min-h-0 bg-page px-page-gutter py-8 pb-8 sm:px-page-gutter sm:py-section-y lg:rounded-panel lg:px-section-gutter-lg lg:py-section-y-xl lg:pb-section-y-lg" id="process" aria-labelledby="process-title">
       <SectionTitle
         id="process-title"
         title={content.title}

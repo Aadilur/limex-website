@@ -5,14 +5,20 @@ import { pageContentClass, pageLayoutClass, pageShellClass } from "./layout";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
 
-function toPageContent(service: ServicePageContent | PublicServiceDetail): ServicePageContent {
-  if (!("detail" in service)) return service;
+function toPageContent(service: ServicePageContent | PublicServiceDetail, locale: "en" | "bn"): ServicePageContent {
+  if (!("detail" in service)) return { ...service, locale };
 
   return {
     ...service.detail,
     slug: service.slug,
-    breadcrumb: `Home / Services / ${service.title}`,
-    category: service.category.toUpperCase(),
+    locale,
+    breadcrumb: locale === "bn" ? `হোম / সেবাসমূহ / ${service.title}` : `Home / Services / ${service.title}`,
+    breadcrumbItems: [
+      { label: locale === "bn" ? "হোম" : "Home", href: "/" },
+      { label: locale === "bn" ? "সেবাসমূহ" : "Services", href: locale === "bn" ? "/bn/services" : "/services" },
+      { label: service.title },
+    ],
+    category: locale === "bn" ? service.category : service.category.toUpperCase(),
     title: service.title,
     description: service.description,
     destination: service.destination,
@@ -20,8 +26,8 @@ function toPageContent(service: ServicePageContent | PublicServiceDetail): Servi
   };
 }
 
-export function ServiceDetailPage({ service }: { service: ServicePageContent | PublicServiceDetail }) {
-  const pageContent = toPageContent(service);
+export function ServiceDetailPage({ service, locale = "en" }: { service: ServicePageContent | PublicServiceDetail; locale?: "en" | "bn" }) {
+  const pageContent = toPageContent(service, locale);
 
   return (
     <main className={pageLayoutClass}>

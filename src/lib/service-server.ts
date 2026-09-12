@@ -1,6 +1,7 @@
 import { navigation, services } from "@/components/limex/data";
 import { trademarkRegistrationService } from "@/components/limex/service-page-data";
-import type { PublicService, PublicServiceCatalog, PublicServiceDetail, ServiceDestination, ServiceDetailContent } from "./service-types";
+import { generatedServiceToPublic, getGeneratedService, mergeGeneratedServiceCatalog } from "./service-content";
+import type { PublicService, PublicServiceCatalog, PublicServiceDetail, ServiceDestination, ServiceDetailContent, ServiceLocale } from "./service-types";
 
 function fallbackDestination(href: string): ServiceDestination {
   const normalized = href.trim();
@@ -103,10 +104,8 @@ function fallbackDetail(): PublicServiceDetail {
   };
 }
 
-function fallbackCatalog(): PublicServiceCatalog {
-  const items = services.map(fallbackItem);
-  const categories = [...new Map(items.map((item) => [item.categoryKey, { key: item.categoryKey, label: item.category, count: items.filter((candidate) => candidate.categoryKey === item.categoryKey).length }])).values()];
-  return { categories, items };
+function fallbackCatalog(locale: ServiceLocale = "en"): PublicServiceCatalog {
+  return mergeGeneratedServiceCatalog(null, locale);
 }
 
 function backendUrl(path: string) {
@@ -126,15 +125,24 @@ async function fetchBackend<T>(path: string): Promise<{ value: T | null; availab
   }
 }
 
-export async function getPublicServicesServer() {
+export async function getPublicServicesServer(locale: ServiceLocale = "en") {
   const result = await fetchBackend<PublicServiceCatalog>("/api/services");
-  if (result.available && result.value) return result.value;
-  return fallbackCatalog();
+  if (result.available && result.value) return mergeGeneratedServiceCatalog(result.value, locale);
+  return fallbackCatalog(locale);
 }
 
-export async function getPublicServiceServer(slug: string) {
+export async function getPublicServiceServer(slug: string, locale: ServiceLocale = "en") {
+  const generated = getGeneratedService(slug);
+  if (locale === "bn" && generated) return { ...generatedServiceToPublic(generated, locale), detail: generated.detailBn };
+
   const result = await fetchBackend<PublicServiceDetail>(`/api/services/${encodeURIComponent(slug)}`);
   if (result.value) return result.value;
+  if (generated) {
+    return {
+      ...generatedServiceToPublic(generated, locale),
+      detail: locale === "bn" ? generated.detailBn : generated.detailEn,
+    };
+  }
   if (result.notFound) return null;
   return slug === trademarkRegistrationService.slug ? fallbackDetail() : null;
 }

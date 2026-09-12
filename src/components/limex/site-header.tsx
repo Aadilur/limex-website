@@ -7,6 +7,7 @@ import { navigation, type NavItem } from "./data";
 import { MegaMenuPanel, MobileMegaMenuContent } from "./mega-menu";
 import { LogoLockup } from "./ui";
 import { getPublicMenu } from "@/lib/menu-api";
+import { getGeneratedService, hydrateServiceNavigation } from "@/lib/service-content";
 
 function slugify(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-");
@@ -83,7 +84,8 @@ function MobileNavGroup({ item, onNavigate, isActive }: { item: NavItem; onNavig
 
 export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
   const pathname = usePathname();
-  const [menuNavigation, setMenuNavigation] = useState<NavItem[]>(navigation);
+  const navigationLocale = pathname.startsWith("/bn/") ? "bn" as const : "en" as const;
+  const [menuNavigation, setMenuNavigation] = useState<NavItem[]>(() => hydrateServiceNavigation(navigation, navigationLocale));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [isHidden, setIsHidden] = useState(false);
@@ -106,7 +108,7 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
           return managedItem ? [managedItem] : [];
         });
         const newManagedItems = managedItems.filter((item) => !staticManagedKeys.has(item.key ?? slugify(item.label)));
-        setMenuNavigation([...mergedNavigation.filter((item) => item.label === "Home"), ...mergedNavigation.filter(hasMegaMenu), ...newManagedItems, ...mergedNavigation.filter((item) => !hasMegaMenu(item) && item.label !== "Home")]);
+        setMenuNavigation(hydrateServiceNavigation([...mergedNavigation.filter((item) => item.label === "Home"), ...mergedNavigation.filter(hasMegaMenu), ...newManagedItems, ...mergedNavigation.filter((item) => !hasMegaMenu(item) && item.label !== "Home")], navigationLocale));
       })
       .catch(() => {
         // Keep the bundled navigation available when the API is unavailable.
@@ -115,7 +117,7 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [navigationLocale]);
 
   useEffect(() => {
     const closeOnOutsideClick = (event: PointerEvent) => {
@@ -169,21 +171,23 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
 
   const closeMobileMenu = () => setMobileOpen(false);
   const openMenuItem = menuNavigation.find((item) => item.label === openMenu && hasMegaMenu(item));
+  const serviceSlug = pathname.match(/^\/(?:bn\/)?services\/([^/]+)/)?.[1];
+  const generatedService = serviceSlug ? getGeneratedService(serviceSlug) : null;
   const activeNavLabel = pathname === "/"
     ? "Home"
     : pathname === "/about" || pathname.startsWith("/about/")
       ? "About us"
-      : pathname.startsWith("/blog")
+      : pathname.startsWith("/blog") || pathname.startsWith("/bn/blog")
         ? "Blog"
         : pathname.startsWith("/trademark-classes")
           ? "IP & Trademark"
-          : pathname.startsWith("/services/trademark")
+          : generatedService?.sectionLabel ?? (pathname.startsWith("/services/trademark") || pathname.startsWith("/bn/services/trademark")
             ? "IP & Trademark"
-            : pathname.startsWith("/services")
+            : pathname.startsWith("/services") || pathname.startsWith("/bn/services")
               ? "Startup & Licensing"
               : pathname.startsWith("/business-tools")
                 ? "Business Tools"
-                : menuNavigation.find((item) => item.active)?.label;
+                : menuNavigation.find((item) => item.active)?.label);
   const homeHref = pathname === "/" ? "#top" : "/";
   const contactHref = resolveLocalHref("#contact", pathname);
   const navMotionClassName = `transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${isHidden && !mobileOpen ? "-translate-y-full opacity-0" : "translate-y-0 opacity-100"}`.trim();
