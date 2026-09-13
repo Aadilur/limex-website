@@ -32,11 +32,14 @@ test("rich text separates scoped CSS and preserves editor-defined classes", () =
   assert.match(content.html, /class="guide-layout custom-card"/);
 });
 test("rich text keeps safe semantic wrappers used by pasted styled articles", () => {
-  const source = "<style>.limex-business-guide { max-width: 980px; } .limex-business-guide .bg-hero { padding: 56px; } @media (max-width: 600px) { .limex-business-guide .bg-hero { padding: 20px; } }</style><article class=\"limex-business-guide\"><header class=\"bg-hero\"><h2>Business setup guide</h2></header></article>";
+  const source = "<style>.limex-business-guide { max-width: 980px; } .limex-business-guide .bg-hero { padding: 56px; border-left: 3px solid #698471; } .limex-business-guide .bg-table { border-collapse: collapse; } .limex-business-guide .bg-table-wrap { -webkit-overflow-scrolling: touch; } .limex-business-guide .bg-cta-link { color: #1a211c !important; } @media (max-width: 600px) { .limex-business-guide .bg-hero { padding: 20px; } }</style><article class=\"limex-business-guide\"><header class=\"bg-hero\"><h2>Business setup guide</h2></header><div class=\"bg-table-wrap\"><table class=\"bg-table\"></table></div><a class=\"bg-cta-link\" href=\"#contact\">Talk to our team</a></article>";
   const content = sanitizeBlogContent(source);
   assert.match(content.html, /^<article class=\"limex-business-guide\"><header class=\"bg-hero\">/);
   assert.match(content.css, /\.blog-rich-text \.limex-business-guide\{max-width: 980px\}/);
-  assert.match(content.css, /\.blog-rich-text \.limex-business-guide \.bg-hero\{padding: 56px\}/);
+  assert.match(content.css, /\.blog-rich-text \.limex-business-guide \.bg-hero\{padding: 56px; border-left: 3px solid #698471\}/);
+  assert.match(content.css, /border-collapse: collapse/);
+  assert.match(content.css, /-webkit-overflow-scrolling: touch/);
+  assert.match(content.css, /color: #1a211c !important/);
   assert.match(content.css, /@media \(max-width: 600px\)\{\.blog-rich-text \.limex-business-guide \.bg-hero\{padding: 20px\}\}/);
 });
 test("catalogue contains seven distinct calculators and six builders", () => {

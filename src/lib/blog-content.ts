@@ -29,12 +29,12 @@ const richTextClassPattern = safeCssIdentifierPattern;
 const richTextIdPattern = safeCssIdentifierPattern;
 const allowedCssProperties = new Set([
   "align-content", "align-items", "align-self", "aspect-ratio", "background", "background-color",
-  "border", "border-bottom", "border-color", "border-radius", "border-style", "border-top", "border-width",
+  "border", "border-bottom", "border-collapse", "border-color", "border-left", "border-radius", "border-right", "border-style", "border-top", "border-width",
   "box-sizing", "bottom", "color", "column-gap", "content", "display", "flex", "flex-basis", "flex-direction",
   "flex-grow", "flex-shrink", "flex-wrap", "font-family", "font-size", "font-style", "font-weight", "gap", "grid-auto-flow", "grid-column", "grid-row", "grid-template-columns",
   "grid-template-rows", "height", "justify-content", "justify-items", "left", "letter-spacing", "line-height", "margin",
   "margin-bottom", "margin-left", "margin-right", "margin-top", "max-height", "max-width", "min-height", "min-width",
-  "object-fit", "object-position", "opacity", "order", "overflow", "overflow-wrap", "overflow-x", "overflow-y", "padding", "padding-bottom",
+  "-webkit-overflow-scrolling", "object-fit", "object-position", "opacity", "order", "overflow", "overflow-wrap", "overflow-x", "overflow-y", "padding", "padding-bottom",
   "padding-left", "padding-right", "padding-top", "position", "right", "text-align", "text-decoration", "top",
   "text-overflow", "text-shadow", "text-transform", "transition", "transform", "vertical-align", "white-space", "width", "word-break", "z-index",
   "box-shadow", "cursor", "list-style", "list-style-type",
@@ -63,7 +63,9 @@ function sanitizeCssDeclarations(value: string) {
       const rawValue = declaration.slice(separator + 1).trim();
       if (!allowedCssProperties.has(property) || !rawValue) return "";
       if (/url\s*\(|expression\s*\(|javascript\s*:|vbscript\s*:|behavior\s*:|-moz-binding|@import|<|>|[{}]/i.test(rawValue)) return "";
-      const safeValue = rawValue.replace(/\s*!important\b/gi, "").trim();
+      // Keep local priority declarations from pasted designs. They cannot
+      // affect the rest of the page because selectors are scoped below.
+      const safeValue = rawValue.replace(/\s*!important\b/gi, " !important").trim();
       return safeValue ? property + ": " + safeValue : "";
     })
     .filter(Boolean)
