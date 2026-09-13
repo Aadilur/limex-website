@@ -21,18 +21,23 @@ function safeUrl(value: string, kind: "href" | "src") {
   return /^https?:\/\//i.test(trimmed) ? trimmed : kind === "href" ? "#" : null;
 }
 
-const blogClassPattern = /^blog-[a-z0-9]+(?:-[a-z0-9]+)*$/i;
-const blogIdPattern = /^blog-[a-z0-9]+(?:-[a-z0-9]+)*$/i;
+// Rich text can contain editor-defined classes, but they must remain simple
+// CSS identifiers. The stylesheet sanitizer scopes every selector to the
+// rendered rich-text root, so these names cannot target the rest of the page.
+const safeCssIdentifierPattern = /^[-_a-zA-Z][-_a-zA-Z0-9]{0,80}$/;
+const richTextClassPattern = safeCssIdentifierPattern;
+const richTextIdPattern = safeCssIdentifierPattern;
 const allowedCssProperties = new Set([
   "align-content", "align-items", "align-self", "aspect-ratio", "background", "background-color",
   "border", "border-bottom", "border-color", "border-radius", "border-style", "border-top", "border-width",
   "box-sizing", "bottom", "color", "column-gap", "content", "display", "flex", "flex-basis", "flex-direction",
-  "flex-grow", "flex-shrink", "font-family", "font-size", "font-style", "font-weight", "gap", "grid-template-columns",
+  "flex-grow", "flex-shrink", "flex-wrap", "font-family", "font-size", "font-style", "font-weight", "gap", "grid-auto-flow", "grid-column", "grid-row", "grid-template-columns",
   "grid-template-rows", "height", "justify-content", "justify-items", "left", "letter-spacing", "line-height", "margin",
   "margin-bottom", "margin-left", "margin-right", "margin-top", "max-height", "max-width", "min-height", "min-width",
-  "object-fit", "object-position", "opacity", "order", "overflow", "overflow-wrap", "padding", "padding-bottom",
+  "object-fit", "object-position", "opacity", "order", "overflow", "overflow-wrap", "overflow-x", "overflow-y", "padding", "padding-bottom",
   "padding-left", "padding-right", "padding-top", "position", "right", "text-align", "text-decoration", "top",
-  "transform", "transition", "width", "z-index",
+  "text-overflow", "text-shadow", "text-transform", "transition", "transform", "vertical-align", "white-space", "width", "word-break", "z-index",
+  "box-shadow", "cursor", "list-style", "list-style-type",
 ]);
 
 export function isSafeBlogNavigationUrl(value: unknown) {
@@ -108,7 +113,7 @@ function sanitizeBlogStyles(value: string): string {
     if (openIndex < 0) break;
     const closeIndex = findClosingBrace(value, openIndex);
     if (closeIndex < 0) break;
-    const prelude = value.slice(cursor, openIndex).trim();
+    const prelude = value.slice(cursor, openIndex).replace(/\/\*[\s\S]*?\*\//g, "").trim();
     const body = value.slice(openIndex + 1, closeIndex);
     if (/^@media\s+(?:screen\s+and\s+)?\((?:max|min)-(?:width|height)\s*:\s*\d+(?:\.\d+)?(?:px|rem|em)\)\s*$/i.test(prelude)) {
       const nested = sanitizeBlogStyles(body);
@@ -116,7 +121,10 @@ function sanitizeBlogStyles(value: string): string {
     } else if (!prelude.startsWith("@")) {
       const selectors = splitCssSelectors(prelude)
         .map((selector) => selector.trim().replace(/\s+/g, " "))
-        .filter((selector) => selector && /\.blog-[a-z0-9_-]+/i.test(selector) && !/(?:^|\s)(?:html|body)\b|:root|[{};]/i.test(selector))
+        // The scope prefix keeps even element-only rules (for example
+        // `h2` or `p`) inside this rich-text instance. Reject root selectors
+        // and CSS control characters so pasted styles cannot escape it.
+        .filter((selector) => selector && !/(?:^|[\s>+~,(])(?:html|body|head)\b|:root|:global\b|[{};'"`\\]/i.test(selector))
         .map((selector) => selector.startsWith(".blog-rich-text") ? selector : ".blog-rich-text " + selector);
       const declarations = sanitizeCssDeclarations(body);
       if (selectors.length && declarations) output += selectors.join(", ") + "{" + declarations + "}";
@@ -166,12 +174,12 @@ function sanitizeTag(match: string, closingSlash: string | undefined, tagName: s
     const name = attribute[1]?.toLowerCase();
     const value = attribute[2] ?? attribute[3] ?? attribute[4] ?? "";
     if (name === "class") {
-      const classes = value.split(/\s+/).filter((className) => blogClassPattern.test(className)).slice(0, 24);
+      const classes = value.split(/\s+/).filter((className) => richTextClassPattern.test(className)).slice(0, 24);
       if (classes.length) attributes.push("class=\"" + escapeAttribute(classes.join(" ")) + "\"");
     } else if (name === "style") {
       const declarations = sanitizeCssDeclarations(value);
       if (declarations) attributes.push("style=\"" + escapeAttribute(declarations) + "\"");
-    } else if (name === "id" && blogIdPattern.test(value)) {
+    } else if (name === "id" && richTextIdPattern.test(value)) {
       attributes.push("id=\"" + escapeAttribute(value) + "\"");
     } else if (name === "data-blog-block" && /^[a-z0-9_-]{1,80}$/i.test(value)) {
       attributes.push("data-blog-block=\"" + escapeAttribute(value) + "\"");
@@ -188,18 +196,37 @@ function escapeAttribute(value: string) {
 }
 
 export function sanitizeBlogHtml(value: unknown) {
+  const { html, css } = sanitizeBlogContent(value);
+  return `${css ? `<style>${css}</style>` : ""}${html}`.trim();
+}
+
+export type SanitizedBlogContent = {
+  html: string;
+  css: string;
+};
+
+/**
+ * Sanitize rich HTML and separate its safe, scoped stylesheet. Keeping CSS
+ * outside the HTML fragment makes browser rendering deterministic: a style
+ * element is no longer nested inside dangerouslySetInnerHTML content.
+ */
+export function sanitizeBlogContent(value: unknown): SanitizedBlogContent {
   const source = typeof value === "string" ? value : "";
-  const withSafeStyles = source
-    .replace(/<style\b[^>]*>(?![\s\S]*?<\/style\s*>)[\s\S]*$/gi, "")
+  const styles: string[] = [];
+  const withoutStyles = source
     .replace(/<style\b[^>]*>([\s\S]*?)<\/style\s*>/gi, (_match, css: string) => {
       const safeCss = sanitizeBlogStyles(css);
-      return safeCss ? "<style>" + safeCss + "</style>" : "";
+      if (safeCss) styles.push(safeCss);
+      return "";
     })
-  const withoutDangerousBlocks = withSafeStyles.replace(dangerousBlocks, "").replace(dangerousSelfClosing, "").replace(/<!--[\s\S]*?-->/g, "");
-  return withoutDangerousBlocks.replace(/<\/?([a-zA-Z0-9-]+)([^>]*)>/g, (match, tagName: string, rawAttributes: string) => {
+    // An unfinished style block must never leak raw CSS into the markup.
+    .replace(/<style\b[^>]*>[\s\S]*$/gi, "");
+  const withoutDangerousBlocks = withoutStyles.replace(dangerousBlocks, "").replace(dangerousSelfClosing, "").replace(/<!--[\s\S]*?-->/g, "");
+  const html = withoutDangerousBlocks.replace(/<\/?([a-zA-Z0-9-]+)([^>]*)>/g, (match, tagName: string, rawAttributes: string) => {
     const closingSlash = match.startsWith("</") ? "/" : undefined;
     return sanitizeTag(match, closingSlash, tagName, rawAttributes);
   }).trim();
+  return { html, css: styles.join("") };
 }
 
 export function htmlToPlainText(value: string) {

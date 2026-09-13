@@ -7,7 +7,7 @@ import { renderTemplateDocx } from "../src/lib/document-template-docx.js";
 import { renderTemplatePrintHtml } from "../src/lib/document-template-print.js";
 import { addPartnershipPartnerSlot, defaultPartnershipDeed40BanglaTemplate, defaultPartnershipDeed40EnglishTemplate, partnershipDeedMaxPartners, partnershipPartnerVisibility, upgradePartnershipDeedTemplate } from "../src/lib/partnership-deed-templates.js";
 import { defaultRentalDeedBanglaTemplate, defaultRentalDeedEnglishTemplate } from "../src/lib/rental-deed-templates.js";
-import { sanitizeBlogHtml } from "../src/lib/blog-content.js";
+import { sanitizeBlogContent, sanitizeBlogHtml } from "../src/lib/blog-content.js";
 
 const settings = defaultToolsSettings;
 function calculate(slug: ToolSlug, values: ToolValues) { return calculateTool(slug, { ...initialToolValues(calculatorFields(slug, settings)), ...values }, settings).result; }
@@ -20,6 +20,16 @@ test("blog HTML keeps scoped responsive guide styles", () => {
   assert.match(html, /grid-template-columns: 60px 1fr/);
   assert.match(html, /@media \(max-width: 600px\)\{\.blog-rich-text \.blog-guide-step\{gap: 12px\}\}/);
   assert.doesNotMatch(html, /<script|onclick=|url\s*\(/i);
+});
+
+test("rich text separates scoped CSS and preserves editor-defined classes", () => {
+  const source = "<style>.guide-layout { display: grid; gap: 16px; } h2 { letter-spacing: -0.02em; } @media (max-width: 600px) { .guide-layout { display: block; } }</style><div class=\"guide-layout custom-card\"><h2>Filing guide</h2></div>";
+  const content = sanitizeBlogContent(source);
+  assert.match(content.css, /\.blog-rich-text \.guide-layout\{display: grid; gap: 16px\}/);
+  assert.match(content.css, /\.blog-rich-text h2\{letter-spacing: -0.02em\}/);
+  assert.match(content.css, /@media \(max-width: 600px\)\{\.blog-rich-text \.guide-layout\{display: block\}\}/);
+  assert.doesNotMatch(content.html, /<style/i);
+  assert.match(content.html, /class="guide-layout custom-card"/);
 });
 test("catalogue contains seven distinct calculators and six builders", () => {
   assert.equal(businessTools.filter((tool) => tool.group === "calculator").length, 7); assert.equal(businessTools.filter((tool) => tool.group === "builder").length, 6); assert.equal(new Set(businessTools.map((tool) => tool.slug)).size, 13);

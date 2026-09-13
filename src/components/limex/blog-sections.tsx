@@ -15,8 +15,8 @@ import { getBlogToneClasses } from "./styles";
 import { ContactModal } from "./contact-section";
 import { ActionButton, Breadcrumbs, SearchIcon } from "./ui";
 import { blogRichTextClass } from "./blog-rich-text";
+import { SanitizedRichText } from "./sanitized-rich-text";
 import { getPublicBlogIndex, type BlogIndexResponse, type BlogLocale } from "@/lib/blog-api";
-import { sanitizeBlogHtml } from "@/lib/blog-content";
 
 function categoryLabel(category: string) {
   return category.toUpperCase();
@@ -310,12 +310,7 @@ function BlogContentBlockView({ block }: { block: BlogContentBlock }) {
 
 function BlogBody({ article }: { article: BlogArticle }) {
   if (article.bodyHtml) {
-    return (
-      <div
-        className={blogRichTextClass}
-        dangerouslySetInnerHTML={{ __html: sanitizeBlogHtml(article.bodyHtml) }}
-      />
-    );
+    return <SanitizedRichText html={article.bodyHtml} className={blogRichTextClass} />;
   }
 
   return (

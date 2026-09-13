@@ -7,6 +7,7 @@ import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
+import { sanitizeBlogContent } from "@/lib/blog-content";
 
 export type RichTextDocument = Record<string, unknown>;
 
@@ -258,6 +259,7 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
   const [panelError, setPanelError] = useState("");
   const initialContent = useRef(value || "");
   const previousValue = useRef(value || "");
+  const preservedCss = useRef(sanitizeBlogContent(value).css);
 
   const extensions = useMemo(
     () => [
@@ -301,10 +303,11 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
     // remains owned by the same contenteditable node.
     shouldRerenderOnTransaction: false,
     extensions,
-    content: initialContent.current,
+    content: sanitizeBlogContent(initialContent.current).html,
     editorProps,
     onUpdate: ({ editor: nextEditor }) => {
-      onChange(nextEditor.getHTML(), nextEditor.getJSON());
+      const html = nextEditor.getHTML();
+      onChange(preservedCss.current ? `<style>${preservedCss.current}</style>${html}` : html, nextEditor.getJSON());
     },
     onSelectionUpdate: () => setSelectionVersion((current) => current + 1),
   });
@@ -313,14 +316,16 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
     const nextHtml = value || "";
     const lastPropValue = previousValue.current;
     previousValue.current = nextHtml;
+    preservedCss.current = sanitizeBlogContent(nextHtml).css;
     if (!editor || sourceMode) return;
+    const nextContent = sanitizeBlogContent(nextHtml).html;
     const currentHtml = editor.getHTML();
-    if (currentHtml === nextHtml || (nextHtml === "" && currentHtml === "<p></p>")) return;
+    if (currentHtml === nextHtml || currentHtml === nextContent || (nextHtml === "" && currentHtml === "<p></p>")) return;
     // A local transaction updates the editor before the parent state update
     // reaches this component. Do not push the stale parent value back into
     // the editor while it still has focus, or the cursor jumps/resets.
     if (editor.isFocused && nextHtml === lastPropValue) return;
-    editor.commands.setContent(nextHtml, false);
+    editor.commands.setContent(nextContent, false);
   }, [editor, sourceMode, value]);
 
   const activeStyle = useMemo<BlockStyle>(() => {
@@ -353,7 +358,8 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
 
   function toggleSourceMode() {
     if (sourceMode && editor) {
-      editor.commands.setContent(value || "", false);
+      preservedCss.current = sanitizeBlogContent(value).css;
+      editor.commands.setContent(sanitizeBlogContent(value).html, false);
       setSelectionVersion((current) => current + 1);
     }
     setPanelError("");
@@ -404,10 +410,10 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
       {panelError ? <p className="border-b border-[#f4c9d0] bg-[#fff5f6] px-3 py-2 text-[10px] font-semibold text-[#ad3148]" role="alert">{panelError}</p> : null}
       {linkPanelOpen && editor ? <LinkPanel editor={editor} value={linkUrl} onChange={setLinkUrl} onClose={() => setLinkPanelOpen(false)} onError={setPanelError} /> : null}
       {imagePanelOpen && editor ? <ImagePanel editor={editor} url={imageUrl} alt={imageAlt} onUrlChange={setImageUrl} onAltChange={setImageAlt} onClose={() => setImagePanelOpen(false)} onError={setPanelError} /> : null}
-      {sourceMode ? <textarea className={cn(compact ? "min-h-[220px]" : "min-h-[320px]", "w-full resize-y border-0 bg-[#fffdfa] px-5 py-5 font-mono text-[12px] leading-[1.7] text-[#3f3b37] outline-none")} value={value} onChange={(event) => onChange(event.target.value, { version: 1, html: event.target.value })} spellCheck={false} aria-label={`${ariaLabel} HTML source`} /> : editor ? <EditorContent editor={editor} /> : <div className={cn(compact ? "min-h-[220px]" : "min-h-[320px]", "px-5 py-5 text-[13px] text-[#aaa49b]")}>Loading editor…</div>}
+      {sourceMode ? <textarea className={cn(compact ? "min-h-[220px]" : "min-h-[320px]", "w-full resize-y border-0 bg-[#fffdfa] px-5 py-5 font-mono text-[12px] leading-[1.7] text-[#3f3b37] outline-none")} value={value} onChange={(event) => { preservedCss.current = sanitizeBlogContent(event.target.value).css; onChange(event.target.value, { version: 1, html: event.target.value }); }} spellCheck={false} aria-label={`${ariaLabel} HTML source`} /> : editor ? <EditorContent editor={editor} /> : <div className={cn(compact ? "min-h-[220px]" : "min-h-[320px]", "px-5 py-5 text-[13px] text-[#aaa49b]")}>Loading editor…</div>}
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#eee9e2] px-4 py-2 text-[10px] text-[#9b958c]">
         <span>{wordCount.toLocaleString()} words · {characterCount.toLocaleString()} characters</span>
-        <span>{sourceMode ? "HTML source" : "Visual editor"} · sanitized on save</span>
+        <span>{sourceMode ? "HTML source · custom CSS supported" : "Visual editor"} · sanitized on save</span>
       </div>
     </div>
   );

@@ -5,11 +5,11 @@ import { useState } from "react";
 import type { ServicePageContent, ServicePriceTier } from "./service-page-data";
 import type { PublicContactSettings } from "@/lib/contact-types";
 import { getTool, toolHref } from "@/lib/business-tools";
-import { sanitizeBlogHtml } from "@/lib/blog-content";
 import { ContactModal } from "./contact-section";
 import { ToolWorkspace } from "./tool-workspace";
 import { ActionButton, Breadcrumbs, WaveLabel } from "./ui";
 import { blogRichTextClass } from "./blog-rich-text";
+import { SanitizedRichText } from "./sanitized-rich-text";
 
 function externalLinkProps(href: string) {
   return /^https?:\/\//i.test(href) ? { target: "_blank" as const, rel: "noreferrer" } : {};
@@ -81,11 +81,10 @@ const serviceUi = {
   },
 } as const;
 
-const richTextClass = "text-body-lg text-muted [&_a]:font-semibold [&_a]:text-pink [&_a]:underline [&_a]:decoration-pink/30 [&_a]:underline-offset-2 [&_blockquote]:my-cluster [&_blockquote]:border-l-2 [&_blockquote]:border-pink [&_blockquote]:pl-cluster [&_h2]:mt-section-gap-lg [&_h2]:font-brand [&_h2]:text-section-title [&_h2]:font-bold [&_h2]:text-ink [&_h3]:mt-section-gap [&_h3]:font-brand [&_h3]:text-subheading-mobile [&_h3]:font-bold [&_h3]:text-ink [&_img]:my-cluster [&_img]:max-w-full [&_img]:rounded-card [&_img]:object-contain [&_li]:ml-5 [&_li]:list-disc [&_li]:pl-1 [&_ol_li]:list-decimal [&_p+p]:mt-cluster [&_strong]:font-bold [&_ul]:my-cluster [&_ol]:my-cluster";
+const richTextClass = "blog-rich-text text-body-lg text-muted [&_a]:font-semibold [&_a]:text-pink [&_a]:underline [&_a]:decoration-pink/30 [&_a]:underline-offset-2 [&_blockquote]:my-cluster [&_blockquote]:border-l-2 [&_blockquote]:border-pink [&_blockquote]:pl-cluster [&_h2]:mt-section-gap-lg [&_h2]:font-brand [&_h2]:text-section-title [&_h2]:font-bold [&_h2]:text-ink [&_h3]:mt-section-gap [&_h3]:font-brand [&_h3]:text-subheading-mobile [&_h3]:font-bold [&_h3]:text-ink [&_img]:my-cluster [&_img]:max-w-full [&_img]:rounded-card [&_img]:object-contain [&_li]:ml-5 [&_li]:list-disc [&_li]:pl-1 [&_ol_li]:list-decimal [&_p+p]:mt-cluster [&_strong]:font-bold [&_ul]:my-cluster [&_ol]:my-cluster";
 
 function RichTextContent({ id, html, fallback, className = richTextClass }: { id?: string; html?: string; fallback: string; className?: string }) {
-  if (!html?.trim()) return <p className={className}>{fallback}</p>;
-  return <div id={id} className={className} dangerouslySetInnerHTML={{ __html: sanitizeBlogHtml(html) }} />;
+  return <SanitizedRichText id={id} html={html} fallback={fallback} className={className.includes("blog-rich-text") ? className : `blog-rich-text ${className}`} />;
 }
 
 export function ServiceHeroSection({ service }: { service: ServicePageContent }) {
