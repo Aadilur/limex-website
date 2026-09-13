@@ -72,9 +72,9 @@ function BlogCover({
   const coverWidthClass = isThumb
     ? ""
     : isCard
-      ? "w-[112px] shrink-0 sm:w-full"
+      ? "w-[96px] shrink-0 sm:w-full"
       : isRelated
-        ? "w-[112px] shrink-0 lg:w-full"
+        ? "w-[96px] shrink-0 sm:w-[120px] lg:w-full"
         : "w-full";
   const coverClass = isFeatured
     ? "aspect-[2/1] rounded-[16px]"
@@ -246,22 +246,22 @@ export function BlogRelatedArticleCard({
 }) {
   return (
     <a
-      className="group flex h-full min-h-0 flex-row overflow-hidden rounded-[22px] border border-[#e5e0d6] bg-white shadow-[0_2px_12px_rgba(7,20,46,0.03)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(7,20,46,0.08)] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3 lg:flex-col"
+      className="group flex h-full min-h-0 flex-row overflow-hidden rounded-[20px] border border-[#e5e0d6] bg-white shadow-[0_2px_12px_rgba(7,20,46,0.03)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(7,20,46,0.08)] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3 sm:rounded-[22px] lg:flex-col"
       href={blogHref(article.slug, locale)}
     >
       <BlogCover article={article} variant="related" />
-      <div className="flex min-w-0 min-h-0 flex-1 flex-col gap-2 overflow-hidden p-4 sm:p-5 lg:gap-cluster-xs lg:p-card-pad">
+      <div className="flex min-w-0 min-h-0 flex-1 flex-col gap-1.5 overflow-hidden p-3.5 sm:gap-2 sm:p-5 lg:gap-cluster-xs lg:p-card-pad">
         <p className="line-clamp-1 text-[10px] font-bold uppercase tracking-[0.1em] text-pink lg:text-overline">
           {categoryLabel(article.category)} <span className="px-1">·</span>{" "}
           {article.date}
         </p>
-        <h3 className="line-clamp-2 font-brand text-[16px] font-bold leading-[1.25] tracking-[-0.02em] text-ink transition-colors group-hover:text-pink sm:text-subheading">
+        <h3 className="line-clamp-2 font-brand text-[15px] font-bold leading-[1.25] tracking-[-0.02em] text-ink transition-colors group-hover:text-pink sm:text-[16px] sm:text-subheading">
           {article.title}
         </h3>
-        <p className="line-clamp-2 text-[13px] leading-[1.5] text-muted lg:line-clamp-3 lg:text-body-sm">
+        <p className="line-clamp-2 text-[12px] leading-[1.5] text-muted sm:text-[13px] lg:line-clamp-3 lg:text-body-sm">
           {article.summary}
         </p>
-        <span className="mt-auto pt-2 text-[13px] font-semibold text-pink transition-transform duration-200 group-hover:translate-x-0.5 lg:text-body-xs">
+        <span className="mt-auto pt-1.5 text-[12px] font-semibold text-pink transition-transform duration-200 group-hover:translate-x-0.5 sm:pt-2 sm:text-[13px] lg:text-body-xs">
           Read more <span aria-hidden="true">↗</span>
         </span>
       </div>
@@ -710,17 +710,17 @@ export function BlogDetailContent({
             </span>
           </div>
           <h1
-            className="mt-4 max-w-[950px] font-brand text-[30px] font-bold leading-[1.14] tracking-[-0.035em] text-ink sm:text-[40px] sm:leading-[1.08] lg:mt-6 lg:text-[50px] lg:leading-[1.05]"
+            className="mt-4 max-w-[950px] font-brand text-[28px] font-bold leading-[1.15] tracking-[-0.035em] text-ink sm:text-[38px] sm:leading-[1.08] lg:mt-6 lg:text-[50px] lg:leading-[1.05]"
             id="article-title"
           >
             {article.title}
           </h1>
-          <p className="mt-4 max-w-[780px] text-[16px] leading-[1.62] text-muted sm:text-[18px] sm:leading-[1.6] lg:mt-5 lg:text-[19px]">
+          <p className="mt-4 max-w-[780px] text-[15px] leading-[1.65] text-muted sm:text-[18px] sm:leading-[1.6] lg:mt-5 lg:text-[19px]">
             {article.summary}
           </p>
         </div>
         <div className="mt-6 flex flex-col items-start gap-3 border-b border-[#e5e0d6] pb-4 text-body-sm text-muted sm:flex-row sm:items-center sm:justify-between lg:mt-8 lg:gap-cluster lg:pb-5">
-          <div className="flex flex-wrap items-center gap-2 text-muted">
+          <div className="flex flex-wrap items-center gap-2 text-muted text-[13px] sm:text-body-sm">
             <span>{article.date}</span>
             <span className="px-0.5">·</span>
             <span>
@@ -739,7 +739,7 @@ export function BlogDetailContent({
             ) : null}
           </div>
           <button
-            className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-full border border-[#dcd5cb] bg-white px-5 text-[13px] font-semibold text-pink shadow-[0_1px_3px_rgba(7,20,46,0.02)] transition-all duration-150 hover:border-pink/45 hover:text-ink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2 sm:w-auto sm:text-xs"
+            className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full border border-[#dcd5cb] bg-white px-5 text-[13px] font-semibold text-pink shadow-[0_1px_3px_rgba(7,20,46,0.02)] transition-all duration-150 hover:border-pink/45 hover:text-ink active:scale-[0.98] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2 sm:w-auto sm:text-xs"
             type="button"
             onClick={handleShare}
           >
@@ -795,31 +795,31 @@ export function BlogDetailContent({
               <BlogBody article={article} />
             </div>
             <BlogRelatedServices article={article} />
-            <div className="relative mt-10 overflow-hidden rounded-[24px] bg-gradient-to-br from-[#071b3d] via-[#09224d] to-[#041026] p-6 text-white shadow-[0_12px_36px_rgba(7,20,46,0.1)] lg:mt-12 lg:p-8">
+            <div className="relative mt-10 overflow-hidden rounded-[22px] bg-gradient-to-br from-[#071b3d] via-[#09224d] to-[#041026] p-6 text-white shadow-[0_12px_36px_rgba(7,20,46,0.1)] sm:rounded-[24px] lg:mt-12 lg:p-8">
               <div className="pointer-events-none absolute -bottom-10 -right-10 size-48 rounded-full bg-[#0055ff]/20 blur-2xl" />
               <div className="relative z-10">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-[#f5b8c7]/30 bg-[#f5b8c7]/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[#f5b8c7]">
                   GET SUPPORT
                 </span>
-                <p className="mt-3 max-w-[620px] font-brand text-[22px] font-bold leading-snug text-white lg:text-[26px]">
+                <p className="mt-3 max-w-[620px] font-brand text-[20px] font-bold leading-snug text-white sm:text-[22px] lg:text-[26px]">
                   Want a clear next step for your business?
                 </p>
                 {primaryService ? (
-                  <p className="mt-2 max-w-[620px] text-[14px] leading-relaxed text-white/75 lg:text-[15px]">
+                  <p className="mt-2 max-w-[620px] text-[13.5px] leading-relaxed text-white/75 sm:text-[14px] lg:text-[15px]">
                     We can help with {primaryService.label.toLowerCase()} and
                     the next steps around it.
                   </p>
                 ) : null}
-                <div className="mt-6 flex flex-wrap items-center gap-3">
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
                   <ContactModal
                     articleSlug={article.slug}
-                    buttonClassName="min-w-[170px] !rounded-full shadow-md"
+                    buttonClassName="min-h-[46px] w-full justify-center !rounded-full shadow-md sm:w-auto sm:min-w-[170px]"
                     buttonLabel="Book this service"
                     serviceKey={primaryService?.serviceKey}
                   />
                   {primaryService && primaryService.href !== "#contact" ? (
                     <a
-                      className="inline-flex items-center gap-1 text-[13px] font-semibold text-white/85 underline decoration-white/30 underline-offset-4 transition-colors hover:text-white"
+                      className="inline-flex items-center justify-center gap-1 py-1 text-[13px] font-semibold text-white/85 underline decoration-white/30 underline-offset-4 transition-colors hover:text-white sm:justify-start"
                       href={primaryService.href}
                     >
                       View {primaryService.label.toLowerCase()} ↗
@@ -895,7 +895,7 @@ export function BlogDetailContent({
                 </p>
                 <ContactModal
                   articleSlug={article.slug}
-                  buttonClassName="mt-5 w-full justify-center !rounded-full shadow-md"
+                  buttonClassName="mt-5 min-h-[46px] w-full justify-center !rounded-full shadow-md"
                   buttonLabel="Ask a question"
                   serviceKey={primaryService?.serviceKey}
                 />

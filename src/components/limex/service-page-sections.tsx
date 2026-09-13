@@ -177,11 +177,11 @@ export function ServiceHeroSection({
           <p className="mt-3.5 max-w-[620px] text-body leading-[1.6] text-muted sm:text-body-lg">
             {service.description}
           </p>
-          <div className="mt-6 flex flex-wrap items-center gap-cluster sm:mt-8">
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-cluster sm:mt-8">
             <ActionButton
               href="#service-contact"
               arrow="cta"
-              className="min-h-button-lg w-[188px] pl-5 text-body-xs shadow-[0_4px_14px_rgba(0,85,255,0.18)]"
+              className="min-h-button-lg w-full justify-between pl-5 text-body-xs shadow-[0_4px_14px_rgba(0,85,255,0.18)] sm:w-[188px]"
             >
               {service.ctaLabel}
             </ActionButton>
@@ -189,7 +189,7 @@ export function ServiceHeroSection({
             service.destination.type !== "DETAIL" &&
             service.destination.type !== "CONTACT" ? (
               <a
-                className="inline-flex min-h-control items-center gap-cluster-sm rounded-full border border-[#dcd5cb] bg-white px-4 text-button font-semibold text-ink shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition-all hover:border-[#0055ff] hover:text-[#0055ff] hover:shadow-sm focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3"
+                className="inline-flex min-h-control w-full items-center justify-center gap-cluster-sm rounded-full border border-[#dcd5cb] bg-white px-5 text-button font-semibold text-ink shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition-all hover:border-[#0055ff] hover:text-[#0055ff] hover:shadow-sm focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3 sm:w-auto"
                 href={service.destination.href}
                 target={service.destination.isExternal ? "_blank" : undefined}
                 rel={service.destination.isExternal ? "noreferrer" : undefined}
@@ -202,28 +202,28 @@ export function ServiceHeroSection({
             ) : null}
           </div>
 
-          <dl className="mt-8 grid max-w-[650px] grid-cols-1 divide-y divide-[#e5e0d6] rounded-[20px] border border-[#e5e0d6] bg-white/70 p-4 shadow-[0_2px_12px_rgba(7,20,46,0.02)] backdrop-blur-sm sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:p-5">
-            <div className="pb-3 sm:pb-0 sm:pr-4">
-              <dt className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#53657b]">
+          <dl className="mt-7 grid max-w-[650px] grid-cols-1 gap-2 rounded-[22px] border border-[#e5e0d6] bg-white/80 p-2.5 shadow-[0_2px_12px_rgba(7,20,46,0.02)] backdrop-blur-sm sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-[#e5e0d6] sm:rounded-[20px] sm:p-5">
+            <div className="flex items-center justify-between rounded-[14px] bg-[#fbfaf8] px-4 py-3 sm:block sm:rounded-none sm:bg-transparent sm:px-4 sm:py-0 sm:first:pl-0">
+              <dt className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#64748b]">
                 {ui.startingPrice}
               </dt>
-              <dd className="mt-1 text-[16px] font-bold tracking-tight text-ink">
+              <dd className="text-[15px] font-bold tracking-tight text-ink sm:mt-1 sm:text-[17px]">
                 {service.startingPrice}
               </dd>
             </div>
-            <div className="py-3 sm:py-0 sm:px-4">
-              <dt className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#53657b]">
+            <div className="flex items-center justify-between rounded-[14px] bg-[#fbfaf8] px-4 py-3 sm:block sm:rounded-none sm:bg-transparent sm:px-4 sm:py-0">
+              <dt className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#64748b]">
                 {ui.deliveryTime}
               </dt>
-              <dd className="mt-1 text-[16px] font-bold tracking-tight text-ink">
+              <dd className="text-[15px] font-bold tracking-tight text-ink sm:mt-1 sm:text-[17px]">
                 {service.deliveryTime}
               </dd>
             </div>
-            <div className="pt-3 sm:pt-0 sm:pl-4">
-              <dt className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#53657b]">
+            <div className="flex items-center justify-between rounded-[14px] bg-[#fbfaf8] px-4 py-3 sm:block sm:rounded-none sm:bg-transparent sm:px-4 sm:py-0 sm:last:pr-0">
+              <dt className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#64748b]">
                 {ui.serviceMode}
               </dt>
-              <dd className="mt-1 text-[16px] font-bold tracking-tight text-ink">
+              <dd className="text-[15px] font-bold tracking-tight text-ink sm:mt-1 sm:text-[17px]">
                 {service.serviceMode}
               </dd>
             </div>
@@ -231,7 +231,7 @@ export function ServiceHeroSection({
         </div>
 
         <div
-          className="relative min-h-[320px] overflow-hidden rounded-[24px] border border-[#e5e0d6] bg-gradient-to-br from-[#f7f2fc] via-[#f0f4fe] to-[#eaf0fc] shadow-[0_12px_40px_rgba(7,27,61,0.04)] sm:min-h-[380px]"
+          className="relative min-h-[300px] overflow-hidden rounded-[24px] border border-[#e5e0d6] bg-gradient-to-br from-[#f7f2fc] via-[#f0f4fe] to-[#eaf0fc] shadow-[0_12px_40px_rgba(7,27,61,0.04)] sm:min-h-[380px]"
           aria-label={service.mediaTitle}
         >
           {service.mediaUrl?.trim() ? (
@@ -265,15 +265,15 @@ export function ServiceHeroSection({
             </span>
           ) : null}
           <div
-            className={`absolute left-1/2 top-1/2 w-[min(340px,calc(100%-48px))] -translate-x-1/2 -translate-y-1/2 rounded-[20px] border border-white/90 p-6 shadow-[0_16px_36px_rgba(7,27,61,0.08)] backdrop-blur-md ${service.mediaUrl?.trim() ? "bg-navy/85 text-white" : "bg-white/95 text-ink"}`.trim()}
+            className={`absolute left-1/2 top-1/2 w-[calc(100%-32px)] sm:w-[min(340px,calc(100%-48px))] -translate-x-1/2 -translate-y-1/2 rounded-[20px] border border-white/90 p-5 sm:p-6 shadow-[0_16px_36px_rgba(7,27,61,0.08)] backdrop-blur-md ${service.mediaUrl?.trim() ? "bg-navy/85 text-white" : "bg-white/95 text-ink"}`.trim()}
           >
             <h2
-              className={`font-brand text-[22px] font-bold leading-[1.2] tracking-tight ${service.mediaUrl?.trim() ? "text-white" : "text-ink"}`.trim()}
+              className={`font-brand text-[20px] sm:text-[22px] font-bold leading-[1.2] tracking-tight ${service.mediaUrl?.trim() ? "text-white" : "text-ink"}`.trim()}
             >
               {service.mediaTitle}
             </h2>
             <p
-              className={`mt-2 text-body-xs leading-relaxed ${service.mediaUrl?.trim() ? "text-white/75" : "text-muted"}`.trim()}
+              className={`mt-2 text-[13px] sm:text-body-xs leading-relaxed ${service.mediaUrl?.trim() ? "text-white/75" : "text-muted"}`.trim()}
             >
               {service.mediaDescription}
             </p>
@@ -435,13 +435,13 @@ export function ServiceOverviewSection({
               <dl className="mt-4 divide-y divide-[#f0ece4]">
                 {service.facts.map((fact) => (
                   <div
-                    className="flex items-baseline justify-between gap-4 py-3"
+                    className="flex items-baseline justify-between gap-3 py-3"
                     key={fact.label}
                   >
-                    <dt className="text-[13px] font-medium text-[#53657b]">
+                    <dt className="pr-2 text-[13px] font-medium text-[#53657b]">
                       {fact.label}
                     </dt>
-                    <dd className="text-right text-[14px] font-bold text-ink">
+                    <dd className="max-w-[55%] shrink-0 break-words text-right text-[14px] font-bold text-ink">
                       {fact.value}
                     </dd>
                   </div>
@@ -510,10 +510,10 @@ export function ServiceOverviewSection({
                     : "Document builders"}
                 </p>
               ) : null}
-              <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="mt-4 grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
                 {builderTools.map((tool) => (
                   <a
-                    className="group flex min-w-0 items-center justify-between gap-4 rounded-[20px] border border-[#e5e0d6] bg-white p-5 shadow-[0_2px_8px_rgba(0,0,0,0.02)] transition-all hover:-translate-y-0.5 hover:border-[#0055ff]/40 hover:shadow-[0_8px_24px_rgba(0,85,255,0.06)] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3"
+                    className="group flex min-w-0 items-center justify-between gap-4 rounded-[18px] border border-[#e5e0d6] bg-white p-4 shadow-[0_2px_8px_rgba(0,0,0,0.02)] transition-all hover:-translate-y-0.5 hover:border-[#0055ff]/40 hover:shadow-[0_8px_24px_rgba(0,85,255,0.06)] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3 sm:rounded-[20px] sm:p-5"
                     href={toolHref(tool.slug)}
                     key={tool.slug}
                   >
@@ -526,7 +526,7 @@ export function ServiceOverviewSection({
                       </span>
                     </span>
                     <span
-                      className="shrink-0 text-pink transition-transform duration-200 group-hover:translate-x-0.5"
+                      className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#f6f4ee] text-xs font-bold text-pink transition-colors group-hover:bg-[#0055ff] group-hover:text-white"
                       aria-hidden="true"
                     >
                       ↗
@@ -802,7 +802,7 @@ export function ServiceContactSection({
 
   return (
     <section
-      className="relative mt-12 overflow-hidden rounded-[28px] border border-white/10 bg-gradient-to-br from-[#071b3d] via-[#09224d] to-[#041026] p-7 text-white shadow-[0_24px_60px_rgba(7,27,61,0.22)] sm:p-10 lg:mt-20 lg:flex lg:items-center lg:justify-between lg:p-12"
+      className="relative mt-12 overflow-hidden rounded-[24px] border border-white/10 bg-gradient-to-br from-[#071b3d] via-[#09224d] to-[#041026] p-6 text-white shadow-[0_24px_60px_rgba(7,27,61,0.22)] sm:rounded-[28px] sm:p-10 lg:mt-20 lg:flex lg:items-center lg:justify-between lg:p-12"
       id="service-contact"
       aria-labelledby="service-contact-title"
     >
@@ -815,7 +815,7 @@ export function ServiceContactSection({
           {contactEyebrow}
         </span>
         <h2
-          className="mt-3.5 max-w-[760px] font-brand text-[28px] font-bold leading-[1.1] sm:text-page-title-mobile lg:text-page-title"
+          className="mt-3.5 max-w-[760px] font-brand text-[24px] font-bold leading-[1.15] sm:text-page-title-mobile lg:text-page-title"
           id="service-contact-title"
         >
           {contactTitle}
@@ -829,12 +829,12 @@ export function ServiceContactSection({
           serviceKey={service.serviceKey ?? service.title}
           initialMessage={`I’m interested in ${service.title}.`}
           variant="white"
-          buttonClassName="min-h-[50px] min-w-[210px] justify-center rounded-full font-bold text-body-xs shadow-md"
+          buttonClassName="min-h-[50px] w-full justify-center rounded-full font-bold text-body-xs shadow-md sm:w-auto sm:min-w-[210px]"
           buttonLabel={contactButtonLabel}
         />
         {whatsappHref ? (
           <a
-            className="inline-flex min-h-[50px] min-w-[210px] items-center justify-center gap-2 rounded-full border border-white/25 bg-white/10 px-5 text-button font-bold text-white backdrop-blur-sm transition-all hover:bg-white/20 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-white/60 focus-visible:outline-offset-3"
+            className="inline-flex min-h-[50px] w-full items-center justify-center gap-2 rounded-full border border-white/25 bg-white/10 px-5 text-button font-bold text-white backdrop-blur-sm transition-all hover:bg-white/20 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-white/60 focus-visible:outline-offset-3 sm:w-auto sm:min-w-[210px]"
             href={whatsappHref}
             target="_blank"
             rel="noreferrer"
