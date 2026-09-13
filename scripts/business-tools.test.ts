@@ -250,6 +250,58 @@ test("home page video reels hide play button and text while playing until hovere
   );
 });
 
+test("service page overview preserves custom HTML with scoped CSS and handles large layouts", async () => {
+  const serviceHtml = `
+    <style>
+      .service-flow-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+      .service-flow-card { background: #f7fbff; border: 1px solid #c7ddfc; border-radius: 18px; padding: 24px; }
+      .service-flow-card h3 { color: #071b3d; font-size: 18px; }
+      @media (max-width: 768px) { .service-flow-grid { grid-template-columns: 1fr; } }
+    </style>
+    <div class="service-flow-grid">
+      <div class="service-flow-card">
+        <h3>Step 1: Consultation</h3>
+        <p>Initial assessment and document checklist.</p>
+      </div>
+      <div class="service-flow-card">
+        <h3>Step 2: Filing</h3>
+        <p>Submission to government portal.</p>
+      </div>
+      <div class="service-flow-card">
+        <h3>Step 3: Handover</h3>
+        <p>Delivery of completed certificate.</p>
+      </div>
+    </div>
+  `;
+  const sanitized = sanitizeBlogContent(serviceHtml);
+  assert.match(sanitized.css, /\.blog-rich-text \.service-flow-grid\{display: grid/);
+  assert.match(sanitized.css, /\.blog-rich-text \.service-flow-card\{background: #f7fbff/);
+  assert.match(sanitized.html, /class="service-flow-grid"/);
+  assert.match(sanitized.html, /<h3>Step 1: Consultation<\/h3>/);
+
+  // Verify service routes allow up to 300,000 characters for overviewHtml
+  const fs = await import("node:fs/promises");
+  const routesContent = await fs.readFile(
+    new URL("../server/modules/services/interface/http/service.routes.ts", import.meta.url),
+    "utf8",
+  );
+  assert.match(routesContent, /overviewHtml:\s*z\.string\(\)\.trim\(\)\.max\(300000\)\.optional\(\)/);
+
+  // Verify service repository checks overview text without requiring legacy overviewTitle
+  const repoContent = await fs.readFile(
+    new URL("../server/modules/services/infrastructure/prisma-service.repository.ts", import.meta.url),
+    "utf8",
+  );
+  assert.match(repoContent, /const hasOverview = detail\.overviewHtml !== undefined/);
+
+  // Verify service page sections share blogRichTextClass for unified styling
+  const sectionsContent = await fs.readFile(
+    new URL("../src/components/limex/service-page-sections.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(sectionsContent, /const richTextClass = blogRichTextClass;/);
+});
+
 test("catalogue contains seven distinct calculators and six builders", () => {
   assert.equal(
     businessTools.filter((tool) => tool.group === "calculator").length,

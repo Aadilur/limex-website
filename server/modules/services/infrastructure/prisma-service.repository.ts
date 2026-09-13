@@ -305,7 +305,10 @@ export class PrismaServiceRepository implements ServiceRepository {
       const overviewText = detail.overviewHtml !== undefined
         ? htmlToPlainText(detail.overviewHtml)
         : detail.overviewDescriptionHtml ? htmlToPlainText(detail.overviewDescriptionHtml) : detail.overviewDescription.trim();
-      if (!current.titleEn.trim() || !current.descriptionEn.trim() || !detail.overviewTitle.trim() || !overviewText) {
+      const hasOverview = detail.overviewHtml !== undefined
+        ? Boolean(overviewText)
+        : Boolean(detail.overviewTitle.trim() && overviewText);
+      if (!current.titleEn.trim() || !current.descriptionEn.trim() || !hasOverview) {
         throw new ServiceSafetyError("Add a service title, summary and overview before publishing.");
       }
 

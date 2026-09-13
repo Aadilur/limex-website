@@ -143,7 +143,7 @@ function RichTextPreview({
         compact ? "min-h-[220px]" : "min-h-[320px]",
         "max-h-[680px] overflow-auto bg-[#f2eee7] p-3 sm:p-5",
       )}
-      aria-label="Rendered article preview"
+      aria-label="Rendered preview"
     >
       <div className="mx-auto max-w-[960px] rounded-[14px] bg-[#fffdfa] px-4 py-5 shadow-[0_8px_28px_rgba(40,34,28,0.08)] sm:px-7 sm:py-7">
         {css ? (
@@ -365,7 +365,7 @@ function LinkPanel({
         Cancel
       </button>
       <p className="basis-full text-[10px] text-[#9b958c]" role="status">
-        Select text in the article, then add a link. External links open in a
+        Select text, then add a link. External links open in a
         new tab.
       </p>
     </div>
@@ -720,7 +720,7 @@ export function RichTextEditor({
       const nextContent = sanitizeBlogContent(value);
       if (hasCustomRichTextStructure(nextContent.html, nextContent.css)) {
         setPanelError(
-          "This article uses custom HTML/CSS. Use HTML or CSS to edit it and Preview to inspect the exact result.",
+          "This content uses custom HTML/CSS. Use HTML or CSS to edit it and Preview to inspect the exact result.",
         );
         setEditorMode("preview");
         return;
@@ -754,15 +754,15 @@ export function RichTextEditor({
     >
       <div
         className="flex flex-wrap items-center justify-between gap-2 border-b border-[#eee9e2] bg-[#faf7f2] px-2.5 py-1.5"
-        aria-label="Article formatting toolbar"
+        aria-label="Formatting toolbar"
       >
         {editorMode === "visual" ? (
           <div className="flex flex-wrap items-center gap-1">
-            <label className="sr-only" htmlFor="article-block-style">
+            <label className="sr-only" htmlFor="editor-block-style">
               Text style
             </label>
             <select
-              id="article-block-style"
+              id="editor-block-style"
               className="mr-1 h-8 rounded-[8px] bg-transparent px-2 text-[11px] font-bold text-[#4f4b47] outline-none transition-colors hover:bg-white focus:bg-white focus:ring-2 focus:ring-[#008cff]/20"
               value={activeStyle}
               onChange={(event) =>
@@ -868,7 +868,7 @@ export function RichTextEditor({
             </span>
             <span className="font-bold text-[#071b3d]">Custom CSS</span>
             <span className="hidden text-[11px] text-[#9b958c] sm:inline">
-              · Scoped to this article (.blog-rich-text)
+              · Scoped to (.blog-rich-text)
             </span>
           </div>
         ) : (
@@ -968,7 +968,7 @@ export function RichTextEditor({
           </span>
           <span>
             Use HTML or CSS to edit it. Preview renders the exact scoped styles
-            that the public article receives.
+            that the public page receives.
           </span>
         </div>
       ) : null}

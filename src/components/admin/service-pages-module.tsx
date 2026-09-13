@@ -48,6 +48,7 @@ function emptyDetail(): ServiceDetailContent {
     overviewEyebrow: "OVERVIEW",
     overviewTitle: "A practical path forward",
     overviewDescription: "Share the scope of this service and the next step your customer should take.",
+    overviewHtml: "",
     overviewDescriptionHtml: "",
     contentLabel: "THE LIMEX APPROACH",
     contentTitle: "Make the next step easier to understand.",
@@ -411,7 +412,7 @@ function DetailEditor({ detail, onChange, mediaAssetId, onMediaAssetChange }: { 
           <div className="mt-4">
             <RichTextEditor ariaLabel="Complete service overview and guided filing" placeholder="Write the complete overview, approach, benefits and filing steps…" value={detail.overviewHtml !== undefined ? detail.overviewHtml : legacyOverviewHtml(detail)} onChange={(html) => update("overviewHtml", html)} />
           </div>
-          <p className="mt-2 text-[10px] leading-[1.45] text-[#989188]">Use Heading 2 for the section title, Heading 3 for the approach title, and lists for benefits or steps. Use HTML source for custom classes, CSS and responsive markup. Existing structured content remains available until this editor is saved.</p>
+          <p className="mt-2 text-[10px] leading-[1.45] text-[#989188]">Use Visual for standard writing, HTML &amp; CSS for custom layouts, and Preview to inspect the exact result before saving.</p>
         </div>
       </SectionDisclosure>
 

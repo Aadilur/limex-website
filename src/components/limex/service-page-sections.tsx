@@ -92,8 +92,7 @@ const serviceUi = {
   },
 } as const;
 
-const richTextClass =
-  "blog-rich-text text-body-lg text-muted [&_a]:font-semibold [&_a]:text-pink [&_a]:underline [&_a]:decoration-pink/30 [&_a]:underline-offset-2 [&_blockquote]:my-cluster [&_blockquote]:border-l-2 [&_blockquote]:border-pink [&_blockquote]:pl-cluster [&_h2]:mt-section-gap-lg [&_h2]:font-brand [&_h2]:text-section-title [&_h2]:font-bold [&_h2]:text-ink [&_h3]:mt-section-gap [&_h3]:font-brand [&_h3]:text-subheading-mobile [&_h3]:font-bold [&_h3]:text-ink [&_img]:my-cluster [&_img]:max-w-full [&_img]:rounded-card [&_img]:object-contain [&_ul]:my-cluster [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:my-cluster [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:py-1 [&_.list-none]:list-none [&_p+p]:mt-cluster [&_strong]:font-bold";
+const richTextClass = blogRichTextClass;
 
 function RichTextContent({
   id,
