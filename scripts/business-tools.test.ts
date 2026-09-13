@@ -244,7 +244,10 @@ test("home page video reels hide play button and text while playing until hovere
     /selected\s*\?\s*"pointer-events-none z-10 opacity-0 group-hover:opacity-100"/,
   );
   // Close button exists to dismiss active video
-  assert.match(mediaSectionsContent, /aria-label=\{`Close \$\{reel\.title\} video`\}/);
+  assert.match(
+    mediaSectionsContent,
+    /aria-label=\{`Close \$\{reel\.title\} video`\}/,
+  );
 });
 
 test("catalogue contains seven distinct calculators and six builders", () => {
