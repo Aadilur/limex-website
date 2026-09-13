@@ -49,6 +49,30 @@ function getYouTubeVideoId(url: string) {
   }
 }
 
+function PlayIcon() {
+  return (
+    <svg className="ml-0.5 size-5 fill-current" viewBox="0 0 20 20" aria-hidden="true">
+      <path d="M6.6 4.3a1 1 0 0 1 1.5-.86l6.5 4.7a1 1 0 0 1 0 1.62l-6.5 4.7a1 1 0 0 1-1.5-.86V4.3Z" />
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg
+      className="size-4"
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
+      <path d="m5 5 10 10M15 5 5 15" />
+    </svg>
+  );
+}
+
 export function VideoReelsSection({
   content = defaultLandingContent.testimonials,
 }: {
@@ -116,30 +140,20 @@ export function VideoReelsSection({
 
             return (
               <article
-                className={`group relative min-h-[480px] min-w-[min(306px,calc(100vw-56px))] basis-[min(306px,calc(100vw-56px))] snap-start overflow-hidden rounded-3xl border ${selected ? "border-white/90 -translate-y-1" : "border-white/35"} bg-[#293a40] transition-transform duration-200 lg:min-h-[535px] lg:min-w-[306px] lg:basis-[306px] hover:-translate-y-1`.trim()}
+                className={`group relative min-h-[480px] min-w-[min(306px,calc(100vw-56px))] basis-[min(306px,calc(100vw-56px))] snap-start overflow-hidden rounded-3xl border ${
+                  selected ? "border-[#071b3d] -translate-y-1" : "border-[#d7d5d0]"
+                } bg-[#293a40] shadow-[0_14px_34px_rgba(27,34,30,0.08)] transition-transform duration-300 hover:-translate-y-1 lg:min-h-[535px] lg:min-w-[306px] lg:basis-[306px]`.trim()}
                 key={reel.id}
               >
-                <img
-                  className={`absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-[1.04] ${selected ? "scale-[1.04]" : ""}`.trim()}
-                  src={
-                    reel.imageUrl ||
-                    (videoId
-                      ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
-                      : "/figma/reel-1.png")
-                  }
-                  alt=""
-                  loading="lazy"
-                  decoding="async"
-                />
                 {selected && videoId ? (
-                  <>
+                  <div className="absolute inset-0 z-[5] bg-[#11141a]">
                     <iframe
-                      className="absolute inset-0 z-[5] size-full"
+                      className="size-full"
                       src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&playsinline=1`}
                       title={reel.title}
                       loading="lazy"
                       referrerPolicy="strict-origin-when-cross-origin"
-                      allow="autoplay; encrypted-media; picture-in-picture"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                       allowFullScreen
                     />
                     <button
@@ -151,61 +165,44 @@ export function VideoReelsSection({
                         setActiveReel(null);
                       }}
                     >
-                      <svg
-                        className="size-4"
-                        viewBox="0 0 20 20"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
-                      >
-                        <path d="M5 5l10 10M15 5L5 15" />
-                      </svg>
+                      <CloseIcon />
                     </button>
-                  </>
-                ) : null}
-                <div
-                  className={`absolute inset-x-0 bottom-0 flex min-h-24 flex-col justify-end gap-1.5 bg-gradient-to-b from-transparent to-[rgba(18,20,33,0.88)] px-5 pb-[18px] pt-[54px] text-[#ffebd7] drop-shadow-[0_1px_12px_rgba(18,20,33,0.32)] transition-opacity duration-300 ${selected ? "pointer-events-none z-10 opacity-0 group-hover:opacity-100" : ""}`.trim()}
-                >
-                  <h3 className="max-w-[250px] text-card-title">
-                    {reel.title}
-                  </h3>
-                  <p className="text-micro">{reel.subtitle}</p>
-                </div>
-                {videoId ? (
-                  <button
-                    className={`absolute left-1/2 top-1/2 z-10 grid size-[144px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-0 bg-transparent transition-[transform,opacity] duration-300 hover:scale-[1.04] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2 sm:size-[176px] ${
-                      selected
-                        ? "pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100"
-                        : "opacity-100 pointer-events-auto"
-                    }`.trim()}
-                    type="button"
-                    aria-label={`${selected ? "Pause" : "Play"} ${reel.title}`}
-                    aria-pressed={selected}
-                    onClick={() =>
-                      setActiveReel((current) =>
-                        current === index ? null : index,
-                      )
-                    }
-                  >
+                  </div>
+                ) : (
+                  <>
                     <img
-                      className="absolute inset-0 size-full"
-                      src="/figma/play-overlay.svg"
+                      className="absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                      src={
+                        reel.imageUrl ||
+                        (videoId
+                          ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+                          : "/figma/reel-1.png")
+                      }
                       alt=""
-                      aria-hidden="true"
+                      loading="lazy"
+                      decoding="async"
                     />
-                    <span
-                      className="relative z-10 grid size-[58px] place-items-center rounded-full bg-[rgba(252,251,250,0.96)] shadow-play"
-                      aria-hidden="true"
-                    >
-                      <span
-                        className={`ml-1 h-0 w-0 border-y-[10px] border-y-transparent border-l-[15px] border-l-[#071b3d] ${selected ? "ml-0 h-[18px] w-[14px] border-0 border-l-[5px] border-r-[5px] border-solid border-[#071b3d]" : ""}`.trim()}
-                      />
-                    </span>
-                  </button>
-                ) : null}
+                    <div className="absolute inset-x-0 bottom-0 flex min-h-24 flex-col justify-end gap-1.5 bg-gradient-to-b from-transparent via-[rgba(18,20,33,0.38)] to-[rgba(18,20,33,0.94)] px-5 pb-5 pt-16 text-[#ffebd7] drop-shadow-[0_1px_12px_rgba(18,20,33,0.32)]">
+                      <p className="text-overline text-brand-cyan">LIMEX STORY</p>
+                      <h3 className="max-w-[250px] line-clamp-2 text-card-title">
+                        {reel.title}
+                      </h3>
+                      {reel.subtitle ? (
+                        <p className="text-micro text-[#ffebd7]/80">{reel.subtitle}</p>
+                      ) : null}
+                    </div>
+                    {videoId ? (
+                      <button
+                        className="absolute left-1/2 top-1/2 z-10 grid size-[72px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-white/75 bg-white/95 text-[#071b3d] shadow-[0_10px_26px_rgba(18,20,33,0.22)] ring-8 ring-white/20 transition-transform duration-200 hover:scale-105 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/50 focus-visible:outline-offset-3"
+                        type="button"
+                        aria-label={`Play ${reel.title}`}
+                        onClick={() => setActiveReel(index)}
+                      >
+                        <PlayIcon />
+                      </button>
+                    ) : null}
+                  </>
+                )}
               </article>
             );
           })}

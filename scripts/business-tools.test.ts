@@ -227,21 +227,25 @@ test("blog details page orders sections sequentially starting from 01", async ()
   );
 });
 
-test("home page video reels hide play button and text while playing until hovered", async () => {
+test("home page video reels match About Us player: clean play button and no pause button covering screen when playing", async () => {
   const fs = await import("node:fs/promises");
   const mediaSectionsContent = await fs.readFile(
     new URL("../src/components/limex/media-sections.tsx", import.meta.url),
     "utf8",
   );
-  // Button hides when playing, shows on hover
+  // Play button uses compact circular PlayIcon matching About Us
   assert.match(
     mediaSectionsContent,
-    /selected\s*\?\s*"pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100"/,
+    /<PlayIcon \/>/,
   );
-  // Text overlay hides when playing
   assert.match(
     mediaSectionsContent,
-    /selected\s*\?\s*"pointer-events-none z-10 opacity-0 group-hover:opacity-100"/,
+    /size-\[72px\]\s+-translate-x-1\/2\s+-translate-y-1\/2\s+place-items-center\s+rounded-full/,
+  );
+  // No pause overlay covering screen while playing (play button is only in non-playing branch)
+  assert.doesNotMatch(
+    mediaSectionsContent,
+    /play-overlay\.svg/,
   );
   // Close button exists to dismiss active video
   assert.match(
