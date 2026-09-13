@@ -203,12 +203,12 @@ function StatusPill({ service }: { service: AdminService }) {
 
 function SectionDisclosure({ title, count, open = false, children }: { title: string; count?: number; open?: boolean; children: ReactNode }) {
   return (
-    <details className="group border-b border-[#ebe5dd] last:border-b-0" open={open}>
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-4 text-[13px] font-bold text-[#29252a] [&::-webkit-details-marker]:hidden">
+    <details className="group border-b border-[#eee9e2] last:border-b-0 transition-colors duration-200 group-open:bg-[#faf8f5]" open={open}>
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-4 text-[13px] font-bold text-[#29252a] transition-colors group-open:text-[#14131c] sm:px-4 [&::-webkit-details-marker]:hidden">
         <span className="min-w-0 truncate">{title}{typeof count === "number" ? <span className="ml-2 font-medium text-[#9b958c]">{count}</span> : null}</span>
-        <span className="grid size-7 shrink-0 place-items-center rounded-full bg-[#f3f0eb] text-[16px] font-normal text-[#8b857e] transition-transform group-open:rotate-45" aria-hidden="true">+</span>
+        <span className="grid size-7 shrink-0 place-items-center rounded-full bg-[#f3f0eb] text-[16px] font-normal text-[#8b857e] transition-[color,background-color,transform] group-open:rotate-45 group-open:bg-[#fff0f3] group-open:text-[#d63c57]" aria-hidden="true">+</span>
       </summary>
-      <div className="pb-5 pt-1">{children}</div>
+      <div className="px-3 pb-5 pt-1 sm:px-4">{children}</div>
     </details>
   );
 }
@@ -385,63 +385,58 @@ function DetailEditor({ detail, onChange, mediaAssetId, onMediaAssetChange }: { 
         </div>
       </SectionDisclosure>
 
-      <SectionDisclosure title="Section copy">
-        <p className="mb-4 max-w-[680px] text-[11px] leading-[1.5] text-[#8b857e]">Change the public labels and supporting copy without changing the page structure. Empty optional sections stay hidden.</p>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Key facts label" value={detail.keyFactsLabel ?? ""} onChange={(event) => update("keyFactsLabel", event.target.value)} placeholder="Key facts" />
-          <Field label="Related options label" value={detail.relatedOptionsLabel ?? ""} onChange={(event) => update("relatedOptionsLabel", event.target.value)} placeholder="Related options" />
-          <Field label="Tools eyebrow" value={detail.toolsEyebrow ?? ""} onChange={(event) => update("toolsEyebrow", event.target.value)} placeholder="Helpful tools" />
-          <Field label="Tools title" value={detail.toolsTitle ?? ""} onChange={(event) => update("toolsTitle", event.target.value)} placeholder="Keep the next step close at hand." />
-          <TextAreaField className="sm:col-span-2" label="Tools description" value={detail.toolsDescription ?? ""} onChange={(event) => update("toolsDescription", event.target.value)} />
-          <Field label="Pricing eyebrow" value={detail.pricingEyebrow ?? ""} onChange={(event) => update("pricingEyebrow", event.target.value)} placeholder="Optional / pricing" />
-          <Field label="Pricing title" value={detail.pricingTitle ?? ""} onChange={(event) => update("pricingTitle", event.target.value)} placeholder="Show the right price for this service" />
-          <TextAreaField className="sm:col-span-2" label="Pricing subtitle" value={detail.pricingDescription ?? ""} onChange={(event) => update("pricingDescription", event.target.value)} />
-          <Field label="Most popular label" value={detail.mostPopularLabel ?? ""} onChange={(event) => update("mostPopularLabel", event.target.value)} placeholder="Most popular" />
-          <Field label="FAQ eyebrow" value={detail.faqEyebrow ?? ""} onChange={(event) => update("faqEyebrow", event.target.value)} placeholder="Optional / FAQ" />
-          <Field label="FAQ title" value={detail.faqTitle ?? ""} onChange={(event) => update("faqTitle", event.target.value)} placeholder="Common questions" />
-          <TextAreaField className="sm:col-span-2" label="FAQ subtitle" value={detail.faqDescription ?? ""} onChange={(event) => update("faqDescription", event.target.value)} />
-          <Field label="FAQ support label" value={detail.faqSupportLabel ?? ""} onChange={(event) => update("faqSupportLabel", event.target.value)} placeholder="Still deciding?" />
-          <TextAreaField label="FAQ support text" value={detail.faqSupportDescription ?? ""} onChange={(event) => update("faqSupportDescription", event.target.value)} />
-          <Field label="Contact eyebrow" value={detail.contactEyebrow ?? ""} onChange={(event) => update("contactEyebrow", event.target.value)} placeholder="Ready when you are" />
-          <Field label="Contact button label" value={detail.contactButtonLabel ?? ""} onChange={(event) => update("contactButtonLabel", event.target.value)} placeholder="Talk to an advisor" />
-          <Field className="sm:col-span-2" label="Contact title" value={detail.contactTitle ?? ""} onChange={(event) => update("contactTitle", event.target.value)} placeholder="Need help choosing the right option?" />
-          <TextAreaField className="sm:col-span-2" label="Contact subtitle" value={detail.contactDescription ?? ""} onChange={(event) => update("contactDescription", event.target.value)} />
-        </div>
+      <SectionDisclosure title="Related options">
+        <Field label="Section label" value={detail.relatedOptionsLabel ?? ""} onChange={(event) => update("relatedOptionsLabel", event.target.value)} placeholder="Related options" />
+        <p className="mt-2 text-[11px] leading-[1.5] text-[#9b958c]">The links shown here come from child items under the assigned menu entry. Manage those links in Menu structure.</p>
       </SectionDisclosure>
 
       <SectionDisclosure title="Helpful tools" count={selectedTools.length}>
-        <label className="block min-w-0">
-          <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Add a calculator or builder</span>
-          <select className={fieldClass} value="" onChange={(event) => addTool(event.target.value)}>
-            <option value="">Choose a tool…</option>
-            <optgroup label="Calculators">
-              {businessTools.filter((tool) => tool.group === "calculator" && !selectedTools.includes(tool.slug)).map((tool) => <option key={tool.slug} value={tool.slug}>{tool.title}</option>)}
-            </optgroup>
-            <optgroup label="Document builders">
-              {businessTools.filter((tool) => tool.group === "builder" && !selectedTools.includes(tool.slug)).map((tool) => <option key={tool.slug} value={tool.slug}>{tool.title}</option>)}
-            </optgroup>
-          </select>
-        </label>
-        {selectedTools.length ? <div className="mt-3 divide-y divide-[#ebe5dd] border-y border-[#ebe5dd]">
-          {selectedTools.map((slug) => {
-            const tool = businessTools.find((candidate) => candidate.slug === slug);
-            if (!tool) return null;
-            return <div className="flex min-w-0 items-center justify-between gap-2 py-3" key={slug}>
-              <span className="min-w-0"><span className="block truncate text-[12px] font-semibold text-[#3f3b37]">{tool.title}</span><span className="mt-0.5 block text-[10px] uppercase tracking-[0.08em] text-[#a19a91]">{tool.group === "calculator" ? "Calculator" : "Document builder"}</span></span>
-              <RemoveButton label={`Remove ${tool.title}`} onClick={() => update("tools", selectedTools.filter((candidate) => candidate !== slug))} />
-            </div>;
-          })}
-        </div> : <p className="mt-3 text-[11px] text-[#9b958c]">No tools attached. This section stays hidden on the public page until you add one.</p>}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Section eyebrow" value={detail.toolsEyebrow ?? ""} onChange={(event) => update("toolsEyebrow", event.target.value)} placeholder="Helpful tools" />
+          <Field label="Section title" value={detail.toolsTitle ?? ""} onChange={(event) => update("toolsTitle", event.target.value)} placeholder="Keep the next step close at hand." />
+          <TextAreaField className="sm:col-span-2" label="Section subtitle" value={detail.toolsDescription ?? ""} onChange={(event) => update("toolsDescription", event.target.value)} placeholder="Link a calculator or document builder that helps customers move forward." />
+        </div>
+        <div className="mt-4 border-t border-[#f0ece6] pt-4">
+          <label className="block min-w-0">
+            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Add a calculator or builder</span>
+            <select className={fieldClass} value="" onChange={(event) => addTool(event.target.value)}>
+              <option value="">Choose a tool…</option>
+              <optgroup label="Calculators">
+                {businessTools.filter((tool) => tool.group === "calculator" && !selectedTools.includes(tool.slug)).map((tool) => <option key={tool.slug} value={tool.slug}>{tool.title}</option>)}
+              </optgroup>
+              <optgroup label="Document builders">
+                {businessTools.filter((tool) => tool.group === "builder" && !selectedTools.includes(tool.slug)).map((tool) => <option key={tool.slug} value={tool.slug}>{tool.title}</option>)}
+              </optgroup>
+            </select>
+          </label>
+          {selectedTools.length ? <div className="mt-3 divide-y divide-[#ebe5dd] border-y border-[#ebe5dd]">
+            {selectedTools.map((slug) => {
+              const tool = businessTools.find((candidate) => candidate.slug === slug);
+              if (!tool) return null;
+              return <div className="flex min-w-0 items-center justify-between gap-2 py-3" key={slug}>
+                <span className="min-w-0"><span className="block truncate text-[12px] font-semibold text-[#3f3b37]">{tool.title}</span><span className="mt-0.5 block text-[10px] uppercase tracking-[0.08em] text-[#a19a91]">{tool.group === "calculator" ? "Calculator" : "Document builder"}</span></span>
+                <RemoveButton label={`Remove ${tool.title}`} onClick={() => update("tools", selectedTools.filter((candidate) => candidate !== slug))} />
+              </div>;
+            })}
+          </div> : <p className="mt-3 text-[11px] text-[#9b958c]">No tools attached. This section stays hidden on the public page until you add one.</p>}
+        </div>
       </SectionDisclosure>
 
       <SectionDisclosure title="Key facts" count={detail.facts.length}>
         <div>
-          <div className="flex items-center justify-between gap-3"><div><p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Optional sidebar facts</p><p className="mt-1 text-[10px] text-[#aaa49b]">Leave empty to hide the facts column on the public page.</p></div><AddButton onClick={addFact}>+ Add fact</AddButton></div>
+          <Field label="Section label" value={detail.keyFactsLabel ?? ""} onChange={(event) => update("keyFactsLabel", event.target.value)} placeholder="Key facts" />
+          <div className="mt-4 flex items-center justify-between gap-3"><div><p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Optional sidebar facts</p><p className="mt-1 text-[10px] text-[#aaa49b]">Leave empty to hide the facts column on the public page.</p></div><AddButton onClick={addFact}>+ Add fact</AddButton></div>
           {detail.facts.length ? <div className="mt-2 divide-y divide-[#ebe5dd] border-y border-[#ebe5dd]">{detail.facts.map((fact, index) => <div className="grid gap-2 py-2 sm:grid-cols-2" key={`fact-${index}`}><input className={`${fieldClass} mt-0`} value={fact.label} placeholder="Label" onChange={(event) => update("facts", detail.facts.map((item, itemIndex) => itemIndex === index ? { ...item, label: event.target.value } : item))} /><div className="flex gap-2"><input className={`${fieldClass} mt-0`} value={fact.value} placeholder="Value" onChange={(event) => update("facts", detail.facts.map((item, itemIndex) => itemIndex === index ? { ...item, value: event.target.value } : item))} /><RemoveButton label="Remove fact" onClick={() => update("facts", detail.facts.filter((_, itemIndex) => itemIndex !== index))} /></div></div>)}</div> : <p className="mt-2 text-[11px] text-[#9b958c]">No key facts added. The facts column will not render publicly.</p>}
         </div>
       </SectionDisclosure>
 
       <SectionDisclosure title="Pricing and booking" count={detail.pricing.length}>
+        <div className="mb-4 grid gap-4 sm:grid-cols-2">
+          <Field label="Section eyebrow" value={detail.pricingEyebrow ?? ""} onChange={(event) => update("pricingEyebrow", event.target.value)} placeholder="Optional / pricing" />
+          <Field label="Featured package label" value={detail.mostPopularLabel ?? ""} onChange={(event) => update("mostPopularLabel", event.target.value)} placeholder="Most popular" />
+          <Field className="sm:col-span-2" label="Section title" value={detail.pricingTitle ?? ""} onChange={(event) => update("pricingTitle", event.target.value)} placeholder="Show the right price for this service" />
+          <TextAreaField className="sm:col-span-2" label="Section subtitle" value={detail.pricingDescription ?? ""} onChange={(event) => update("pricingDescription", event.target.value)} placeholder="Use a starting price, package cards or a custom quote depending on the scope." />
+        </div>
         <p className="mb-4 max-w-[680px] text-[11px] leading-[1.5] text-[#8b857e]">Add up to six packages. Each package gets a booking button; WhatsApp appears automatically when Contact settings has a number.</p>
         {detail.pricing.length ? <div className="divide-y divide-[#ebe5dd] border-y border-[#ebe5dd]">
           {detail.pricing.map((tier, index) => <div className="relative py-4" key={`pricing-${index}`}>
@@ -464,8 +459,25 @@ function DetailEditor({ detail, onChange, mediaAssetId, onMediaAssetChange }: { 
       </SectionDisclosure>
 
       <SectionDisclosure title="FAQs" count={detail.faqs.length}>
+        <div className="mb-4 grid gap-4 sm:grid-cols-2">
+          <Field label="Section eyebrow" value={detail.faqEyebrow ?? ""} onChange={(event) => update("faqEyebrow", event.target.value)} placeholder="Optional / FAQ" />
+          <Field label="Support label" value={detail.faqSupportLabel ?? ""} onChange={(event) => update("faqSupportLabel", event.target.value)} placeholder="Still deciding?" />
+          <Field className="sm:col-span-2" label="Section title" value={detail.faqTitle ?? ""} onChange={(event) => update("faqTitle", event.target.value)} placeholder="Common questions" />
+          <TextAreaField className="sm:col-span-2" label="Section subtitle" value={detail.faqDescription ?? ""} onChange={(event) => update("faqDescription", event.target.value)} placeholder="A few clear answers before you choose the next step." />
+          <TextAreaField className="sm:col-span-2" label="Support text" value={detail.faqSupportDescription ?? ""} onChange={(event) => update("faqSupportDescription", event.target.value)} placeholder="Talk to an advisor when the right path needs a little context." />
+        </div>
         {detail.faqs.length ? <div className="divide-y divide-[#ebe5dd] border-y border-[#ebe5dd]">{detail.faqs.map((faq, index) => <div className="relative py-4" key={`faq-${index}`}><div className="flex items-center justify-between gap-3"><p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#9b958c]">Question {String(index + 1).padStart(2, "0")}</p><RemoveButton label="Remove FAQ" onClick={() => update("faqs", detail.faqs.filter((_, itemIndex) => itemIndex !== index))} /></div><div className="mt-2 grid gap-3"><Field label="Question" value={faq.question} onChange={(event) => update("faqs", detail.faqs.map((item, itemIndex) => itemIndex === index ? { ...item, question: event.target.value } : item))} /><TextAreaField label="Answer" value={faq.answer} onChange={(event) => update("faqs", detail.faqs.map((item, itemIndex) => itemIndex === index ? { ...item, answer: event.target.value } : item))} /></div></div>)}</div> : <p className="text-[11px] text-[#9b958c]">No FAQs yet. The FAQ section stays hidden.</p>}
         <div className="mt-3"><AddButton onClick={addFaq}>+ Add FAQ</AddButton></div>
+      </SectionDisclosure>
+
+      <SectionDisclosure title="Contact / booking">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Section eyebrow" value={detail.contactEyebrow ?? ""} onChange={(event) => update("contactEyebrow", event.target.value)} placeholder="Ready when you are" />
+          <Field label="Button label" value={detail.contactButtonLabel ?? ""} onChange={(event) => update("contactButtonLabel", event.target.value)} placeholder="Talk to an advisor" />
+          <Field className="sm:col-span-2" label="Section title" value={detail.contactTitle ?? ""} onChange={(event) => update("contactTitle", event.target.value)} placeholder="Need help choosing the right option?" />
+          <TextAreaField className="sm:col-span-2" label="Section subtitle" value={detail.contactDescription ?? ""} onChange={(event) => update("contactDescription", event.target.value)} placeholder="A short conversation is enough to recommend the right path for" />
+        </div>
+        <p className="mt-3 text-[11px] leading-[1.5] text-[#9b958c]">The button opens the shared contact form. WhatsApp uses the global contact details configured in Contact settings.</p>
       </SectionDisclosure>
     </div>
   );
