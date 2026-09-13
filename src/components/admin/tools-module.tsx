@@ -30,7 +30,11 @@ type ServiceRequest = {
     type?: string;
     services?: string[];
     values?: Record<string, string>;
-    result?: { title: string; total: number; rows: { label: string; amount: number | null }[] };
+    result?: {
+      title: string;
+      total: number;
+      rows: { label: string; amount: number | null }[];
+    };
     draft?: { title: string; sections: { heading: string; body: string }[] };
     configVersion?: number;
   };
@@ -38,11 +42,14 @@ type ServiceRequest = {
 
 const statuses = ["NEW", "CONTACTED", "IN_PROGRESS", "COMPLETED"] as const;
 const labelStatus = (value: string) => value.toLowerCase().replaceAll("_", " ");
-const displayStatus = (value: string) => labelStatus(value).replace(/^./, (character) => character.toUpperCase());
+const displayStatus = (value: string) =>
+  labelStatus(value).replace(/^./, (character) => character.toUpperCase());
 
 function requestSourceLabel(toolSlug: string) {
   if (toolSlug === "contact") return "Website contact form";
-  return businessTools.find((tool) => tool.slug === toolSlug)?.title ?? toolSlug;
+  return (
+    businessTools.find((tool) => tool.slug === toolSlug)?.title ?? toolSlug
+  );
 }
 
 function requestDateLabel(value: string) {
@@ -55,7 +62,9 @@ function requestDateLabel(value: string) {
 
 function whatsappUrl(phone: string, name: string) {
   const cleanPhone = phone.replace(/[^+\d]/g, "");
-  const text = encodeURIComponent(`Hello ${name}, this is Limex regarding your service request.`);
+  const text = encodeURIComponent(
+    `Hello ${name}, this is Limex regarding your service request.`,
+  );
   return `https://wa.me/${cleanPhone.replace(/^\+/, "")}?text=${text}`;
 }
 
@@ -76,7 +85,13 @@ function statusStyle(status: string) {
 
 function PhoneIcon({ className = "size-3.5" }: { className?: string }) {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+    >
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -88,7 +103,13 @@ function PhoneIcon({ className = "size-3.5" }: { className?: string }) {
 
 function MailIcon({ className = "size-3.5" }: { className?: string }) {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+    >
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -100,7 +121,13 @@ function MailIcon({ className = "size-3.5" }: { className?: string }) {
 
 function CalendarIcon({ className = "size-3.5" }: { className?: string }) {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+    >
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -112,7 +139,13 @@ function CalendarIcon({ className = "size-3.5" }: { className?: string }) {
 
 function ChevronDownIcon({ className = "size-3" }: { className?: string }) {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.4}>
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2.4}
+    >
       <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
     </svg>
   );
@@ -140,8 +173,12 @@ function RequestDetailDrawer({
       {/* Reference & Quick Actions Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#eee9e2] pb-3.5">
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#8c857b]">Reference</span>
-          <code className="rounded-[6px] bg-[#f4f2ee] px-2 py-0.5 text-[11.5px] font-mono text-[#37332d]">{item.id}</code>
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#8c857b]">
+            Reference
+          </span>
+          <code className="rounded-[6px] bg-[#f4f2ee] px-2 py-0.5 text-[11.5px] font-mono text-[#37332d]">
+            {item.id}
+          </code>
           <button
             type="button"
             className="text-[11px] font-semibold text-[#0055ff] transition-colors hover:underline"
@@ -186,22 +223,30 @@ function RequestDetailDrawer({
           <strong className="font-semibold">Preferred meeting schedule:</strong>
           <span>{item.preferredDate ?? "Date to be confirmed"}</span>
           <span>·</span>
-          <span>{item.preferredTime ?? "Time to be confirmed"} (Dhaka time)</span>
+          <span>
+            {item.preferredTime ?? "Time to be confirmed"} (Dhaka time)
+          </span>
         </div>
       ) : null}
 
       {/* Client Message */}
       {item.message ? (
         <div className="rounded-[12px] border border-[#eae5dd] bg-[#faf8f5] p-3.5">
-          <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#8c857b]">Client Message</p>
-          <p className="mt-1.5 whitespace-pre-wrap text-[12.5px] leading-[1.65] text-[#2c2824]">{item.message}</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#8c857b]">
+            Client Message
+          </p>
+          <p className="mt-1.5 whitespace-pre-wrap text-[12.5px] leading-[1.65] text-[#2c2824]">
+            {item.message}
+          </p>
         </div>
       ) : null}
 
       {/* Requested Services */}
       {item.context.services?.length ? (
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#8c857b]">Requested Services</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#8c857b]">
+            Requested Services
+          </p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {item.context.services.map((service) => (
               <span
@@ -219,15 +264,24 @@ function RequestDetailDrawer({
       {item.context.result ? (
         <div className="rounded-[12px] border border-[#cbe4d4] bg-[#f3faf5] p-3.5">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <span className="text-[13px] font-bold text-[#1e5835]">{item.context.result.title}</span>
-            <span className="font-brand text-[18px] font-bold text-[#1e5835]">{money(item.context.result.total)}</span>
+            <span className="text-[13px] font-bold text-[#1e5835]">
+              {item.context.result.title}
+            </span>
+            <span className="font-brand text-[18px] font-bold text-[#1e5835]">
+              {money(item.context.result.total)}
+            </span>
           </div>
           {item.context.result.rows?.length ? (
             <div className="mt-2.5 divide-y divide-[#dbeef2] border-t border-[#dbeef2] pt-2">
               {item.context.result.rows.map((row, idx) => (
-                <div key={idx} className="flex justify-between py-1 text-[11.5px] text-[#345942]">
+                <div
+                  key={idx}
+                  className="flex justify-between py-1 text-[11.5px] text-[#345942]"
+                >
                   <span>{row.label}</span>
-                  <span className="font-semibold">{row.amount !== null ? money(row.amount) : "To confirm"}</span>
+                  <span className="font-semibold">
+                    {row.amount !== null ? money(row.amount) : "To confirm"}
+                  </span>
                 </div>
               ))}
             </div>
@@ -238,12 +292,21 @@ function RequestDetailDrawer({
       {/* Calculator Values */}
       {item.context.values && Object.keys(item.context.values).length > 0 ? (
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#8c857b]">Submitted Parameters</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#8c857b]">
+            Submitted Parameters
+          </p>
           <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {Object.entries(item.context.values).map(([key, value]) => (
-              <div key={key} className="rounded-[10px] border border-[#ebe5dc] bg-[#faf8f5] px-3 py-2">
-                <p className="text-[10.5px] font-medium text-[#7c756c]">{key.replace(/([A-Z])/g, " $1")}</p>
-                <p className="mt-0.5 truncate text-[12px] font-semibold text-[#1c191d]">{value || "Not provided"}</p>
+              <div
+                key={key}
+                className="rounded-[10px] border border-[#ebe5dc] bg-[#faf8f5] px-3 py-2"
+              >
+                <p className="text-[10.5px] font-medium text-[#7c756c]">
+                  {key.replace(/([A-Z])/g, " $1")}
+                </p>
+                <p className="mt-0.5 truncate text-[12px] font-semibold text-[#1c191d]">
+                  {value || "Not provided"}
+                </p>
               </div>
             ))}
           </div>
@@ -258,9 +321,16 @@ function RequestDetailDrawer({
           </summary>
           <div className="mt-3 space-y-3 border-t border-[#eae5dd] pt-3">
             {item.context.draft.sections.map((section) => (
-              <div key={section.heading} className="rounded-[10px] border border-[#ebe6df] bg-white p-3">
-                <h4 className="text-[12px] font-bold text-[#37332d]">{section.heading}</h4>
-                <p className="mt-1 whitespace-pre-wrap text-[11.5px] leading-relaxed text-[#605a52]">{section.body}</p>
+              <div
+                key={section.heading}
+                className="rounded-[10px] border border-[#ebe6df] bg-white p-3"
+              >
+                <h4 className="text-[12px] font-bold text-[#37332d]">
+                  {section.heading}
+                </h4>
+                <p className="mt-1 whitespace-pre-wrap text-[11.5px] leading-relaxed text-[#605a52]">
+                  {section.body}
+                </p>
               </div>
             ))}
           </div>
@@ -272,7 +342,10 @@ function RequestDetailDrawer({
       !item.context.draft &&
       !item.context.services?.length &&
       !item.message ? (
-        <p className="text-[11.5px] text-[#7b8579]">No additional calculator or document details were shared with this request.</p>
+        <p className="text-[11.5px] text-[#7b8579]">
+          No additional calculator or document details were shared with this
+          request.
+        </p>
       ) : null}
     </div>
   );
@@ -320,7 +393,9 @@ function ServiceRequestsTable({
                 const isExpanded = expanded === item.id;
                 return (
                   <Fragment key={item.id}>
-                    <tr className={`transition-colors hover:bg-[#fafbf8] ${isExpanded ? "bg-[#f9faf7]" : "bg-white"}`}>
+                    <tr
+                      className={`transition-colors hover:bg-[#fafbf8] ${isExpanded ? "bg-[#f9faf7]" : "bg-white"}`}
+                    >
                       {/* Column 1: Client & Type */}
                       <td className="py-3.5 pl-5 pr-4 align-top">
                         <div className="flex items-start gap-3">
@@ -331,7 +406,9 @@ function ServiceRequestsTable({
                             {item.name.trim().charAt(0).toUpperCase() || "?"}
                           </span>
                           <div className="min-w-0">
-                            <p className="truncate font-bold text-[#071b3d]">{item.name || "Anonymous Client"}</p>
+                            <p className="truncate font-bold text-[#071b3d]">
+                              {item.name || "Anonymous Client"}
+                            </p>
                             <span
                               className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] ${
                                 item.requestType === "APPOINTMENT"
@@ -339,7 +416,9 @@ function ServiceRequestsTable({
                                   : "border border-[#dcfce7] bg-[#f0fdf4] text-[#166534]"
                               }`}
                             >
-                              {item.requestType === "APPOINTMENT" ? "Appointment" : "Callback"}
+                              {item.requestType === "APPOINTMENT"
+                                ? "Appointment"
+                                : "Callback"}
                             </span>
                           </div>
                         </div>
@@ -347,8 +426,12 @@ function ServiceRequestsTable({
 
                       {/* Column 2: Tool / Origin */}
                       <td className="px-4 py-3.5 align-top">
-                        <p className="font-semibold text-[#1c191d]">{requestSourceLabel(item.toolSlug)}</p>
-                        <p className="mt-0.5 text-[11.5px] text-[#78716c]">{requestDateLabel(item.createdAt)}</p>
+                        <p className="font-semibold text-[#1c191d]">
+                          {requestSourceLabel(item.toolSlug)}
+                        </p>
+                        <p className="mt-0.5 text-[11.5px] text-[#78716c]">
+                          {requestDateLabel(item.createdAt)}
+                        </p>
                       </td>
 
                       {/* Column 3: Contact Details */}
@@ -370,11 +453,15 @@ function ServiceRequestsTable({
                               title={item.email}
                             >
                               <MailIcon />
-                              <span className="max-w-[170px] truncate">{item.email}</span>
+                              <span className="max-w-[170px] truncate">
+                                {item.email}
+                              </span>
                             </a>
                           ) : null}
                           {!item.phone && !item.email ? (
-                            <span className="text-[11.5px] font-medium text-[#b42318]">No channel provided</span>
+                            <span className="text-[11.5px] font-medium text-[#b42318]">
+                              No channel provided
+                            </span>
                           ) : null}
                         </div>
                       </td>
@@ -385,19 +472,26 @@ function ServiceRequestsTable({
                           <div className="inline-flex items-center gap-1.5 rounded-full border border-[#dce8d6] bg-[#f1f8ed] px-2.5 py-1 text-[11px] font-medium text-[#2d503b]">
                             <CalendarIcon />
                             <span>
-                              {item.preferredDate ?? "Date TBD"} · {item.preferredTime ?? "Time TBD"}
+                              {item.preferredDate ?? "Date TBD"} ·{" "}
+                              {item.preferredTime ?? "Time TBD"}
                             </span>
                           </div>
                         ) : item.message ? (
-                          <p className="max-w-[190px] truncate text-[12px] italic text-[#6b665f]" title={item.message}>
+                          <p
+                            className="max-w-[190px] truncate text-[12px] italic text-[#6b665f]"
+                            title={item.message}
+                          >
                             &ldquo;{item.message}&rdquo;
                           </p>
                         ) : item.context.services?.length ? (
                           <span className="rounded-full border border-[#d2e2fe] bg-[#f0f4ff] px-2.5 py-0.5 text-[11px] font-semibold text-[#0055ff]">
-                            {item.context.services.length} service{item.context.services.length === 1 ? "" : "s"}
+                            {item.context.services.length} service
+                            {item.context.services.length === 1 ? "" : "s"}
                           </span>
                         ) : (
-                          <span className="text-[11.5px] text-[#9b958c]">Standard request</span>
+                          <span className="text-[11.5px] text-[#9b958c]">
+                            Standard request
+                          </span>
                         )}
                       </td>
 
@@ -410,10 +504,16 @@ function ServiceRequestsTable({
                             )}`}
                             value={item.status}
                             disabled={busy}
-                            onChange={(event) => onUpdateStatus(item.id, event.target.value)}
+                            onChange={(event) =>
+                              onUpdateStatus(item.id, event.target.value)
+                            }
                           >
                             {statuses.map((value) => (
-                              <option value={value} key={value} className="bg-white text-[#1c191d]">
+                              <option
+                                value={value}
+                                key={value}
+                                className="bg-white text-[#1c191d]"
+                              >
                                 {displayStatus(value)}
                               </option>
                             ))}
@@ -444,7 +544,11 @@ function ServiceRequestsTable({
                             stroke="currentColor"
                             strokeWidth={2.2}
                           >
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M19 9l-7 7-7-7"
+                            />
                           </svg>
                         </button>
                       </td>
@@ -454,7 +558,11 @@ function ServiceRequestsTable({
                     {isExpanded ? (
                       <tr className="border-b border-t border-[#e2e7dd] bg-[#fafbf7]">
                         <td colSpan={6} className="p-4 sm:p-5">
-                          <RequestDetailDrawer item={item} copiedId={copiedId} onCopy={copyReference} />
+                          <RequestDetailDrawer
+                            item={item}
+                            copiedId={copiedId}
+                            onCopy={copyReference}
+                          />
                         </td>
                       </tr>
                     ) : null}
@@ -485,7 +593,9 @@ function ServiceRequestsTable({
                       {item.name.trim().charAt(0).toUpperCase() || "?"}
                     </span>
                     <div>
-                      <h3 className="font-bold text-[#071b3d]">{item.name || "Anonymous Client"}</h3>
+                      <h3 className="font-bold text-[#071b3d]">
+                        {item.name || "Anonymous Client"}
+                      </h3>
                       <span
                         className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-[0.06em] ${
                           item.requestType === "APPOINTMENT"
@@ -493,7 +603,9 @@ function ServiceRequestsTable({
                             : "border border-[#dcfce7] bg-[#f0fdf4] text-[#166534]"
                         }`}
                       >
-                        {item.requestType === "APPOINTMENT" ? "Appointment" : "Callback"}
+                        {item.requestType === "APPOINTMENT"
+                          ? "Appointment"
+                          : "Callback"}
                       </span>
                     </div>
                   </div>
@@ -504,10 +616,16 @@ function ServiceRequestsTable({
                       )}`}
                       value={item.status}
                       disabled={busy}
-                      onChange={(event) => onUpdateStatus(item.id, event.target.value)}
+                      onChange={(event) =>
+                        onUpdateStatus(item.id, event.target.value)
+                      }
                     >
                       {statuses.map((value) => (
-                        <option value={value} key={value} className="bg-white text-[#1c191d]">
+                        <option
+                          value={value}
+                          key={value}
+                          className="bg-white text-[#1c191d]"
+                        >
                           {displayStatus(value)}
                         </option>
                       ))}
@@ -520,12 +638,17 @@ function ServiceRequestsTable({
 
                 <div className="mt-3 grid gap-1.5 border-t border-[#f0f2ed] pt-3 text-[12px]">
                   <p className="text-[#78716c]">
-                    <strong className="font-semibold text-[#37332d]">{requestSourceLabel(item.toolSlug)}</strong> ·{" "}
-                    {requestDateLabel(item.createdAt)}
+                    <strong className="font-semibold text-[#37332d]">
+                      {requestSourceLabel(item.toolSlug)}
+                    </strong>{" "}
+                    · {requestDateLabel(item.createdAt)}
                   </p>
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-[#2d503b]">
                     {item.phone ? (
-                      <a className="flex items-center gap-1 font-medium hover:underline" href={`tel:${item.phone.replace(/[^+\d]/g, "")}`}>
+                      <a
+                        className="flex items-center gap-1 font-medium hover:underline"
+                        href={`tel:${item.phone.replace(/[^+\d]/g, "")}`}
+                      >
                         <PhoneIcon /> {item.phone}
                       </a>
                     ) : null}
@@ -544,7 +667,8 @@ function ServiceRequestsTable({
                   <div className="mt-3 flex items-center gap-1.5 rounded-[10px] bg-[#f1f8ed] px-3 py-1.5 text-[11px] text-[#2d503b]">
                     <CalendarIcon />
                     <span>
-                      {item.preferredDate ?? "Date TBD"} · {item.preferredTime ?? "Time TBD"}
+                      {item.preferredDate ?? "Date TBD"} ·{" "}
+                      {item.preferredTime ?? "Time TBD"}
                     </span>
                   </div>
                 ) : null}
@@ -555,7 +679,9 @@ function ServiceRequestsTable({
                     className="inline-flex items-center gap-1.5 text-[11.5px] font-bold text-[#0055ff] hover:underline"
                     onClick={() => onToggle(item.id)}
                   >
-                    <span>{isExpanded ? "Hide details" : "View shared details"}</span>
+                    <span>
+                      {isExpanded ? "Hide details" : "View shared details"}
+                    </span>
                     <svg
                       className={`size-3.5 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
                       fill="none"
@@ -563,7 +689,11 @@ function ServiceRequestsTable({
                       stroke="currentColor"
                       strokeWidth={2.2}
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M19 9l-7 7-7-7"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -571,7 +701,11 @@ function ServiceRequestsTable({
 
               {isExpanded ? (
                 <div className="border-t border-[#dfe4da] bg-[#fafbf7] p-4">
-                  <RequestDetailDrawer item={item} copiedId={copiedId} onCopy={copyReference} />
+                  <RequestDetailDrawer
+                    item={item}
+                    copiedId={copiedId}
+                    onCopy={copyReference}
+                  />
                 </div>
               ) : null}
             </article>
@@ -663,7 +797,9 @@ export function ToolsAdminModule() {
   }, [dirty]);
 
   function updateSettings(update: (settings: ToolsSettings) => ToolsSettings) {
-    setConfig((current) => (current ? { ...current, settings: update(current.settings) } : current));
+    setConfig((current) =>
+      current ? { ...current, settings: update(current.settings) } : current,
+    );
     setDirty(true);
     setNotice("");
   }
@@ -675,7 +811,11 @@ export function ToolsAdminModule() {
     setNotice("");
     const parsed = toolsSettingsSchema.safeParse(config.settings);
     if (!parsed.success) {
-      setError(parsed.error.issues.map((issue) => `${issue.path.join(" → ")}: ${issue.message}`).join("\n"));
+      setError(
+        parsed.error.issues
+          .map((issue) => `${issue.path.join(" → ")}: ${issue.message}`)
+          .join("\n"),
+      );
       return;
     }
     setBusy(true);
@@ -686,7 +826,9 @@ export function ToolsAdminModule() {
       });
       setConfig(updated);
       setDirty(false);
-      setNotice("Settings published. New calculations use this version; existing requests keep their original snapshot.");
+      setNotice(
+        "Settings published. New calculations use this version; existing requests keep their original snapshot.",
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to save settings.");
     } finally {
@@ -698,10 +840,19 @@ export function ToolsAdminModule() {
     setBusy(true);
     setError("");
     try {
-      await request(`/api/admin/tools/requests/${id}`, { method: "PATCH", body: JSON.stringify({ status: next }) });
-      setItems((current) => current.map((item) => (item.id === id ? { ...item, status: next } : item)));
+      await request(`/api/admin/tools/requests/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: next }),
+      });
+      setItems((current) =>
+        current.map((item) =>
+          item.id === id ? { ...item, status: next } : item,
+        ),
+      );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to update request.");
+      setError(
+        err instanceof Error ? err.message : "Unable to update request.",
+      );
     } finally {
       setBusy(false);
     }
@@ -711,7 +862,9 @@ export function ToolsAdminModule() {
   function updateYear(key: string, value: unknown) {
     updateSettings((settings) => ({
       ...settings,
-      taxYears: settings.taxYears.map((item, index) => (index === yearIndex ? { ...item, [key]: value } : item)),
+      taxYears: settings.taxYears.map((item, index) =>
+        index === yearIndex ? { ...item, [key]: value } : item,
+      ),
     }));
   }
 
@@ -719,12 +872,15 @@ export function ToolsAdminModule() {
     <div>
       <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#0055ff]">Calculators & requests</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#0055ff]">
+            Calculators & requests
+          </p>
           <h1 className="mt-2 font-brand text-[32px] font-bold tracking-[-.03em] text-[#071b3d] sm:text-[38px]">
             Business tools
           </h1>
           <p className="mt-2 text-[13px] text-[#687063]">
-            Manage calculators, document templates, fees and requests in one focused workspace.
+            Manage calculators, document templates, fees and requests in one
+            focused workspace.
           </p>
         </div>
         <a
@@ -734,8 +890,18 @@ export function ToolsAdminModule() {
           rel="noreferrer"
         >
           <span>Open tools</span>
-          <svg className="size-3.5 text-[#8b857e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          <svg
+            className="size-3.5 text-[#8b857e]"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2.2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+            />
           </svg>
         </a>
       </div>
@@ -767,13 +933,19 @@ export function ToolsAdminModule() {
       </div>
 
       {error ? (
-        <div className={`${styles.error} mb-5 whitespace-pre-line rounded-[14px]`} role="alert">
+        <div
+          className={`${styles.error} mb-5 whitespace-pre-line rounded-[14px]`}
+          role="alert"
+        >
           {error}
           <button
             className={styles.quiet}
             type="button"
             onClick={() => {
-              if (!dirty || window.confirm("Discard unsaved settings and reload?")) {
+              if (
+                !dirty ||
+                window.confirm("Discard unsaved settings and reload?")
+              ) {
                 setError("");
                 setYearIndex(0);
                 setReload((value) => value + 1);
@@ -786,7 +958,10 @@ export function ToolsAdminModule() {
       ) : null}
 
       {notice ? (
-        <p className="mb-5 rounded-[14px] border border-[#c1d5ba] bg-[#edf5e9] p-4 text-[13px] text-[#355b36]" role="status">
+        <p
+          className="mb-5 rounded-[14px] border border-[#c1d5ba] bg-[#edf5e9] p-4 text-[13px] text-[#355b36]"
+          role="status"
+        >
           {notice}
         </p>
       ) : null}
@@ -817,8 +992,18 @@ export function ToolsAdminModule() {
                     ))}
                   </select>
                   <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8c857b]">
-                    <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    <svg
+                      className="size-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M19 9l-7 7-7-7"
+                      />
                     </svg>
                   </div>
                 </div>
@@ -832,7 +1017,13 @@ export function ToolsAdminModule() {
               className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-[#d8d2c8] bg-white px-4 text-[12px] font-bold text-[#4f4b47] transition-all hover:border-[#aaa197] hover:bg-[#faf8f5] hover:text-[#071b3d]"
               onClick={() => setReload((value) => value + 1)}
             >
-              <svg className="size-3.5 text-[#706a62]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+              <svg
+                className="size-3.5 text-[#706a62]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2.2}
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -850,9 +1041,24 @@ export function ToolsAdminModule() {
               role="status"
             >
               <div className="flex flex-col items-center gap-2">
-                <svg className="size-6 animate-spin text-[#0055ff]" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                <svg
+                  className="size-6 animate-spin text-[#0055ff]"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8H4z"
+                  />
                 </svg>
                 <span>Loading service requests…</span>
               </div>
@@ -862,7 +1068,9 @@ export function ToolsAdminModule() {
               items={items}
               busy={busy}
               expanded={expanded}
-              onToggle={(id) => setExpanded((current) => (current === id ? "" : id))}
+              onToggle={(id) =>
+                setExpanded((current) => (current === id ? "" : id))
+              }
               onUpdateStatus={(id, next) => void updateStatus(id, next)}
             />
           ) : !error ? (
@@ -879,14 +1087,29 @@ export function ToolsAdminModule() {
               disabled={page === 1}
               onClick={() => setPage((value) => value - 1)}
             >
-              <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              <svg
+                className="size-3.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2.2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15 19l-7-7 7-7"
+                />
               </svg>
               <span>Previous</span>
             </button>
             <p className="text-[12px] font-medium text-[#736d64]">
-              Page <strong className="font-semibold text-[#071b3d]">{page}</strong> of{" "}
-              <strong className="font-semibold text-[#071b3d]">{Math.max(1, Math.ceil(total / 20))}</strong> · {total} total requests
+              Page{" "}
+              <strong className="font-semibold text-[#071b3d]">{page}</strong>{" "}
+              of{" "}
+              <strong className="font-semibold text-[#071b3d]">
+                {Math.max(1, Math.ceil(total / 20))}
+              </strong>{" "}
+              · {total} total requests
             </p>
             <button
               className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-[#d6dbcf] bg-white px-4 text-[12px] font-semibold text-[#4f4b47] shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition-all hover:border-[#aaa197] hover:bg-[#faf8f5] disabled:cursor-not-allowed disabled:opacity-40"
@@ -895,8 +1118,18 @@ export function ToolsAdminModule() {
               onClick={() => setPage((value) => value + 1)}
             >
               <span>Next</span>
-              <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              <svg
+                className="size-3.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2.2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </button>
           </div>
@@ -909,8 +1142,9 @@ export function ToolsAdminModule() {
             {tab === "fees" ? (
               <div className="grid gap-5">
                 <p className={styles.muted}>
-                  Choose one service to edit its fees and rules. Blank means “to confirm”; enter 0 only when a charge is
-                  genuinely zero. Your edits remain a draft until you publish settings.
+                  Choose one service to edit its fees and rules. Blank means “to
+                  confirm”; enter 0 only when a charge is genuinely zero. Your
+                  edits remain a draft until you publish settings.
                 </p>
                 <FeeSettingsEditor
                   settings={config.settings}
@@ -928,7 +1162,9 @@ export function ToolsAdminModule() {
                     <select
                       className={styles.control}
                       value={yearIndex}
-                      onChange={(event) => setYearIndex(Number(event.target.value))}
+                      onChange={(event) =>
+                        setYearIndex(Number(event.target.value))
+                      }
                     >
                       {config.settings.taxYears.map((item, index) => (
                         <option key={index} value={index}>
@@ -961,7 +1197,9 @@ export function ToolsAdminModule() {
                   </button>
                 </div>
                 <section className={styles.formPanel}>
-                  <h2 className={`${styles.panelTitle} mb-6`}>Tax-free thresholds</h2>
+                  <h2 className={`${styles.panelTitle} mb-6`}>
+                    Tax-free thresholds
+                  </h2>
                   <div className={styles.fields}>
                     <label className={styles.field}>
                       <span className={styles.label}>Year (YYYY-YY)</span>
@@ -970,12 +1208,21 @@ export function ToolsAdminModule() {
                         required
                         pattern="[0-9]{4}-[0-9]{2}"
                         value={year.year}
-                        onChange={(event) => updateYear("year", event.target.value)}
+                        onChange={(event) =>
+                          updateYear("year", event.target.value)
+                        }
                       />
                     </label>
                     {Object.entries(year.thresholds).map(([key, value]) => (
                       <label key={key} className={styles.field}>
-                        <span className={styles.label}>{taxCategoryLabels[key as keyof typeof taxCategoryLabels]} (৳)</span>
+                        <span className={styles.label}>
+                          {
+                            taxCategoryLabels[
+                              key as keyof typeof taxCategoryLabels
+                            ]
+                          }{" "}
+                          (৳)
+                        </span>
                         <input
                           className={styles.control}
                           type="number"
@@ -983,7 +1230,10 @@ export function ToolsAdminModule() {
                           required
                           value={value}
                           onChange={(event) =>
-                            updateYear("thresholds", { ...year.thresholds, [key]: Number(event.target.value) })
+                            updateYear("thresholds", {
+                              ...year.thresholds,
+                              [key]: Number(event.target.value),
+                            })
                           }
                         />
                       </label>
@@ -991,15 +1241,20 @@ export function ToolsAdminModule() {
                   </div>
                 </section>
                 <section className={styles.formPanel}>
-                  <h2 className={`${styles.panelTitle} mb-3`}>Progressive bands</h2>
+                  <h2 className={`${styles.panelTitle} mb-3`}>
+                    Progressive bands
+                  </h2>
                   <p className={`${styles.muted} mb-5`}>
-                    Band widths start after the category’s tax-free threshold. The final band covers all remaining income.
+                    Band widths start after the category’s tax-free threshold.
+                    The final band covers all remaining income.
                   </p>
                   {year.bands.map((band, index) => (
                     <div key={index} className="mb-5 grid grid-cols-2 gap-4">
                       <label className={styles.field}>
                         <span className={styles.label}>
-                          {index === year.bands.length - 1 ? "Remaining income" : `Band ${index + 1} width (৳)`}
+                          {index === year.bands.length - 1
+                            ? "Remaining income"
+                            : `Band ${index + 1} width (৳)`}
                         </span>
                         <input
                           className={styles.control}
@@ -1011,7 +1266,14 @@ export function ToolsAdminModule() {
                           onChange={(event) =>
                             updateYear(
                               "bands",
-                              year.bands.map((item, i) => (i === index ? { ...item, width: Number(event.target.value) } : item)),
+                              year.bands.map((item, i) =>
+                                i === index
+                                  ? {
+                                      ...item,
+                                      width: Number(event.target.value),
+                                    }
+                                  : item,
+                              ),
                             )
                           }
                         />
@@ -1029,7 +1291,14 @@ export function ToolsAdminModule() {
                           onChange={(event) =>
                             updateYear(
                               "bands",
-                              year.bands.map((item, i) => (i === index ? { ...item, rate: Number(event.target.value) } : item)),
+                              year.bands.map((item, i) =>
+                                i === index
+                                  ? {
+                                      ...item,
+                                      rate: Number(event.target.value),
+                                    }
+                                  : item,
+                              ),
                             )
                           }
                         />
@@ -1054,13 +1323,20 @@ export function ToolsAdminModule() {
                     className={styles.quiet}
                     type="button"
                     disabled={year.bands.length <= 1}
-                    onClick={() => updateYear("bands", [...year.bands.slice(0, -2), year.bands.at(-1)!])}
+                    onClick={() =>
+                      updateYear("bands", [
+                        ...year.bands.slice(0, -2),
+                        year.bands.at(-1)!,
+                      ])
+                    }
                   >
                     Remove last finite band
                   </button>
                 </section>
                 <section className={styles.formPanel}>
-                  <h2 className={`${styles.panelTitle} mb-6`}>Rebates and adjustments</h2>
+                  <h2 className={`${styles.panelTitle} mb-6`}>
+                    Rebates and adjustments
+                  </h2>
                   <div className={styles.fields}>
                     {taxNumbers.map(([key, label]) => (
                       <label className={styles.field} key={key}>
@@ -1072,7 +1348,9 @@ export function ToolsAdminModule() {
                           min={0}
                           step="0.01"
                           value={year[key]}
-                          onChange={(event) => updateYear(key, Number(event.target.value))}
+                          onChange={(event) =>
+                            updateYear(key, Number(event.target.value))
+                          }
                         />
                       </label>
                     ))}
@@ -1083,7 +1361,9 @@ export function ToolsAdminModule() {
                         type="url"
                         required
                         value={year.sourceUrl}
-                        onChange={(event) => updateYear("sourceUrl", event.target.value)}
+                        onChange={(event) =>
+                          updateYear("sourceUrl", event.target.value)
+                        }
                       />
                     </label>
                   </div>
@@ -1096,7 +1376,11 @@ export function ToolsAdminModule() {
               Version {config.version}
               {dirty ? " · Unpublished changes" : " · Published"}
             </p>
-            <button className={styles.button} type="submit" disabled={busy || !dirty}>
+            <button
+              className={styles.button}
+              type="submit"
+              disabled={busy || !dirty}
+            >
               {busy ? "Saving…" : "Publish settings"}
             </button>
           </div>

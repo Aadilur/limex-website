@@ -7,22 +7,46 @@ export type BreadcrumbItem = {
   href?: string;
 };
 
-export function Breadcrumbs({ items, className = "" }: { items: BreadcrumbItem[]; className?: string }) {
+export function Breadcrumbs({
+  items,
+  className = "",
+}: {
+  items: BreadcrumbItem[];
+  className?: string;
+}) {
   if (!items.length) return null;
 
   return (
-    <nav className={`flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-footer font-text text-muted ${className}`.trim()} aria-label="Breadcrumb">
+    <nav
+      className={`flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-footer font-text text-muted ${className}`.trim()}
+      aria-label="Breadcrumb"
+    >
       {items.map((item, index) => {
         const isCurrent = index === items.length - 1;
         return (
-          <span className="inline-flex min-w-0 max-w-full items-center gap-x-2" key={`${item.label}-${index}`}>
-            {index > 0 ? <span className="shrink-0 text-[#b1aaa8]" aria-hidden="true">/</span> : null}
+          <span
+            className="inline-flex min-w-0 max-w-full items-center gap-x-2"
+            key={`${item.label}-${index}`}
+          >
+            {index > 0 ? (
+              <span className="shrink-0 text-[#b1aaa8]" aria-hidden="true">
+                /
+              </span>
+            ) : null}
             {item.href && !isCurrent ? (
-              <Link className="break-words transition-colors hover:text-pink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2" href={item.href}>
+              <Link
+                className="break-words transition-colors hover:text-pink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2"
+                href={item.href}
+              >
                 {item.label}
               </Link>
             ) : (
-              <span className="break-words text-ink" aria-current={isCurrent ? "page" : undefined}>{item.label}</span>
+              <span
+                className="break-words text-ink"
+                aria-current={isCurrent ? "page" : undefined}
+              >
+                {item.label}
+              </span>
             )}
           </span>
         );
@@ -34,7 +58,14 @@ export function Breadcrumbs({ items, className = "" }: { items: BreadcrumbItem[]
 type ActionButtonProps = {
   children: ReactNode;
   href?: string;
-  variant?: "dark" | "light" | "outline" | "white" | "soft" | "ghost" | "ghost-muted";
+  variant?:
+    | "dark"
+    | "light"
+    | "outline"
+    | "white"
+    | "soft"
+    | "ghost"
+    | "ghost-muted";
   className?: string;
   onClick?: MouseEventHandler<HTMLButtonElement>;
   type?: "button" | "submit" | "reset";
@@ -65,14 +96,17 @@ export function ActionButton({
   ariaLabel,
   arrow = "text",
 }: ActionButtonProps) {
-  const classes = `${actionBase} ${actionVariants[variant]} ${className}`.trim();
+  const classes =
+    `${actionBase} ${actionVariants[variant]} ${className}`.trim();
   const content = (
     <>
       <span>{children}</span>
       {arrow !== "none" ? (
         <span
           className={`inline-flex size-[18px] shrink-0 items-center justify-center text-icon-action ${
-            arrow === "cta" ? "size-[26px] bg-[url('/figma/cta-arrow-circle.svg')] bg-contain bg-center bg-no-repeat font-bold text-white" : ""
+            arrow === "cta"
+              ? "size-[26px] bg-[url('/figma/cta-arrow-circle.svg')] bg-contain bg-center bg-no-repeat font-bold text-white"
+              : ""
           }`.trim()}
           aria-hidden="true"
         >
@@ -83,6 +117,14 @@ export function ActionButton({
   );
 
   if (href) {
+    const isInternal = href.startsWith("/") && !href.startsWith("//");
+    if (isInternal) {
+      return (
+        <Link className={classes} href={href} aria-label={ariaLabel}>
+          {content}
+        </Link>
+      );
+    }
     return (
       <a className={classes} href={href} aria-label={ariaLabel}>
         {content}
@@ -91,42 +133,105 @@ export function ActionButton({
   }
 
   return (
-    <button className={classes} type={type} onClick={onClick} aria-label={ariaLabel}>
+    <button
+      className={classes}
+      type={type}
+      onClick={onClick}
+      aria-label={ariaLabel}
+    >
       {content}
     </button>
   );
 }
 
-export function TextLink({ children, href = "#contact" }: { children: ReactNode; href?: string }) {
+export function TextLink({
+  children,
+  href = "#contact",
+}: {
+  children: ReactNode;
+  href?: string;
+}) {
+  const isInternal = href.startsWith("/") && !href.startsWith("//");
+  if (isInternal) {
+    return (
+      <Link
+        className="font-strong transition-colors hover:text-pink"
+        href={href}
+      >
+        {children}{" "}
+        <span className="text-pink" aria-hidden="true">
+          ↗
+        </span>
+      </Link>
+    );
+  }
   return (
     <a className="font-strong transition-colors hover:text-pink" href={href}>
-      {children} <span className="text-pink" aria-hidden="true">↗</span>
+      {children}{" "}
+      <span className="text-pink" aria-hidden="true">
+        ↗
+      </span>
     </a>
   );
 }
 
-export function WaveLabel({ children, className = "" }: { children: ReactNode; className?: string }) {
+export function WaveLabel({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
   return (
     <span className={`inline-flex w-max ${className}`.trim()}>
       <span className="relative inline-flex pb-1.5 text-overline">
         <span>{children}</span>
-        <svg className="pointer-events-none absolute inset-x-0 bottom-0 h-[8px] w-full overflow-visible" viewBox="0 0 120 8" preserveAspectRatio="none" fill="none" aria-hidden="true">
-          <path d="M1 4C10 1 18 1 27 4S44 7 53 4 70 1 79 4s17 3 26 0 9-2 14 0" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" vectorEffect="non-scaling-stroke" />
+        <svg
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-[8px] w-full overflow-visible"
+          viewBox="0 0 120 8"
+          preserveAspectRatio="none"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M1 4C10 1 18 1 27 4S44 7 53 4 70 1 79 4s17 3 26 0 9-2 14 0"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeWidth="1.8"
+            vectorEffect="non-scaling-stroke"
+          />
         </svg>
       </span>
     </span>
   );
 }
 
-export function SectionSeparator({ label, className = "" }: { label?: ReactNode; className?: string } = {}) {
+export function SectionSeparator({
+  label,
+  className = "",
+}: { label?: ReactNode; className?: string } = {}) {
   return (
-    <div className={`pointer-events-none relative z-10 flex h-0 items-center gap-4 overflow-visible px-page-gutter lg:px-page-gutter-lg ${className}`.trim()} aria-hidden="true">
+    <div
+      className={`pointer-events-none relative z-10 flex h-0 items-center gap-4 overflow-visible px-page-gutter lg:px-page-gutter-lg ${className}`.trim()}
+      aria-hidden="true"
+    >
       <span className="h-px flex-1 bg-gradient-to-r from-transparent via-[#c8c5bc] to-[#c8c5bc]" />
       {label ? (
         <WaveLabel className="bg-page px-4 text-brand-blue">{label}</WaveLabel>
       ) : (
-        <svg className="h-4 w-[clamp(88px,12vw,136px)] shrink-0 text-[#789382]" viewBox="0 0 136 12" preserveAspectRatio="none" fill="none">
-          <path d="M1 6C12 6 14 1.5 25 1.5S38 6 49 6 62 1.5 73 1.5 86 6 97 6s13-4.5 24-4.5S129 6 135 6" stroke="currentColor" strokeLinecap="round" strokeWidth="1.7" vectorEffect="non-scaling-stroke" />
+        <svg
+          className="h-4 w-[clamp(88px,12vw,136px)] shrink-0 text-[#789382]"
+          viewBox="0 0 136 12"
+          preserveAspectRatio="none"
+          fill="none"
+        >
+          <path
+            d="M1 6C12 6 14 1.5 25 1.5S38 6 49 6 62 1.5 73 1.5 86 6 97 6s13-4.5 24-4.5S129 6 135 6"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeWidth="1.7"
+            vectorEffect="non-scaling-stroke"
+          />
         </svg>
       )}
       <span className="h-px flex-1 bg-gradient-to-l from-transparent via-[#c8c5bc] to-[#c8c5bc]" />
@@ -149,66 +254,152 @@ export function SectionTitle({
   className?: string;
   size?: "default" | "compact" | "large";
 }) {
-  const titleClass = size === "compact"
-    ? "text-subheading-mobile lg:text-subheading"
-    : size === "large"
-      ? "text-section-title-mobile lg:text-section-title"
-      : "text-heading-mobile lg:text-heading";
-  const eyebrowClass = size === "compact" ? "mb-cluster-xs text-overline" : "mb-cluster-sm text-label";
-  const descriptionClass = size === "compact" ? "mt-0 text-body-xs" : "mt-cluster-sm text-body";
+  const titleClass =
+    size === "compact"
+      ? "text-subheading-mobile lg:text-subheading"
+      : size === "large"
+        ? "text-section-title-mobile lg:text-section-title"
+        : "text-heading-mobile lg:text-heading";
+  const eyebrowClass =
+    size === "compact"
+      ? "mb-cluster-xs text-overline"
+      : "mb-cluster-sm text-label";
+  const descriptionClass =
+    size === "compact" ? "mt-0 text-body-xs" : "mt-cluster-sm text-body";
 
   return (
     <div className={`max-w-[780px] ${className}`.trim()}>
-      {eyebrow ? <p className={`text-pink uppercase ${eyebrowClass}`.trim()}>{eyebrow}</p> : null}
-      <h2 className={`text-ink ${titleClass}`.trim()} id={id}>{title}</h2>
-      {description ? <p className={`max-w-[700px] text-muted ${descriptionClass}`.trim()}>{description}</p> : null}
+      {eyebrow ? (
+        <p className={`text-pink uppercase ${eyebrowClass}`.trim()}>
+          {eyebrow}
+        </p>
+      ) : null}
+      <h2 className={`text-ink ${titleClass}`.trim()} id={id}>
+        {title}
+      </h2>
+      {description ? (
+        <p className={`max-w-[700px] text-muted ${descriptionClass}`.trim()}>
+          {description}
+        </p>
+      ) : null}
     </div>
   );
 }
 
-export function LogoLockup({ light = false, className = "", href = "#top" }: { light?: boolean; className?: string; href?: string }) {
+export function LogoLockup({
+  light = false,
+  className = "",
+  href = "#top",
+}: {
+  light?: boolean;
+  className?: string;
+  href?: string;
+}) {
+  const isInternal = href.startsWith("/") && !href.startsWith("//");
+  const content = (
+    <Image
+      className="h-auto w-full object-contain object-left"
+      src={light ? "/brand/limex-logo-light.png" : "/brand/limex-logo.png"}
+      alt="Limex Consultancy Firm"
+      width={1600}
+      height={474}
+    />
+  );
+
+  if (isInternal) {
+    return (
+      <Link
+        className={`flex w-[178px] min-w-[178px] items-center ${className}`.trim()}
+        href={href}
+        aria-label="Limex home"
+      >
+        {content}
+      </Link>
+    );
+  }
+
   return (
     <a
       className={`flex w-[178px] min-w-[178px] items-center ${className}`.trim()}
       href={href}
       aria-label="Limex home"
     >
-      <Image
-        className="h-auto w-full object-contain object-left"
-        src={light ? "/brand/limex-logo-light.png" : "/brand/limex-logo.png"}
-        alt="Limex Consultancy Firm"
-        width={1600}
-        height={474}
-      />
+      {content}
     </a>
   );
 }
 
 export function ExternalArrow() {
-  return <span className="font-strong text-pink" aria-hidden="true">↗</span>;
+  return (
+    <span className="font-strong text-pink" aria-hidden="true">
+      ↗
+    </span>
+  );
 }
 
 export function SearchIcon({ className = "size-5" }: { className?: string }) {
   return (
-    <svg className={`${className} text-muted`.trim()} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="10.8" cy="10.8" r="6.4" stroke="currentColor" strokeWidth="1.8" />
-      <path d="m16 16 4.2 4.2" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
+    <svg
+      className={`${className} text-muted`.trim()}
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <circle
+        cx="10.8"
+        cy="10.8"
+        r="6.4"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <path
+        d="m16 16 4.2 4.2"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.8"
+      />
     </svg>
   );
 }
 
-export function ChevronDownIcon({ className = "size-4" }: { className?: string }) {
+export function ChevronDownIcon({
+  className = "size-4",
+}: {
+  className?: string;
+}) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="m6 9 6 6 6-6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="m6 9 6 6 6-6"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
     </svg>
   );
 }
 
 export function CheckIcon({ className = "size-4" }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="m5 12.5 4.2 4.2L19 7" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="m5 12.5 4.2 4.2L19 7"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
     </svg>
   );
 }

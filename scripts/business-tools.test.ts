@@ -1364,3 +1364,44 @@ test("tools module service requests render as a responsive table with headers an
   assert.match(toolsModuleContent, /ServiceRequestsTable/);
 });
 
+test("seamless navigation transitions, progress bar, and view transitions are properly configured", async () => {
+  const fs = await import("node:fs/promises");
+  const globalsCss = await fs.readFile(
+    new URL("../src/app/globals.css", import.meta.url),
+    "utf8",
+  );
+  const templateTsx = await fs.readFile(
+    new URL("../src/app/template.tsx", import.meta.url),
+    "utf8",
+  );
+  const navigationProgressTsx = await fs.readFile(
+    new URL("../src/components/limex/navigation-progress.tsx", import.meta.url),
+    "utf8",
+  );
+  const smoothScrollTsx = await fs.readFile(
+    new URL("../src/components/limex/smooth-scroll.tsx", import.meta.url),
+    "utf8",
+  );
+  const layoutTsx = await fs.readFile(
+    new URL("../src/app/layout.tsx", import.meta.url),
+    "utf8",
+  );
+
+  // View transitions and keyframe animations in CSS
+  assert.match(globalsCss, /@view-transition\s*\{\s*navigation:\s*auto;\s*\}/);
+  assert.match(globalsCss, /::view-transition-old\(root\)/);
+  assert.match(globalsCss, /::view-transition-new\(root\)/);
+  assert.match(globalsCss, /@keyframes page-transition-fade-in/);
+  assert.match(globalsCss, /page-transition-enter/);
+
+  // App router template wraps content for fluid page-enter animation
+  assert.match(templateTsx, /page-transition-enter/);
+
+  // NavigationProgress renders the top bar and is present in RootLayout
+  assert.match(navigationProgressTsx, /NavigationProgress/);
+  assert.match(layoutTsx, /<NavigationProgress \/>/);
+
+  // SmoothScroll resets scroll cleanly on route change and intercepts clicks
+  assert.match(smoothScrollTsx, /lenis\.scrollTo\(0,\s*\{\s*immediate:\s*true/);
+  assert.match(smoothScrollTsx, /startViewTransition/);
+});

@@ -1,10 +1,19 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import type { MegaMenuChild, MegaMenuItem, MegaMenuTone, NavItem } from "./data";
+import type {
+  MegaMenuChild,
+  MegaMenuItem,
+  MegaMenuTone,
+  NavItem,
+} from "./data";
 import { WaveLabel } from "./ui";
 
-const toneClasses: Record<MegaMenuTone, { accent: string; marker: string; badge: string }> = {
+const toneClasses: Record<
+  MegaMenuTone,
+  { accent: string; marker: string; badge: string }
+> = {
   green: {
     accent: "text-[#007ea6]",
     marker: "bg-[#e5fbff] text-[#007ea6]",
@@ -40,21 +49,85 @@ function resolveLocalHref(href: string, pathname: string) {
   return `/${href}`;
 }
 
+function SmartLink({
+  href,
+  className,
+  onClick,
+  children,
+  target,
+  rel,
+  ariaLabel,
+}: {
+  href: string;
+  className?: string;
+  onClick?: () => void;
+  children: ReactNode;
+  target?: string;
+  rel?: string;
+  ariaLabel?: string;
+}) {
+  const isInternal = href.startsWith("/") && !href.startsWith("//");
+  if (isInternal) {
+    return (
+      <Link
+        className={className}
+        href={href}
+        onClick={onClick}
+        target={target}
+        rel={rel}
+        aria-label={ariaLabel}
+      >
+        {children}
+      </Link>
+    );
+  }
+
+  return (
+    <a
+      className={className}
+      href={href}
+      onClick={onClick}
+      target={target}
+      rel={rel}
+      aria-label={ariaLabel}
+    >
+      {children}
+    </a>
+  );
+}
+
 function LinkArrow({ small = false }: { small?: boolean }) {
-  return <img className={small ? "size-3 shrink-0" : "size-3.5 shrink-0"} src="/figma/arrow-up-right.svg" alt="" aria-hidden="true" />;
+  return (
+    <img
+      className={small ? "size-3 shrink-0" : "size-3.5 shrink-0"}
+      src="/figma/arrow-up-right.svg"
+      alt=""
+      aria-hidden="true"
+    />
+  );
 }
 
 function MenuEyebrow({ item, tone }: { item: NavItem; tone: MegaMenuTone }) {
   return (
-    <p className={`text-overline ${toneClasses[tone].accent}`.trim()}>{item.menuEyebrow ?? item.label}</p>
+    <p className={`text-overline ${toneClasses[tone].accent}`.trim()}>
+      {item.menuEyebrow ?? item.label}
+    </p>
   );
 }
 
-function ChildLink({ child, onNavigate, pathname }: { child: MegaMenuChild; onNavigate: () => void; pathname: string }) {
+function ChildLink({
+  child,
+  onNavigate,
+  pathname,
+}: {
+  child: MegaMenuChild;
+  onNavigate: () => void;
+  pathname: string;
+}) {
   const href = resolveLocalHref(child.href, pathname);
 
   return (
-    <a
+    <SmartLink
       className="group flex min-w-0 items-start justify-between gap-cluster-sm rounded-control px-2 py-cluster-xs text-micro font-text text-muted transition-colors duration-200 ease-out hover:text-pink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-1"
       href={href}
       onClick={onNavigate}
@@ -62,39 +135,74 @@ function ChildLink({ child, onNavigate, pathname }: { child: MegaMenuChild; onNa
     >
       <span className="min-w-0 break-words">{child.label}</span>
       <LinkArrow small />
-    </a>
+    </SmartLink>
   );
 }
 
-function MegaMenuItemRow({ item, tone, onNavigate, pathname }: { item: MegaMenuItem; tone: MegaMenuTone; onNavigate: () => void; pathname: string }) {
+function MegaMenuItemRow({
+  item,
+  tone,
+  onNavigate,
+  pathname,
+}: {
+  item: MegaMenuItem;
+  tone: MegaMenuTone;
+  onNavigate: () => void;
+  pathname: string;
+}) {
   const palette = toneClasses[tone];
   const href = resolveLocalHref(item.href, pathname);
 
   return (
     <div className="mb-cluster-sm break-inside-avoid rounded-control px-1 py-1">
-      <a
+      <SmartLink
         className="group flex min-w-0 items-start gap-cluster rounded-control px-cluster-sm py-cluster-xs text-ink transition-colors duration-200 ease-out hover:text-pink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-1"
         href={href}
         onClick={onNavigate}
         {...getLinkProps(href)}
       >
-        <span className={`mt-0.5 grid size-8 shrink-0 place-items-center rounded-full text-nav-compact font-bold ${palette.marker}`.trim()}>{item.marker}</span>
+        <span
+          className={`mt-0.5 grid size-8 shrink-0 place-items-center rounded-full text-nav-compact font-bold ${palette.marker}`.trim()}
+        >
+          {item.marker}
+        </span>
         <span className="min-w-0 flex-1">
-          <span className="block break-words text-meta font-bold text-ink transition-colors duration-200 ease-out group-hover:text-pink">{item.label}</span>
-          <span className="mt-0.5 block break-words text-micro text-muted">{item.description}</span>
+          <span className="block break-words text-meta font-bold text-ink transition-colors duration-200 ease-out group-hover:text-pink">
+            {item.label}
+          </span>
+          <span className="mt-0.5 block break-words text-micro text-muted">
+            {item.description}
+          </span>
         </span>
         <LinkArrow />
-      </a>
+      </SmartLink>
       {item.children?.length ? (
         <div className="ml-[43px] mt-1 space-y-0.5 border-l border-border pl-2">
-          {item.children.map((child) => <ChildLink child={child} key={child.label} onNavigate={onNavigate} pathname={pathname} />)}
+          {item.children.map((child) => (
+            <ChildLink
+              child={child}
+              key={child.label}
+              onNavigate={onNavigate}
+              pathname={pathname}
+            />
+          ))}
         </div>
       ) : null}
     </div>
   );
 }
 
-function Spotlight({ item, tone, onNavigate, pathname }: { item: NavItem; tone: MegaMenuTone; onNavigate: () => void; pathname: string }) {
+function Spotlight({
+  item,
+  tone,
+  onNavigate,
+  pathname,
+}: {
+  item: NavItem;
+  tone: MegaMenuTone;
+  onNavigate: () => void;
+  pathname: string;
+}) {
   if (!item.spotlight) return null;
 
   const palette = toneClasses[tone];
@@ -102,41 +210,63 @@ function Spotlight({ item, tone, onNavigate, pathname }: { item: NavItem; tone: 
 
   return (
     <aside className="relative hidden h-fit min-h-[244px] self-start overflow-hidden rounded-card border border-white/10 bg-[#071b3d] p-4 text-white wide:flex">
-      <div className={`absolute inset-x-0 top-0 h-1 ${palette.badge}`.trim()} aria-hidden="true" />
+      <div
+        className={`absolute inset-x-0 top-0 h-1 ${palette.badge}`.trim()}
+        aria-hidden="true"
+      />
       <div className="flex min-h-[212px] flex-col justify-between">
         <div>
           <div className="flex items-center justify-between gap-cluster-sm">
-            <WaveLabel className="text-white/85">{item.spotlight.badge}</WaveLabel>
+            <WaveLabel className="text-white/85">
+              {item.spotlight.badge}
+            </WaveLabel>
             <span className="text-overline text-white/45">NEXT</span>
           </div>
-          <h3 className="mt-section-gap-lg max-w-[200px] font-brand text-body-lg">{item.spotlight.title}</h3>
-          <p className="mt-cluster-sm max-w-[200px] text-body-xs text-[#c8c4ce]">{item.spotlight.description}</p>
+          <h3 className="mt-section-gap-lg max-w-[200px] font-brand text-body-lg">
+            {item.spotlight.title}
+          </h3>
+          <p className="mt-cluster-sm max-w-[200px] text-body-xs text-[#c8c4ce]">
+            {item.spotlight.description}
+          </p>
         </div>
-        <a
+        <SmartLink
           className="flex min-h-[42px] items-center justify-between gap-cluster-sm overflow-hidden rounded-pill bg-white px-3.5 text-micro font-bold text-ink transition-transform hover:-translate-y-px focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2"
           href={href}
           onClick={onNavigate}
           {...getLinkProps(href)}
         >
-          <span className="min-w-0 truncate whitespace-nowrap">{item.spotlight.ctaLabel}</span>
+          <span className="min-w-0 truncate whitespace-nowrap">
+            {item.spotlight.ctaLabel}
+          </span>
           <LinkArrow small />
-        </a>
+        </SmartLink>
       </div>
     </aside>
   );
 }
 
-export function MegaMenuPanel({ item, onNavigate }: { item: NavItem; onNavigate: () => void }) {
+export function MegaMenuPanel({
+  item,
+  onNavigate,
+}: {
+  item: NavItem;
+  onNavigate: () => void;
+}) {
   const groups = item.megaGroups ?? [];
   const tone = item.tone ?? "green";
   const pathname = usePathname();
   const [activeGroup, setActiveGroup] = useState("all");
-  const visibleGroups = activeGroup === "all" ? groups : groups.filter((group) => group.key === activeGroup);
+  const visibleGroups =
+    activeGroup === "all"
+      ? groups
+      : groups.filter((group) => group.key === activeGroup);
   const visibleItems = visibleGroups
     .flatMap((group) => group.items)
     .sort((left, right) => Number(left.marker) - Number(right.marker));
   const isDenseMenu = visibleItems.length > 12;
-  const panelHeightClass = isDenseMenu ? "h-[min(640px,calc(100vh-132px))]" : "h-fit";
+  const panelHeightClass = isDenseMenu
+    ? "h-[min(640px,calc(100vh-132px))]"
+    : "h-fit";
 
   return (
     <div
@@ -158,7 +288,10 @@ export function MegaMenuPanel({ item, onNavigate }: { item: NavItem; onNavigate:
       </div>
 
       <div className="mt-cluster-lg grid min-h-0 flex-1 grid-cols-[minmax(136px,164px)_minmax(0,1fr)] gap-cluster wide:grid-cols-[152px_minmax(0,1fr)_224px] wide:gap-cluster">
-        <nav className="min-h-0 overflow-y-auto rounded-card border border-warm bg-cream p-2" aria-label="Browse menu categories">
+        <nav
+          className="min-h-0 overflow-y-auto rounded-card border border-warm bg-cream p-2"
+          aria-label="Browse menu categories"
+        >
           <p className="px-2 py-1.5 text-overline text-muted">Browse by need</p>
           <div className="space-y-1">
             <button
@@ -168,7 +301,12 @@ export function MegaMenuPanel({ item, onNavigate }: { item: NavItem; onNavigate:
               onClick={() => setActiveGroup("all")}
             >
               <span>All services</span>
-              <span className={activeGroup === "all" ? "text-pink" : "text-muted"} aria-hidden="true">→</span>
+              <span
+                className={activeGroup === "all" ? "text-pink" : "text-muted"}
+                aria-hidden="true"
+              >
+                →
+              </span>
             </button>
             {groups.map((group) => (
               <button
@@ -186,18 +324,36 @@ export function MegaMenuPanel({ item, onNavigate }: { item: NavItem; onNavigate:
 
         <div className="min-h-0 overflow-y-auto pr-1 [scrollbar-width:thin]">
           <div className="columns-1 gap-cluster md:columns-2 wide:columns-3">
-            {visibleItems.map((menuItem) => <MegaMenuItemRow item={menuItem} key={menuItem.label} onNavigate={onNavigate} pathname={pathname} tone={tone} />)}
+            {visibleItems.map((menuItem) => (
+              <MegaMenuItemRow
+                item={menuItem}
+                key={menuItem.label}
+                onNavigate={onNavigate}
+                pathname={pathname}
+                tone={tone}
+              />
+            ))}
           </div>
         </div>
 
-        <Spotlight item={item} onNavigate={onNavigate} pathname={pathname} tone={tone} />
+        <Spotlight
+          item={item}
+          onNavigate={onNavigate}
+          pathname={pathname}
+          tone={tone}
+        />
       </div>
-
     </div>
   );
 }
 
-export function MobileMegaMenuContent({ item, onNavigate }: { item: NavItem; onNavigate: () => void }) {
+export function MobileMegaMenuContent({
+  item,
+  onNavigate,
+}: {
+  item: NavItem;
+  onNavigate: () => void;
+}) {
   const groups = item.megaGroups ?? [];
   const tone = item.tone ?? "green";
   const pathname = usePathname();
@@ -208,24 +364,50 @@ export function MobileMegaMenuContent({ item, onNavigate }: { item: NavItem; onN
         <MenuEyebrow item={item} tone={tone} />
       </div>
       {groups.map((group) => (
-        <section className="border-b border-border pb-3 last:border-b-0" key={group.key}>
+        <section
+          className="border-b border-border pb-3 last:border-b-0"
+          key={group.key}
+        >
           <div className="mb-cluster-sm px-1">
             <div>
-              <p className={`text-overline ${toneClasses[tone].accent}`.trim()}>{group.label}</p>
-              <p className="mt-0.5 text-micro text-muted">{group.description}</p>
+              <p className={`text-overline ${toneClasses[tone].accent}`.trim()}>
+                {group.label}
+              </p>
+              <p className="mt-0.5 text-micro text-muted">
+                {group.description}
+              </p>
             </div>
           </div>
           <div className="space-y-1">
             {group.items.map((menuItem) => (
-              <div className="rounded-control bg-white/70 px-2.5 py-2" key={menuItem.label}>
-                    <a className="group flex min-w-0 items-start justify-between gap-cluster text-body-xs font-bold text-ink transition-colors duration-200 ease-out hover:text-pink" href={resolveLocalHref(menuItem.href, pathname)} onClick={onNavigate} {...getLinkProps(resolveLocalHref(menuItem.href, pathname))}>
-                  <span className="min-w-0 break-words transition-colors duration-200 ease-out group-hover:text-pink">{menuItem.label}</span>
+              <div
+                className="rounded-control bg-white/70 px-2.5 py-2"
+                key={menuItem.label}
+              >
+                <SmartLink
+                  className="group flex min-w-0 items-start justify-between gap-cluster text-body-xs font-bold text-ink transition-colors duration-200 ease-out hover:text-pink"
+                  href={resolveLocalHref(menuItem.href, pathname)}
+                  onClick={onNavigate}
+                  {...getLinkProps(resolveLocalHref(menuItem.href, pathname))}
+                >
+                  <span className="min-w-0 break-words transition-colors duration-200 ease-out group-hover:text-pink">
+                    {menuItem.label}
+                  </span>
                   <LinkArrow />
-                </a>
-                <p className="mt-0.5 text-micro text-muted">{menuItem.description}</p>
+                </SmartLink>
+                <p className="mt-0.5 text-micro text-muted">
+                  {menuItem.description}
+                </p>
                 {menuItem.children?.length ? (
                   <div className="mt-2 space-y-0.5 border-l border-border pl-2">
-                    {menuItem.children.map((child) => <ChildLink child={child} key={child.label} onNavigate={onNavigate} pathname={pathname} />)}
+                    {menuItem.children.map((child) => (
+                      <ChildLink
+                        child={child}
+                        key={child.label}
+                        onNavigate={onNavigate}
+                        pathname={pathname}
+                      />
+                    ))}
                   </div>
                 ) : null}
               </div>
@@ -234,10 +416,17 @@ export function MobileMegaMenuContent({ item, onNavigate }: { item: NavItem; onN
         </section>
       ))}
       {item.spotlight ? (
-        <a className="flex min-h-12 items-center justify-between gap-cluster overflow-hidden rounded-card bg-[#071b3d] px-3.5 text-body-xs font-bold text-white" href={resolveLocalHref(item.spotlight.ctaHref, pathname)} onClick={onNavigate} {...getLinkProps(resolveLocalHref(item.spotlight.ctaHref, pathname))}>
-          <span className="min-w-0 truncate whitespace-nowrap">{item.spotlight.ctaLabel}</span>
+        <SmartLink
+          className="flex min-h-12 items-center justify-between gap-cluster overflow-hidden rounded-card bg-[#071b3d] px-3.5 text-body-xs font-bold text-white"
+          href={resolveLocalHref(item.spotlight.ctaHref, pathname)}
+          onClick={onNavigate}
+          {...getLinkProps(resolveLocalHref(item.spotlight.ctaHref, pathname))}
+        >
+          <span className="min-w-0 truncate whitespace-nowrap">
+            {item.spotlight.ctaLabel}
+          </span>
           <LinkArrow small />
-        </a>
+        </SmartLink>
       ) : null}
     </div>
   );
