@@ -40,6 +40,29 @@ test("document templates keep a safe service CTA default and reject external ser
   assert.equal(legacy.settings.serviceCta.href, "");
   assert.throws(() => documentTemplateDraftSchema.parse({ ...defaultMouTemplate, settings: { ...defaultMouTemplate.settings, serviceCta: { ...defaultMouTemplate.settings.serviceCta, enabled: true, href: "https://example.com" } } }));
 });
+test("document templates can save an intentionally empty page", () => {
+  const emptyPage = documentTemplateDraftSchema.parse({ ...defaultMouTemplate, pages: [{ id: "empty-page", title: "Blank page", settings: {}, blocks: [] }] });
+  assert.equal(emptyPage.pages[0]?.blocks.length, 0);
+
+  const legacyEmpty = normalizeDocumentTemplateDraft({
+    title: defaultMouTemplate.title,
+    slug: "empty-legacy-template",
+    description: defaultMouTemplate.description,
+    settings: defaultMouTemplate.settings,
+    fields: defaultMouTemplate.fields,
+    blocks: [],
+  });
+  assert.equal(legacyEmpty.pages.length, 1);
+  assert.equal(legacyEmpty.pages[0]?.blocks.length, 0);
+});
+test("document templates keep a valid admin-selected icon", () => {
+  const selected = documentTemplateDraftSchema.parse({ ...defaultMouTemplate, settings: { ...defaultMouTemplate.settings, icon: "building" } });
+  assert.equal(selected.settings.icon, "building");
+
+  const legacy = documentTemplateDraftSchema.parse({ ...defaultMouTemplate, settings: { ...defaultMouTemplate.settings, icon: undefined } });
+  assert.equal(legacy.settings.icon, "contract");
+  assert.throws(() => documentTemplateDraftSchema.parse({ ...defaultMouTemplate, settings: { ...defaultMouTemplate.settings, icon: "not-an-icon" } }));
+});
 test("rental deed templates preserve the supplied long-sheet ratio and separate languages", () => {
   for (const template of [defaultRentalDeedEnglishTemplate, defaultRentalDeedBanglaTemplate]) {
     const parsed = documentTemplateDraftSchema.parse(template);

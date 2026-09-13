@@ -25,6 +25,7 @@ import {
 import {
   checkTemplateSlug,
   createAdminTemplate,
+  deleteAdminTemplate,
   getAdminTemplate,
   getAdminTemplates,
   publishAdminTemplate,
@@ -33,6 +34,7 @@ import {
   updateAdminTemplate,
 } from "@/lib/template-api";
 import { ApiError, getAdminMenu, type AdminMenuSection } from "@/lib/menu-api";
+import { IconPicker } from "@/components/admin/icon-picker";
 import { DocumentTemplatePaper } from "@/components/limex/document-template-paper";
 
 const inputClass = "h-10 w-full rounded-[9px] border border-[#d8d2c8] bg-white px-3 text-[12.5px] font-medium text-[#242129] outline-none transition-[border-color,box-shadow] placeholder:text-[#a29b92] hover:border-[#bdb4aa] focus:border-[#0055ff] focus:ring-4 focus:ring-[#f8d9de]";
@@ -69,7 +71,7 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
 
 function DisclosureSection({ title, description, children, action, meta, defaultOpen = false }: { title: string; description?: string; children: ReactNode; action?: ReactNode; meta?: ReactNode; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);
-  return <section className="overflow-hidden rounded-[15px] bg-white shadow-[0_1px_0_rgba(44,36,31,0.04)]"><div className="flex items-center gap-3 px-3.5 py-3 sm:px-4"><button type="button" className="flex min-w-0 flex-1 items-center gap-2 text-left" aria-expanded={open} onClick={() => setOpen((value) => !value)}><span className={`grid size-6 shrink-0 place-items-center rounded-full text-[14px] transition-colors ${open ? "bg-[#071b3d] text-white" : "bg-[#f4eee8] text-[#746b61]"}`.trim()} aria-hidden="true">{open ? "−" : "+"}</span><span className="min-w-0"><span className="block font-brand text-[16px] font-bold tracking-[-0.02em] text-[#071b3d]">{title}</span>{description ? <span className="mt-0.5 block truncate text-[11px] leading-[1.4] text-[#817970]">{description}</span> : null}</span></button>{meta ? <span className="hidden shrink-0 text-[11px] text-[#948b82] sm:block">{meta}</span> : null}{action}</div>{open ? <div className="border-t border-[#eee9e2] px-3.5 py-3.5 sm:px-4">{children}</div> : null}</section>;
+  return <section className="relative rounded-[15px] bg-white shadow-[0_1px_0_rgba(44,36,31,0.04)]"><div className="flex items-center gap-3 px-3.5 py-3 sm:px-4"><button type="button" className="flex min-w-0 flex-1 items-center gap-2 text-left" aria-expanded={open} onClick={() => setOpen((value) => !value)}><span className={`grid size-6 shrink-0 place-items-center rounded-full text-[14px] transition-colors ${open ? "bg-[#071b3d] text-white" : "bg-[#f4eee8] text-[#746b61]"}`.trim()} aria-hidden="true">{open ? "−" : "+"}</span><span className="min-w-0"><span className="block font-brand text-[16px] font-bold tracking-[-0.02em] text-[#071b3d]">{title}</span>{description ? <span className="mt-0.5 block truncate text-[11px] leading-[1.4] text-[#817970]">{description}</span> : null}</span></button>{meta ? <span className="hidden shrink-0 text-[11px] text-[#948b82] sm:block">{meta}</span> : null}{action}</div>{open ? <div className="border-t border-[#eee9e2] px-3.5 py-3.5 sm:px-4">{children}</div> : null}</section>;
 }
 
 function isFormattedBlock(block: TemplateBlock): block is Extract<TemplateBlock, { type: "title" | "heading" | "paragraph" | "field" }> {
@@ -387,7 +389,7 @@ function PreviewPanel({ template, values }: { template: DocumentTemplateDraft; v
   return <aside className="min-w-0 xl:sticky xl:top-[92px] xl:h-[calc(100vh-116px)]"><section className="flex h-[min(760px,calc(100vh-128px))] min-h-[420px] flex-col overflow-hidden rounded-[18px] bg-[#f7f3ed] shadow-[0_1px_0_rgba(44,36,31,0.04)]" aria-label="Live document preview"><header className="flex flex-wrap items-center justify-between gap-2 px-3.5 py-3 sm:px-4"><div><p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#0055ff]">Live preview</p><p className="mt-0.5 text-[13px] font-bold text-[#2d2824]">{templatePaperSizeLabels[template.settings.paperSize]} document · {template.pages.length} page{template.pages.length === 1 ? "" : "s"}</p></div><span className="rounded-full bg-white/75 px-2.5 py-1 text-[10px] font-bold text-[#817970]">Fit to width</span></header><div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain bg-[#eee9e2] p-2.5 sm:p-4" tabIndex={0} role="region" aria-label="Scrollable live document pages"><div className="mx-auto w-full max-w-[820px]"><DocumentTemplatePaper template={template} values={values} showLabels={false} /></div></div><footer className="px-3.5 py-2.5 text-[10px] leading-[1.4] text-[#817970] sm:px-4"><code className="rounded bg-white/80 px-1">{'{{field_key}}'}</code> shows dynamic content · Scroll to review every page</footer></section></aside>;
 }
 
-type BusyAction = "save" | "publish" | "unpublish" | null;
+type BusyAction = "save" | "publish" | "unpublish" | "delete" | null;
 
 function Editor({ template, onChange, onSave, onPublish, onUnpublish, busy, busyAction, isNew, isPublished, isDirty, savedSlug, slugStatus, slugBusy, onCheckSlug, serviceOptions, canMutate }: { template: DocumentTemplateDraft; onChange: (template: DocumentTemplateDraft) => void; onSave: () => void; onPublish: () => void; onUnpublish: () => void; busy: boolean; busyAction: BusyAction; isNew: boolean; isPublished: boolean; isDirty: boolean; savedSlug: string; slugStatus: "unchecked" | "checking" | "available" | "taken" | "invalid"; slugBusy: boolean; onCheckSlug: () => void; serviceOptions: ServiceOption[]; canMutate: boolean }) {
   const [activePageId, setActivePageId] = useState(template.pages[0]?.id ?? "");
@@ -439,6 +441,7 @@ function templateSummaryFromAdmin(template: AdminDocumentTemplate): DocumentTemp
     slug: template.slug,
     title: template.title,
     description: template.description,
+    icon: template.settings.icon,
     paperSize: template.settings.paperSize,
     status: template.status,
     revision: template.revision,
@@ -447,6 +450,10 @@ function templateSummaryFromAdmin(template: AdminDocumentTemplate): DocumentTemp
     sortOrder: template.sortOrder,
     updatedAt: template.updatedAt,
   };
+}
+
+function TemplateIconControl({ value, onChange, disabled }: { value: DocumentTemplateDraft["settings"]["icon"]; onChange: (value: DocumentTemplateDraft["settings"]["icon"]) => void; disabled: boolean }) {
+  return <section className="relative z-30 rounded-[15px] bg-white px-3.5 py-3.5 shadow-[0_1px_0_rgba(44,36,31,0.04)] sm:px-4"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="font-brand text-[16px] font-bold tracking-[-0.02em] text-[#071b3d]">Template icon</p><p className="mt-0.5 text-[11px] text-[#817970]">Choose the icon shown on document-builder cards.</p></div><div className="w-full sm:w-[240px]"><IconPicker value={value} onChange={onChange} disabled={disabled} /></div></div></section>;
 }
 
 type TemplateBuilderViewProps = {
@@ -466,16 +473,32 @@ type TemplateBuilderViewProps = {
   onDragEnd: () => void;
   onDrop: (sourceId: string, targetId: string) => void;
   onMove: (id: string, direction: -1 | 1) => void;
+  onRequestDelete: (template: DocumentTemplateSummary) => void;
 };
 
-function TemplateBuilderView({ templates, selectedId, loadingTemplateId, draggingTemplateId, reorderingTemplates, busy, error, notice, editor, onStartNew, onReloadSelected, onSelectTemplate, onDragStart, onDragEnd, onDrop, onMove }: TemplateBuilderViewProps) {
+type DeleteTemplateModalProps = {
+  template: DocumentTemplateSummary | null;
+  confirmation: string;
+  busy: boolean;
+  onConfirmationChange: (value: string) => void;
+  onCancel: () => void;
+  onConfirm: () => void;
+};
+
+function DeleteTemplateModal({ template, confirmation, busy, onConfirmationChange, onCancel, onConfirm }: DeleteTemplateModalProps) {
+  if (!template) return null;
+  const confirmed = confirmation.trim().toLowerCase() === "delete";
+  return <div className="fixed inset-0 z-[70] grid place-items-center bg-[#071b3d]/45 p-4 backdrop-blur-[3px]" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !busy) onCancel(); }}><form className="w-full max-w-[460px] overflow-hidden rounded-[20px] bg-white shadow-[0_24px_80px_rgba(7,27,61,0.24)]" role="dialog" aria-modal="true" aria-labelledby="delete-template-title" aria-describedby="delete-template-description" onSubmit={(event) => { event.preventDefault(); if (confirmed) onConfirm(); }} onMouseDown={(event) => event.stopPropagation()}><div className="flex items-start gap-3 border-b border-[#eee9e2] px-5 py-5"><span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#fff0f2] text-[18px] font-bold text-[#b13c53]" aria-hidden="true">!</span><div className="min-w-0 flex-1"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#b13c53]">Permanent action</p><h2 id="delete-template-title" className="mt-1 break-words font-brand text-[20px] font-bold tracking-[-0.03em] text-[#071b3d]">Delete “{template.title}”?</h2><p id="delete-template-description" className="mt-2 text-[12px] leading-[1.55] text-[#6f675f]">This permanently removes the saved template and any published version. If it is open with unsaved edits, those edits will be discarded too. This action cannot be undone.</p></div><button type="button" className="grid size-8 shrink-0 place-items-center rounded-full text-[20px] leading-none text-[#8b8177] transition-colors hover:bg-[#f4eee8] hover:text-[#071b3d] disabled:cursor-not-allowed disabled:opacity-40" aria-label="Close delete dialog" onClick={onCancel} disabled={busy}>×</button></div><div className="space-y-2.5 px-5 py-5"><label htmlFor="delete-template-confirmation" className="block text-[11px] font-bold text-[#423d38]">Type <code className="rounded bg-[#f4eee8] px-1.5 py-0.5 font-mono text-[11px] text-[#071b3d]">delete</code> to confirm</label><input id="delete-template-confirmation" autoFocus autoComplete="off" spellCheck={false} className={`${inputClass} ${confirmation && !confirmed ? "border-[#d98a99] focus:border-[#b13c53] focus:ring-[#ffe3e7]" : ""}`.trim()} value={confirmation} onChange={(event) => onConfirmationChange(event.target.value)} placeholder="delete" aria-invalid={Boolean(confirmation) && !confirmed} /><p className="text-[10px] leading-[1.45] text-[#8b8177]">The delete button becomes available only when the word matches exactly.</p></div><footer className="flex flex-wrap justify-end gap-2 bg-[#faf8f4] px-5 py-4"><button type="button" className="min-h-10 rounded-full bg-white px-4 text-[12px] font-bold text-[#514c47] ring-1 ring-inset ring-[#ded7ce] transition-colors hover:bg-[#f4eee8] disabled:cursor-not-allowed disabled:opacity-45" onClick={onCancel} disabled={busy}>Cancel</button><button type="submit" className="min-h-10 rounded-full bg-[#b13c53] px-4 text-[12px] font-bold text-white transition-colors hover:bg-[#922e43] disabled:cursor-not-allowed disabled:opacity-40" disabled={!confirmed || busy}>{busy ? "Deleting…" : "Delete permanently"}</button></footer></form></div>;
+}
+
+function TemplateBuilderView({ templates, selectedId, loadingTemplateId, draggingTemplateId, reorderingTemplates, busy, error, notice, editor, onStartNew, onReloadSelected, onSelectTemplate, onDragStart, onDragEnd, onDrop, onMove, onRequestDelete }: TemplateBuilderViewProps) {
   function handleDrop(event: React.DragEvent<HTMLDivElement>, targetId: string) {
     event.preventDefault();
     const sourceId = event.dataTransfer.getData("text/plain") || draggingTemplateId;
     if (sourceId) onDrop(sourceId, targetId);
   }
 
-  return <div className="space-y-5"><div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#0055ff]">Business tools / templates</p><h2 className="mt-1 font-brand text-[28px] font-bold tracking-[-0.04em] text-[#071b3d]">Build documents once.</h2><p className="mt-1 max-w-[620px] text-[12px] leading-[1.5] text-[#817970]">Arrange pages and elements in one focused workspace, then publish a polished form for users to complete.</p></div><button className="min-h-10 rounded-full bg-[#071b3d] px-5 text-[12px] font-bold text-white transition-colors hover:bg-[#0055ff] disabled:cursor-not-allowed disabled:opacity-50" type="button" onClick={onStartNew} disabled={busy || reorderingTemplates || loadingTemplateId !== null}>+ New template</button></div>{error ? <div className="flex flex-wrap items-center justify-between gap-3 rounded-[11px] bg-[#fff4f5] px-3.5 py-3" role="alert"><p className="text-[12px] font-semibold text-[#c53e59]">{error}</p>{selectedId ? <button className="rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-[#a83b51] transition-colors hover:bg-[#ffe8ec] disabled:opacity-50" type="button" onClick={onReloadSelected} disabled={busy || reorderingTemplates || loadingTemplateId !== null}>Reload server copy</button> : null}</div> : null}{notice ? <p className="rounded-[11px] bg-[#eff8f1] px-3.5 py-3 text-[12px] font-semibold text-[#2d7650]" role="status">{notice}</p> : null}<div className="grid min-w-0 gap-4 lg:grid-cols-[240px_minmax(0,1fr)]"><aside className="min-w-0 rounded-[16px] bg-white/60 p-2.5"><div className="mb-2 flex items-center justify-between px-2"><div><span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-[#8a8178]">Templates</span><span className="mt-0.5 block text-[10px] text-[#a09991]">Drag to set the order</span></div><span className="text-[10px] text-[#a09991]">{templates.length}</span></div>{templates.length ? <div className="flex gap-1.5 overflow-x-auto pb-1 lg:block lg:space-y-1.5 lg:overflow-visible">{templates.map((template, index) => <div className={`min-w-[200px] rounded-[11px] transition-opacity sm:min-w-0 ${draggingTemplateId === template.id ? "opacity-55" : ""}`.trim()} key={template.id} onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; }} onDrop={(event) => handleDrop(event, template.id)}><button className={`flex w-full items-center gap-2 rounded-[11px] px-3 py-2.5 text-left transition-colors lg:block lg:w-full ${selectedId === template.id ? "bg-[#071b3d] text-white" : "bg-[#f7f3ed] text-[#423d38] hover:bg-[#eee7df]"}`.trim()} type="button" draggable={!busy && !reorderingTemplates} onDragStart={(event) => { event.dataTransfer.effectAllowed = "move"; event.dataTransfer.setData("text/plain", template.id); onDragStart(template.id); }} onDragEnd={onDragEnd} onClick={() => onSelectTemplate(template)} disabled={busy || reorderingTemplates || loadingTemplateId !== null}><span className="min-w-0 flex-1"><span className="block truncate text-[12px] font-bold">{template.title}</span><span className={`mt-1 block truncate text-[10px] ${selectedId === template.id ? "text-white/60" : "text-[#8e867e]"}`.trim()}>{loadingTemplateId === template.id ? "Loading…" : `${template.status === "PUBLISHED" ? "Published" : "Draft"} · ${template.paperSize}`}</span></span><span className={`shrink-0 text-[14px] ${selectedId === template.id ? "text-white/50" : "text-[#aaa198]"}`.trim()} title="Drag to reorder" aria-hidden="true">⠿</span></button><div className="flex items-center justify-between gap-2 px-2 pt-1 lg:px-1"><span className="truncate text-[9px] text-[#a09991]">{reorderingTemplates ? "Saving order…" : `Position ${index + 1}`}</span><span className="flex shrink-0 items-center gap-0.5"><button className="grid size-6 place-items-center rounded text-[11px] text-[#8f867d] transition-colors hover:bg-[#f4eee8] hover:text-[#071b3d] disabled:cursor-not-allowed disabled:opacity-25" type="button" aria-label={`Move ${template.title} up`} disabled={index === 0 || busy || reorderingTemplates} onClick={() => onMove(template.id, -1)}>↑</button><button className="grid size-6 place-items-center rounded text-[11px] text-[#8f867d] transition-colors hover:bg-[#f4eee8] hover:text-[#071b3d] disabled:cursor-not-allowed disabled:opacity-25" type="button" aria-label={`Move ${template.title} down`} disabled={index === templates.length - 1 || busy || reorderingTemplates} onClick={() => onMove(template.id, 1)}>↓</button></span></div></div>)}</div> : <p className="px-2 py-3 text-[11px] leading-[1.45] text-[#817970]">No saved templates yet. Start a local draft.</p>}</aside><div className="min-w-0">{editor}</div></div></div>;
+  return <div className="space-y-5"><div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#0055ff]">Business tools / templates</p><h2 className="mt-1 font-brand text-[28px] font-bold tracking-[-0.04em] text-[#071b3d]">Build documents once.</h2><p className="mt-1 max-w-[620px] text-[12px] leading-[1.5] text-[#817970]">Arrange pages and elements in one focused workspace, then publish a polished form for users to complete.</p></div><button className="min-h-10 rounded-full bg-[#071b3d] px-5 text-[12px] font-bold text-white transition-colors hover:bg-[#0055ff] disabled:cursor-not-allowed disabled:opacity-50" type="button" onClick={onStartNew} disabled={busy || reorderingTemplates || loadingTemplateId !== null}>+ New template</button></div>{error ? <div className="flex flex-wrap items-center justify-between gap-3 rounded-[11px] bg-[#fff4f5] px-3.5 py-3" role="alert"><p className="text-[12px] font-semibold text-[#c53e59]">{error}</p>{selectedId ? <button className="rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-[#a83b51] transition-colors hover:bg-[#ffe8ec] disabled:opacity-50" type="button" onClick={onReloadSelected} disabled={busy || reorderingTemplates || loadingTemplateId !== null}>Reload server copy</button> : null}</div> : null}{notice ? <p className="rounded-[11px] bg-[#eff8f1] px-3.5 py-3 text-[12px] font-semibold text-[#2d7650]" role="status">{notice}</p> : null}<div className="grid min-w-0 gap-4 lg:grid-cols-[240px_minmax(0,1fr)]"><aside className="min-w-0 rounded-[16px] bg-white/60 p-2.5"><div className="mb-2 flex items-center justify-between px-2"><div><span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-[#8a8178]">Templates</span><span className="mt-0.5 block text-[10px] text-[#a09991]">Drag to set the order</span></div><span className="text-[10px] text-[#a09991]">{templates.length}</span></div>{templates.length ? <div className="flex gap-1.5 overflow-x-auto pb-1 lg:block lg:space-y-1.5 lg:overflow-visible">{templates.map((template, index) => <div className={`min-w-[200px] rounded-[11px] transition-opacity sm:min-w-0 ${draggingTemplateId === template.id ? "opacity-55" : ""}`.trim()} key={template.id} onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; }} onDrop={(event) => handleDrop(event, template.id)}><button className={`flex w-full items-center gap-2 rounded-[11px] px-3 py-2.5 text-left transition-colors lg:block lg:w-full ${selectedId === template.id ? "bg-[#071b3d] text-white" : "bg-[#f7f3ed] text-[#423d38] hover:bg-[#eee7df]"}`.trim()} type="button" draggable={!busy && !reorderingTemplates} onDragStart={(event) => { event.dataTransfer.effectAllowed = "move"; event.dataTransfer.setData("text/plain", template.id); onDragStart(template.id); }} onDragEnd={onDragEnd} onClick={() => onSelectTemplate(template)} disabled={busy || reorderingTemplates || loadingTemplateId !== null}><span className="min-w-0 flex-1"><span className="block truncate text-[12px] font-bold">{template.title}</span><span className={`mt-1 block truncate text-[10px] ${selectedId === template.id ? "text-white/60" : "text-[#8e867e]"}`.trim()}>{loadingTemplateId === template.id ? "Loading…" : `${template.status === "PUBLISHED" ? "Published" : "Draft"} · ${template.paperSize}`}</span></span><span className={`shrink-0 text-[14px] ${selectedId === template.id ? "text-white/50" : "text-[#aaa198]"}`.trim()} title="Drag to reorder" aria-hidden="true">⠿</span></button><div className="flex items-center justify-between gap-2 px-2 pt-1 lg:px-1"><span className="truncate text-[9px] text-[#a09991]">{reorderingTemplates ? "Saving order…" : `Position ${index + 1}`}</span><span className="flex shrink-0 items-center gap-0.5"><button className="grid size-6 place-items-center rounded text-[11px] text-[#8f867d] transition-colors hover:bg-[#f4eee8] hover:text-[#071b3d] disabled:cursor-not-allowed disabled:opacity-25" type="button" aria-label={`Move ${template.title} up`} disabled={index === 0 || busy || reorderingTemplates} onClick={() => onMove(template.id, -1)}>↑</button><button className="grid size-6 place-items-center rounded text-[11px] text-[#8f867d] transition-colors hover:bg-[#f4eee8] hover:text-[#071b3d] disabled:cursor-not-allowed disabled:opacity-25" type="button" aria-label={`Move ${template.title} down`} disabled={index === templates.length - 1 || busy || reorderingTemplates} onClick={() => onMove(template.id, 1)}>↓</button><button className="rounded-full border border-[#ecd6db] bg-[#fff8f8] px-2 py-1 text-[10px] font-bold text-[#b13c53] transition-colors hover:bg-[#fff0f2] disabled:cursor-not-allowed disabled:opacity-35" type="button" aria-label={`Delete ${template.title}`} disabled={busy || reorderingTemplates || loadingTemplateId !== null} onClick={(event) => { event.stopPropagation(); onRequestDelete(template); }}>Delete</button></span></div></div>)}</div> : <p className="px-2 py-3 text-[11px] leading-[1.45] text-[#817970]">No saved templates yet. Start a local draft.</p>}</aside><div className="min-w-0">{editor}</div></div></div>;
 }
 
 export function TemplateBuilderModule() {
@@ -499,6 +522,8 @@ export function TemplateBuilderModule() {
   const [error, setError] = useState("");
   const [draggingTemplateId, setDraggingTemplateId] = useState<string | null>(null);
   const [reorderingTemplates, setReorderingTemplates] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<DocumentTemplateSummary | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const loadRequestRef = useRef(0);
 
   function handleError(value: unknown) { if (value instanceof ApiError && value.status === 401) { window.location.assign("/admin/login"); return; } const message = value instanceof Error ? value.message : "Unable to load templates."; setError(value instanceof ApiError && [409, 502, 503].includes(value.status) ? `${message} Your current edits remain in this screen; nothing was overwritten.` : message); }
@@ -510,6 +535,53 @@ export function TemplateBuilderModule() {
   function changeDraft(next: DocumentTemplateDraft) { setIsDirty(true); setDraft((current) => { if (current?.slug !== next.slug) setSlugStatus("unchecked"); return next; }); }
   async function validateSlug(): Promise<boolean> { if (!draft) return false; if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(draft.slug)) { setSlugStatus("invalid"); return false; } setSlugBusy(true); setSlugStatus("checking"); try { const result = await checkTemplateSlug(draft.slug, isNew ? undefined : selectedId ?? undefined); setSlugStatus(result.available ? "available" : "taken"); if (!result.available) setError("Choose another public slug before saving."); return result.available; } catch (value) { setSlugStatus("unchecked"); handleError(value); return false; } finally { setSlugBusy(false); } }
   const canMutate = isNew || (templatesLoaded && selectedId !== null && revision !== null);
+  function requestDelete(template: DocumentTemplateSummary) { if (busy || reorderingTemplates || loadingTemplateId !== null) return; setDeleteTarget(template); setDeleteConfirmation(""); setNotice(""); setError(""); }
+  function cancelDelete() { if (busy) return; setDeleteTarget(null); setDeleteConfirmation(""); }
+  async function deleteTemplate() {
+    const target = deleteTarget;
+    if (!target || busy || deleteConfirmation.trim().toLowerCase() !== "delete") return;
+    setBusy(true);
+    setBusyAction("delete");
+    setNotice("");
+    setError("");
+    try {
+      await deleteAdminTemplate(target.id);
+      const remaining = templates.filter((template) => template.id !== target.id);
+      setTemplates(remaining);
+      setDeleteTarget(null);
+      setDeleteConfirmation("");
+      if (selectedId === target.id) {
+        const requestId = ++loadRequestRef.current;
+        const next = remaining[0];
+        setSelectedId(null);
+        setSavedSlug("");
+        setDraft(null);
+        setRevision(null);
+        setIsPublished(false);
+        setIsNew(false);
+        setIsDirty(false);
+        setSlugStatus("unchecked");
+        if (next) {
+          setLoadingTemplateId(next.id);
+          try {
+            const fullTemplate = await getAdminTemplate(next.id);
+            if (requestId === loadRequestRef.current) applyTemplate(fullTemplate);
+          } finally {
+            if (requestId === loadRequestRef.current) setLoadingTemplateId(null);
+          }
+        } else {
+          setLoadingTemplateId(null);
+          setTemplatesLoaded(true);
+        }
+      }
+      setNotice("Template deleted.");
+    } catch (value) {
+      handleError(value);
+    } finally {
+      setBusy(false);
+      setBusyAction(null);
+    }
+  }
   async function save() { if (!draft || busy || !canMutate) return; setBusy(true); setBusyAction("save"); setNotice(""); setError(""); try { if (!(await validateSlug())) return; const saved = isNew ? await createAdminTemplate(draft) : await updateAdminTemplate(selectedId!, draft, revision!); const summary = templateSummaryFromAdmin(saved); setTemplates((current) => isNew ? [...current, summary] : current.map((item) => item.id === saved.id ? summary : item)); applyTemplate(saved); setNotice(isNew ? "Draft created." : "Draft saved."); } catch (value) { handleError(value); } finally { setBusy(false); setBusyAction(null); } }
   async function publish() { if (!selectedId || revision === null || !draft || busy || !templatesLoaded) return; setBusy(true); setBusyAction("publish"); setNotice(""); setError(""); try { if (!(await validateSlug())) return; const savedDraft = await updateAdminTemplate(selectedId, draft, revision); const savedDraftSummary = templateSummaryFromAdmin(savedDraft); setTemplates((current) => current.map((item) => item.id === savedDraft.id ? savedDraftSummary : item)); applyTemplate(savedDraft); const saved = await publishAdminTemplate(savedDraft.id, savedDraft.revision); const savedSummary = templateSummaryFromAdmin(saved); setTemplates((current) => current.map((item) => item.id === saved.id ? savedSummary : item)); applyTemplate(saved); setNotice("Template published."); } catch (value) { handleError(value); } finally { setBusy(false); setBusyAction(null); } }
   async function unpublish() { if (!selectedId || revision === null || busy || !templatesLoaded) return; setBusy(true); setBusyAction("unpublish"); setNotice(""); setError(""); try { const saved = await unpublishAdminTemplate(selectedId, revision); const summary = templateSummaryFromAdmin(saved); setTemplates((current) => current.map((item) => item.id === saved.id ? summary : item)); applyTemplate(saved); setNotice("Template unpublished."); } catch (value) { handleError(value); } finally { setBusy(false); setBusyAction(null); } }
@@ -553,6 +625,6 @@ export function TemplateBuilderModule() {
   }
 
   if (loading) return <div className="grid min-h-[360px] place-items-center rounded-[20px] bg-white text-[13px] font-semibold text-[#817970]">Loading templates…</div>;
-  const editor = draft ? <Editor template={draft} onChange={changeDraft} onSave={() => void save()} onPublish={() => void publish()} onUnpublish={() => void unpublish()} busy={busy || reorderingTemplates || loadingTemplateId !== null} busyAction={busyAction} isNew={isNew} isPublished={isPublished} isDirty={isDirty} savedSlug={savedSlug} slugStatus={slugStatus} slugBusy={slugBusy} onCheckSlug={() => void validateSlug()} serviceOptions={serviceOptions} canMutate={canMutate} /> : <div className="grid min-h-[300px] place-items-center rounded-[16px] bg-white p-8 text-center text-[13px] text-[#817970]">Choose a template or create a new one.</div>;
-  return <TemplateBuilderView templates={templates} selectedId={selectedId} loadingTemplateId={loadingTemplateId} draggingTemplateId={draggingTemplateId} reorderingTemplates={reorderingTemplates} busy={busy} error={error} notice={notice} editor={editor} onStartNew={startNew} onReloadSelected={() => void reloadSelected()} onSelectTemplate={(template) => void selectTemplate(template)} onDragStart={setDraggingTemplateId} onDragEnd={() => setDraggingTemplateId(null)} onDrop={reorderTemplate} onMove={moveTemplate} />;
+  const editor = draft ? <div className="space-y-3"><TemplateIconControl value={draft.settings.icon} onChange={(icon) => changeDraft({ ...draft, settings: { ...draft.settings, icon } })} disabled={busy || reorderingTemplates || loadingTemplateId !== null} /><Editor template={draft} onChange={changeDraft} onSave={() => void save()} onPublish={() => void publish()} onUnpublish={() => void unpublish()} busy={busy || reorderingTemplates || loadingTemplateId !== null} busyAction={busyAction} isNew={isNew} isPublished={isPublished} isDirty={isDirty} savedSlug={savedSlug} slugStatus={slugStatus} slugBusy={slugBusy} onCheckSlug={() => void validateSlug()} serviceOptions={serviceOptions} canMutate={canMutate} /></div> : <div className="grid min-h-[300px] place-items-center rounded-[16px] bg-white p-8 text-center text-[13px] text-[#817970]">Choose a template or create a new one.</div>;
+  return <><TemplateBuilderView templates={templates} selectedId={selectedId} loadingTemplateId={loadingTemplateId} draggingTemplateId={draggingTemplateId} reorderingTemplates={reorderingTemplates} busy={busy} error={error} notice={notice} editor={editor} onStartNew={startNew} onReloadSelected={() => void reloadSelected()} onSelectTemplate={(template) => void selectTemplate(template)} onDragStart={setDraggingTemplateId} onDragEnd={() => setDraggingTemplateId(null)} onDrop={reorderTemplate} onMove={moveTemplate} onRequestDelete={requestDelete} /><DeleteTemplateModal template={deleteTarget} confirmation={deleteConfirmation} busy={busyAction === "delete"} onConfirmationChange={setDeleteConfirmation} onCancel={cancelDelete} onConfirm={() => void deleteTemplate()} /></>;
 }

@@ -75,7 +75,7 @@ const footerLinkHref: Record<string, string> = {
   Contact: "/#contact",
   "VAT calculator": "/business-tools/vat",
   "Income tax estimator": "/business-tools/income-tax",
-  "Deed builder": "/business-tools/rental-deed",
+  "Deed builder": "/business-tools/templates",
 };
 
 export const defaultLandingContent: LandingContent = {
@@ -166,7 +166,7 @@ export const defaultLandingContent: LandingContent = {
     description: "Practical tools for quick business decisions.",
     ctaLabel: "Explore tools",
     ctaHref: "/business-tools",
-    items: businessTools.map((tool) => ({
+    items: businessTools.filter((tool) => tool.group === "calculator").map((tool) => ({
       id: `tool-${tool.slug}`,
       isVisible: true,
       mark: tool.icon,

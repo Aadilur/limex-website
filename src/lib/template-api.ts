@@ -23,7 +23,7 @@ function assertAdminTemplateSummary(value: unknown): DocumentTemplateSummary {
   if (!isRecord(value) || typeof value.id !== "string" || typeof value.slug !== "string" || typeof value.title !== "string" || typeof value.description !== "string" || typeof value.paperSize !== "string" || (value.status !== "DRAFT" && value.status !== "PUBLISHED") || typeof value.revision !== "number" || (value.publishedRevision !== null && typeof value.publishedRevision !== "number") || (value.publishedAt !== null && typeof value.publishedAt !== "string") || typeof value.updatedAt !== "string") {
     throw new ApiError(502, "The template list was incomplete. Nothing was changed.");
   }
-  return value as unknown as DocumentTemplateSummary;
+  return { ...value, icon: typeof value.icon === "string" ? value.icon : "contract" } as unknown as DocumentTemplateSummary;
 }
 
 function assertAdminTemplateList(value: unknown): DocumentTemplateSummary[] {
@@ -76,6 +76,12 @@ export function updateAdminTemplate(id: string, template: DocumentTemplateDraft,
     method: "PUT",
     body: JSON.stringify({ template, expectedRevision }),
   }).then(assertAdminTemplate);
+}
+
+export function deleteAdminTemplate(id: string): Promise<void> {
+  return request<unknown>(`/api/admin/tools/templates/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  }).then(() => undefined);
 }
 
 export function publishAdminTemplate(id: string, expectedRevision: number): Promise<AdminDocumentTemplate> {

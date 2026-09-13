@@ -63,9 +63,10 @@ export function withLandingFallback(content: Partial<LandingContent> | null | un
     return { ...fallback, ...saved, coverUrl: fallback.coverUrl };
   });
   const sourceTools = content?.tools?.items ?? [];
+  const calculatorTools = businessTools.filter((tool) => tool.group === "calculator");
   const seen = new Set<string>();
   const savedTools = sourceTools.flatMap((saved) => {
-    const tool = businessTools.find((candidate) => saved.id === `tool-${candidate.slug}` || saved.href === toolHref(candidate.slug));
+    const tool = calculatorTools.find((candidate) => saved.id === `tool-${candidate.slug}` || saved.href === toolHref(candidate.slug));
     if (!tool || seen.has(tool.slug)) return [];
     seen.add(tool.slug);
     const fallback = defaultLandingContent.tools.items.find((item) => item.id === `tool-${tool.slug}`)!;
@@ -77,7 +78,7 @@ export function withLandingFallback(content: Partial<LandingContent> | null | un
       tag: tool.group,
     }];
   });
-  const toolItems = [...savedTools, ...businessTools.filter((tool) => !seen.has(tool.slug)).map((tool) => defaultLandingContent.tools.items.find((item) => item.id === `tool-${tool.slug}`)!)];
+  const toolItems = [...savedTools, ...calculatorTools.filter((tool) => !seen.has(tool.slug)).map((tool) => defaultLandingContent.tools.items.find((item) => item.id === `tool-${tool.slug}`)!)];
   return {
     ...defaultLandingContent,
     ...content,

@@ -1,5 +1,34 @@
 import { z } from "zod";
 
+// Keep the template schema independent from the client-only service icon module.
+// The server imports this file to validate and render templates during production builds.
+const templateIconNames = [
+  "building",
+  "license",
+  "receipt-tax",
+  "tax",
+  "file-upload",
+  "file-download",
+  "users-group",
+  "factory",
+  "shield-check",
+  "certificate-2",
+  "leaf",
+  "plane",
+  "world",
+  "file-check",
+  "package",
+  "trademark",
+  "copyright",
+  "lightbulb",
+  "report-money",
+  "contract",
+  "calculator",
+  "language",
+  "checklist",
+  "briefcase",
+] as const;
+
 export const templatePaperSizes = ["A4", "LEGAL", "DEED"] as const;
 export type TemplatePaperSize = (typeof templatePaperSizes)[number];
 
@@ -157,10 +186,11 @@ export const templatePageSchema = z.object({
   id: idSchema,
   title: textSchema(180),
   settings: templatePageSettingsSchema.default({}),
-  blocks: z.array(templateBlockSchema).min(1).max(240),
+  blocks: z.array(templateBlockSchema).max(240),
 });
 
 export const templateSettingsSchema = z.object({
+  icon: z.enum(templateIconNames).default("contract"),
   paperSize: z.enum(templatePaperSizes).default("A4"),
   marginTop: z.number().int().min(8).max(60).default(20),
   marginRight: z.number().int().min(8).max(50).default(18),
@@ -190,7 +220,7 @@ const legacyDocumentTemplateSchema = z.object({
   description: textSchema(500),
   settings: templateSettingsSchema,
   fields: z.array(templateFieldSchema).max(80),
-  blocks: z.array(templateBlockSchema).min(1).max(240),
+  blocks: z.array(templateBlockSchema).max(240),
 });
 
 function templatePlaceholderKeys(text: string) {
@@ -252,6 +282,7 @@ export type TemplateBlock = z.infer<typeof templateBlockSchema>;
 export type TemplatePageSettings = z.infer<typeof templatePageSettingsSchema>;
 export type TemplatePage = z.infer<typeof templatePageSchema>;
 export type TemplateSettings = z.infer<typeof templateSettingsSchema>;
+export type TemplateIconName = TemplateSettings["icon"];
 export type TemplateServiceCta = z.infer<typeof serviceCtaSchema>;
 export type DocumentTemplateDraft = z.infer<typeof documentTemplateDraftSchema>;
 
@@ -260,6 +291,7 @@ export type DocumentTemplateSummary = {
   slug: string;
   title: string;
   description: string;
+  icon: TemplateIconName;
   paperSize: TemplatePaperSize;
   status: "DRAFT" | "PUBLISHED";
   revision: number;
@@ -337,6 +369,7 @@ export function expandTemplateBlockInstances(template: DocumentTemplateDraft, bl
 }
 
 export const defaultTemplateSettings: TemplateSettings = {
+  icon: "contract",
   paperSize: "A4",
   marginTop: 20,
   marginRight: 18,
@@ -382,7 +415,8 @@ function blocksToPages(blocks: TemplateBlock[]): TemplatePage[] {
     }
     pages.at(-1)!.blocks.push(block);
   }
-  return pages.filter((page) => page.blocks.length > 0);
+  const nonEmptyPages = pages.filter((page) => page.blocks.length > 0);
+  return nonEmptyPages.length ? nonEmptyPages : pages;
 }
 
 export function flattenTemplatePages(pages: TemplatePage[]): TemplateBlock[] {

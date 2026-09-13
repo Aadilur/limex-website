@@ -297,16 +297,6 @@ const businessTools: MegaMenuGroup[] = [
         description: "Build practical agreements in the right format.",
         href: agreementBuilderUrl,
         marker: "02",
-        children: [
-          { label: "Office Rental Deed - English", href: "/business-tools/templates/office-rental-deed-en" },
-          { label: "Office Rental Deed - বাংলা", href: "/business-tools/templates/office-rental-deed-bn" },
-          { label: "40 Page Partnership Deed - English", href: "/business-tools/templates/partnership-deed-40-en" },
-          { label: "40 Page Partnership Deed - বাংলা", href: "/business-tools/templates/partnership-deed-40-bn" },
-          { label: "E-Trade License Closed/Cancel Application", href: "/business-tools/trade-license-cancellation" },
-          { label: "MOA/AOA Builder", href: "/business-tools/moa-aoa" },
-          { label: "MOU Generator", href: "/business-tools/mou" },
-          { label: "Employment Agreement Generator", href: "/business-tools/employment-agreement" },
-        ],
       },
     ],
   },
@@ -393,31 +383,34 @@ export const serviceFilters = [
 
 export type ServiceFilter = (typeof serviceFilters)[number];
 
-export type ServiceIconName =
-  | "building"
-  | "license"
-  | "receipt-tax"
-  | "tax"
-  | "file-upload"
-  | "file-download"
-  | "users-group"
-  | "factory"
-  | "shield-check"
-  | "certificate-2"
-  | "leaf"
-  | "plane"
-  | "world"
-  | "file-check"
-  | "package"
-  | "trademark"
-  | "copyright"
-  | "lightbulb"
-  | "report-money"
-  | "contract"
-  | "calculator"
-  | "language"
-  | "checklist"
-  | "briefcase";
+export const serviceIconNames = [
+  "building",
+  "license",
+  "receipt-tax",
+  "tax",
+  "file-upload",
+  "file-download",
+  "users-group",
+  "factory",
+  "shield-check",
+  "certificate-2",
+  "leaf",
+  "plane",
+  "world",
+  "file-check",
+  "package",
+  "trademark",
+  "copyright",
+  "lightbulb",
+  "report-money",
+  "contract",
+  "calculator",
+  "language",
+  "checklist",
+  "briefcase",
+] as const;
+
+export type ServiceIconName = (typeof serviceIconNames)[number];
 
 export type Service = {
   number: string;

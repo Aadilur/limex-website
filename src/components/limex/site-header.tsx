@@ -7,6 +7,7 @@ import { navigation, type NavItem } from "./data";
 import { MegaMenuPanel, MobileMegaMenuContent } from "./mega-menu";
 import { LogoLockup } from "./ui";
 import { getPublicMenu } from "@/lib/menu-api";
+import { getPublishedTemplates, type DocumentTemplateSummary } from "@/lib/template-api";
 import { getGeneratedService, hydrateServiceNavigation } from "@/lib/service-content";
 
 function slugify(value: string) {
@@ -20,6 +21,23 @@ function resolveLocalHref(href: string, pathname: string) {
 
 function hasMegaMenu(item: NavItem) {
   return Boolean(item.megaGroups?.some((group) => group.items?.length));
+}
+
+function attachPublishedTemplateLinks(items: NavItem[], templates: DocumentTemplateSummary[]) {
+  const children = templates.map((template) => ({ label: template.title, href: `/business-tools/templates/${template.slug}` }));
+  return items.map((item) => {
+    if (item.label !== "Business Tools" || !item.megaGroups) return item;
+    return {
+      ...item,
+      megaGroups: item.megaGroups.flatMap((group) => {
+        if (group.key !== "agreement-builders") return [group];
+        const items = group.items
+          .map((menuItem) => menuItem.label !== "Business Agreement Builder" ? menuItem : { ...menuItem, children })
+          .filter((menuItem) => menuItem.label !== "Business Agreement Builder" || children.length > 0);
+        return items.length ? [{ ...group, items }] : [];
+      }),
+    };
+  });
 }
 
 function DesktopNavTrigger({
@@ -86,6 +104,7 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
   const pathname = usePathname();
   const navigationLocale = pathname.startsWith("/bn/") ? "bn" as const : "en" as const;
   const [menuNavigation, setMenuNavigation] = useState<NavItem[]>(() => hydrateServiceNavigation(navigation, navigationLocale));
+  const [publishedTemplates, setPublishedTemplates] = useState<DocumentTemplateSummary[]>([]);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [isHidden, setIsHidden] = useState(false);
@@ -94,6 +113,19 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
 
   useEffect(() => {
     let cancelled = false;
+    let templatesForMenu: DocumentTemplateSummary[] = [];
+
+    void getPublishedTemplates()
+      .then((templates) => {
+        if (cancelled) return;
+        templatesForMenu = templates;
+        setPublishedTemplates(templates);
+        setMenuNavigation((current) => attachPublishedTemplateLinks(current, templates));
+      })
+      .catch(() => {
+        // A menu without document-builder links is safer than showing stale templates.
+        if (!cancelled) setMenuNavigation((current) => attachPublishedTemplateLinks(current, []));
+      });
 
     void getPublicMenu()
       .then((managedItems) => {
@@ -108,7 +140,8 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
           return managedItem ? [managedItem] : [];
         });
         const newManagedItems = managedItems.filter((item) => !staticManagedKeys.has(item.key ?? slugify(item.label)));
-        setMenuNavigation([...mergedNavigation.filter((item) => item.label === "Home"), ...mergedNavigation.filter(hasMegaMenu), ...newManagedItems, ...mergedNavigation.filter((item) => !hasMegaMenu(item) && item.label !== "Home")]);
+        const nextNavigation = [...mergedNavigation.filter((item) => item.label === "Home"), ...mergedNavigation.filter(hasMegaMenu), ...newManagedItems, ...mergedNavigation.filter((item) => !hasMegaMenu(item) && item.label !== "Home")];
+        setMenuNavigation(attachPublishedTemplateLinks(nextNavigation, templatesForMenu));
       })
       .catch(() => {
         // Keep the bundled navigation available when the API is unavailable.
@@ -118,6 +151,10 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
       cancelled = true;
     };
   }, [navigationLocale]);
+
+  useEffect(() => {
+    setMenuNavigation((current) => attachPublishedTemplateLinks(current, publishedTemplates));
+  }, [publishedTemplates]);
 
   useEffect(() => {
     const closeOnOutsideClick = (event: PointerEvent) => {
@@ -198,13 +235,13 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
       ref={headerRef}
     >
       <div
-        className={`relative mx-mobile-gutter hidden min-h-[60px] items-center gap-cluster-sm rounded-nav border border-[rgba(224,222,227,0.86)] bg-page px-cluster py-cluster wide:mx-page-gutter-lg wide:flex wide:min-h-[68px] wide:gap-cluster-xl wide:px-5 ${navMotionClassName}`.trim()}
+        className={`relative mx-mobile-gutter hidden min-h-[60px] grid-cols-[90px_minmax(0,1fr)_90px] items-center rounded-nav border border-[rgba(224,222,227,0.86)] bg-page px-cluster py-cluster wide:mx-page-gutter-lg wide:grid wide:min-h-[68px] wide:gap-x-cluster-xl wide:px-5 ${navMotionClassName}`.trim()}
         onBlur={(event) => {
           if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpenMenu(null);
         }}
       >
         <LogoLockup href={homeHref} className="w-[68px] min-w-[68px] xl:w-[80px] xl:min-w-[80px] wide:w-[90px] wide:min-w-[90px]" />
-        <nav className="min-w-0 flex flex-1 items-center gap-0.5 xl:gap-1 wide:gap-3.5" aria-label="Primary navigation">
+        <nav className="min-w-0 flex items-center justify-center gap-0.5 xl:gap-1 wide:gap-3.5" aria-label="Primary navigation">
           {menuNavigation.map((item) =>
             hasMegaMenu(item) ? (
               <DesktopNavTrigger
@@ -240,12 +277,8 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
             />
           </>
         ) : null}
-        <a className="group inline-flex h-11 w-[136px] min-w-[136px] items-center gap-cluster-xs rounded-pill border border-brand-blue bg-brand-blue px-1.5 text-button font-bold text-white transition-all duration-200 hover:-translate-y-px hover:border-brand-deep hover:bg-brand-deep hover:shadow-[0_8px_18px_rgba(0,85,255,0.2)] wide:gap-cluster-sm wide:px-1.5" href={contactHref}>
-          <span className="grid size-8 shrink-0 place-items-center rounded-full bg-white/10 transition-colors duration-200 group-hover:bg-white/20">
-            <img className="size-5" src="/figma/whatsapp-dot.svg" alt="" aria-hidden="true" />
-          </span>
-          <span className="min-w-0 flex-1 whitespace-nowrap text-left">Contact us</span>
-          <span className="mr-1 text-icon-action transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden="true">↗</span>
+        <a className="group inline-flex h-10 w-[90px] items-center justify-center rounded-pill border border-brand-blue bg-brand-blue px-4 text-button font-bold text-white transition-all duration-200 hover:-translate-y-px hover:border-brand-deep hover:bg-brand-deep hover:shadow-[0_8px_18px_rgba(0,85,255,0.2)]" href={contactHref}>
+          <span>Contact</span>
         </a>
       </div>
 
@@ -294,10 +327,8 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
                 ),
               )}
             </nav>
-            <a className="mt-auto flex min-h-12 items-center gap-cluster-sm rounded-pill bg-[#071b3d] px-3.5 text-body-xs font-bold text-white transition-transform hover:-translate-y-px" href={contactHref} onClick={closeMobileMenu}>
-              <img className="size-5" src="/figma/whatsapp-dot.svg" alt="" aria-hidden="true" />
-              <span className="flex-1">Contact us</span>
-              <span aria-hidden="true">↗</span>
+            <a className="mt-auto flex min-h-12 items-center justify-center rounded-pill bg-[#071b3d] px-3.5 text-body-xs font-bold text-white transition-transform hover:-translate-y-px" href={contactHref} onClick={closeMobileMenu}>
+              <span>Contact</span>
             </a>
           </aside>
         </div>

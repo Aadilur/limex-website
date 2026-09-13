@@ -7,14 +7,14 @@ import { SiteFooter } from "@/components/limex/site-footer";
 import { ToolWorkspace } from "@/components/limex/tool-workspace";
 
 type Props = { params: Promise<{ slug: string }> };
-export function generateStaticParams() { return businessTools.map((tool) => ({ slug: tool.slug })); }
+export function generateStaticParams() { return businessTools.filter((tool) => tool.group === "calculator").map((tool) => ({ slug: tool.slug })); }
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const tool = getTool((await params).slug);
   return { title: `${tool?.title ?? "Business tools"} | Limex`, description: tool?.description };
 }
 export default async function ToolPage({ params }: Props) {
   const slug = (await params).slug;
-  if (slug === "rental-deed") redirect("/business-tools/templates/office-rental-deed-en");
   const tool = getTool(slug); if (!tool) notFound();
+  if (tool.group === "builder") redirect("/business-tools/templates");
   return <main className={pageLayoutClass}><section className={pageShellClass}><SiteHeader fullBleed /><div className={pageContentClass}><ToolWorkspace tool={tool} /></div></section><SiteFooter /></main>;
 }

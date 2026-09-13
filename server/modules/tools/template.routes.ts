@@ -57,6 +57,7 @@ function toSummary(row: {
     slug: row.slug,
     title: row.title,
     description: row.description,
+    icon: settings.icon,
     paperSize: settings.paperSize,
     status: row.status === "PUBLISHED" ? "PUBLISHED" : "DRAFT",
     revision: row.revision,
@@ -253,6 +254,18 @@ export async function templateRoutes(app: FastifyInstance) {
     const row = await findAdminTemplate(id);
     if (!row) return reply.code(404).send({ error: "Template not found." });
     return { data: toAdminTemplate(row) };
+  });
+
+  app.delete("/api/admin/tools/templates/:id", async (request, reply) => {
+    if (!requireAdminSession(request, reply)) return;
+    const { id } = idParamsSchema.parse(request.params);
+    try {
+      await prisma.documentTemplate.delete({ where: { id } });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") return reply.code(404).send({ error: "Template not found." });
+      throw error;
+    }
+    return { data: { id } };
   });
 
   app.post("/api/admin/tools/templates/:id/publish", async (request, reply) => {
