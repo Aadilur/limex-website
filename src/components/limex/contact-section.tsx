@@ -308,9 +308,15 @@ export function ContactForm({ content = defaultLandingContent.contact, compact =
     <form className={formClassName} id={formId} aria-labelledby={formTitleId} onSubmit={handleSubmit}>
       {!compact ? <span className="pointer-events-none absolute left-4 top-0 h-1 w-14 rounded-b-full bg-accent lg:left-8" aria-hidden="true" /> : null}
       <div className={`border-b border-[#d3d0c8] ${compact ? "pb-4" : "pb-section-gap-lg"}`.trim()}>
-        <p className="text-overline text-accent">{content.formEyebrow}</p>
-        <h3 className="mt-2 font-brand text-subheading text-ink" id={formTitleId}>{content.formTitle}</h3>
-        <p className="mt-cluster-xs text-body-xs text-muted">{content.formDescription}</p>
+        {compact ? (
+          <h3 className="text-overline text-accent" id={formTitleId}>Your details</h3>
+        ) : (
+          <>
+            <p className="text-overline text-accent">{content.formEyebrow}</p>
+            <h3 className="mt-2 font-brand text-subheading text-ink" id={formTitleId}>{content.formTitle}</h3>
+            <p className="mt-cluster-xs text-body-xs text-muted">{content.formDescription}</p>
+          </>
+        )}
       </div>
 
       <div className={`${compact ? "mt-4" : "mt-section-gap-lg"} flex flex-col ${fieldGap}`.trim()}>
@@ -434,6 +440,7 @@ type ContactModalProps = {
 
 export function ContactModal({ articleSlug, buttonClassName = "", buttonLabel = "Start a conversation", content = defaultLandingContent.contact, initialMessage, serviceKey, variant = "white" }: ContactModalProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [contactDetails, setContactDetails] = useState<PublicContactSettings | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const modalId = useId().replace(/:/g, "");
   const source: ContactRequestSource | null = articleSlug
@@ -455,6 +462,27 @@ export function ContactModal({ articleSlug, buttonClassName = "", buttonLabel = 
     };
   }, [isOpen]);
 
+  useEffect(() => {
+    if (!isOpen || contactDetails) return;
+    let cancelled = false;
+    void getPublicContactSettings().then((settings) => {
+      if (!cancelled) setContactDetails(settings);
+    }).catch(() => {
+      // Keep the popup's landing fallbacks when contact settings are unavailable.
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [contactDetails, isOpen]);
+
+  const whatsappDisplay = contactDetails?.whatsappDisplay?.trim() || content.whatsapp;
+  const whatsappUrl = contactDetails?.whatsappUrl || null;
+  const email = contactDetails?.email?.trim() || content.email;
+  const phone = contactDetails?.phone?.trim() || "";
+  const address = contactDetails?.address?.trim() || "";
+  const phoneUrl = phone ? `tel:${phone.replace(/[^+\d]/g, "")}` : null;
+  const emailUrl = email ? `mailto:${encodeURIComponent(email)}` : null;
+
   return (
     <>
       <ActionButton variant={variant} className={buttonClassName} onClick={() => setIsOpen(true)}>{buttonLabel}</ActionButton>
@@ -466,10 +494,39 @@ export function ContactModal({ articleSlug, buttonClassName = "", buttonLabel = 
               <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-[#e2ddd4] bg-page/95 px-4 py-4 backdrop-blur sm:px-6">
                 <div>
                   <p className="text-overline text-accent">LET’S TALK</p>
-                  <h2 className="mt-1 font-brand text-subheading text-ink" id={`${modalId}-title`}>A clear next step starts here.</h2>
-                  <p className="mt-1 text-body-xs text-muted">Share the essentials and our team will guide you from there.</p>
+                  <h2 className="mt-1 font-brand text-subheading text-ink" id={`${modalId}-title`}>Tell us what you need.</h2>
                 </div>
                 <button ref={closeButtonRef} className="grid size-10 shrink-0 place-items-center rounded-full border border-[#d5d0c8] bg-white text-[22px] leading-none text-ink transition-colors hover:border-accent hover:text-accent focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2" type="button" aria-label="Close contact form" onClick={() => setIsOpen(false)}>×</button>
+              </div>
+              <div className="border-b border-[#e2ddd4] bg-[#f7f4ef] px-4 py-3 sm:px-6" aria-label="Contact details">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
+                  <div className="min-w-0">
+                    <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-[#9b6a76]">WhatsApp</span>
+                    {whatsappUrl ? (
+                      <a className="mt-1 block truncate text-[12px] font-semibold text-[#49313a] underline decoration-[#e5a9b6] underline-offset-2 transition-colors hover:text-accent" href={whatsappUrl} target="_blank" rel="noreferrer">{whatsappDisplay}</a>
+                    ) : (
+                      <span className="mt-1 block truncate text-[12px] font-semibold text-[#49313a]">{whatsappDisplay}</span>
+                    )}
+                  </div>
+                  {phoneUrl ? (
+                    <div className="min-w-0">
+                      <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-[#9b6a76]">Phone</span>
+                      <a className="mt-1 block truncate text-[12px] font-semibold text-[#49313a] underline decoration-[#e5a9b6] underline-offset-2 transition-colors hover:text-accent" href={phoneUrl}>{phone}</a>
+                    </div>
+                  ) : null}
+                  {emailUrl ? (
+                    <div className="min-w-0">
+                      <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-[#9b6a76]">Email</span>
+                      <a className="mt-1 block truncate text-[12px] font-semibold text-[#49313a] underline decoration-[#e5a9b6] underline-offset-2 transition-colors hover:text-accent" href={emailUrl}>{email}</a>
+                    </div>
+                  ) : null}
+                  {address ? (
+                    <div className="col-span-2 min-w-0 sm:col-span-1">
+                      <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-[#9b6a76]">Address</span>
+                      <address className="mt-1 max-h-9 overflow-hidden whitespace-pre-line break-words text-[12px] font-semibold not-italic leading-[1.35] text-[#49313a]">{address}</address>
+                    </div>
+                  ) : null}
+                </div>
               </div>
               <ContactForm content={content} compact formId={`${modalId}-form`} initialService={serviceKey} initialMessage={initialMessage} source={source} />
             </div>
