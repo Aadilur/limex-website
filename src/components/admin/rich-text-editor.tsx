@@ -8,6 +8,7 @@ import Placeholder from "@tiptap/extension-placeholder";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import { sanitizeBlogContent } from "@/lib/blog-content";
+import { blogRichTextClass } from "@/components/limex/blog-rich-text";
 
 export type RichTextDocument = Record<string, unknown>;
 
@@ -27,6 +28,7 @@ type EditorIconName =
   | "external";
 
 type BlockStyle = "paragraph" | "heading-2" | "heading-3" | "heading-4";
+type EditorMode = "visual" | "source" | "preview";
 
 type RichTextEditorProps = {
   value: string;
@@ -97,6 +99,32 @@ function isExternalUrl(value: string) {
 function countWords(value: string) {
   const text = value.replace(/\s+/g, " ").trim();
   return text ? text.split(" ").length : 0;
+}
+
+/**
+ * TipTap's standard document schema deliberately handles common prose, not
+ * arbitrary layout markup. Editing a custom card/grid/table document in that
+ * mode would normalize away its wrappers and classes. Keep those documents
+ * source-first, with a faithful preview, so an admin never loses a design by
+ * simply opening the editor.
+ */
+function hasCustomRichTextStructure(html: string) {
+  return /<(?:article|header|footer|main|nav|aside|section|div|table|thead|tbody|tr|th|td|figure|figcaption|span)\b|\s(?:class|id|style|data-[\w-]+)\s*=/i.test(html);
+}
+
+function RichTextPreview({ html, css, compact }: { html: string; css: string; compact: boolean }) {
+  return (
+    <div className={cn(compact ? "min-h-[220px]" : "min-h-[320px]", "max-h-[680px] overflow-auto bg-[#f2eee7] p-3 sm:p-5")} aria-label="Rendered article preview">
+      <div className="mx-auto max-w-[960px] rounded-[14px] bg-[#fffdfa] px-4 py-5 shadow-[0_8px_28px_rgba(40,34,28,0.08)] sm:px-7 sm:py-7">
+        {css ? <style data-limex-rich-text-preview="true" dangerouslySetInnerHTML={{ __html: css }} /> : null}
+        {html ? <div className={`${blogRichTextClass} !mt-0`} dangerouslySetInnerHTML={{ __html: html }} /> : <p className="text-[13px] text-[#9b958c]">Nothing to preview yet.</p>}
+      </div>
+    </div>
+  );
+}
+
+function ModeButton({ active, children, onClick }: { active: boolean; children: string; onClick: () => void }) {
+  return <button className={cn("rounded-[8px] px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-[#77736e] transition-colors hover:bg-white hover:text-[#0055ff]", active && "bg-white text-[#0055ff] shadow-[0_2px_8px_rgba(20,19,28,0.08)]")} type="button" aria-pressed={active} onClick={onClick}>{children}</button>;
 }
 
 function EditorIcon({ name }: { name: EditorIconName }) {
@@ -249,7 +277,10 @@ function ImagePanel({
 }
 
 export function RichTextEditor({ value, onChange, placeholder = "Start writing your article…", ariaLabel = "Article body", compact = false, className = "" }: RichTextEditorProps) {
-  const [sourceMode, setSourceMode] = useState(false);
+  const initialContent = useRef(value || "");
+  const initialSanitizedContent = useRef(sanitizeBlogContent(initialContent.current));
+  const initialHasCustomStructure = useRef(hasCustomRichTextStructure(initialSanitizedContent.current.html));
+  const [editorMode, setEditorMode] = useState<EditorMode>(() => initialHasCustomStructure.current ? "preview" : "visual");
   const [cssPanelOpen, setCssPanelOpen] = useState(false);
   const [selectionVersion, setSelectionVersion] = useState(0);
   const [linkPanelOpen, setLinkPanelOpen] = useState(false);
@@ -258,11 +289,12 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
   const [imageUrl, setImageUrl] = useState("");
   const [imageAlt, setImageAlt] = useState("");
   const [panelError, setPanelError] = useState("");
-  const initialContent = useRef(value || "");
   const previousValue = useRef(value || "");
   const preservedCss = useRef(sanitizeBlogContent(value).css);
   const internalValueUpdate = useRef(false);
   const [customCss, setCustomCss] = useState(() => sanitizeBlogContent(value).css);
+  const renderedContent = useMemo(() => sanitizeBlogContent(value), [value]);
+  const hasCustomStructure = hasCustomRichTextStructure(renderedContent.html);
 
   const extensions = useMemo(
     () => [
@@ -290,7 +322,7 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
   const editorProps = useMemo(
     () => ({
       attributes: {
-        class: editorSurfaceClass(compact),
+        class: `blog-rich-text ${editorSurfaceClass(compact)}`,
         "aria-label": ariaLabel,
         role: "textbox",
         spellcheck: "true",
@@ -306,7 +338,7 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
     // remains owned by the same contenteditable node.
     shouldRerenderOnTransaction: false,
     extensions,
-    content: sanitizeBlogContent(initialContent.current).html,
+    content: initialHasCustomStructure.current ? "" : initialSanitizedContent.current.html,
     editorProps,
     onUpdate: ({ editor: nextEditor }) => {
       const html = nextEditor.getHTML();
@@ -324,7 +356,11 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
     const nextContent = sanitizeBlogContent(nextHtml);
     preservedCss.current = nextContent.css;
     if (!wasInternalUpdate) setCustomCss(nextContent.css);
-    if (!editor || sourceMode) return;
+    if (hasCustomRichTextStructure(nextContent.html)) {
+      if (editorMode === "visual") setEditorMode("preview");
+      return;
+    }
+    if (!editor || editorMode !== "visual") return;
     const currentHtml = editor.getHTML();
     if (currentHtml === nextHtml || currentHtml === nextContent.html || (nextHtml === "" && currentHtml === "<p></p>")) return;
     // A local transaction updates the editor before the parent state update
@@ -332,7 +368,7 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
     // the editor while it still has focus, or the cursor jumps/resets.
     if (editor.isFocused && nextHtml === lastPropValue) return;
     editor.commands.setContent(nextContent.html, false);
-  }, [editor, sourceMode, value]);
+  }, [editor, editorMode, value]);
 
   const activeStyle = useMemo<BlockStyle>(() => {
     if (!editor) return "paragraph";
@@ -342,9 +378,11 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
     return "paragraph";
   }, [editor, selectionVersion, value]);
 
-  const bodyText = sourceMode ? value.replace(/<[^>]+>/g, " ") : editor?.getText() || "";
+  const bodyText = editorMode === "visual" ? editor?.getText() || "" : renderedContent.html.replace(/<[^>]+>/g, " ");
   const wordCount = countWords(bodyText);
   const characterCount = bodyText.replace(/\s/g, "").length;
+  const visualMode = editorMode === "visual";
+  const modeLabel = editorMode === "source" ? "HTML source" : editorMode === "preview" ? "Rendered preview" : "Visual editor";
 
   function emitChange(html: string, document: RichTextDocument) {
     internalValueUpdate.current = true;
@@ -378,16 +416,22 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
     setLinkPanelOpen(false);
   }
 
-  function toggleSourceMode() {
-    if (sourceMode && editor) {
-      preservedCss.current = sanitizeBlogContent(value).css;
-      editor.commands.setContent(sanitizeBlogContent(value).html, false);
+  function changeEditorMode(nextMode: EditorMode) {
+    if (nextMode === "visual") {
+      const nextContent = sanitizeBlogContent(value);
+      if (hasCustomRichTextStructure(nextContent.html)) {
+        setPanelError("This article uses custom HTML/CSS. Use HTML source to edit it and Preview to check the exact result.");
+        setEditorMode("preview");
+        return;
+      }
+      preservedCss.current = nextContent.css;
+      editor?.commands.setContent(nextContent.html, false);
       setSelectionVersion((current) => current + 1);
     }
     setPanelError("");
     setLinkPanelOpen(false);
     setImagePanelOpen(false);
-    setSourceMode((current) => !current);
+    setEditorMode(nextMode);
   }
 
   function updateBlockStyle(nextStyle: BlockStyle) {
@@ -404,33 +448,36 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
     <div className={cn("overflow-hidden rounded-[14px] border border-[#ddd7ce] bg-[#fffdfa] transition-colors focus-within:border-[#0055ff] focus-within:ring-4 focus-within:ring-[#008cff]/10", className)}>
       <div className="flex flex-wrap items-center gap-1 border-b border-[#eee9e2] bg-[#faf7f2] px-2 py-1.5" aria-label="Article formatting toolbar">
         <label className="sr-only" htmlFor="article-block-style">Text style</label>
-        <select id="article-block-style" className="mr-1 h-8 rounded-[8px] bg-transparent px-2 text-[11px] font-bold text-[#4f4b47] outline-none transition-colors hover:bg-white focus:bg-white focus:ring-2 focus:ring-[#008cff]/20" value={activeStyle} onChange={(event) => updateBlockStyle(event.target.value as BlockStyle)} disabled={!editor || sourceMode}>
+        <select id="article-block-style" className="mr-1 h-8 rounded-[8px] bg-transparent px-2 text-[11px] font-bold text-[#4f4b47] outline-none transition-colors hover:bg-white focus:bg-white focus:ring-2 focus:ring-[#008cff]/20" value={activeStyle} onChange={(event) => updateBlockStyle(event.target.value as BlockStyle)} disabled={!editor || !visualMode}>
           <option value="paragraph">Paragraph</option>
           <option value="heading-2">Heading 2</option>
           <option value="heading-3">Heading 3</option>
           <option value="heading-4">Heading 4</option>
         </select>
         <ToolbarDivider />
-        <ToolbarButton label="Bold" icon="bold" active={editor?.isActive("bold") ?? false} disabled={!editor || sourceMode} onClick={() => editor?.chain().focus().toggleBold().run()} />
-        <ToolbarButton label="Italic" icon="italic" active={editor?.isActive("italic") ?? false} disabled={!editor || sourceMode} onClick={() => editor?.chain().focus().toggleItalic().run()} />
-        <ToolbarButton label="Underline" icon="underline" active={editor?.isActive("underline") ?? false} disabled={!editor || sourceMode} onClick={() => editor?.chain().focus().toggleUnderline().run()} />
-        <ToolbarButton label="Strikethrough" icon="strike" active={editor?.isActive("strike") ?? false} disabled={!editor || sourceMode} onClick={() => editor?.chain().focus().toggleStrike().run()} />
+        <ToolbarButton label="Bold" icon="bold" active={editor?.isActive("bold") ?? false} disabled={!editor || !visualMode} onClick={() => editor?.chain().focus().toggleBold().run()} />
+        <ToolbarButton label="Italic" icon="italic" active={editor?.isActive("italic") ?? false} disabled={!editor || !visualMode} onClick={() => editor?.chain().focus().toggleItalic().run()} />
+        <ToolbarButton label="Underline" icon="underline" active={editor?.isActive("underline") ?? false} disabled={!editor || !visualMode} onClick={() => editor?.chain().focus().toggleUnderline().run()} />
+        <ToolbarButton label="Strikethrough" icon="strike" active={editor?.isActive("strike") ?? false} disabled={!editor || !visualMode} onClick={() => editor?.chain().focus().toggleStrike().run()} />
         <ToolbarDivider />
-        <ToolbarButton label="Bulleted list" icon="bullet-list" active={editor?.isActive("bulletList") ?? false} disabled={!editor || sourceMode} onClick={() => editor?.chain().focus().toggleBulletList().run()} />
-        <ToolbarButton label="Numbered list" icon="ordered-list" active={editor?.isActive("orderedList") ?? false} disabled={!editor || sourceMode} onClick={() => editor?.chain().focus().toggleOrderedList().run()} />
-        <ToolbarButton label="Quote" icon="quote" active={editor?.isActive("blockquote") ?? false} disabled={!editor || sourceMode} onClick={() => editor?.chain().focus().toggleBlockquote().run()} />
-        <ToolbarButton label="Horizontal divider" icon="divider" disabled={!editor || sourceMode} onClick={() => editor?.chain().focus().setHorizontalRule().run()} />
+        <ToolbarButton label="Bulleted list" icon="bullet-list" active={editor?.isActive("bulletList") ?? false} disabled={!editor || !visualMode} onClick={() => editor?.chain().focus().toggleBulletList().run()} />
+        <ToolbarButton label="Numbered list" icon="ordered-list" active={editor?.isActive("orderedList") ?? false} disabled={!editor || !visualMode} onClick={() => editor?.chain().focus().toggleOrderedList().run()} />
+        <ToolbarButton label="Quote" icon="quote" active={editor?.isActive("blockquote") ?? false} disabled={!editor || !visualMode} onClick={() => editor?.chain().focus().toggleBlockquote().run()} />
+        <ToolbarButton label="Horizontal divider" icon="divider" disabled={!editor || !visualMode} onClick={() => editor?.chain().focus().setHorizontalRule().run()} />
         <div className="ml-auto flex items-center gap-1">
-          <ToolbarButton label="Add or edit link" icon="link" active={linkPanelOpen || (editor?.isActive("link") ?? false)} disabled={!editor || sourceMode} onClick={openLinkPanel} />
-          <ToolbarButton label="Insert image" icon="image" active={imagePanelOpen} disabled={!editor || sourceMode} onClick={openImagePanel} />
+          <ToolbarButton label="Add or edit link" icon="link" active={linkPanelOpen || (editor?.isActive("link") ?? false)} disabled={!editor || !visualMode} onClick={openLinkPanel} />
+          <ToolbarButton label="Insert image" icon="image" active={imagePanelOpen} disabled={!editor || !visualMode} onClick={openImagePanel} />
           <ToolbarDivider />
-          <ToolbarButton label="Undo" icon="undo" disabled={!editor || sourceMode || !editor?.can().undo()} onClick={() => editor?.chain().focus().undo().run()} />
-          <ToolbarButton label="Redo" icon="redo" disabled={!editor || sourceMode || !editor?.can().redo()} onClick={() => editor?.chain().focus().redo().run()} />
+          <ToolbarButton label="Undo" icon="undo" disabled={!editor || !visualMode || !editor?.can().undo()} onClick={() => editor?.chain().focus().undo().run()} />
+          <ToolbarButton label="Redo" icon="redo" disabled={!editor || !visualMode || !editor?.can().redo()} onClick={() => editor?.chain().focus().redo().run()} />
           <button className={cn("ml-1 rounded-[8px] px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-[#77736e] transition-colors hover:bg-white hover:text-[#0055ff]", cssPanelOpen && "bg-white text-[#0055ff]")} type="button" aria-expanded={cssPanelOpen} onClick={() => { if (!cssPanelOpen) setCustomCss(sanitizeBlogContent(value).css); setCssPanelOpen((current) => !current); }}>{cssPanelOpen ? "Hide CSS" : "Custom CSS"}</button>
-          <button className={cn("rounded-[8px] px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-[#77736e] transition-colors hover:bg-white hover:text-[#0055ff]", sourceMode && "bg-white text-[#0055ff]")} type="button" aria-pressed={sourceMode} onClick={toggleSourceMode}>{sourceMode ? "Visual editor" : "HTML source"}</button>
+          <ModeButton active={editorMode === "source"} onClick={() => changeEditorMode("source")}>HTML</ModeButton>
+          <ModeButton active={editorMode === "preview"} onClick={() => changeEditorMode("preview")}>Preview</ModeButton>
+          <ModeButton active={visualMode} onClick={() => changeEditorMode("visual")}>Visual</ModeButton>
         </div>
       </div>
       {panelError ? <p className="border-b border-[#f4c9d0] bg-[#fff5f6] px-3 py-2 text-[10px] font-semibold text-[#ad3148]" role="alert">{panelError}</p> : null}
+      {hasCustomStructure ? <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#d8e9df] bg-[#f3faf5] px-3 py-2.5 text-[10px] leading-[1.45] text-[#3d6650]"><span className="font-bold uppercase tracking-[0.1em]">Custom layout protected</span><span>Use HTML to edit it. Preview renders the same scoped HTML and CSS that the public article receives.</span></div> : null}
       {linkPanelOpen && editor ? <LinkPanel editor={editor} value={linkUrl} onChange={setLinkUrl} onClose={() => setLinkPanelOpen(false)} onError={setPanelError} /> : null}
       {imagePanelOpen && editor ? <ImagePanel editor={editor} url={imageUrl} alt={imageAlt} onUrlChange={setImageUrl} onAltChange={setImageAlt} onClose={() => setImagePanelOpen(false)} onError={setPanelError} /> : null}
       {cssPanelOpen ? <div className="border-b border-[#eee9e2] bg-[#f7fbff] px-3 py-3 sm:px-4">
@@ -443,10 +490,10 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
         </div>
         <textarea className="mt-3 min-h-[150px] w-full resize-y rounded-[10px] border border-[#cfe0f4] bg-white px-3 py-3 font-mono text-[12px] leading-[1.65] text-[#071b3d] outline-none transition-colors placeholder:text-[#9b958c] focus:border-[#0055ff] focus:ring-4 focus:ring-[#008cff]/10" value={customCss} onChange={(event) => updateCustomCss(event.target.value)} spellCheck={false} aria-label={`${ariaLabel} custom CSS`} placeholder={".guide-card {\n  border-radius: 16px;\n}\n\n@media (max-width: 640px) {\n  .guide-card { padding: 16px; }\n}"} />
       </div> : null}
-      {sourceMode ? <textarea className={cn(compact ? "min-h-[220px]" : "min-h-[320px]", "w-full resize-y border-0 bg-[#fffdfa] px-5 py-5 font-mono text-[12px] leading-[1.7] text-[#3f3b37] outline-none")} value={value} onChange={(event) => { const nextContent = sanitizeBlogContent(event.target.value); preservedCss.current = nextContent.css; setCustomCss(nextContent.css); emitChange(event.target.value, { version: 1, html: event.target.value }); }} spellCheck={false} aria-label={`${ariaLabel} HTML source`} /> : editor ? <EditorContent editor={editor} /> : <div className={cn(compact ? "min-h-[220px]" : "min-h-[320px]", "px-5 py-5 text-[13px] text-[#aaa49b]")}>Loading editor…</div>}
+      {editorMode === "source" ? <textarea className={cn(compact ? "min-h-[220px]" : "min-h-[320px]", "w-full resize-y border-0 bg-[#fffdfa] px-5 py-5 font-mono text-[12px] leading-[1.7] text-[#3f3b37] outline-none")} value={value} onChange={(event) => { const nextContent = sanitizeBlogContent(event.target.value); preservedCss.current = nextContent.css; setCustomCss(nextContent.css); emitChange(event.target.value, { version: 1, html: event.target.value }); }} spellCheck={false} aria-label={`${ariaLabel} HTML source`} /> : editorMode === "preview" ? <RichTextPreview html={renderedContent.html} css={renderedContent.css} compact={compact} /> : <>{renderedContent.css ? <style data-limex-rich-text-editor="true" dangerouslySetInnerHTML={{ __html: renderedContent.css }} /> : null}{editor ? <EditorContent editor={editor} /> : <div className={cn(compact ? "min-h-[220px]" : "min-h-[320px]", "px-5 py-5 text-[13px] text-[#aaa49b]")}>Loading editor…</div>}</>}
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#eee9e2] px-4 py-2 text-[10px] text-[#9b958c]">
         <span>{wordCount.toLocaleString()} words · {characterCount.toLocaleString()} characters</span>
-        <span>{sourceMode ? "HTML source" : "Visual editor"}{customCss ? " · custom CSS" : ""} · sanitized on save</span>
+        <span>{modeLabel}{customCss ? " · custom CSS" : ""} · scoped and sanitized on save</span>
       </div>
     </div>
   );
