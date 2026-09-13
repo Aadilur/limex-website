@@ -1486,7 +1486,7 @@ test("seamless navigation transitions, progress bar, and view transitions are pr
   assert.match(smoothScrollTsx, /startViewTransition/);
 });
 
-test("service page renders on-page interactive ContactForm with pre-selected service and trust guarantees", async () => {
+test("service page renders ContactModal CTA buttons in hero and bottom with pre-selected service and clean bg-page stroke styling", async () => {
   const fs = await import("node:fs/promises");
   const serviceSectionsTsx = await fs.readFile(
     new URL(
@@ -1507,26 +1507,37 @@ test("service page renders on-page interactive ContactForm with pre-selected ser
   // 1. tools.routes.ts accepts both BLOG and SERVICE sources
   assert.match(toolsRoutesTs, /z\.enum\(\[\s*"BLOG",\s*"SERVICE"\s*\]\)/);
 
-  // 2. ServiceContactSection embeds ContactForm with initialService, SERVICE source, and formId
-  assert.match(serviceSectionsTsx, /<ContactForm/);
-  assert.match(serviceSectionsTsx, /initialService=\{service\.title\}/);
-  assert.match(serviceSectionsTsx, /type:\s*"SERVICE"/);
-  assert.match(serviceSectionsTsx, /formId="service-contact-form"/);
+  // 2. ServiceHeroSection and ServiceContactSection both use ContactModal with cta arrow and serviceKey
+  assert.match(
+    serviceSectionsTsx,
+    /<ContactModal[^>]*serviceKey=\{service\.serviceKey \?\? service\.title\}/,
+  );
+  assert.match(serviceSectionsTsx, /buttonLabel=\{service\.ctaLabel\}/);
+  assert.match(serviceSectionsTsx, /buttonLabel=\{contactButtonLabel\}/);
 
-  // 3. Section provides smooth scroll anchor compatibility for #service-contact and #contact
-  assert.match(serviceSectionsTsx, /id="service-contact"/);
-  assert.match(serviceSectionsTsx, /id="contact"/);
+  // 3. Section provides clean reassurance text below the button
+  assert.match(serviceSectionsTsx, /bottomReassurance/);
+  assert.match(serviceSectionsTsx, /whatsappNow/);
 
-  // 4. Trust guarantees and direct WhatsApp action are present
-  assert.match(serviceSectionsTsx, /guarantee1Title/);
-  assert.match(serviceSectionsTsx, /guarantee2Title/);
-  assert.match(serviceSectionsTsx, /guarantee3Title/);
-  assert.match(serviceSectionsTsx, /whatsappHref/);
+  // 4. Hero stats, Key facts, and FAQ backgrounds use bg-page separated by strokes
+  assert.match(
+    serviceSectionsTsx,
+    /bg-page p-2\.5 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-\[#d8d3c7\]/,
+  );
+  assert.match(
+    serviceSectionsTsx,
+    /rounded-\[22px\] border border-\[#d8d3c7\] bg-page p-5/,
+  );
+  assert.match(
+    serviceSectionsTsx,
+    /rounded-\[20px\] border border-\[#d8d3c7\] bg-page p-5 transition-colors/,
+  );
 
-  // 5. ContactForm in contact-section.tsx initializes values.services with initialService
+  // 5. ContactForm in contact-section.tsx initializes values.services with initialService and supports modal source
   assert.match(
     contactSectionTsx,
     /services:\s*trimmed\s*\?\s*\[trimmed\]\s*:\s*\[\]/,
   );
   assert.match(contactSectionTsx, /className\?: string/);
+  assert.match(contactSectionTsx, /resolvedSource/);
 });

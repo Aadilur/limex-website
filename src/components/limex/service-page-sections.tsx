@@ -5,9 +5,8 @@ import { useEffect, useState } from "react";
 import type { ServicePageContent, ServicePriceTier } from "./service-page-data";
 import type { PublicContactSettings } from "@/lib/contact-types";
 import { getPublicContactSettings } from "@/lib/contact-api";
-import { defaultLandingContent } from "@/lib/landing-api";
 import { getTool, toolHref } from "@/lib/business-tools";
-import { ContactForm, ContactModal } from "./contact-section";
+import { ContactModal } from "./contact-section";
 import { ToolWorkspace } from "./tool-workspace";
 import { ActionButton, Breadcrumbs, WaveLabel } from "./ui";
 import { blogRichTextClass } from "./blog-rich-text";
@@ -74,6 +73,9 @@ const serviceUi = {
     guarantee3Desc:
       "One-on-one expert guidance in Dhaka from document filing to delivery.",
     responseTime: "Typical response within 2 business hours (10 AM – 7 PM BST)",
+    bottomReassurance:
+      "Zero hidden charges · Original government receipts · Typical response within 2 business hours",
+    preferChat: "Prefer instant messaging?",
     formEyebrow: "Direct Service Enquiry",
     formTitle: "Get started today",
     formDescription:
@@ -120,6 +122,9 @@ const serviceUi = {
       "আবেদন থেকে ডেলিভারি পর্যন্ত ঢাকায় আপনার ফাইলে সার্বক্ষণিক সহযোগিতা।",
     responseTime:
       "সাধারণত ২ কার্যঘন্টার মধ্যে উত্তর দেওয়া হয় (সকাল ১০টা – সন্ধ্যা ৭টা BST)",
+    bottomReassurance:
+      "কোনো লুকানো চার্জ নেই · মূল সরকারি চালান · সাধারণত ২ কার্যঘন্টার মধ্যে উত্তর দেওয়া হয়",
+    preferChat: "সরাসরি চ্যাট করতে চান?",
     formEyebrow: "সরাসরি আবেদন",
     formTitle: "আজই শুরু করুন",
     formDescription:
@@ -187,7 +192,7 @@ export function ServiceHeroSection({
       <div className="flex flex-wrap items-center justify-between gap-cluster">
         <Breadcrumbs items={breadcrumbItems} />
         <a
-          className="inline-flex items-center gap-1.5 rounded-full border border-[#dcd5cb] bg-white/75 px-3.5 py-1 text-xs font-semibold text-[#07142e] shadow-[0_1px_2px_rgba(0,0,0,0.02)] backdrop-blur-sm transition-all hover:border-[#0055ff] hover:text-[#0055ff] hover:shadow-sm focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2"
+          className="inline-flex items-center gap-1.5 rounded-full border border-[#d8d3c7] bg-page px-3.5 py-1 text-xs font-semibold text-[#07142e] transition-all hover:border-[#0055ff] hover:text-[#0055ff] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2"
           href={
             locale === "bn"
               ? `/services/${service.slug}`
@@ -214,18 +219,24 @@ export function ServiceHeroSection({
             {service.description}
           </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-cluster sm:mt-8">
-            <ActionButton
-              href="#service-contact"
+            <ContactModal
+              serviceKey={service.serviceKey ?? service.title}
+              serviceSlug={service.slug}
+              initialMessage={
+                locale === "bn"
+                  ? `আমি ${service.title} সংক্রান্ত সেবা নিতে আগ্রহী।`
+                  : `Hello, I'd like to discuss ${service.title}.`
+              }
+              variant="dark"
               arrow="cta"
-              className="min-h-button-lg w-full justify-between pl-5 text-body-xs shadow-[0_4px_14px_rgba(0,85,255,0.18)] sm:w-[188px]"
-            >
-              {service.ctaLabel}
-            </ActionButton>
+              buttonClassName="min-h-button-lg w-full justify-between pl-5 text-body-xs shadow-[0_4px_14px_rgba(0,85,255,0.18)] sm:w-[188px]"
+              buttonLabel={service.ctaLabel}
+            />
             {service.destination &&
             service.destination.type !== "DETAIL" &&
             service.destination.type !== "CONTACT" ? (
               <a
-                className="inline-flex min-h-control w-full items-center justify-center gap-cluster-sm rounded-full border border-[#dcd5cb] bg-white px-5 text-button font-semibold text-ink shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition-all hover:border-[#0055ff] hover:text-[#0055ff] hover:shadow-sm focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3 sm:w-auto"
+                className="inline-flex min-h-control w-full items-center justify-center gap-cluster-sm rounded-full border border-[#d8d3c7] bg-page px-5 text-button font-semibold text-ink transition-all hover:border-[#0055ff] hover:text-[#0055ff] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3 sm:w-auto"
                 href={service.destination.href}
                 target={service.destination.isExternal ? "_blank" : undefined}
                 rel={service.destination.isExternal ? "noreferrer" : undefined}
@@ -238,8 +249,8 @@ export function ServiceHeroSection({
             ) : null}
           </div>
 
-          <dl className="mt-7 grid max-w-[650px] grid-cols-1 gap-2 rounded-[22px] border border-[#e5e0d6] bg-white/80 p-2.5 shadow-[0_2px_12px_rgba(7,20,46,0.02)] backdrop-blur-sm sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-[#e5e0d6] sm:rounded-[20px] sm:p-5">
-            <div className="flex items-center justify-between rounded-[14px] bg-[#fbfaf8] px-4 py-3 sm:block sm:rounded-none sm:bg-transparent sm:px-4 sm:py-0 sm:first:pl-0">
+          <dl className="mt-7 grid max-w-[650px] grid-cols-1 gap-2 rounded-[20px] border border-[#d8d3c7] bg-page p-2.5 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-[#d8d3c7] sm:p-5">
+            <div className="flex items-center justify-between rounded-[12px] border border-[#d8d3c7]/60 px-4 py-3 sm:block sm:rounded-none sm:border-0 sm:px-4 sm:py-0 sm:first:pl-0">
               <dt className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#64748b]">
                 {ui.startingPrice}
               </dt>
@@ -247,7 +258,7 @@ export function ServiceHeroSection({
                 {service.startingPrice}
               </dd>
             </div>
-            <div className="flex items-center justify-between rounded-[14px] bg-[#fbfaf8] px-4 py-3 sm:block sm:rounded-none sm:bg-transparent sm:px-4 sm:py-0">
+            <div className="flex items-center justify-between rounded-[12px] border border-[#d8d3c7]/60 px-4 py-3 sm:block sm:rounded-none sm:border-0 sm:px-4 sm:py-0">
               <dt className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#64748b]">
                 {ui.deliveryTime}
               </dt>
@@ -255,7 +266,7 @@ export function ServiceHeroSection({
                 {service.deliveryTime}
               </dd>
             </div>
-            <div className="flex items-center justify-between rounded-[14px] bg-[#fbfaf8] px-4 py-3 sm:block sm:rounded-none sm:bg-transparent sm:px-4 sm:py-0 sm:last:pr-0">
+            <div className="flex items-center justify-between rounded-[12px] border border-[#d8d3c7]/60 px-4 py-3 sm:block sm:rounded-none sm:border-0 sm:px-4 sm:py-0 sm:last:pr-0">
               <dt className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#64748b]">
                 {ui.serviceMode}
               </dt>
@@ -267,7 +278,7 @@ export function ServiceHeroSection({
         </div>
 
         <div
-          className="relative min-h-[300px] overflow-hidden rounded-[24px] border border-[#e5e0d6] bg-gradient-to-br from-[#f7f2fc] via-[#f0f4fe] to-[#eaf0fc] shadow-[0_12px_40px_rgba(7,27,61,0.04)] sm:min-h-[380px]"
+          className="relative min-h-[300px] overflow-hidden rounded-[24px] border border-[#d8d3c7] bg-gradient-to-br from-[#f2efe9] via-[#ebe8e1] to-[#e5e1d9] shadow-[0_12px_40px_rgba(7,27,61,0.04)] sm:min-h-[380px]"
           aria-label={service.mediaTitle}
         >
           {service.mediaUrl?.trim() ? (
@@ -296,12 +307,12 @@ export function ServiceHeroSection({
             aria-hidden="true"
           />
           {!service.mediaUrl?.trim() ? (
-            <span className="absolute left-6 top-5 inline-flex items-center gap-1.5 rounded-full bg-white/70 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[#0055ff] shadow-sm backdrop-blur-sm">
+            <span className="absolute left-6 top-5 inline-flex items-center gap-1.5 rounded-full border border-[#d8d3c7] bg-page/90 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[#0055ff] shadow-sm backdrop-blur-sm">
               {ui.mediaSlot}
             </span>
           ) : null}
           <div
-            className={`absolute left-1/2 top-1/2 w-[calc(100%-32px)] sm:w-[min(340px,calc(100%-48px))] -translate-x-1/2 -translate-y-1/2 rounded-[20px] border border-white/90 p-5 sm:p-6 shadow-[0_16px_36px_rgba(7,27,61,0.08)] backdrop-blur-md ${service.mediaUrl?.trim() ? "bg-navy/85 text-white" : "bg-white/95 text-ink"}`.trim()}
+            className={`absolute left-1/2 top-1/2 w-[calc(100%-32px)] sm:w-[min(340px,calc(100%-48px))] -translate-x-1/2 -translate-y-1/2 rounded-[20px] border border-[#d8d3c7] p-5 sm:p-6 shadow-[0_16px_36px_rgba(7,27,61,0.06)] backdrop-blur-md ${service.mediaUrl?.trim() ? "bg-navy/85 text-white" : "bg-page/95 text-ink"}`.trim()}
           >
             <h2
               className={`font-brand text-[20px] sm:text-[22px] font-bold leading-[1.2] tracking-tight ${service.mediaUrl?.trim() ? "text-white" : "text-ink"}`.trim()}
@@ -384,7 +395,7 @@ export function ServiceOverviewSection({
                 className={`${richTextClass} mt-4 max-w-[720px]`}
               />
 
-              <article className="mt-8 rounded-[20px] border border-[#e5e0d6] bg-white p-6 shadow-[0_2px_12px_rgba(7,20,46,0.02)] sm:p-8">
+              <article className="mt-8 rounded-[20px] border border-[#d8d3c7] bg-page p-6 sm:p-8">
                 <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#0055ff]">
                   {service.contentLabel}
                 </span>
@@ -402,7 +413,7 @@ export function ServiceOverviewSection({
                 <div className="mt-8 grid gap-4 sm:grid-cols-2">
                   {service.benefits.map((benefit) => (
                     <div
-                      className="flex items-start gap-3 rounded-[16px] border border-[#e8e4dc] bg-white/70 p-4 shadow-[0_1px_3px_rgba(0,0,0,0.02)]"
+                      className="flex items-start gap-3 rounded-[16px] border border-[#d8d3c7] bg-page p-4"
                       key={benefit}
                     >
                       <span
@@ -433,7 +444,7 @@ export function ServiceOverviewSection({
                 <div className="mt-10 grid gap-4 sm:grid-cols-3">
                   {service.steps.map((step, index) => (
                     <div
-                      className="rounded-[18px] border border-[#e5e0d6] bg-white/80 p-5 shadow-[0_2px_8px_rgba(7,20,46,0.02)]"
+                      className="rounded-[18px] border border-[#d8d3c7] bg-page p-5"
                       key={`${step.title}-${index}`}
                     >
                       <span className="inline-flex size-7 items-center justify-center rounded-full bg-[#0055ff]/10 text-xs font-bold text-[#0055ff]">
@@ -458,7 +469,7 @@ export function ServiceOverviewSection({
             className="lg:sticky lg:top-24 h-fit"
             aria-label="Service key facts"
           >
-            <div className="rounded-[22px] border border-[#e5e0d6] bg-white/80 p-5 shadow-[0_4px_24px_rgba(7,20,46,0.03)] backdrop-blur-sm sm:p-6">
+            <div className="rounded-[22px] border border-[#d8d3c7] bg-page p-5 sm:p-6">
               <div className="flex items-center gap-2">
                 <span
                   className="size-2 rounded-full bg-[#0055ff]"
@@ -468,7 +479,7 @@ export function ServiceOverviewSection({
                   {keyFactsLabel}
                 </p>
               </div>
-              <dl className="mt-4 divide-y divide-[#f0ece4]">
+              <dl className="mt-4 divide-y divide-[#d8d3c7]/60">
                 {service.facts.map((fact) => (
                   <div
                     className="flex items-baseline justify-between gap-3 py-3"
@@ -496,7 +507,7 @@ export function ServiceOverviewSection({
           <div className="mt-4 flex flex-wrap gap-2.5">
             {service.relatedLinks.map((link) => (
               <a
-                className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[#e2ddd5] bg-white px-4 py-2 text-xs font-semibold text-ink shadow-[0_1px_3px_rgba(0,0,0,0.02)] transition-all hover:-translate-y-0.5 hover:border-[#0055ff] hover:text-[#0055ff] hover:shadow-sm"
+                className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[#d8d3c7] bg-page px-4 py-2 text-xs font-semibold text-ink transition-all hover:-translate-y-0.5 hover:border-[#0055ff] hover:text-[#0055ff] hover:shadow-sm"
                 href={link.href}
                 {...externalLinkProps(link.href)}
                 key={link.id}
@@ -522,7 +533,7 @@ export function ServiceOverviewSection({
                 {toolsTitle}
               </h3>
             </div>
-            <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-muted shadow-sm">
+            <span className="rounded-full border border-[#d8d3c7] bg-page px-3 py-1 text-xs font-bold text-muted">
               {helpfulTools.length}{" "}
               {helpfulTools.length === 1 ? "tool" : "tools"}
             </span>
@@ -549,7 +560,7 @@ export function ServiceOverviewSection({
               <div className="mt-4 grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
                 {builderTools.map((tool) => (
                   <a
-                    className="group flex min-w-0 items-center justify-between gap-4 rounded-[18px] border border-[#e5e0d6] bg-white p-4 shadow-[0_2px_8px_rgba(0,0,0,0.02)] transition-all hover:-translate-y-0.5 hover:border-[#0055ff]/40 hover:shadow-[0_8px_24px_rgba(0,85,255,0.06)] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3 sm:rounded-[20px] sm:p-5"
+                    className="group flex min-w-0 items-center justify-between gap-4 rounded-[18px] border border-[#d8d3c7] bg-page p-4 transition-all hover:-translate-y-0.5 hover:border-[#0055ff]/40 sm:rounded-[20px] sm:p-5"
                     href={toolHref(tool.slug)}
                     key={tool.slug}
                   >
@@ -603,8 +614,8 @@ function PriceCard({
     <article
       className={`relative flex min-h-[320px] flex-col rounded-[24px] p-6 sm:p-7 transition-all ${
         tier.featured
-          ? "border-2 border-[#0055ff] bg-gradient-to-b from-white via-white to-[#f7faff] shadow-[0_16px_40px_rgba(0,85,255,0.09)] hover:shadow-[0_20px_48px_rgba(0,85,255,0.14)]"
-          : "border border-[#e5e0d6] bg-white shadow-[0_4px_20px_rgba(7,20,46,0.03)] hover:-translate-y-0.5 hover:border-[#cfc9bf] hover:shadow-[0_12px_32px_rgba(7,20,46,0.06)]"
+          ? "border-2 border-[#0055ff] bg-page shadow-[0_12px_32px_rgba(0,85,255,0.06)]"
+          : "border border-[#d8d3c7] bg-page hover:border-[#b8b2a4]"
       }`.trim()}
     >
       {tier.featured ? (
@@ -764,7 +775,7 @@ export function ServiceFaqSection({
           <p className="mt-3 max-w-[520px] text-body leading-relaxed text-muted sm:text-body-lg">
             {faqDescription}
           </p>
-          <div className="mt-8 rounded-[20px] border border-[#e5e0d6] bg-white/70 p-5 backdrop-blur-sm">
+          <div className="mt-8 rounded-[20px] border border-[#d8d3c7] bg-page p-5">
             <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#0055ff]">
               {faqSupportLabel}
             </p>
@@ -781,7 +792,7 @@ export function ServiceFaqSection({
 
             return (
               <div
-                className="rounded-[20px] border border-[#e5e0d6] bg-white/80 p-5 shadow-[0_2px_8px_rgba(7,20,46,0.02)] backdrop-blur-sm transition-all hover:border-[#d0c8bd] hover:bg-white"
+                className="rounded-[20px] border border-[#d8d3c7] bg-page p-5 transition-colors hover:border-[#b8b2a4]"
                 key={faq.question}
               >
                 <button
@@ -793,14 +804,14 @@ export function ServiceFaqSection({
                 >
                   <span className="leading-snug">{faq.question}</span>
                   <span
-                    className={`inline-grid size-8 shrink-0 place-items-center rounded-full text-[18px] font-medium transition-all duration-200 ${isOpen ? "bg-[#0055ff] text-white rotate-45 shadow-sm" : "bg-[#f0ece4] text-[#53657b]"}`.trim()}
+                    className={`inline-grid size-8 shrink-0 place-items-center rounded-full text-[18px] font-medium transition-all duration-200 ${isOpen ? "bg-[#0055ff] text-white rotate-45 shadow-sm" : "border border-[#d8d3c7] bg-page text-[#53657b]"}`.trim()}
                     aria-hidden="true"
                   >
                     +
                   </span>
                 </button>
                 <div
-                  className={`grid overflow-hidden text-[14.5px] leading-[1.65] text-[#53657b] transition-[grid-template-rows,padding] duration-[220ms] ${isOpen ? "grid-rows-[1fr] pt-3.5 mt-3.5 border-t border-[#f0ece4]" : "grid-rows-[0fr]"}`.trim()}
+                  className={`grid overflow-hidden text-[14.5px] leading-[1.65] text-[#53657b] transition-[grid-template-rows,padding] duration-[220ms] ${isOpen ? "grid-rows-[1fr] pt-3.5 mt-3.5 border-t border-[#d8d3c7]/60" : "grid-rows-[0fr]"}`.trim()}
                   id={answerId}
                   role="region"
                 >
@@ -849,34 +860,17 @@ export function ServiceContactSection({
   const contactTitle = service.contactTitle?.trim() || ui.contactTitle;
   const contactDescription =
     service.contactDescription?.trim() || ui.contactDescription;
+  const contactButtonLabel =
+    service.contactButtonLabel?.trim() || ui.contactButton;
 
   const whatsappHref = serviceWhatsAppUrl(
     contactDetails,
     `Hello Limex, I’d like to discuss ${service.title}.`,
   );
-  const whatsappDisplay =
-    contactDetails?.whatsappDisplay ||
-    contactDetails?.phone ||
-    "+880 1800 000 000";
-  const phone = contactDetails?.phone;
-  const email = contactDetails?.email || "hello@limex.com";
-
-  const formContent = {
-    ...defaultLandingContent.contact,
-    formEyebrow: ui.formEyebrow,
-    formTitle: ui.formTitle,
-    formDescription: ui.formDescription,
-    submitLabel: ui.formSubmitLabel,
-  };
-
-  const initialMessage =
-    locale === "bn"
-      ? `আমি ${service.title} সংক্রান্ত সেবা নিতে আগ্রহী। অনুগ্রহ করে প্রয়োজনীয় ডকুমেন্টস এবং পরবর্তী প্রক্রিয়া জানাবেন।`
-      : `Hello, I'd like to get started with ${service.title}. Please provide details on the procedure, timeline, and documents required.`;
 
   return (
     <section
-      className="relative mt-12 scroll-mt-24 rounded-[28px] border border-[#ded8cc] bg-gradient-to-b from-[#fbfaf8] to-[#f5f2eb] p-5 shadow-[0_8px_32px_rgba(7,20,46,0.03)] sm:p-8 lg:mt-20 lg:p-12"
+      className="relative mt-12 scroll-mt-24 rounded-[24px] border border-[#d8d3c7] bg-page p-6 sm:rounded-[28px] sm:p-10 lg:mt-20 lg:p-12"
       id="service-contact"
       aria-labelledby="service-contact-title"
     >
@@ -885,199 +879,60 @@ export function ServiceContactSection({
         className="relative -top-28 block pointer-events-none"
         aria-hidden="true"
       />
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-12 lg:items-start">
-        {/* Left Column: Context, Trust Guarantees, Direct Channels */}
-        <div className="flex flex-col">
-          <div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#0055ff]/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-[#0055ff]">
-              {contactEyebrow}
-            </span>
-            <h2
-              className="mt-3.5 font-brand text-[26px] font-bold leading-[1.12] tracking-[-0.03em] text-ink sm:text-[32px] lg:text-[36px]"
-              id="service-contact-title"
-            >
-              {contactTitle}
-            </h2>
-            <p className="mt-3 text-body leading-relaxed text-muted sm:text-body-lg">
-              {contactDescription}{" "}
-              <strong className="font-semibold text-ink">
-                {service.title}
-              </strong>
-              .{" "}
-              {locale === "bn"
-                ? "আমাদের ঢাকাভিত্তিক কর্পোরেট টিম আপনার ফাইলটি যাচাই করে দ্রুততম সময়ে কাজ শুরু করতে প্রস্তুত।"
-                : "Our Dhaka corporate desk will review your file and guide you through each statutory step."}
-            </p>
-          </div>
+      <div className="mx-auto flex max-w-[680px] flex-col items-center text-center">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#0055ff]/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-[#0055ff]">
+          {contactEyebrow}
+        </span>
+        <h2
+          className="mt-3.5 font-brand text-[26px] font-bold leading-[1.15] tracking-[-0.03em] text-ink sm:text-[32px] lg:text-[36px]"
+          id="service-contact-title"
+        >
+          {contactTitle}
+        </h2>
+        <p className="mt-3 text-body leading-relaxed text-muted sm:text-body-lg">
+          {contactDescription}{" "}
+          <strong className="font-semibold text-ink">
+            {service.title.toLowerCase()}
+          </strong>
+          .
+        </p>
 
-          {/* Trust Guarantees */}
-          <div className="mt-7 flex flex-col gap-3.5 border-t border-[#e5e0d6] pt-6 sm:mt-8">
-            <div className="flex items-start gap-3 rounded-[16px] border border-[#e8e4dc] bg-white/80 p-3.5 shadow-[0_1px_4px_rgba(7,20,46,0.02)] backdrop-blur-sm">
-              <span
-                className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#0055ff]/10 text-[#0055ff]"
-                aria-hidden="true"
-              >
-                <svg
-                  className="size-4"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2.2}
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z"
-                  />
-                </svg>
-              </span>
-              <div>
-                <h3 className="text-body-xs font-bold text-ink">
-                  {ui.guarantee1Title}
-                </h3>
-                <p className="mt-0.5 text-micro leading-relaxed text-muted">
-                  {ui.guarantee1Desc}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 rounded-[16px] border border-[#e8e4dc] bg-white/80 p-3.5 shadow-[0_1px_4px_rgba(7,20,46,0.02)] backdrop-blur-sm">
-              <span
-                className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#0055ff]/10 text-[#0055ff]"
-                aria-hidden="true"
-              >
-                <svg
-                  className="size-4"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2.2}
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
-                  />
-                </svg>
-              </span>
-              <div>
-                <h3 className="text-body-xs font-bold text-ink">
-                  {ui.guarantee2Title}
-                </h3>
-                <p className="mt-0.5 text-micro leading-relaxed text-muted">
-                  {ui.guarantee2Desc}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 rounded-[16px] border border-[#e8e4dc] bg-white/80 p-3.5 shadow-[0_1px_4px_rgba(7,20,46,0.02)] backdrop-blur-sm">
-              <span
-                className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#0055ff]/10 text-[#0055ff]"
-                aria-hidden="true"
-              >
-                <svg
-                  className="size-4"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2.2}
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
-                  />
-                </svg>
-              </span>
-              <div>
-                <h3 className="text-body-xs font-bold text-ink">
-                  {ui.guarantee3Title}
-                </h3>
-                <p className="mt-0.5 text-micro leading-relaxed text-muted">
-                  {ui.guarantee3Desc}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Direct WhatsApp & Contact Channels */}
-          <div className="mt-7 rounded-[20px] border border-[#ded8cc] bg-white p-5 shadow-[0_2px_12px_rgba(7,20,46,0.02)] sm:mt-8">
-            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#0055ff]">
-              {ui.whatsappNow}
-            </p>
-            {whatsappHref ? (
-              <a
-                className="group mt-3 flex items-center justify-between rounded-[14px] bg-[#25d366]/10 px-4 py-3 text-body-sm font-bold text-[#128c7e] transition-all hover:bg-[#25d366] hover:text-white"
-                href={whatsappHref}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <span className="flex items-center gap-2.5">
-                  <img
-                    className="size-5"
-                    src="/figma/whatsapp-dot.svg"
-                    alt=""
-                    aria-hidden="true"
-                  />
-                  <span>{whatsappDisplay}</span>
-                </span>
-                <span
-                  className="transition-transform group-hover:translate-x-0.5"
-                  aria-hidden="true"
-                >
-                  ↗
-                </span>
-              </a>
-            ) : null}
-
-            <div className="mt-4 grid grid-cols-1 gap-2.5 border-t border-[#f0ece4] pt-3 sm:grid-cols-2">
-              {phone ? (
-                <a
-                  className="flex items-center gap-2 text-micro font-medium text-muted transition-colors hover:text-ink"
-                  href={`tel:${phone.replace(/\s+/g, "")}`}
-                >
-                  <span
-                    className="size-1.5 rounded-full bg-[#0055ff]"
-                    aria-hidden="true"
-                  />
-                  <span>{phone}</span>
-                </a>
-              ) : null}
-              {email ? (
-                <a
-                  className="flex items-center gap-2 truncate text-micro font-medium text-muted transition-colors hover:text-ink"
-                  href={`mailto:${email}`}
-                >
-                  <span
-                    className="size-1.5 rounded-full bg-accent"
-                    aria-hidden="true"
-                  />
-                  <span className="truncate">{email}</span>
-                </a>
-              ) : null}
-            </div>
-
-            <p className="mt-3 text-[11.5px] leading-relaxed text-[#7a8b9e]">
-              ⏱ {ui.responseTime}
-            </p>
-          </div>
-        </div>
-
-        {/* Right Column: Embedded ContactForm */}
-        <div className="min-w-0">
-          <ContactForm
-            className="relative flex min-h-0 flex-col rounded-[24px] border border-[#dcd5cb] bg-white p-6 shadow-[0_12px_36px_rgba(7,20,46,0.04)] sm:p-8 lg:p-[32px]"
-            content={formContent}
-            formId="service-contact-form"
-            initialMessage={initialMessage}
-            initialService={service.title}
-            source={{
-              type: "SERVICE",
-              slug: service.slug,
-              service: service.serviceKey ?? service.title,
-            }}
+        <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <ContactModal
+            serviceKey={service.serviceKey ?? service.title}
+            serviceSlug={service.slug}
+            initialMessage={
+              locale === "bn"
+                ? `আমি ${service.title} সংক্রান্ত সেবা নিতে আগ্রহী।`
+                : `Hello, I'd like to discuss ${service.title}.`
+            }
+            variant="dark"
+            arrow="cta"
+            buttonClassName="min-h-button-lg w-full justify-between pl-6 pr-5 text-body-xs shadow-[0_4px_14px_rgba(0,85,255,0.18)] sm:w-auto sm:min-w-[200px]"
+            buttonLabel={contactButtonLabel}
           />
+          {whatsappHref ? (
+            <a
+              className="inline-flex min-h-button-lg w-full items-center justify-center gap-2 rounded-full border border-[#d8d3c7] bg-page px-5 text-body-xs font-semibold text-ink transition-colors hover:border-[#0055ff] hover:text-[#0055ff] sm:w-auto"
+              href={whatsappHref}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <img
+                className="size-4"
+                src="/figma/whatsapp-dot.svg"
+                alt=""
+                aria-hidden="true"
+              />
+              <span>{ui.whatsappNow}</span>
+              <span aria-hidden="true">↗</span>
+            </a>
+          ) : null}
         </div>
+
+        <p className="mt-5 text-[13px] leading-relaxed text-muted">
+          {ui.bottomReassurance}
+        </p>
       </div>
     </section>
   );

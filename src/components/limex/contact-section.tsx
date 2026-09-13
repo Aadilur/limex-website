@@ -779,11 +779,14 @@ export function ContactSection({
 
 type ContactModalProps = {
   articleSlug?: string;
+  arrow?: "text" | "cta" | "none";
   buttonClassName?: string;
   buttonLabel?: string;
   content?: ContactContent;
   initialMessage?: string;
   serviceKey?: string;
+  serviceSlug?: string;
+  source?: ContactRequestSource | null;
   variant?:
     | "dark"
     | "light"
@@ -796,11 +799,14 @@ type ContactModalProps = {
 
 export function ContactModal({
   articleSlug,
+  arrow,
   buttonClassName = "",
   buttonLabel = "Start a conversation",
   content = defaultLandingContent.contact,
   initialMessage,
   serviceKey,
+  serviceSlug,
+  source,
   variant = "white",
 }: ContactModalProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -808,13 +814,21 @@ export function ContactModal({
     useState<PublicContactSettings | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const modalId = useId().replace(/:/g, "");
-  const source: ContactRequestSource | null = articleSlug
-    ? {
-        type: "BLOG",
-        slug: articleSlug,
-        ...(serviceKey ? { service: serviceKey } : {}),
-      }
-    : null;
+  const resolvedSource: ContactRequestSource | null =
+    source ??
+    (articleSlug
+      ? {
+          type: "BLOG",
+          slug: articleSlug,
+          ...(serviceKey ? { service: serviceKey } : {}),
+        }
+      : serviceKey
+        ? {
+            type: "SERVICE",
+            slug: serviceSlug ?? serviceKey.toLowerCase().replace(/\s+/g, "-"),
+            service: serviceKey,
+          }
+        : null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -858,6 +872,7 @@ export function ContactModal({
   return (
     <>
       <ActionButton
+        arrow={arrow}
         variant={variant}
         className={buttonClassName}
         onClick={() => setIsOpen(true)}
@@ -967,7 +982,7 @@ export function ContactModal({
                 formId={`${modalId}-form`}
                 initialService={serviceKey}
                 initialMessage={initialMessage}
-                source={source}
+                source={resolvedSource}
               />
             </div>
           </div>
