@@ -179,7 +179,7 @@ export function createBlogRoutes(blogService: BlogService, mediaService: MediaSe
         query: z.preprocess(blankToNull, text(120).nullable().optional()),
         category: z.preprocess(blankToNull, text(100).nullable().optional()),
         page: z.coerce.number().int().min(1).max(1000).default(1),
-        pageSize: z.coerce.number().int().min(1).max(30).default(30),
+        pageSize: z.coerce.number().int().min(1).max(100).default(100),
       }).parse(request.query);
       reply.header("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
       return { data: await blogService.getPublicIndex({ ...input, query: input.query ?? undefined, category: input.category ?? undefined }) };

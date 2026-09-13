@@ -123,11 +123,13 @@ export type BlogPostInput = {
   services: BlogServiceLink[];
 };
 
-export function getPublicBlogIndex(params?: { locale?: BlogLocale; query?: string; category?: string }): Promise<BlogIndexResponse> {
+export function getPublicBlogIndex(params?: { locale?: BlogLocale; query?: string; category?: string; page?: number; pageSize?: number }): Promise<BlogIndexResponse> {
   const search = new URLSearchParams();
   if (params?.locale) search.set("locale", params.locale);
   if (params?.query) search.set("query", params.query);
   if (params?.category) search.set("category", params.category);
+  search.set("page", String(params?.page ?? 1));
+  search.set("pageSize", String(params?.pageSize ?? 100));
   const suffix = search.toString() ? `?${search.toString()}` : "";
   return request<BlogIndexResponse>(`/api/blog/posts${suffix}`, { cache: "no-store" });
 }

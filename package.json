@@ -22,6 +22,7 @@
     "prisma:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
+    "db:import-blogs": "tsx scripts/import-menu-blogs.ts",
     "db:upgrade-tools": "tsx scripts/upgrade-business-tools-content.ts",
     "test:tools": "node --import tsx --test scripts/business-tools.test.ts"
   },

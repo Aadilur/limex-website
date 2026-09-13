@@ -37,12 +37,18 @@ export async function BlogDetailPage({ article, locale = "en" }: { article: Blog
     headline: article.title,
     inLanguage: article.contentLocale === "bn" ? "bn-BD" : "en-BD",
     description: article.seoDescription || article.summary,
+    articleSection: article.category,
+    keywords: article.tags.join(", "),
     datePublished: article.publishedAt ?? article.date,
     ...(article.updatedAt || article.updatedDate ? { dateModified: article.updatedAt ?? article.updatedDate } : {}),
     author: { "@type": "Person", name: article.author },
     mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
     ...(coverUrl ? { image: [new URL(coverUrl, baseUrl).toString()] } : {}),
-    publisher: { "@type": "Organization", name: "Limex" },
+    publisher: {
+      "@type": "Organization",
+      name: "Limex",
+      logo: { "@type": "ImageObject", url: new URL("/brand/limex-logo.png", baseUrl).toString() },
+    },
   };
   const structuredDataJson = JSON.stringify(structuredData).replace(/</g, "\\u003c");
 

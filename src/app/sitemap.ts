@@ -6,10 +6,10 @@ import { getPublicServicesServer } from "@/lib/service-server";
 export const dynamic = "force-dynamic";
 
 async function loadAllBlogPages(locale: "en" | "bn") {
-  const first = await getPublicBlogIndexServer(locale, 1, 30);
+  const first = await getPublicBlogIndexServer(locale, 1, 100);
   const pages = [first];
   const pageCount = Math.ceil(first.total / Math.max(first.pageSize, 1));
-  for (let page = 2; page <= pageCount; page += 1) pages.push(await getPublicBlogIndexServer(locale, page, 30));
+  for (let page = 2; page <= pageCount; page += 1) pages.push(await getPublicBlogIndexServer(locale, page, 100));
   return pages.flatMap((page) => [page.featured, ...page.items]).filter(Boolean);
 }
 

@@ -50,7 +50,7 @@ async function fetchBackend<T>(path: string): Promise<{ value: T | null; availab
   }
 }
 
-export async function getPublicBlogIndexServer(locale: BlogLocale = "en", page = 1, pageSize = 30) {
+export async function getPublicBlogIndexServer(locale: BlogLocale = "en", page = 1, pageSize = 100) {
   const result = await fetchBackend<BlogIndexResponse>(`/api/blog/posts?locale=${locale}&page=${page}&pageSize=${pageSize}`);
   if (result.available && result.value) return result.value;
   if (result.available) return { featured: null, items: [], categories: [], total: 0, page, pageSize, fallback: false } satisfies BlogIndexResponse;

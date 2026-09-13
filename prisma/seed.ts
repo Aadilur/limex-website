@@ -1,8 +1,6 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 
 import { navigation, services } from "../src/components/limex/data.js";
-import { allBlogArticles, type BlogArticle } from "../src/components/limex/blog-data.js";
-import { blogBlocksToHtml, blogContentJson } from "../src/lib/blog-content.js";
 import { defaultLandingContent } from "../src/lib/landing-defaults.js";
 import { defaultMouTemplate, flattenTemplatePages, normalizeDocumentTemplateDraft } from "../src/lib/document-templates.js";
 import { defaultPartnershipDeed40Templates, isPartnershipDeedTemplate, upgradePartnershipDeedTemplate } from "../src/lib/partnership-deed-templates.js";
@@ -10,102 +8,10 @@ import { defaultRentalDeedTemplates } from "../src/lib/rental-deed-templates.js"
 
 const prisma = new PrismaClient();
 
-function parseArticleDate(value: string) {
-  const match = value.trim().match(/^(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})$/);
-  if (match) {
-    const month = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"].indexOf(match[2].toLowerCase());
-    const day = Number(match[1]);
-    const year = Number(match[3]);
-    if (month >= 0 && day >= 1 && day <= 31) return new Date(Date.UTC(year, month, day, 12));
-  }
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
-}
-
-function articleService(article: BlogArticle) {
-  const preferred = article.category === "Business setup"
-    ? ["Company Formation", "Trade License"]
-    : article.category === "VAT & Tax"
-      ? ["VAT / BIN Registration", "Income Tax"]
-      : article.category === "Brand protection"
-        ? ["Trademark"]
-        : [];
-  return preferred
-    .map((title) => services.find((service) => service.title === title))
-    .filter((service): service is (typeof services)[number] => Boolean(service))
-    .map((service, index) => ({ serviceKey: service.title, label: service.title, href: service.href, isPrimary: index === 0, sortOrder: index }));
-}
-
 async function seedServiceProfiles() {
   // Service pages are intentionally not seeded. Menu entries are navigation
   // records; administrators create service records in the service workspace
   // and attach them to a menu item only when ready.
-}
-
-async function seedBlogPosts() {
-  for (const [sortOrder, article] of allBlogArticles.entries()) {
-    const existing = await prisma.blogPost.findUnique({ where: { slug: article.slug }, select: { id: true } });
-    if (existing) continue;
-
-    const bodyHtml = blogBlocksToHtml(article.blocks ?? []);
-    const translations = [{
-      locale: "en",
-      title: article.title,
-      subtitle: article.summary,
-      intro: article.intro,
-      atAGlance: article.atAGlance,
-      bodyHtml,
-      bodyJson: blogContentJson(bodyHtml),
-      keywords: article.tags,
-      seoTitle: `${article.title} | Limex`,
-      seoDescription: article.summary,
-      coverAlt: `${article.title} cover`,
-      coverCaption: null,
-    }];
-    const relatedServices = articleService(article);
-    const snapshot = {
-      slug: article.slug,
-      category: article.category,
-      author: article.author,
-      readTimeMinutes: Number(article.readTime.match(/\d+/)?.[0] ?? 6),
-      coverTone: article.coverTone,
-      coverNote: article.coverNote,
-      coverNumber: article.coverNumber,
-      coverMediaId: null,
-      sidebarVideoUrl: null,
-      sidebarVideoId: null,
-      sidebarVideoTitle: null,
-      isFeatured: sortOrder === 0,
-      noIndex: false,
-      canonicalUrl: null,
-      translations,
-      services: relatedServices,
-    };
-    const publishedAt = parseArticleDate(article.date);
-    await prisma.blogPost.create({
-      data: {
-        slug: article.slug,
-        publishedSlug: article.slug,
-        category: article.category,
-        author: article.author,
-        readTimeMinutes: snapshot.readTimeMinutes,
-        coverTone: article.coverTone,
-        coverNote: article.coverNote,
-        coverNumber: article.coverNumber,
-        isFeatured: sortOrder === 0,
-        noIndex: false,
-        status: "PUBLISHED",
-        revision: 1,
-        publishedRevision: 1,
-        publishedSnapshot: snapshot as unknown as Prisma.InputJsonValue,
-        publishedAt,
-        sortOrder,
-        translations: { create: translations.map((translation) => ({ ...translation, bodyJson: translation.bodyJson as Prisma.InputJsonValue, keywords: translation.keywords as Prisma.InputJsonValue })) },
-        services: { create: relatedServices },
-        revisions: { create: { version: 1, kind: "PUBLISHED", snapshot: snapshot as unknown as Prisma.InputJsonValue, createdBy: "seed" } },
-      },
-    });
-  }
 }
 
 async function ensureLandingTestVideo() {
@@ -258,8 +164,6 @@ async function main() {
       },
     });
   }
-
-  await seedBlogPosts();
 
   console.log(`Database seeded for ${adminUser.name ?? "Limex"}.`);
 }
