@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { ServicePageContent, ServicePriceTier } from "./service-page-data";
 import type { PublicContactSettings } from "@/lib/contact-types";
+import { getPublicContactSettings } from "@/lib/contact-api";
+import { defaultLandingContent } from "@/lib/landing-api";
 import { getTool, toolHref } from "@/lib/business-tools";
-import { ContactModal } from "./contact-section";
+import { ContactForm, ContactModal } from "./contact-section";
 import { ToolWorkspace } from "./tool-workspace";
 import { ActionButton, Breadcrumbs, WaveLabel } from "./ui";
 import { blogRichTextClass } from "./blog-rich-text";
@@ -60,6 +62,23 @@ const serviceUi = {
     contactButton: "Talk to an advisor",
     bookNow: "Book now",
     whatsappNow: "Discuss on WhatsApp",
+    directPhone: "Call directly",
+    directEmail: "Email our team",
+    guarantee1Title: "Zero Hidden Charges",
+    guarantee1Desc:
+      "100% transparent government fees and fixed service rates upfront.",
+    guarantee2Title: "Official Documentation",
+    guarantee2Desc:
+      "Verified original certificates, registration numbers & sealed chalans.",
+    guarantee3Title: "Dedicated Dhaka Advisor",
+    guarantee3Desc:
+      "One-on-one expert guidance in Dhaka from document filing to delivery.",
+    responseTime: "Typical response within 2 business hours (10 AM – 7 PM BST)",
+    formEyebrow: "Direct Service Enquiry",
+    formTitle: "Get started today",
+    formDescription:
+      "Leave your details and requirements. Our corporate desk will follow up promptly.",
+    formSubmitLabel: "Submit enquiry",
   },
   bn: {
     switchLabel: "English",
@@ -89,6 +108,23 @@ const serviceUi = {
     contactButton: "পরামর্শ নিন",
     bookNow: "এখনই বুক করুন",
     whatsappNow: "WhatsApp-এ আলোচনা করুন",
+    directPhone: "সরাসরি কল করুন",
+    directEmail: "ইমেইল পাঠান",
+    guarantee1Title: "কোনো লুকানো চার্জ নেই",
+    guarantee1Desc: "১০০% স্বচ্ছ সরকারি চালান এবং নির্ধারিত সার্ভিস ফি হিসাব।",
+    guarantee2Title: "অফিসিয়াল ডকুমেন্টস",
+    guarantee2Desc:
+      "মূল যাচাইকৃত সার্টিফিকেট, লাইসেন্স নম্বর ও সিলমোহরযুক্ত চালান।",
+    guarantee3Title: "ডেডিকেটেড পরামর্শক",
+    guarantee3Desc:
+      "আবেদন থেকে ডেলিভারি পর্যন্ত ঢাকায় আপনার ফাইলে সার্বক্ষণিক সহযোগিতা।",
+    responseTime:
+      "সাধারণত ২ কার্যঘন্টার মধ্যে উত্তর দেওয়া হয় (সকাল ১০টা – সন্ধ্যা ৭টা BST)",
+    formEyebrow: "সরাসরি আবেদন",
+    formTitle: "আজই শুরু করুন",
+    formDescription:
+      "আপনার ব্যবসার তথ্য ও প্রয়োজনীয়তা জানান। আমাদের দল দ্রুত যোগাযোগ করবে।",
+    formSubmitLabel: "আবেদন পাঠান",
   },
 } as const;
 
@@ -788,67 +824,260 @@ export function ServiceContactSection({
   service: ServicePageContent;
   contact?: PublicContactSettings | null;
 }) {
-  const ui = serviceUi[service.locale ?? "en"];
+  const [contactDetails, setContactDetails] =
+    useState<PublicContactSettings | null>(contact ?? null);
+
+  useEffect(() => {
+    if (contact) {
+      setContactDetails(contact);
+      return;
+    }
+    let cancelled = false;
+    void getPublicContactSettings()
+      .then((settings) => {
+        if (!cancelled) setContactDetails(settings);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [contact]);
+
+  const locale = service.locale ?? "en";
+  const ui = serviceUi[locale];
   const contactEyebrow = service.contactEyebrow?.trim() || ui.readyEyebrow;
   const contactTitle = service.contactTitle?.trim() || ui.contactTitle;
   const contactDescription =
     service.contactDescription?.trim() || ui.contactDescription;
-  const contactButtonLabel =
-    service.contactButtonLabel?.trim() || ui.contactButton;
+
   const whatsappHref = serviceWhatsAppUrl(
-    contact,
+    contactDetails,
     `Hello Limex, I’d like to discuss ${service.title}.`,
   );
+  const whatsappDisplay =
+    contactDetails?.whatsappDisplay ||
+    contactDetails?.phone ||
+    "+880 1800 000 000";
+  const phone = contactDetails?.phone;
+  const email = contactDetails?.email || "hello@limex.com";
+
+  const formContent = {
+    ...defaultLandingContent.contact,
+    formEyebrow: ui.formEyebrow,
+    formTitle: ui.formTitle,
+    formDescription: ui.formDescription,
+    submitLabel: ui.formSubmitLabel,
+  };
+
+  const initialMessage =
+    locale === "bn"
+      ? `আমি ${service.title} সংক্রান্ত সেবা নিতে আগ্রহী। অনুগ্রহ করে প্রয়োজনীয় ডকুমেন্টস এবং পরবর্তী প্রক্রিয়া জানাবেন।`
+      : `Hello, I'd like to get started with ${service.title}. Please provide details on the procedure, timeline, and documents required.`;
 
   return (
     <section
-      className="relative mt-12 overflow-hidden rounded-[24px] border border-white/10 bg-gradient-to-br from-[#071b3d] via-[#09224d] to-[#041026] p-6 text-white shadow-[0_24px_60px_rgba(7,27,61,0.22)] sm:rounded-[28px] sm:p-10 lg:mt-20 lg:flex lg:items-center lg:justify-between lg:p-12"
+      className="relative mt-12 scroll-mt-24 rounded-[28px] border border-[#ded8cc] bg-gradient-to-b from-[#fbfaf8] to-[#f5f2eb] p-5 shadow-[0_8px_32px_rgba(7,20,46,0.03)] sm:p-8 lg:mt-20 lg:p-12"
       id="service-contact"
       aria-labelledby="service-contact-title"
     >
-      <div
-        className="pointer-events-none absolute -right-20 -top-20 size-80 rounded-full bg-[#0055ff]/15 blur-3xl"
+      <span
+        id="contact"
+        className="relative -top-28 block pointer-events-none"
         aria-hidden="true"
       />
-      <div className="relative z-10">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-cyan/15 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-brand-cyan">
-          {contactEyebrow}
-        </span>
-        <h2
-          className="mt-3.5 max-w-[760px] font-brand text-[24px] font-bold leading-[1.15] sm:text-page-title-mobile lg:text-page-title"
-          id="service-contact-title"
-        >
-          {contactTitle}
-        </h2>
-        <p className="mt-3 max-w-[680px] text-body-sm leading-relaxed text-[#c7cfe0] sm:text-body">
-          {contactDescription} {service.title.toLowerCase()}.
-        </p>
-      </div>
-      <div className="relative z-10 mt-6 flex shrink-0 flex-col gap-3 sm:flex-row lg:mt-0 lg:flex-col xl:flex-row">
-        <ContactModal
-          serviceKey={service.serviceKey ?? service.title}
-          initialMessage={`I’m interested in ${service.title}.`}
-          variant="white"
-          buttonClassName="min-h-[50px] w-full justify-center rounded-full font-bold text-body-xs shadow-md sm:w-auto sm:min-w-[210px]"
-          buttonLabel={contactButtonLabel}
-        />
-        {whatsappHref ? (
-          <a
-            className="inline-flex min-h-[50px] w-full items-center justify-center gap-2 rounded-full border border-white/25 bg-white/10 px-5 text-button font-bold text-white backdrop-blur-sm transition-all hover:bg-white/20 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-white/60 focus-visible:outline-offset-3 sm:w-auto sm:min-w-[210px]"
-            href={whatsappHref}
-            target="_blank"
-            rel="noreferrer"
-          >
-            <img
-              className="size-4"
-              src="/figma/whatsapp-dot.svg"
-              alt=""
-              aria-hidden="true"
-            />
-            <span>{ui.whatsappNow}</span>
-            <span aria-hidden="true">↗</span>
-          </a>
-        ) : null}
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-12 lg:items-start">
+        {/* Left Column: Context, Trust Guarantees, Direct Channels */}
+        <div className="flex flex-col">
+          <div>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#0055ff]/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-[#0055ff]">
+              {contactEyebrow}
+            </span>
+            <h2
+              className="mt-3.5 font-brand text-[26px] font-bold leading-[1.12] tracking-[-0.03em] text-ink sm:text-[32px] lg:text-[36px]"
+              id="service-contact-title"
+            >
+              {contactTitle}
+            </h2>
+            <p className="mt-3 text-body leading-relaxed text-muted sm:text-body-lg">
+              {contactDescription}{" "}
+              <strong className="font-semibold text-ink">
+                {service.title}
+              </strong>
+              .{" "}
+              {locale === "bn"
+                ? "আমাদের ঢাকাভিত্তিক কর্পোরেট টিম আপনার ফাইলটি যাচাই করে দ্রুততম সময়ে কাজ শুরু করতে প্রস্তুত।"
+                : "Our Dhaka corporate desk will review your file and guide you through each statutory step."}
+            </p>
+          </div>
+
+          {/* Trust Guarantees */}
+          <div className="mt-7 flex flex-col gap-3.5 border-t border-[#e5e0d6] pt-6 sm:mt-8">
+            <div className="flex items-start gap-3 rounded-[16px] border border-[#e8e4dc] bg-white/80 p-3.5 shadow-[0_1px_4px_rgba(7,20,46,0.02)] backdrop-blur-sm">
+              <span
+                className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#0055ff]/10 text-[#0055ff]"
+                aria-hidden="true"
+              >
+                <svg
+                  className="size-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2.2}
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z"
+                  />
+                </svg>
+              </span>
+              <div>
+                <h3 className="text-body-xs font-bold text-ink">
+                  {ui.guarantee1Title}
+                </h3>
+                <p className="mt-0.5 text-micro leading-relaxed text-muted">
+                  {ui.guarantee1Desc}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 rounded-[16px] border border-[#e8e4dc] bg-white/80 p-3.5 shadow-[0_1px_4px_rgba(7,20,46,0.02)] backdrop-blur-sm">
+              <span
+                className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#0055ff]/10 text-[#0055ff]"
+                aria-hidden="true"
+              >
+                <svg
+                  className="size-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2.2}
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+                  />
+                </svg>
+              </span>
+              <div>
+                <h3 className="text-body-xs font-bold text-ink">
+                  {ui.guarantee2Title}
+                </h3>
+                <p className="mt-0.5 text-micro leading-relaxed text-muted">
+                  {ui.guarantee2Desc}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 rounded-[16px] border border-[#e8e4dc] bg-white/80 p-3.5 shadow-[0_1px_4px_rgba(7,20,46,0.02)] backdrop-blur-sm">
+              <span
+                className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#0055ff]/10 text-[#0055ff]"
+                aria-hidden="true"
+              >
+                <svg
+                  className="size-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2.2}
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+                  />
+                </svg>
+              </span>
+              <div>
+                <h3 className="text-body-xs font-bold text-ink">
+                  {ui.guarantee3Title}
+                </h3>
+                <p className="mt-0.5 text-micro leading-relaxed text-muted">
+                  {ui.guarantee3Desc}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Direct WhatsApp & Contact Channels */}
+          <div className="mt-7 rounded-[20px] border border-[#ded8cc] bg-white p-5 shadow-[0_2px_12px_rgba(7,20,46,0.02)] sm:mt-8">
+            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#0055ff]">
+              {ui.whatsappNow}
+            </p>
+            {whatsappHref ? (
+              <a
+                className="group mt-3 flex items-center justify-between rounded-[14px] bg-[#25d366]/10 px-4 py-3 text-body-sm font-bold text-[#128c7e] transition-all hover:bg-[#25d366] hover:text-white"
+                href={whatsappHref}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <span className="flex items-center gap-2.5">
+                  <img
+                    className="size-5"
+                    src="/figma/whatsapp-dot.svg"
+                    alt=""
+                    aria-hidden="true"
+                  />
+                  <span>{whatsappDisplay}</span>
+                </span>
+                <span
+                  className="transition-transform group-hover:translate-x-0.5"
+                  aria-hidden="true"
+                >
+                  ↗
+                </span>
+              </a>
+            ) : null}
+
+            <div className="mt-4 grid grid-cols-1 gap-2.5 border-t border-[#f0ece4] pt-3 sm:grid-cols-2">
+              {phone ? (
+                <a
+                  className="flex items-center gap-2 text-micro font-medium text-muted transition-colors hover:text-ink"
+                  href={`tel:${phone.replace(/\s+/g, "")}`}
+                >
+                  <span
+                    className="size-1.5 rounded-full bg-[#0055ff]"
+                    aria-hidden="true"
+                  />
+                  <span>{phone}</span>
+                </a>
+              ) : null}
+              {email ? (
+                <a
+                  className="flex items-center gap-2 truncate text-micro font-medium text-muted transition-colors hover:text-ink"
+                  href={`mailto:${email}`}
+                >
+                  <span
+                    className="size-1.5 rounded-full bg-accent"
+                    aria-hidden="true"
+                  />
+                  <span className="truncate">{email}</span>
+                </a>
+              ) : null}
+            </div>
+
+            <p className="mt-3 text-[11.5px] leading-relaxed text-[#7a8b9e]">
+              ⏱ {ui.responseTime}
+            </p>
+          </div>
+        </div>
+
+        {/* Right Column: Embedded ContactForm */}
+        <div className="min-w-0">
+          <ContactForm
+            className="relative flex min-h-0 flex-col rounded-[24px] border border-[#dcd5cb] bg-white p-6 shadow-[0_12px_36px_rgba(7,20,46,0.04)] sm:p-8 lg:p-[32px]"
+            content={formContent}
+            formId="service-contact-form"
+            initialMessage={initialMessage}
+            initialService={service.title}
+            source={{
+              type: "SERVICE",
+              slug: service.slug,
+              service: service.serviceKey ?? service.title,
+            }}
+          />
+        </div>
       </div>
     </section>
   );

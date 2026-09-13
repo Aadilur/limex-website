@@ -1485,3 +1485,48 @@ test("seamless navigation transitions, progress bar, and view transitions are pr
   assert.match(smoothScrollTsx, /lenis\.scrollTo\(0,\s*\{\s*immediate:\s*true/);
   assert.match(smoothScrollTsx, /startViewTransition/);
 });
+
+test("service page renders on-page interactive ContactForm with pre-selected service and trust guarantees", async () => {
+  const fs = await import("node:fs/promises");
+  const serviceSectionsTsx = await fs.readFile(
+    new URL(
+      "../src/components/limex/service-page-sections.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const contactSectionTsx = await fs.readFile(
+    new URL("../src/components/limex/contact-section.tsx", import.meta.url),
+    "utf8",
+  );
+  const toolsRoutesTs = await fs.readFile(
+    new URL("../server/modules/tools/tools.routes.ts", import.meta.url),
+    "utf8",
+  );
+
+  // 1. tools.routes.ts accepts both BLOG and SERVICE sources
+  assert.match(toolsRoutesTs, /z\.enum\(\[\s*"BLOG",\s*"SERVICE"\s*\]\)/);
+
+  // 2. ServiceContactSection embeds ContactForm with initialService, SERVICE source, and formId
+  assert.match(serviceSectionsTsx, /<ContactForm/);
+  assert.match(serviceSectionsTsx, /initialService=\{service\.title\}/);
+  assert.match(serviceSectionsTsx, /type:\s*"SERVICE"/);
+  assert.match(serviceSectionsTsx, /formId="service-contact-form"/);
+
+  // 3. Section provides smooth scroll anchor compatibility for #service-contact and #contact
+  assert.match(serviceSectionsTsx, /id="service-contact"/);
+  assert.match(serviceSectionsTsx, /id="contact"/);
+
+  // 4. Trust guarantees and direct WhatsApp action are present
+  assert.match(serviceSectionsTsx, /guarantee1Title/);
+  assert.match(serviceSectionsTsx, /guarantee2Title/);
+  assert.match(serviceSectionsTsx, /guarantee3Title/);
+  assert.match(serviceSectionsTsx, /whatsappHref/);
+
+  // 5. ContactForm in contact-section.tsx initializes values.services with initialService
+  assert.match(
+    contactSectionTsx,
+    /services:\s*trimmed\s*\?\s*\[trimmed\]\s*:\s*\[\]/,
+  );
+  assert.match(contactSectionTsx, /className\?: string/);
+});
