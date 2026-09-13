@@ -321,6 +321,88 @@ test("service page overview preserves custom HTML with scoped CSS and handles la
   assert.match(sectionsContent, /const richTextClass = blogRichTextClass;/);
 });
 
+test("all catalog services have rich Public page body overviewHtml templates with zero embedded links", async () => {
+  const { generatedServices } = await import("../src/lib/service-content.js");
+  const { trademarkRegistrationService } =
+    await import("../src/components/limex/service-page-data.js");
+  const fs = await import("node:fs/promises");
+
+  assert.ok(
+    generatedServices.length >= 70,
+    "Expected at least 70 generated services",
+  );
+
+  for (const service of generatedServices) {
+    // Both English and Bengali overviewHtml must be populated
+    assert.ok(
+      service.detailEn.overviewHtml &&
+        service.detailEn.overviewHtml.trim().length > 100,
+      `Service ${service.titleEn} missing rich overviewHtml in English`,
+    );
+    assert.ok(
+      service.detailBn.overviewHtml &&
+        service.detailBn.overviewHtml.trim().length > 100,
+      `Service ${service.titleEn} missing rich overviewHtml in Bengali`,
+    );
+
+    // Absolutely zero links in Public page body
+    assert.ok(
+      !service.detailEn.overviewHtml.includes("<a ") &&
+        !service.detailEn.overviewHtml.includes("href="),
+      `Service ${service.titleEn} (EN) contains unexpected links in overviewHtml`,
+    );
+    assert.ok(
+      !service.detailBn.overviewHtml.includes("<a ") &&
+        !service.detailBn.overviewHtml.includes("href="),
+      `Service ${service.titleEn} (BN) contains unexpected links in overviewHtml`,
+    );
+
+    // Semantic structure must be present
+    assert.match(service.detailEn.overviewHtml, /<h2>[\s\S]*?<\/h2>/);
+    assert.match(service.detailEn.overviewHtml, /<h3>[\s\S]*?<\/h3>/);
+    assert.match(service.detailEn.overviewHtml, /<ul>[\s\S]*?<\/ul>/);
+    assert.match(service.detailEn.overviewHtml, /<ol>[\s\S]*?<\/ol>/);
+  }
+
+  // Verify trademarkRegistrationService
+  assert.ok(
+    trademarkRegistrationService.overviewHtml &&
+      trademarkRegistrationService.overviewHtml.trim().length > 500,
+    "trademarkRegistrationService missing rich overviewHtml",
+  );
+  assert.ok(
+    !trademarkRegistrationService.overviewHtml.includes("<a ") &&
+      !trademarkRegistrationService.overviewHtml.includes("href="),
+    "trademarkRegistrationService contains unexpected links in overviewHtml",
+  );
+
+  // Verify legacyOverviewHtml in service-pages-module.tsx does not generate links
+  const adminContent = await fs.readFile(
+    new URL(
+      "../src/components/admin/service-pages-module.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  assert.ok(
+    !adminContent.includes('`<p><a href="${href}">'),
+    "service-pages-module.tsx should not generate links in legacyOverviewHtml",
+  );
+
+  // Verify service-page-sections.tsx does not render a link button in the overview section
+  const sectionsSource = await fs.readFile(
+    new URL(
+      "../src/components/limex/service-page-sections.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  assert.ok(
+    !sectionsSource.includes("{service.contentLinkLabel ? ("),
+    "service-page-sections.tsx should not render a link button in ServiceOverviewSection",
+  );
+});
+
 test("catalogue contains seven distinct calculators and six builders", () => {
   assert.equal(
     businessTools.filter((tool) => tool.group === "calculator").length,

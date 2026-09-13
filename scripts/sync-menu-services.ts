@@ -4,7 +4,10 @@ import { Prisma, PrismaClient } from "@prisma/client";
 
 import { trademarkRegistrationService } from "../src/components/limex/service-page-data.js";
 import { generatedServices } from "../src/lib/service-content.js";
-import { normalizeServiceDetail, slugify } from "../server/modules/services/domain/service.js";
+import {
+  normalizeServiceDetail,
+  slugify,
+} from "../server/modules/services/domain/service.js";
 import type { ServiceDetailContent } from "../src/lib/service-types.js";
 
 /**
@@ -62,22 +65,44 @@ function asJson(value: unknown) {
   return value as Prisma.InputJsonValue;
 }
 
-function identity(target: Pick<Target, "sectionLabel" | "groupLabel" | "parentLabel" | "label">) {
+function identity(
+  target: Pick<Target, "sectionLabel" | "groupLabel" | "parentLabel" | "label">,
+) {
   return `${target.sectionLabel}|${target.groupLabel}|${target.parentLabel ?? ""}|${target.label}`;
 }
 
 function isContactOnlyHref(href: string) {
   const normalized = href.trim();
-  return normalized === "#" || normalized === "#contact" || normalized.startsWith("#contact-");
+  return (
+    normalized === "#" ||
+    normalized === "#contact" ||
+    normalized.startsWith("#contact-")
+  );
 }
 
 function isUntouchedPlaceholder(profile: ExistingProfile) {
-  return profile.origin === "ADMIN"
-    && profile.status === "LINK_ONLY"
-    && profile.detail === null
-    && profile.publishedDetail === null
-    && profile.revision === 1
-    && profile.publishedRevision === null;
+  return (
+    profile.origin === "ADMIN" &&
+    profile.status === "LINK_ONLY" &&
+    profile.detail === null &&
+    profile.publishedDetail === null &&
+    profile.revision === 1 &&
+    profile.publishedRevision === null
+  );
+}
+
+function shouldUpdateTemplate(
+  profile: ExistingProfile,
+  sourceOverviewHtml?: string,
+) {
+  if (!sourceOverviewHtml) return false;
+  const d = (profile.publishedDetail ??
+    profile.detail) as ServiceDetailContent | null;
+  const currentHtml = d?.overviewHtml?.trim() ?? "";
+  if (!currentHtml) return true;
+  if (currentHtml.includes("<a ") || currentHtml.includes("href=")) return true;
+  if (currentHtml.includes("View full requirements")) return true;
+  return false;
 }
 
 function detailFromLegacyPage(): ServiceDetailContent {
@@ -100,8 +125,8 @@ function detailFromLegacyPage(): ServiceDetailContent {
     contentTitle: source.contentTitle,
     contentDescription: source.contentDescription,
     contentDescriptionHtml: source.contentDescriptionHtml,
-    contentLinkLabel: source.contentLinkLabel,
-    contentLinkHref: source.contentLinkHref ?? "#pricing",
+    contentLinkLabel: "",
+    contentLinkHref: "",
     keyFactsLabel: source.keyFactsLabel,
     relatedOptionsLabel: source.relatedOptionsLabel,
     toolsEyebrow: source.toolsEyebrow,
@@ -130,13 +155,27 @@ function detailFromLegacyPage(): ServiceDetailContent {
 }
 
 function slugBaseFor(target: Target, generatedSlug: string | null) {
-  if (target.sectionLabel === "IP & Trademark" && target.parentLabel === null && target.label === "Trademark") {
+  if (
+    target.sectionLabel === "IP & Trademark" &&
+    target.parentLabel === null &&
+    target.label === "Trademark"
+  ) {
     return trademarkRegistrationService.slug;
   }
-  return generatedSlug ?? slugify(`${target.sectionLabel}-${target.groupLabel}-${target.parentLabel ?? ""}-${target.label}`);
+  return (
+    generatedSlug ??
+    slugify(
+      `${target.sectionLabel}-${target.groupLabel}-${target.parentLabel ?? ""}-${target.label}`,
+    )
+  );
 }
 
-function uniqueSlug(base: string, targetId: string, used: Map<string, string>, currentProfileId: string | null) {
+function uniqueSlug(
+  base: string,
+  targetId: string,
+  used: Map<string, string>,
+  currentProfileId: string | null,
+) {
   const normalized = slugify(base).slice(0, MAX_SLUG_LENGTH);
   const owner = used.get(normalized);
   if (!owner || owner === currentProfileId) {
@@ -213,12 +252,15 @@ async function readMenuTree() {
 function generatedByIdentity() {
   const map = new Map<string, (typeof generatedServices)[number]>();
   for (const entry of generatedServices) {
-    map.set(identity({
-      sectionLabel: entry.sectionLabel,
-      groupLabel: entry.groupLabel,
-      parentLabel: entry.parentLabel,
-      label: entry.titleEn,
-    }), entry);
+    map.set(
+      identity({
+        sectionLabel: entry.sectionLabel,
+        groupLabel: entry.groupLabel,
+        parentLabel: entry.parentLabel,
+        label: entry.titleEn,
+      }),
+      entry,
+    );
   }
   return map;
 }
@@ -227,20 +269,35 @@ function serviceKeyFor(target: Target) {
   return `menu-${target.targetType.toLowerCase()}-${target.id}`.slice(0, 180);
 }
 
-function sourceDetail(target: Target, generated: (typeof generatedServices)[number] | null) {
-  if (target.sectionLabel === "IP & Trademark" && target.parentLabel === null && target.label === "Trademark") {
+function sourceDetail(
+  target: Target,
+  generated: (typeof generatedServices)[number] | null,
+) {
+  if (
+    target.sectionLabel === "IP & Trademark" &&
+    target.parentLabel === null &&
+    target.label === "Trademark"
+  ) {
     return detailFromLegacyPage();
   }
   return generated ? normalizeServiceDetail(generated.detailEn) : null;
 }
 
-function sourceTitle(target: Target, generated: (typeof generatedServices)[number] | null) {
-  if (target.sectionLabel === "IP & Trademark" && target.parentLabel === null && target.label === "Trademark") {
+function sourceTitle(
+  target: Target,
+  generated: (typeof generatedServices)[number] | null,
+) {
+  if (
+    target.sectionLabel === "IP & Trademark" &&
+    target.parentLabel === null &&
+    target.label === "Trademark"
+  ) {
     return {
       titleEn: trademarkRegistrationService.title,
       titleBn: "ট্রেডমার্ক নিবন্ধন",
       descriptionEn: trademarkRegistrationService.description,
-      descriptionBn: "পরিষ্কার অনুসন্ধান, আবেদন ও পরবর্তী সহায়তায় আপনার ব্র্যান্ড সুরক্ষিত রাখুন।",
+      descriptionBn:
+        "পরিষ্কার অনুসন্ধান, আবেদন ও পরবর্তী সহায়তায় আপনার ব্র্যান্ড সুরক্ষিত রাখুন।",
     };
   }
   return {
@@ -287,159 +344,251 @@ async function main() {
   });
   const byTarget = new Map<string, ExistingProfile>();
   for (const profile of profiles) {
-    if (profile.menuItemId) byTarget.set(`ITEM:${profile.menuItemId}`, profile as ExistingProfile);
-    if (profile.menuLinkId) byTarget.set(`LINK:${profile.menuLinkId}`, profile as ExistingProfile);
+    if (profile.menuItemId)
+      byTarget.set(`ITEM:${profile.menuItemId}`, profile as ExistingProfile);
+    if (profile.menuLinkId)
+      byTarget.set(`LINK:${profile.menuLinkId}`, profile as ExistingProfile);
   }
-  const usedSlugs = new Map(profiles.map((profile) => [profile.slug, profile.id]));
+  const usedSlugs = new Map(
+    profiles.map((profile) => [profile.slug, profile.id]),
+  );
 
   const plan = targets.map((target) => {
     const entry = generated.get(identity(target)) ?? null;
     const profile = byTarget.get(`${target.targetType}:${target.id}`) ?? null;
     const detail = sourceDetail(target, entry);
     const shouldMaterialize = Boolean(detail);
-    const slug = profile?.slug ?? uniqueSlug(slugBaseFor(target, entry?.slug ?? null), target.id, usedSlugs, null);
+    const slug =
+      profile?.slug ??
+      uniqueSlug(
+        slugBaseFor(target, entry?.slug ?? null),
+        target.id,
+        usedSlugs,
+        null,
+      );
     const href = nextHref(target, slug, shouldMaterialize);
     return { target, entry, profile, detail, shouldMaterialize, slug, href };
   });
 
   const materialized = plan.filter((item) => item.shouldMaterialize);
-  const missingGenerated = plan.filter((item) => item.target.targetType === "LINK" && !item.entry && isContactOnlyHref(item.target.href));
-  console.log(JSON.stringify({
-    visibleMenuItems: plan.filter((item) => item.target.targetType === "ITEM").length,
-    visibleMenuLinks: plan.filter((item) => item.target.targetType === "LINK").length,
-    serviceTargets: materialized.length,
-    newProfiles: materialized.filter((item) => !item.profile).length,
-    placeholderUpgrades: materialized.filter((item) => item.profile && isUntouchedPlaceholder(item.profile)).length,
-    protectedExistingProfiles: materialized.filter((item) => item.profile && !isUntouchedPlaceholder(item.profile)).length,
-    contactOnlyTargetsMovedToServices: materialized.filter((item) => isContactOnlyHref(item.target.href)).length,
-    contactOnlyLinksWithoutSource: missingGenerated.map((item) => identity(item.target)),
-    dryRun,
-  }, null, 2));
+  const missingGenerated = plan.filter(
+    (item) =>
+      item.target.targetType === "LINK" &&
+      !item.entry &&
+      isContactOnlyHref(item.target.href),
+  );
+  console.log(
+    JSON.stringify(
+      {
+        visibleMenuItems: plan.filter(
+          (item) => item.target.targetType === "ITEM",
+        ).length,
+        visibleMenuLinks: plan.filter(
+          (item) => item.target.targetType === "LINK",
+        ).length,
+        serviceTargets: materialized.length,
+        newProfiles: materialized.filter((item) => !item.profile).length,
+        placeholderUpgrades: materialized.filter(
+          (item) => item.profile && isUntouchedPlaceholder(item.profile),
+        ).length,
+        protectedExistingProfiles: materialized.filter(
+          (item) => item.profile && !isUntouchedPlaceholder(item.profile),
+        ).length,
+        contactOnlyTargetsMovedToServices: materialized.filter((item) =>
+          isContactOnlyHref(item.target.href),
+        ).length,
+        contactOnlyLinksWithoutSource: missingGenerated.map((item) =>
+          identity(item.target),
+        ),
+        dryRun,
+      },
+      null,
+      2,
+    ),
+  );
 
   if (missingGenerated.length) {
-    throw new Error(`A contact-only menu link has no service source: ${missingGenerated.map((item) => identity(item.target)).join(", ")}`);
+    throw new Error(
+      `A contact-only menu link has no service source: ${missingGenerated.map((item) => identity(item.target)).join(", ")}`,
+    );
   }
   if (dryRun) return;
 
   const now = new Date();
   let created = 0;
   let upgraded = 0;
+  let templatesUpdated = 0;
   let protectedExisting = 0;
   let menuLinksUpdated = 0;
 
-  await prisma.$transaction(async (transaction) => {
-    for (const item of materialized) {
-      const { target, entry, profile, detail, slug, href } = item;
-      if (!detail) continue;
-      const copy = sourceTitle(target, entry);
-      const menuSnapshot = profile?.menuSnapshot ?? {
-        targetType: target.targetType,
-        targetId: target.id,
-        href: target.href,
-        source: ACTOR,
-      };
-      const isPlaceholder = profile ? isUntouchedPlaceholder(profile) : false;
+  await prisma.$transaction(
+    async (transaction) => {
+      for (const item of materialized) {
+        const { target, entry, profile, detail, slug, href } = item;
+        if (!detail) continue;
+        const copy = sourceTitle(target, entry);
+        const menuSnapshot = profile?.menuSnapshot ?? {
+          targetType: target.targetType,
+          targetId: target.id,
+          href: target.href,
+          source: ACTOR,
+        };
+        const isPlaceholder = profile ? isUntouchedPlaceholder(profile) : false;
 
-      if (!profile) {
-        const createdProfile = await transaction.serviceProfile.create({
-          data: {
-            serviceKey: serviceKeyFor(target),
-            slug,
-            menuItemId: target.targetType === "ITEM" ? target.id : null,
-            menuLinkId: target.targetType === "LINK" ? target.id : null,
-            menuSnapshot: asJson(menuSnapshot),
-            icon: target.icon,
-            origin: ACTOR,
-            titleEn: copy.titleEn,
-            titleBn: copy.titleBn,
-            descriptionEn: copy.descriptionEn,
-            descriptionBn: copy.descriptionBn,
-            detail: asJson(detail),
-            publishedDetail: asJson(detail),
-            status: "PUBLISHED",
-            revision: 1,
-            publishedRevision: 1,
-            publishedAt: now,
-            revisions: {
-              create: {
-                version: 1,
-                kind: "PUBLISHED",
-                snapshot: asJson({
-                  serviceKey: serviceKeyFor(target),
-                  slug,
-                  menuItemId: target.targetType === "ITEM" ? target.id : null,
-                  menuLinkId: target.targetType === "LINK" ? target.id : null,
-                  icon: target.icon,
-                  titleEn: copy.titleEn,
-                  titleBn: copy.titleBn,
-                  descriptionEn: copy.descriptionEn,
-                  descriptionBn: copy.descriptionBn,
-                  detail,
-                }),
-                createdBy: ACTOR,
+        if (!profile) {
+          const createdProfile = await transaction.serviceProfile.create({
+            data: {
+              serviceKey: serviceKeyFor(target),
+              slug,
+              menuItemId: target.targetType === "ITEM" ? target.id : null,
+              menuLinkId: target.targetType === "LINK" ? target.id : null,
+              menuSnapshot: asJson(menuSnapshot),
+              icon: target.icon,
+              origin: ACTOR,
+              titleEn: copy.titleEn,
+              titleBn: copy.titleBn,
+              descriptionEn: copy.descriptionEn,
+              descriptionBn: copy.descriptionBn,
+              detail: asJson(detail),
+              publishedDetail: asJson(detail),
+              status: "PUBLISHED",
+              revision: 1,
+              publishedRevision: 1,
+              publishedAt: now,
+              revisions: {
+                create: {
+                  version: 1,
+                  kind: "PUBLISHED",
+                  snapshot: asJson({
+                    serviceKey: serviceKeyFor(target),
+                    slug,
+                    menuItemId: target.targetType === "ITEM" ? target.id : null,
+                    menuLinkId: target.targetType === "LINK" ? target.id : null,
+                    icon: target.icon,
+                    titleEn: copy.titleEn,
+                    titleBn: copy.titleBn,
+                    descriptionEn: copy.descriptionEn,
+                    descriptionBn: copy.descriptionBn,
+                    detail,
+                  }),
+                  createdBy: ACTOR,
+                },
               },
             },
-          },
-        });
-        byTarget.set(`${target.targetType}:${target.id}`, createdProfile as unknown as ExistingProfile);
-        created += 1;
-      } else if (isPlaceholder) {
-        const nextRevision = profile.revision + 1;
-        await transaction.serviceProfile.update({
-          where: { id: profile.id },
-          data: {
-            slug,
-            menuSnapshot: asJson(menuSnapshot),
-            icon: target.icon,
-            origin: ACTOR,
-            titleEn: copy.titleEn,
-            titleBn: copy.titleBn,
-            descriptionEn: copy.descriptionEn,
-            descriptionBn: copy.descriptionBn,
-            detail: asJson(detail),
-            publishedDetail: asJson(detail),
-            status: "PUBLISHED",
-            revision: nextRevision,
-            publishedRevision: nextRevision,
-            publishedAt: now,
-            revisions: {
-              create: {
-                version: nextRevision,
-                kind: "PUBLISHED",
-                snapshot: asJson({
-                  serviceKey: profile.serviceKey,
-                  slug,
-                  menuItemId: profile.menuItemId,
-                  menuLinkId: profile.menuLinkId,
-                  icon: target.icon,
-                  titleEn: copy.titleEn,
-                  titleBn: copy.titleBn,
-                  descriptionEn: copy.descriptionEn,
-                  descriptionBn: copy.descriptionBn,
-                  detail,
-                }),
-                createdBy: ACTOR,
+          });
+          byTarget.set(
+            `${target.targetType}:${target.id}`,
+            createdProfile as unknown as ExistingProfile,
+          );
+          created += 1;
+        } else if (isPlaceholder) {
+          const nextRevision = profile.revision + 1;
+          await transaction.serviceProfile.update({
+            where: { id: profile.id },
+            data: {
+              slug,
+              menuSnapshot: asJson(menuSnapshot),
+              icon: target.icon,
+              origin: ACTOR,
+              titleEn: copy.titleEn,
+              titleBn: copy.titleBn,
+              descriptionEn: copy.descriptionEn,
+              descriptionBn: copy.descriptionBn,
+              detail: asJson(detail),
+              publishedDetail: asJson(detail),
+              status: "PUBLISHED",
+              revision: nextRevision,
+              publishedRevision: nextRevision,
+              publishedAt: now,
+              revisions: {
+                create: {
+                  version: nextRevision,
+                  kind: "PUBLISHED",
+                  snapshot: asJson({
+                    serviceKey: profile.serviceKey,
+                    slug,
+                    menuItemId: profile.menuItemId,
+                    menuLinkId: profile.menuLinkId,
+                    icon: target.icon,
+                    titleEn: copy.titleEn,
+                    titleBn: copy.titleBn,
+                    descriptionEn: copy.descriptionEn,
+                    descriptionBn: copy.descriptionBn,
+                    detail,
+                  }),
+                  createdBy: ACTOR,
+                },
               },
             },
-          },
-        });
-        upgraded += 1;
-      } else {
-        protectedExisting += 1;
-      }
-
-      if (isContactOnlyHref(target.href) && href !== target.href) {
-        if (target.targetType === "ITEM") {
-          await transaction.menuItem.update({ where: { id: target.id }, data: { href } });
+          });
+          upgraded += 1;
         } else {
-          await transaction.menuLink.update({ where: { id: target.id }, data: { href } });
+          const needsTemplateUpdate = shouldUpdateTemplate(
+            profile,
+            detail.overviewHtml,
+          );
+          if (needsTemplateUpdate && detail.overviewHtml) {
+            const currentDetail =
+              (profile.detail as Record<string, unknown> | null) ?? {};
+            const currentPublished =
+              (profile.publishedDetail as Record<string, unknown> | null) ?? {};
+            const updatedDetail = {
+              ...currentDetail,
+              overviewHtml: detail.overviewHtml,
+              contentLinkLabel: "",
+              contentLinkHref: "",
+            };
+            const updatedPublishedDetail = {
+              ...currentPublished,
+              overviewHtml: detail.overviewHtml,
+              contentLinkLabel: "",
+              contentLinkHref: "",
+            };
+            await transaction.serviceProfile.update({
+              where: { id: profile.id },
+              data: {
+                detail: asJson(updatedDetail),
+                publishedDetail: asJson(updatedPublishedDetail),
+              },
+            });
+            templatesUpdated += 1;
+          } else {
+            protectedExisting += 1;
+          }
         }
-        menuLinksUpdated += 1;
-      }
-    }
-  }, { timeout: 30000 });
 
-  console.log(JSON.stringify({ created, upgraded, protectedExisting, menuLinksUpdated }, null, 2));
+        if (isContactOnlyHref(target.href) && href !== target.href) {
+          if (target.targetType === "ITEM") {
+            await transaction.menuItem.update({
+              where: { id: target.id },
+              data: { href },
+            });
+          } else {
+            await transaction.menuLink.update({
+              where: { id: target.id },
+              data: { href },
+            });
+          }
+          menuLinksUpdated += 1;
+        }
+      }
+    },
+    { timeout: 30000 },
+  );
+
+  console.log(
+    JSON.stringify(
+      {
+        created,
+        upgraded,
+        templatesUpdated,
+        protectedExisting,
+        menuLinksUpdated,
+      },
+      null,
+      2,
+    ),
+  );
 }
 
 main()

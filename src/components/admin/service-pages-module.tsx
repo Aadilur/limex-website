@@ -148,14 +148,6 @@ function legacyOverviewHtml(detail: ServiceDetailContent) {
   if (detail.contentDescriptionHtml?.trim())
     blocks.push(detail.contentDescriptionHtml.trim());
   else addParagraph(detail.contentDescription);
-  if (detail.contentLinkLabel.trim()) {
-    const href = escapeHtml(
-      detail.contentLinkHref.trim() || "#service-contact",
-    );
-    blocks.push(
-      `<p><a href="${href}">${escapeHtml(detail.contentLinkLabel.trim())}</a></p>`,
-    );
-  }
 
   if (detail.benefits.length) {
     blocks.push(
@@ -804,8 +796,8 @@ function DetailEditor({
             <div>
               <p className={fieldLabelClass}>Public page body</p>
               <p className="mt-1 text-[11px] text-[#948d84]">
-                Use headings, lists, links and images to explain the full
-                service journey.
+                Use headings, lists, formatted text and custom styles to explain
+                the full service journey without unnecessary links.
               </p>
             </div>
             <span className="rounded-full bg-[#f3f0eb] px-2.5 py-1 text-[10px] font-bold text-[#777168]">

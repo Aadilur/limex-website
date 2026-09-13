@@ -354,20 +354,6 @@ export function ServiceOverviewSection({
                   fallback={service.contentDescription}
                   className={`${richTextClass} mt-cluster max-w-[680px] text-body-sm`}
                 />
-                {service.contentLinkLabel ? (
-                  <a
-                    className="mt-section-gap-lg inline-flex items-center gap-cluster-sm text-button font-bold text-ink transition-colors hover:text-pink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3"
-                    href={service.contentLinkHref || "#pricing"}
-                    {...externalLinkProps(
-                      service.contentLinkHref || "#pricing",
-                    )}
-                  >
-                    {service.contentLinkLabel}{" "}
-                    <span className="text-pink" aria-hidden="true">
-                      ↗
-                    </span>
-                  </a>
-                ) : null}
               </article>
 
               {service.benefits?.length ? (
