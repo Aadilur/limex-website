@@ -274,29 +274,50 @@ test("service page overview preserves custom HTML with scoped CSS and handles la
     </div>
   `;
   const sanitized = sanitizeBlogContent(serviceHtml);
-  assert.match(sanitized.css, /\.blog-rich-text \.service-flow-grid\{display: grid/);
-  assert.match(sanitized.css, /\.blog-rich-text \.service-flow-card\{background: #f7fbff/);
+  assert.match(
+    sanitized.css,
+    /\.blog-rich-text \.service-flow-grid\{display: grid/,
+  );
+  assert.match(
+    sanitized.css,
+    /\.blog-rich-text \.service-flow-card\{background: #f7fbff/,
+  );
   assert.match(sanitized.html, /class="service-flow-grid"/);
   assert.match(sanitized.html, /<h3>Step 1: Consultation<\/h3>/);
 
   // Verify service routes allow up to 300,000 characters for overviewHtml
   const fs = await import("node:fs/promises");
   const routesContent = await fs.readFile(
-    new URL("../server/modules/services/interface/http/service.routes.ts", import.meta.url),
+    new URL(
+      "../server/modules/services/interface/http/service.routes.ts",
+      import.meta.url,
+    ),
     "utf8",
   );
-  assert.match(routesContent, /overviewHtml:\s*z\.string\(\)\.trim\(\)\.max\(300000\)\.optional\(\)/);
+  assert.match(
+    routesContent,
+    /overviewHtml:\s*z\.string\(\)\.trim\(\)\.max\(300000\)\.optional\(\)/,
+  );
 
   // Verify service repository checks overview text without requiring legacy overviewTitle
   const repoContent = await fs.readFile(
-    new URL("../server/modules/services/infrastructure/prisma-service.repository.ts", import.meta.url),
+    new URL(
+      "../server/modules/services/infrastructure/prisma-service.repository.ts",
+      import.meta.url,
+    ),
     "utf8",
   );
-  assert.match(repoContent, /const hasOverview = detail\.overviewHtml !== undefined/);
+  assert.match(
+    repoContent,
+    /const hasOverview = detail\.overviewHtml !== undefined/,
+  );
 
   // Verify service page sections share blogRichTextClass for unified styling
   const sectionsContent = await fs.readFile(
-    new URL("../src/components/limex/service-page-sections.tsx", import.meta.url),
+    new URL(
+      "../src/components/limex/service-page-sections.tsx",
+      import.meta.url,
+    ),
     "utf8",
   );
   assert.match(sectionsContent, /const richTextClass = blogRichTextClass;/);

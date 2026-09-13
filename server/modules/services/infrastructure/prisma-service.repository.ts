@@ -55,7 +55,10 @@ function snapshotFromRow(row: ServiceProfileRow, detail: unknown) {
   };
 }
 
-function currentStatus(status: string, hasDetail: boolean): ServiceProfileStatus {
+function currentStatus(
+  status: string,
+  hasDetail: boolean,
+): ServiceProfileStatus {
   if (status === "PUBLISHED") return "DRAFT";
   return hasDetail ? "DRAFT" : "LINK_ONLY";
 }
@@ -75,7 +78,18 @@ export class PrismaServiceRepository implements ServiceRepository {
               include: {
                 links: {
                   orderBy: { sortOrder: "asc" },
-                  include: { serviceProfile: { select: { slug: true, publishedDetail: true, titleEn: true, titleBn: true, descriptionEn: true, descriptionBn: true } } },
+                  include: {
+                    serviceProfile: {
+                      select: {
+                        slug: true,
+                        publishedDetail: true,
+                        titleEn: true,
+                        titleBn: true,
+                        descriptionEn: true,
+                        descriptionBn: true,
+                      },
+                    },
+                  },
                 },
               },
             },
@@ -86,12 +100,18 @@ export class PrismaServiceRepository implements ServiceRepository {
   }
 
   public async findProfiles(): Promise<ServiceProfileRow[]> {
-    const rows = await this.client.serviceProfile.findMany({ orderBy: { updatedAt: "desc" } });
+    const rows = await this.client.serviceProfile.findMany({
+      orderBy: { updatedAt: "desc" },
+    });
     return rows.map(toRow);
   }
 
-  public async findProfileByMenuItemId(menuItemId: string): Promise<ServiceProfileRow | null> {
-    const row = await this.client.serviceProfile.findUnique({ where: { menuItemId } });
+  public async findProfileByMenuItemId(
+    menuItemId: string,
+  ): Promise<ServiceProfileRow | null> {
+    const row = await this.client.serviceProfile.findUnique({
+      where: { menuItemId },
+    });
     return row ? toRow(row) : null;
   }
 
@@ -100,12 +120,19 @@ export class PrismaServiceRepository implements ServiceRepository {
     return row ? toRow(row) : null;
   }
 
-  public async findProfileBySlug(slug: string): Promise<ServiceProfileRow | null> {
-    const row = await this.client.serviceProfile.findUnique({ where: { slug } });
+  public async findProfileBySlug(
+    slug: string,
+  ): Promise<ServiceProfileRow | null> {
+    const row = await this.client.serviceProfile.findUnique({
+      where: { slug },
+    });
     return row ? toRow(row) : null;
   }
 
-  public async createProfile(input: ServiceProfileInput, updatedBy: string): Promise<ServiceProfileRow> {
+  public async createProfile(
+    input: ServiceProfileInput,
+    updatedBy: string,
+  ): Promise<ServiceProfileRow> {
     return this.client.$transaction(async (transaction) => {
       const detail = input.detail ? normalizeServiceDetail(input.detail) : null;
       const serviceKey = input.serviceKey?.trim() || `service:${input.slug}`;
@@ -130,7 +157,9 @@ export class PrismaServiceRepository implements ServiceRepository {
             create: {
               version: 1,
               kind: "DRAFT",
-              snapshot: asJson(snapshotFromInput({ ...input, serviceKey, detail })),
+              snapshot: asJson(
+                snapshotFromInput({ ...input, serviceKey, detail }),
+              ),
               createdBy: updatedBy,
             },
           },
@@ -140,13 +169,23 @@ export class PrismaServiceRepository implements ServiceRepository {
     });
   }
 
-  public async updateProfile(id: string, input: ServiceProfileInput, expectedRevision: number, updatedBy: string): Promise<ServiceProfileRow> {
+  public async updateProfile(
+    id: string,
+    input: ServiceProfileInput,
+    expectedRevision: number,
+    updatedBy: string,
+  ): Promise<ServiceProfileRow> {
     return this.client.$transaction(async (transaction) => {
-      const current = await transaction.serviceProfile.findUnique({ where: { id } });
+      const current = await transaction.serviceProfile.findUnique({
+        where: { id },
+      });
       if (!current) throw new ServiceNotFoundError();
-      if (expectedRevision !== current.revision) throw new ServiceConflictError();
+      if (expectedRevision !== current.revision)
+        throw new ServiceConflictError();
       if (current?.detail && !input.detail) {
-        throw new ServiceSafetyError("The detail content was missing from this save, so the existing service page was kept safe.");
+        throw new ServiceSafetyError(
+          "The detail content was missing from this save, so the existing service page was kept safe.",
+        );
       }
 
       const nextRevision = current.revision + 1;
@@ -161,9 +200,14 @@ export class PrismaServiceRepository implements ServiceRepository {
           titleBn: input.titleBn,
           descriptionEn: input.descriptionEn,
           descriptionBn: input.descriptionBn,
-          ...(input.mediaAssetId !== undefined ? { mediaAssetId: input.mediaAssetId ?? null } : {}),
+          ...(input.mediaAssetId !== undefined
+            ? { mediaAssetId: input.mediaAssetId ?? null }
+            : {}),
           ...(detail ? { detail: asJson(detail) } : {}),
-          status: currentStatus(current.status, Boolean(detail ?? current.detail)),
+          status: currentStatus(
+            current.status,
+            Boolean(detail ?? current.detail),
+          ),
           revision: nextRevision,
         },
       });
@@ -189,69 +233,145 @@ export class PrismaServiceRepository implements ServiceRepository {
           profileId: id,
           version: nextRevision,
           kind: "DRAFT",
-          snapshot: asJson(snapshotFromInput({ ...input, serviceKey: input.serviceKey ?? current.serviceKey, detail })),
+          snapshot: asJson(
+            snapshotFromInput({
+              ...input,
+              serviceKey: input.serviceKey ?? current.serviceKey,
+              detail,
+            }),
+          ),
           createdBy: updatedBy,
         },
       });
 
-      const saved = await transaction.serviceProfile.findUnique({ where: { id } });
+      const saved = await transaction.serviceProfile.findUnique({
+        where: { id },
+      });
       if (!saved) throw new ServiceNotFoundError();
       return toRow(saved);
     });
   }
 
-  public async assignProfile(id: string, target: ServiceMenuAssignment | null, expectedRevision: number, updatedBy: string): Promise<ServiceProfileRow> {
+  public async assignProfile(
+    id: string,
+    target: ServiceMenuAssignment | null,
+    expectedRevision: number,
+    updatedBy: string,
+  ): Promise<ServiceProfileRow> {
     return this.client.$transaction(async (transaction) => {
-      const current = await transaction.serviceProfile.findUnique({ where: { id } });
+      const current = await transaction.serviceProfile.findUnique({
+        where: { id },
+      });
       if (!current) throw new ServiceNotFoundError();
-      if (current.revision !== expectedRevision) throw new ServiceConflictError("This service changed in another session. Reload before changing its menu assignment.");
+      if (current.revision !== expectedRevision)
+        throw new ServiceConflictError(
+          "This service changed in another session. Reload before changing its menu assignment.",
+        );
 
       const menuItemId = target?.targetType === "ITEM" ? target.targetId : null;
       const menuLinkId = target?.targetType === "LINK" ? target.targetId : null;
-      const sameTarget = current.menuItemId === menuItemId && current.menuLinkId === menuLinkId;
+      const sameTarget =
+        current.menuItemId === menuItemId && current.menuLinkId === menuLinkId;
 
       if (!sameTarget && current.menuItemId && current.menuSnapshot) {
-        const snapshot = current.menuSnapshot as { targetType?: string; targetId?: string; href?: string };
-        if (snapshot.targetType === "ITEM" && snapshot.targetId === current.menuItemId) {
-          const oldMenuItem = await transaction.menuItem.findUnique({ where: { id: current.menuItemId } });
+        const snapshot = current.menuSnapshot as {
+          targetType?: string;
+          targetId?: string;
+          href?: string;
+        };
+        if (
+          snapshot.targetType === "ITEM" &&
+          snapshot.targetId === current.menuItemId
+        ) {
+          const oldMenuItem = await transaction.menuItem.findUnique({
+            where: { id: current.menuItemId },
+          });
           if (oldMenuItem && oldMenuItem.href === `/services/${current.slug}`) {
-            await transaction.menuItem.update({ where: { id: oldMenuItem.id }, data: { href: snapshot.href ?? oldMenuItem.href } });
+            await transaction.menuItem.update({
+              where: { id: oldMenuItem.id },
+              data: { href: snapshot.href ?? oldMenuItem.href },
+            });
           }
         }
       }
       if (!sameTarget && current.menuLinkId && current.menuSnapshot) {
-        const snapshot = current.menuSnapshot as { targetType?: string; targetId?: string; href?: string };
-        if (snapshot.targetType === "LINK" && snapshot.targetId === current.menuLinkId) {
-          const oldMenuLink = await transaction.menuLink.findUnique({ where: { id: current.menuLinkId } });
+        const snapshot = current.menuSnapshot as {
+          targetType?: string;
+          targetId?: string;
+          href?: string;
+        };
+        if (
+          snapshot.targetType === "LINK" &&
+          snapshot.targetId === current.menuLinkId
+        ) {
+          const oldMenuLink = await transaction.menuLink.findUnique({
+            where: { id: current.menuLinkId },
+          });
           if (oldMenuLink && oldMenuLink.href === `/services/${current.slug}`) {
-            await transaction.menuLink.update({ where: { id: oldMenuLink.id }, data: { href: snapshot.href ?? oldMenuLink.href } });
+            await transaction.menuLink.update({
+              where: { id: oldMenuLink.id },
+              data: { href: snapshot.href ?? oldMenuLink.href },
+            });
           }
         }
       }
 
-      let menuSnapshot: Prisma.InputJsonValue | typeof Prisma.JsonNull = sameTarget && current.menuSnapshot ? asJson(current.menuSnapshot) : Prisma.JsonNull;
+      let menuSnapshot: Prisma.InputJsonValue | typeof Prisma.JsonNull =
+        sameTarget && current.menuSnapshot
+          ? asJson(current.menuSnapshot)
+          : Prisma.JsonNull;
       if (menuItemId) {
-        const menuItem = await transaction.menuItem.findUnique({ where: { id: menuItemId } });
-        if (!menuItem) throw new ServiceNotFoundError("That menu entry no longer exists. Refresh the menu list and try again.");
-        menuSnapshot = { targetType: "ITEM", targetId: menuItem.id, href: menuItem.href };
-        const assigned = await transaction.serviceProfile.findUnique({ where: { menuItemId } });
+        const menuItem = await transaction.menuItem.findUnique({
+          where: { id: menuItemId },
+        });
+        if (!menuItem)
+          throw new ServiceNotFoundError(
+            "That menu entry no longer exists. Refresh the menu list and try again.",
+          );
+        menuSnapshot = {
+          targetType: "ITEM",
+          targetId: menuItem.id,
+          href: menuItem.href,
+        };
+        const assigned = await transaction.serviceProfile.findUnique({
+          where: { menuItemId },
+        });
         if (assigned && assigned.id !== id) {
           const legacyAssigned = isLegacySeedProfile(toRow(assigned));
           if (!legacyAssigned) {
-            throw new ServiceConflictError("That menu entry is already assigned to another service. Detach it there before reassigning it.");
+            throw new ServiceConflictError(
+              "That menu entry is already assigned to another service. Detach it there before reassigning it.",
+            );
           }
           // Older deployments may not have applied the standalone-service
           // migration yet. Release only an untouched placeholder here; never
           // replace a profile that contains content or revision history.
-          await transaction.serviceProfile.update({ where: { id: assigned.id }, data: { menuItemId: null, origin: "SEED" } });
+          await transaction.serviceProfile.update({
+            where: { id: assigned.id },
+            data: { menuItemId: null, origin: "SEED" },
+          });
         }
       }
       if (menuLinkId) {
-        const menuLink = await transaction.menuLink.findUnique({ where: { id: menuLinkId } });
-        if (!menuLink) throw new ServiceNotFoundError("That menu link no longer exists. Refresh the menu list and try again.");
-        menuSnapshot = { targetType: "LINK", targetId: menuLink.id, href: menuLink.href };
-        const assigned = await transaction.serviceProfile.findUnique({ where: { menuLinkId } });
-        if (assigned && assigned.id !== id) throw new ServiceConflictError("That menu link is already assigned to another service. Detach it there before reassigning it.");
+        const menuLink = await transaction.menuLink.findUnique({
+          where: { id: menuLinkId },
+        });
+        if (!menuLink)
+          throw new ServiceNotFoundError(
+            "That menu link no longer exists. Refresh the menu list and try again.",
+          );
+        menuSnapshot = {
+          targetType: "LINK",
+          targetId: menuLink.id,
+          href: menuLink.href,
+        };
+        const assigned = await transaction.serviceProfile.findUnique({
+          where: { menuLinkId },
+        });
+        if (assigned && assigned.id !== id)
+          throw new ServiceConflictError(
+            "That menu link is already assigned to another service. Detach it there before reassigning it.",
+          );
       }
 
       const nextRevision = current.revision + 1;
@@ -259,7 +379,10 @@ export class PrismaServiceRepository implements ServiceRepository {
         where: { id, revision: expectedRevision },
         data: { menuItemId, menuLinkId, menuSnapshot, revision: nextRevision },
       });
-      if (!result.count) throw new ServiceConflictError("This service changed in another session. Reload before changing its menu assignment.");
+      if (!result.count)
+        throw new ServiceConflictError(
+          "This service changed in another session. Reload before changing its menu assignment.",
+        );
 
       if (menuItemId) {
         await transaction.menuItem.update({
@@ -273,7 +396,13 @@ export class PrismaServiceRepository implements ServiceRepository {
         });
       }
 
-      const row = toRow({ ...current, menuItemId, menuLinkId, menuSnapshot, revision: nextRevision });
+      const row = toRow({
+        ...current,
+        menuItemId,
+        menuLinkId,
+        menuSnapshot,
+        revision: nextRevision,
+      });
       await transaction.serviceProfileRevision.create({
         data: {
           profileId: id,
@@ -284,32 +413,58 @@ export class PrismaServiceRepository implements ServiceRepository {
         },
       });
 
-      const saved = await transaction.serviceProfile.findUnique({ where: { id } });
+      const saved = await transaction.serviceProfile.findUnique({
+        where: { id },
+      });
       if (!saved) throw new ServiceNotFoundError();
       return toRow(saved);
     });
   }
 
-  public async publishProfile(id: string, expectedRevision: number, updatedBy: string): Promise<ServiceProfileRow> {
+  public async publishProfile(
+    id: string,
+    expectedRevision: number,
+    updatedBy: string,
+  ): Promise<ServiceProfileRow> {
     return this.client.$transaction(async (transaction) => {
-      const current = await transaction.serviceProfile.findUnique({ where: { id } });
+      const current = await transaction.serviceProfile.findUnique({
+        where: { id },
+      });
       if (!current) throw new ServiceNotFoundError();
-      if (current.revision !== expectedRevision) throw new ServiceConflictError("This service changed in another session. Reload before publishing.");
-      if (!current.detail) throw new ServiceSafetyError("Save the service detail content before publishing this page.");
+      if (current.revision !== expectedRevision)
+        throw new ServiceConflictError(
+          "This service changed in another session. Reload before publishing.",
+        );
+      if (!current.detail)
+        throw new ServiceSafetyError(
+          "Save the service detail content before publishing this page.",
+        );
 
       const detail = normalizeServiceDetail(current.detail);
       const publishedDetail = {
         ...detail,
-        mediaUrl: current.mediaAssetId ? "/api/media/" + current.mediaAssetId : detail.mediaUrl,
+        mediaUrl: current.mediaAssetId
+          ? "/api/media/" + current.mediaAssetId
+          : detail.mediaUrl,
       };
-      const overviewText = detail.overviewHtml !== undefined
-        ? htmlToPlainText(detail.overviewHtml)
-        : detail.overviewDescriptionHtml ? htmlToPlainText(detail.overviewDescriptionHtml) : detail.overviewDescription.trim();
-      const hasOverview = detail.overviewHtml !== undefined
-        ? Boolean(overviewText)
-        : Boolean(detail.overviewTitle.trim() && overviewText);
-      if (!current.titleEn.trim() || !current.descriptionEn.trim() || !hasOverview) {
-        throw new ServiceSafetyError("Add a service title, summary and overview before publishing.");
+      const overviewText =
+        detail.overviewHtml !== undefined
+          ? htmlToPlainText(detail.overviewHtml)
+          : detail.overviewDescriptionHtml
+            ? htmlToPlainText(detail.overviewDescriptionHtml)
+            : detail.overviewDescription.trim();
+      const hasOverview =
+        detail.overviewHtml !== undefined
+          ? Boolean(overviewText)
+          : Boolean(detail.overviewTitle.trim() && overviewText);
+      if (
+        !current.titleEn.trim() ||
+        !current.descriptionEn.trim() ||
+        !hasOverview
+      ) {
+        throw new ServiceSafetyError(
+          "Add a service title, summary and overview before publishing.",
+        );
       }
 
       const nextRevision = current.revision + 1;
@@ -325,29 +480,58 @@ export class PrismaServiceRepository implements ServiceRepository {
           revision: nextRevision,
         },
       });
-      if (!result.count) throw new ServiceConflictError("This service changed in another session. Reload before publishing.");
+      if (!result.count)
+        throw new ServiceConflictError(
+          "This service changed in another session. Reload before publishing.",
+        );
 
       await transaction.serviceProfileRevision.create({
         data: {
           profileId: id,
           version: nextRevision,
           kind: "PUBLISHED",
-          snapshot: asJson(snapshotFromInput({ serviceKey: current.serviceKey, slug: current.slug, label: "", description: "", href: "", icon: "", titleEn: current.titleEn, titleBn: current.titleBn, descriptionEn: current.descriptionEn, descriptionBn: current.descriptionBn, mediaAssetId: current.mediaAssetId, detail })),
+          snapshot: asJson(
+            snapshotFromInput({
+              serviceKey: current.serviceKey,
+              slug: current.slug,
+              label: "",
+              description: "",
+              href: "",
+              icon: "",
+              titleEn: current.titleEn,
+              titleBn: current.titleBn,
+              descriptionEn: current.descriptionEn,
+              descriptionBn: current.descriptionBn,
+              mediaAssetId: current.mediaAssetId,
+              detail,
+            }),
+          ),
           createdBy: updatedBy,
         },
       });
 
-      const saved = await transaction.serviceProfile.findUnique({ where: { id } });
+      const saved = await transaction.serviceProfile.findUnique({
+        where: { id },
+      });
       if (!saved) throw new ServiceNotFoundError();
       return toRow(saved);
     });
   }
 
-  public async unpublishProfile(id: string, expectedRevision: number, updatedBy: string): Promise<ServiceProfileRow> {
+  public async unpublishProfile(
+    id: string,
+    expectedRevision: number,
+    updatedBy: string,
+  ): Promise<ServiceProfileRow> {
     return this.client.$transaction(async (transaction) => {
-      const current = await transaction.serviceProfile.findUnique({ where: { id } });
+      const current = await transaction.serviceProfile.findUnique({
+        where: { id },
+      });
       if (!current) throw new ServiceNotFoundError();
-      if (current.revision !== expectedRevision) throw new ServiceConflictError("This service changed in another session. Reload before unpublishing.");
+      if (current.revision !== expectedRevision)
+        throw new ServiceConflictError(
+          "This service changed in another session. Reload before unpublishing.",
+        );
 
       const nextRevision = current.revision + 1;
       const result = await transaction.serviceProfile.updateMany({
@@ -359,7 +543,10 @@ export class PrismaServiceRepository implements ServiceRepository {
           revision: nextRevision,
         },
       });
-      if (!result.count) throw new ServiceConflictError("This service changed in another session. Reload before unpublishing.");
+      if (!result.count)
+        throw new ServiceConflictError(
+          "This service changed in another session. Reload before unpublishing.",
+        );
 
       await transaction.serviceProfileRevision.create({
         data: {
@@ -371,7 +558,9 @@ export class PrismaServiceRepository implements ServiceRepository {
         },
       });
 
-      const saved = await transaction.serviceProfile.findUnique({ where: { id } });
+      const saved = await transaction.serviceProfile.findUnique({
+        where: { id },
+      });
       if (!saved) throw new ServiceNotFoundError();
       return toRow(saved);
     });

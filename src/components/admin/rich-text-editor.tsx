@@ -365,8 +365,7 @@ function LinkPanel({
         Cancel
       </button>
       <p className="basis-full text-[10px] text-[#9b958c]" role="status">
-        Select text, then add a link. External links open in a
-        new tab.
+        Select text, then add a link. External links open in a new tab.
       </p>
     </div>
   );
