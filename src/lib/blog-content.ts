@@ -6,7 +6,7 @@ export type BlogLocale = (typeof blogLocales)[number];
 const allowedTags = new Set([
   "p", "br", "h2", "h3", "h4", "strong", "b", "em", "i", "u", "s",
   "ul", "ol", "li", "blockquote", "a", "img", "hr", "table", "thead",
-  "tbody", "tr", "th", "td", "figure", "figcaption", "div", "section", "span", "style",
+  "tbody", "tr", "th", "td", "figure", "figcaption", "main", "article", "header", "footer", "nav", "aside", "div", "section", "span", "style",
 ]);
 const voidTags = new Set(["br", "hr", "img"]);
 const dangerousBlocks = /<(script|iframe|object|embed|svg|math|template|textarea|input|button|select|option|form|meta|link)[^>]*>[\s\S]*?<\/\1\s*>/gi;

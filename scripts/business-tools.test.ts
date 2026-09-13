@@ -31,6 +31,14 @@ test("rich text separates scoped CSS and preserves editor-defined classes", () =
   assert.doesNotMatch(content.html, /<style/i);
   assert.match(content.html, /class="guide-layout custom-card"/);
 });
+test("rich text keeps safe semantic wrappers used by pasted styled articles", () => {
+  const source = "<style>.limex-business-guide { max-width: 980px; } .limex-business-guide .bg-hero { padding: 56px; } @media (max-width: 600px) { .limex-business-guide .bg-hero { padding: 20px; } }</style><article class=\"limex-business-guide\"><header class=\"bg-hero\"><h2>Business setup guide</h2></header></article>";
+  const content = sanitizeBlogContent(source);
+  assert.match(content.html, /^<article class=\"limex-business-guide\"><header class=\"bg-hero\">/);
+  assert.match(content.css, /\.blog-rich-text \.limex-business-guide\{max-width: 980px\}/);
+  assert.match(content.css, /\.blog-rich-text \.limex-business-guide \.bg-hero\{padding: 56px\}/);
+  assert.match(content.css, /@media \(max-width: 600px\)\{\.blog-rich-text \.limex-business-guide \.bg-hero\{padding: 20px\}\}/);
+});
 test("catalogue contains seven distinct calculators and six builders", () => {
   assert.equal(businessTools.filter((tool) => tool.group === "calculator").length, 7); assert.equal(businessTools.filter((tool) => tool.group === "builder").length, 6); assert.equal(new Set(businessTools.map((tool) => tool.slug)).size, 13);
 });
