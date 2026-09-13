@@ -387,7 +387,7 @@ export function BlogDetailContent({ article, relatedArticles, locale = "en" }: {
       </section>
 
       <section className="bg-page px-0 py-6 lg:px-page-gutter-lg lg:py-10" aria-labelledby="article-content-label">
-        <p className="text-[11px] font-semibold tracking-[0.04em] text-pink lg:text-meta" id="article-content-label">04 <span className="px-1">/</span> ARTICLE CONTENT</p>
+        <p className="text-[11px] font-semibold tracking-[0.04em] text-pink lg:text-meta" id="article-content-label">01 <span className="px-1">/</span> ARTICLE CONTENT</p>
         <div className="mt-6 grid gap-6 lg:mt-section-gap-lg lg:grid-cols-[minmax(0,820px)_336px] lg:gap-section-gap-lg">
           <article className="min-w-0">
             <BlogCover article={article} variant="hero" />
@@ -439,7 +439,7 @@ export function BlogDetailContent({ article, relatedArticles, locale = "en" }: {
       {visibleRelatedArticles.length ? <section className="bg-page px-0 py-6 lg:px-page-gutter-lg lg:py-10" aria-labelledby="more-practical-reads-title">
         <div className="flex flex-col gap-cluster-sm lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-meta font-semibold text-pink">05 <span className="px-1">/</span> MORE TO READ</p>
+            <p className="text-meta font-semibold text-pink">02 <span className="px-1">/</span> MORE TO READ</p>
             <h2 className="mt-cluster-sm font-brand text-section-title-mobile text-ink lg:text-section-title" id="more-practical-reads-title">More practical reads</h2>
             <p className="mt-cluster-sm text-body-sm text-muted lg:text-body">Keep exploring the journal for your next business decision.</p>
           </div>

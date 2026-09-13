@@ -77,14 +77,35 @@ export function VideoReelsSection({ content = defaultLandingContent.testimonials
           return (
             <article className={`group relative min-h-[480px] min-w-[min(306px,calc(100vw-56px))] basis-[min(306px,calc(100vw-56px))] snap-start overflow-hidden rounded-3xl border ${selected ? "border-white/90 -translate-y-1" : "border-white/35"} bg-[#293a40] transition-transform duration-200 lg:min-h-[535px] lg:min-w-[306px] lg:basis-[306px] hover:-translate-y-1`.trim()} key={reel.id}>
               <img className={`absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-[1.04] ${selected ? "scale-[1.04]" : ""}`.trim()} src={reel.imageUrl || (videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : "/figma/reel-1.png")} alt="" loading="lazy" decoding="async" />
-              {selected && videoId ? <iframe className="absolute inset-0 z-[5] size-full" src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&playsinline=1`} title={reel.title} loading="lazy" referrerPolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen /> : null}
-              <div className="absolute inset-x-0 bottom-0 flex min-h-24 flex-col justify-end gap-1.5 bg-gradient-to-b from-transparent to-[rgba(18,20,33,0.88)] px-5 pb-[18px] pt-[54px] text-[#ffebd7] drop-shadow-[0_1px_12px_rgba(18,20,33,0.32)]">
+              {selected && videoId ? (
+                <>
+                  <iframe className="absolute inset-0 z-[5] size-full" src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&playsinline=1`} title={reel.title} loading="lazy" referrerPolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
+                  <button
+                    className="absolute right-3.5 top-3.5 z-20 grid size-9 place-items-center rounded-full border border-white/20 bg-[#071b3d]/80 text-white backdrop-blur-[10px] transition-all duration-200 hover:scale-105 hover:bg-[#071b3d] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-white/70 focus-visible:outline-offset-2"
+                    type="button"
+                    aria-label={`Close ${reel.title} video`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setActiveReel(null);
+                    }}
+                  >
+                    <svg className="size-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M5 5l10 10M15 5L5 15" />
+                    </svg>
+                  </button>
+                </>
+              ) : null}
+              <div className={`absolute inset-x-0 bottom-0 flex min-h-24 flex-col justify-end gap-1.5 bg-gradient-to-b from-transparent to-[rgba(18,20,33,0.88)] px-5 pb-[18px] pt-[54px] text-[#ffebd7] drop-shadow-[0_1px_12px_rgba(18,20,33,0.32)] transition-opacity duration-300 ${selected ? "pointer-events-none z-10 opacity-0 group-hover:opacity-100" : ""}`.trim()}>
                 <h3 className="max-w-[250px] text-card-title">{reel.title}</h3>
                 <p className="text-micro">{reel.subtitle}</p>
               </div>
               {videoId ? (
                 <button
-                  className="absolute left-1/2 top-1/2 z-10 grid size-[144px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-0 bg-transparent transition-transform duration-200 hover:scale-[1.04] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2 sm:size-[176px]"
+                  className={`absolute left-1/2 top-1/2 z-10 grid size-[144px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-0 bg-transparent transition-[transform,opacity] duration-300 hover:scale-[1.04] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2 sm:size-[176px] ${
+                    selected
+                      ? "pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100"
+                      : "opacity-100 pointer-events-auto"
+                  }`.trim()}
                   type="button"
                   aria-label={`${selected ? "Pause" : "Play"} ${reel.title}`}
                   aria-pressed={selected}

@@ -203,6 +203,50 @@ test("blog rich text styles lists via ul and ol without forcing duplicate marker
   assert.match(sanitized.html, /<li>First point<\/li>/);
 });
 
+test("blog details page orders sections sequentially starting from 01", async () => {
+  const fs = await import("node:fs/promises");
+  const blogSectionsContent = await fs.readFile(
+    new URL("../src/components/limex/blog-sections.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(
+    blogSectionsContent,
+    /01 <span className="px-1">\/<\/span> ARTICLE CONTENT/,
+  );
+  assert.match(
+    blogSectionsContent,
+    /02 <span className="px-1">\/<\/span> MORE TO READ/,
+  );
+  assert.doesNotMatch(
+    blogSectionsContent,
+    /04 <span className="px-1">\/<\/span> ARTICLE CONTENT/,
+  );
+  assert.doesNotMatch(
+    blogSectionsContent,
+    /05 <span className="px-1">\/<\/span> MORE TO READ/,
+  );
+});
+
+test("home page video reels hide play button and text while playing until hovered", async () => {
+  const fs = await import("node:fs/promises");
+  const mediaSectionsContent = await fs.readFile(
+    new URL("../src/components/limex/media-sections.tsx", import.meta.url),
+    "utf8",
+  );
+  // Button hides when playing, shows on hover
+  assert.match(
+    mediaSectionsContent,
+    /selected\s*\?\s*"pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100"/,
+  );
+  // Text overlay hides when playing
+  assert.match(
+    mediaSectionsContent,
+    /selected\s*\?\s*"pointer-events-none z-10 opacity-0 group-hover:opacity-100"/,
+  );
+  // Close button exists to dismiss active video
+  assert.match(mediaSectionsContent, /aria-label=\{`Close \$\{reel\.title\} video`\}/);
+});
+
 test("catalogue contains seven distinct calculators and six builders", () => {
   assert.equal(
     businessTools.filter((tool) => tool.group === "calculator").length,
