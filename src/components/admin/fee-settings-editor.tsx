@@ -115,12 +115,11 @@ export function FeeSettingsEditor({ settings, busy, slug, onSlugChange, updateSe
           </label>
         </div>
 
-        {slug === "rjsc" ? <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-[13px] bg-[#f4f7f1] px-4 py-3 text-[11px] leading-5 text-[#63705f]">
-          <span>Private and one-person company registration uses the shared capital-based RJSC schedule.</span>
-          <button className="font-semibold text-[#355b45] underline underline-offset-4" type="button" onClick={() => onSlugChange("limited-company")}>Edit company schedule</button>
+        {slug === "rjsc" ? <div className="mt-6 rounded-[13px] bg-[#f4f7f1] px-4 py-3 text-[11px] leading-5 text-[#63705f]">
+          Private and one-person company registration shares the capital-based RJSC schedule shown below. Public-company and other service assessments can still vary.
         </div> : null}
 
-        {slug === "limited-company" ? <CompanyFeeEditor value={settings.companyRegistration} disabled={busy} onChange={(value) => updateSettings((current) => ({ ...current, companyRegistration: value }))} /> : null}
+        {slug === "limited-company" || slug === "rjsc" ? <CompanyFeeEditor value={settings.companyRegistration} disabled={busy} onChange={(value) => updateSettings((current) => ({ ...current, companyRegistration: value }))} /> : null}
         {slug === "trade-license" ? <TradeLicenseFeeEditor value={settings.tradeLicense} disabled={busy} onChange={(value) => updateSettings((current) => ({ ...current, tradeLicense: value }))} /> : null}
 
         {chargeFields.length ? <div className={`${styles.fields} mt-6 border-t border-[#e2e6de] pt-6`}>

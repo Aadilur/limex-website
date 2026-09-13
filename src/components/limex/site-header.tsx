@@ -203,7 +203,7 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
           if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpenMenu(null);
         }}
       >
-        <LogoLockup href={homeHref} className="w-[130px] min-w-[130px] xl:w-[155px] xl:min-w-[155px] wide:w-[178px] wide:min-w-[178px]" />
+        <LogoLockup href={homeHref} className="w-[112px] min-w-[112px] xl:w-[132px] xl:min-w-[132px] wide:w-[150px] wide:min-w-[150px]" />
         <nav className="min-w-0 flex flex-1 items-center gap-0.5 xl:gap-1 wide:gap-3.5" aria-label="Primary navigation">
           {menuNavigation.map((item) =>
             hasMegaMenu(item) ? (
@@ -250,7 +250,7 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
       </div>
 
       <div className={`relative mx-mobile-gutter flex min-h-[60px] items-center justify-between rounded-nav border border-[rgba(224,222,227,0.86)] bg-page px-4 py-cluster wide:hidden ${navMotionClassName}`.trim()}>
-        <LogoLockup href={homeHref} className="w-[124px] min-w-[124px] sm:w-[132px] sm:min-w-[132px]" />
+        <LogoLockup href={homeHref} className="w-[112px] min-w-[112px] sm:w-[120px] sm:min-w-[120px]" />
         <button
           className="relative grid size-[42px] place-items-center rounded-full border-0 bg-brand-blue text-white transition-transform duration-200 hover:scale-105 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3"
           type="button"

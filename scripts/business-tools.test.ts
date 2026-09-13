@@ -299,6 +299,8 @@ test("company setup applies the published RJSC schedule", () => {
   assert.equal(rjscRegistration.rows.find((row) => row.label === "RJSC filing fee · 6 documents")?.amount, 1200);
   assert.equal(rjscRegistration.rows.find((row) => row.label === "Authorised share capital fee")?.amount, 3330);
   assert.match(rjscRegistration.notes[1] ?? "", /above ৳ 5,000,000/);
+  const rjscCapitalIncrease = calculate("rjsc", { entity: "Private limited company", serviceType: "Capital increase", capital: "5000001", governmentFee: "", extras: "" });
+  assert.equal(rjscCapitalIncrease.rows.find((row) => row.label === "Authorised share capital fee")?.amount, 3330);
 });
 test("RJSC reference table keeps the supplied capital points and supports legacy settings", () => {
   assert.equal(defaultRjscReferenceRows.length, 15);

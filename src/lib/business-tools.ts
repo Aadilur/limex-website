@@ -773,13 +773,20 @@ export function calculateTool(slug: ToolSlug, input: unknown, settings: ToolsSet
       ? `RJSC · ${values.serviceType}${values.entity ? ` · ${values.entity}` : ""}`
       : slug === "trade-license"
         ? `Government assessment · ${values.application}`
-        : "Government assessment";
+      : "Government assessment";
+  const usesRjscCapitalSchedule = slug === "rjsc"
+    && values.serviceType === "Capital increase"
+    && ["Private limited company", "One-person company"].includes(values.entity ?? "");
+  const rjscCapitalFee = usesRjscCapitalSchedule
+    ? calculateAuthorisedCapitalFee(n("capital"), settings.companyRegistration.capitalFeeBands)
+    : null;
   const rows: CalculationResult["rows"] = [
     { label: primaryLabel, amount: assessed === null ? null : assessed * classes },
+    ...(rjscCapitalFee === null ? [] : [{ label: "Authorised share capital fee", amount: rjscCapitalFee }]),
     { label: slug === "trademark" ? "Limex support · all selected classes" : "Limex support", amount: config.serviceFee === null ? null : config.serviceFee * classes },
   ];
   if (slug === "trade-license") rows.push({ label: "Signboard charge", amount: amountOrPending("signboard") });
   rows.push({ label: "Other assessed charges", amount: amountOrPending("extras") });
   const complete = rows.every((row) => row.amount !== null);
-  return { values, result: { title: complete ? "Estimated total" : "Known costs so far", complete, total: round(rows.reduce((sum, row) => sum + (row.amount ?? 0), 0)), rows, sourceUrl: config.sourceUrl, notes: [config.note, ...(complete ? [] : ["Pending amounts are not included. Request a fee check to complete this budget."]), "This is a planning estimate, not a quotation or completed government application. A Limex advisor will confirm scope and charges."] } };
+  return { values, result: { title: complete ? "Estimated total" : "Known costs so far", complete, total: round(rows.reduce((sum, row) => sum + (row.amount ?? 0), 0)), rows, sourceUrl: config.sourceUrl, notes: [config.note, ...(rjscCapitalFee === null ? [] : [`The authorised-capital fee for ${money(n("capital"))} is calculated from the shared RJSC capital bands: ${money(rjscCapitalFee)}.`]), ...(complete ? [] : ["Pending amounts are not included. Request a fee check to complete this budget."]), "This is a planning estimate, not a quotation or completed government application. A Limex advisor will confirm scope and charges."] } };
 }
