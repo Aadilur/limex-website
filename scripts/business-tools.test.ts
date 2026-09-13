@@ -309,7 +309,7 @@ test("service page overview preserves custom HTML with scoped CSS and handles la
   );
   assert.match(
     repoContent,
-    /const hasOverview = detail\.overviewHtml !== undefined/,
+    /const hasOverview =\s*detail\.overviewHtml !== undefined/,
   );
 
   // Verify service page sections share blogRichTextClass for unified styling
@@ -1319,3 +1319,27 @@ for (const tool of businessTools.filter((tool) => tool.group === "builder"))
       assert.match(bangla.title, /[\u0980-\u09ff]/);
     }
   });
+
+test("services module and icon picker use refined SVG arrows, styled dropdowns, and non-boxy inputs", async () => {
+  const fs = await import("node:fs/promises");
+  const servicesContent = await fs.readFile(
+    new URL("../src/components/admin/services-module.tsx", import.meta.url),
+    "utf8",
+  );
+  const iconPickerContent = await fs.readFile(
+    new URL("../src/components/admin/icon-picker.tsx", import.meta.url),
+    "utf8",
+  );
+
+  // Verifies custom select with chevron arrow and appearance-none
+  assert.match(servicesContent, /appearance-none/);
+  assert.match(servicesContent, /stroke="currentColor"/);
+
+  // Verifies no raw unicode caron or ASCII arrows in services-module
+  assert.doesNotMatch(servicesContent, />⌄</);
+  assert.doesNotMatch(servicesContent, />[↑→]</);
+
+  // Verifies icon-picker uses SVG arrow and search input icon
+  assert.doesNotMatch(iconPickerContent, />⌄</);
+  assert.match(iconPickerContent, /Search icons/);
+});
