@@ -224,8 +224,8 @@ function buildTargets(sections: Awaited<ReturnType<typeof readMenuTree>>) {
   return targets;
 }
 
-async function readMenuTree() {
-  return prisma.menuSection.findMany({
+async function readMenuTree(client: PrismaClient = prisma) {
+  return client.menuSection.findMany({
     where: { isVisible: true },
     orderBy: { sortOrder: "asc" },
     include: {
@@ -316,12 +316,20 @@ function nextHref(target: Target, slug: string, hasDetail: boolean) {
   return hasDetail ? `/services/${slug}` : target.href;
 }
 
-async function main() {
-  const dryRun = process.argv.includes("--dry-run");
-  const sections = await readMenuTree();
+export type SyncMenuServicesOptions = {
+  dryRun?: boolean;
+  silent?: boolean;
+};
+
+export async function syncMenuServices(
+  client: PrismaClient = prisma,
+  options: SyncMenuServicesOptions = {},
+) {
+  const { dryRun = false, silent = false } = options;
+  const sections = await readMenuTree(client);
   const targets = buildTargets(sections);
   const generated = generatedByIdentity();
-  const profiles = await prisma.serviceProfile.findMany({
+  const profiles = await client.serviceProfile.findMany({
     select: {
       id: true,
       serviceKey: true,
@@ -377,35 +385,37 @@ async function main() {
       !item.entry &&
       isContactOnlyHref(item.target.href),
   );
-  console.log(
-    JSON.stringify(
-      {
-        visibleMenuItems: plan.filter(
-          (item) => item.target.targetType === "ITEM",
-        ).length,
-        visibleMenuLinks: plan.filter(
-          (item) => item.target.targetType === "LINK",
-        ).length,
-        serviceTargets: materialized.length,
-        newProfiles: materialized.filter((item) => !item.profile).length,
-        placeholderUpgrades: materialized.filter(
-          (item) => item.profile && isUntouchedPlaceholder(item.profile),
-        ).length,
-        protectedExistingProfiles: materialized.filter(
-          (item) => item.profile && !isUntouchedPlaceholder(item.profile),
-        ).length,
-        contactOnlyTargetsMovedToServices: materialized.filter((item) =>
-          isContactOnlyHref(item.target.href),
-        ).length,
-        contactOnlyLinksWithoutSource: missingGenerated.map((item) =>
-          identity(item.target),
-        ),
-        dryRun,
-      },
-      null,
-      2,
-    ),
-  );
+  if (!silent) {
+    console.log(
+      JSON.stringify(
+        {
+          visibleMenuItems: plan.filter(
+            (item) => item.target.targetType === "ITEM",
+          ).length,
+          visibleMenuLinks: plan.filter(
+            (item) => item.target.targetType === "LINK",
+          ).length,
+          serviceTargets: materialized.length,
+          newProfiles: materialized.filter((item) => !item.profile).length,
+          placeholderUpgrades: materialized.filter(
+            (item) => item.profile && isUntouchedPlaceholder(item.profile),
+          ).length,
+          protectedExistingProfiles: materialized.filter(
+            (item) => item.profile && !isUntouchedPlaceholder(item.profile),
+          ).length,
+          contactOnlyTargetsMovedToServices: materialized.filter((item) =>
+            isContactOnlyHref(item.target.href),
+          ).length,
+          contactOnlyLinksWithoutSource: missingGenerated.map((item) =>
+            identity(item.target),
+          ),
+          dryRun,
+        },
+        null,
+        2,
+      ),
+    );
+  }
 
   if (missingGenerated.length) {
     throw new Error(
@@ -421,7 +431,7 @@ async function main() {
   let protectedExisting = 0;
   let menuLinksUpdated = 0;
 
-  await prisma.$transaction(
+  await client.$transaction(
     async (transaction) => {
       for (const item of materialized) {
         const { target, entry, profile, detail, slug, href } = item;
@@ -576,26 +586,32 @@ async function main() {
     { timeout: 30000 },
   );
 
-  console.log(
-    JSON.stringify(
-      {
-        created,
-        upgraded,
-        templatesUpdated,
-        protectedExisting,
-        menuLinksUpdated,
-      },
-      null,
-      2,
-    ),
-  );
+  const result = {
+    created,
+    upgraded,
+    templatesUpdated,
+    protectedExisting,
+    menuLinksUpdated,
+  };
+
+  if (!silent) {
+    console.log(JSON.stringify(result, null, 2));
+  }
+
+  return result;
 }
 
-main()
-  .catch((error) => {
-    console.error(error);
-    process.exitCode = 1;
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+if (
+  process.argv[1] &&
+  (process.argv[1].endsWith("sync-menu-services.ts") ||
+    process.argv[1].endsWith("sync-menu-services.js"))
+) {
+  syncMenuServices(prisma, { dryRun: process.argv.includes("--dry-run") })
+    .catch((error) => {
+      console.error(error);
+      process.exitCode = 1;
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}

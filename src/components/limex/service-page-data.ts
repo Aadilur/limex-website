@@ -37,7 +37,7 @@ export type ServicePageContent = {
   contentTitle: string;
   contentDescription: string;
   contentDescriptionHtml?: string;
-  contentLinkLabel: string;
+  contentLinkLabel?: string;
   contentLinkHref?: string;
   keyFactsLabel?: string;
   relatedOptionsLabel?: string;
