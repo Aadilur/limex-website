@@ -51,7 +51,11 @@ function getYouTubeVideoId(url: string) {
 
 function PlayIcon() {
   return (
-    <svg className="ml-0.5 size-5 fill-current" viewBox="0 0 20 20" aria-hidden="true">
+    <svg
+      className="ml-0.5 size-5 fill-current"
+      viewBox="0 0 20 20"
+      aria-hidden="true"
+    >
       <path d="M6.6 4.3a1 1 0 0 1 1.5-.86l6.5 4.7a1 1 0 0 1 0 1.62l-6.5 4.7a1 1 0 0 1-1.5-.86V4.3Z" />
     </svg>
   );
@@ -141,7 +145,9 @@ export function VideoReelsSection({
             return (
               <article
                 className={`group relative min-h-[480px] min-w-[min(306px,calc(100vw-56px))] basis-[min(306px,calc(100vw-56px))] snap-start overflow-hidden rounded-3xl border ${
-                  selected ? "border-[#071b3d] -translate-y-1" : "border-[#d7d5d0]"
+                  selected
+                    ? "border-[#071b3d] -translate-y-1"
+                    : "border-[#d7d5d0]"
                 } bg-[#293a40] shadow-[0_14px_34px_rgba(27,34,30,0.08)] transition-transform duration-300 hover:-translate-y-1 lg:min-h-[535px] lg:min-w-[306px] lg:basis-[306px]`.trim()}
                 key={reel.id}
               >
@@ -183,12 +189,16 @@ export function VideoReelsSection({
                       decoding="async"
                     />
                     <div className="absolute inset-x-0 bottom-0 flex min-h-24 flex-col justify-end gap-1.5 bg-gradient-to-b from-transparent via-[rgba(18,20,33,0.38)] to-[rgba(18,20,33,0.94)] px-5 pb-5 pt-16 text-[#ffebd7] drop-shadow-[0_1px_12px_rgba(18,20,33,0.32)]">
-                      <p className="text-overline text-brand-cyan">LIMEX STORY</p>
+                      <p className="text-overline text-brand-cyan">
+                        LIMEX STORY
+                      </p>
                       <h3 className="max-w-[250px] line-clamp-2 text-card-title">
                         {reel.title}
                       </h3>
                       {reel.subtitle ? (
-                        <p className="text-micro text-[#ffebd7]/80">{reel.subtitle}</p>
+                        <p className="text-micro text-[#ffebd7]/80">
+                          {reel.subtitle}
+                        </p>
                       ) : null}
                     </div>
                     {videoId ? (

@@ -234,19 +234,13 @@ test("home page video reels match About Us player: clean play button and no paus
     "utf8",
   );
   // Play button uses compact circular PlayIcon matching About Us
-  assert.match(
-    mediaSectionsContent,
-    /<PlayIcon \/>/,
-  );
+  assert.match(mediaSectionsContent, /<PlayIcon \/>/);
   assert.match(
     mediaSectionsContent,
     /size-\[72px\]\s+-translate-x-1\/2\s+-translate-y-1\/2\s+place-items-center\s+rounded-full/,
   );
   // No pause overlay covering screen while playing (play button is only in non-playing branch)
-  assert.doesNotMatch(
-    mediaSectionsContent,
-    /play-overlay\.svg/,
-  );
+  assert.doesNotMatch(mediaSectionsContent, /play-overlay\.svg/);
   // Close button exists to dismiss active video
   assert.match(
     mediaSectionsContent,
