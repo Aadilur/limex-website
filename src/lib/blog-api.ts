@@ -167,6 +167,10 @@ export function unpublishAdminBlogPost(id: string, expectedRevision: number): Pr
   return request<AdminBlogPost>(`/api/admin/blog/posts/${id}/unpublish`, { method: "POST", body: JSON.stringify({ expectedRevision }) });
 }
 
+export function deleteAdminBlogPost(id: string, expectedRevision: number): Promise<{ deleted: true }> {
+  return request<{ deleted: true }>(`/api/admin/blog/posts/${id}`, { method: "DELETE", body: JSON.stringify({ expectedRevision }) });
+}
+
 export function getAdminBlogRevisions(id: string): Promise<BlogRevision[]> {
   return request<BlogRevision[]>(`/api/admin/blog/posts/${id}/revisions`, { cache: "no-store" });
 }

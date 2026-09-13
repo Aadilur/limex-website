@@ -252,6 +252,10 @@ export class BlogService {
     return toAdmin(await this.blogs.unpublish(id, expectedRevision, username));
   }
 
+  public async deletePost(id: string, expectedRevision: number) {
+    return this.blogs.delete(id, expectedRevision);
+  }
+
   public reorderPosts(ids: string[]) {
     return this.blogs.reorder(ids);
   }

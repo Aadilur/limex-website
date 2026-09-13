@@ -283,6 +283,17 @@ export function createBlogRoutes(blogService: BlogService, mediaService: MediaSe
       } catch (error) { return sendKnownError(error, reply); }
     });
 
+    app.delete("/api/admin/blog/posts/:id", async (request, reply) => {
+      if (!requireAdminSession(request, reply)) return;
+      try {
+        const { id } = idSchema.parse(request.params);
+        const { expectedRevision } = revisionSchema.parse(request.body);
+        await blogService.deletePost(id, expectedRevision);
+        reply.header("Cache-Control", "no-store");
+        return { data: { deleted: true } };
+      } catch (error) { return sendKnownError(error, reply); }
+    });
+
     app.put("/api/admin/blog/posts/order", async (request, reply) => {
       if (!requireAdminSession(request, reply)) return;
       try {

@@ -23,6 +23,7 @@
     "prisma:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
     "db:import-blogs": "tsx scripts/import-menu-blogs.ts",
+    "db:sync-menu-services": "tsx scripts/sync-menu-services.ts",
     "db:upgrade-tools": "tsx scripts/upgrade-business-tools-content.ts",
     "test:tools": "node --import tsx --test scripts/business-tools.test.ts"
   },

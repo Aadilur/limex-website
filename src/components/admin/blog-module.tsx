@@ -21,6 +21,7 @@ import {
 import {
   checkAdminBlogSlug,
   createAdminBlogPost,
+  deleteAdminBlogPost,
   getAdminBlogPost,
   getAdminBlogPosts,
   getAdminBlogRevisions,
@@ -332,17 +333,21 @@ function BlogSummaryRow({
   onMove,
   onDragStart,
   onDrop,
+  onRequestDelete,
   index,
   total,
   canReorder,
+  deleting,
 }: {
   item: AdminBlogSummary;
   onMove: (id: string, direction: -1 | 1) => void;
   onDragStart: (id: string) => void;
   onDrop: (id: string) => void;
+  onRequestDelete: (item: AdminBlogSummary) => void;
   index: number;
   total: number;
   canReorder: boolean;
+  deleting: boolean;
 }) {
   return (
     <div
@@ -420,6 +425,16 @@ function BlogSummaryRow({
         >
           ↓
         </button>
+        <button
+          className="inline-flex min-h-8 items-center justify-center rounded-full border border-[#f1c6ce] px-2.5 text-[10px] font-bold text-[#ad3148] transition-colors hover:bg-[#fff0f2] disabled:cursor-not-allowed disabled:opacity-40"
+          type="button"
+          onClick={() => onRequestDelete(item)}
+          disabled={deleting}
+          aria-label={`Delete ${item.title || "untitled article"}`}
+          title="Delete article"
+        >
+          Delete
+        </button>
         <a
           className="ml-1 grid size-8 place-items-center rounded-full bg-[#071b3d] text-[14px] text-white transition-colors hover:bg-[#0055ff]"
           href={`/admin/blog/${item.id}`}
@@ -428,6 +443,129 @@ function BlogSummaryRow({
           ↗
         </a>
       </div>
+    </div>
+  );
+}
+
+type DeleteBlogTarget = {
+  title: string;
+  slug: string;
+  revision: number;
+};
+
+function BlogDeleteModal({
+  target,
+  confirmation,
+  busy,
+  onConfirmationChange,
+  onCancel,
+  onConfirm,
+}: {
+  target: DeleteBlogTarget | null;
+  confirmation: string;
+  busy: boolean;
+  onConfirmationChange: (value: string) => void;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  if (!target) return null;
+  const confirmed = confirmation.trim().toLowerCase() === "delete";
+  return (
+    <div
+      className="fixed inset-0 z-[70] grid place-items-center bg-[#071b3d]/45 p-4 backdrop-blur-[3px]"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget && !busy) onCancel();
+      }}
+    >
+      <form
+        className="w-full max-w-[460px] overflow-hidden rounded-[20px] bg-white shadow-[0_24px_80px_rgba(7,27,61,0.24)]"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-blog-title"
+        aria-describedby="delete-blog-description"
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (confirmed) onConfirm();
+        }}
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-start gap-3 border-b border-[#eee9e2] px-5 py-5">
+          <span
+            className="grid size-10 shrink-0 place-items-center rounded-full bg-[#fff0f2] text-[18px] font-bold text-[#b13c53]"
+            aria-hidden="true"
+          >
+            !
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#b13c53]">
+              Permanent action
+            </p>
+            <h2
+              id="delete-blog-title"
+              className="mt-1 break-words font-brand text-[20px] font-bold tracking-[-0.03em] text-[#071b3d]"
+            >
+              Delete “{target.title || "Untitled article"}”?
+            </h2>
+            <p
+              id="delete-blog-description"
+              className="mt-2 text-[12px] leading-[1.55] text-[#6f675f]"
+            >
+              This permanently removes the article, its revisions, service
+              connections and public URL. Unsaved edits will also be lost.
+              Uploaded media stays available in the shared media library.
+            </p>
+            <p className="mt-2 truncate text-[11px] text-[#9b958c]">
+              /blog/{target.slug}
+            </p>
+          </div>
+          <button
+            type="button"
+            className="grid size-8 shrink-0 place-items-center rounded-full text-[20px] leading-none text-[#8b8177] transition-colors hover:bg-[#f4eee8] hover:text-[#071b3d] disabled:cursor-not-allowed disabled:opacity-40"
+            aria-label="Close delete dialog"
+            onClick={onCancel}
+            disabled={busy}
+          >
+            ×
+          </button>
+        </div>
+        <div className="space-y-2.5 px-5 py-5">
+          <label
+            htmlFor="delete-blog-confirmation"
+            className="block text-[11px] font-bold text-[#423d38]"
+          >
+            Type <code className="rounded bg-[#f4eee8] px-1.5 py-0.5 font-mono text-[11px] text-[#071b3d]">delete</code> to confirm
+          </label>
+          <input
+            id="delete-blog-confirmation"
+            autoFocus
+            autoComplete="off"
+            spellCheck={false}
+            className={`${inputClass} ${confirmation && !confirmed ? "border-[#d98a99] focus:border-[#b13c53] focus:ring-[#ffe3e7]" : ""}`.trim()}
+            value={confirmation}
+            onChange={(event) => onConfirmationChange(event.target.value)}
+            placeholder="delete"
+            aria-invalid={Boolean(confirmation) && !confirmed}
+          />
+        </div>
+        <footer className="flex flex-wrap justify-end gap-2 bg-[#faf8f4] px-5 py-4">
+          <button
+            type="button"
+            className="min-h-10 rounded-full bg-white px-4 text-[12px] font-bold text-[#514c47] ring-1 ring-inset ring-[#ded7ce] transition-colors hover:bg-[#f4eee8] disabled:cursor-not-allowed disabled:opacity-45"
+            onClick={onCancel}
+            disabled={busy}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="min-h-10 rounded-full bg-[#b13c53] px-4 text-[12px] font-bold text-white transition-colors hover:bg-[#922e43] disabled:cursor-not-allowed disabled:opacity-40"
+            disabled={!confirmed || busy}
+          >
+            {busy ? "Deleting…" : "Delete permanently"}
+          </button>
+        </footer>
+      </form>
     </div>
   );
 }
@@ -441,6 +579,9 @@ export function BlogListModule() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<DeleteBlogTarget | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const reorderEnabled = !query.trim() && !status;
 
   async function load() {
@@ -565,6 +706,52 @@ export function BlogListModule() {
     }
   }
 
+  function requestDelete(item: AdminBlogSummary) {
+    if (deletingId) return;
+    setDeleteTarget({ title: item.title, slug: item.slug, revision: item.revision });
+    setDeleteConfirmation("");
+    setNotice("");
+    setError("");
+  }
+
+  function cancelDelete() {
+    if (deletingId) return;
+    setDeleteTarget(null);
+    setDeleteConfirmation("");
+  }
+
+  async function deleteArticle() {
+    const target = deleteTarget;
+    if (!target || deleteConfirmation.trim().toLowerCase() !== "delete" || deletingId) return;
+    const item = items.find((candidate) => candidate.slug === target.slug);
+    if (!item) {
+      setDeleteTarget(null);
+      setDeleteConfirmation("");
+      setNotice("That article is no longer in this list.");
+      return;
+    }
+    setDeletingId(item.id);
+    setError("");
+    try {
+      await deleteAdminBlogPost(item.id, target.revision);
+      setItems((current) => current.filter((candidate) => candidate.id !== item.id));
+      setDeleteTarget(null);
+      setDeleteConfirmation("");
+      setNotice("Article deleted permanently.");
+    } catch (deleteError) {
+      if (isUnauthorizedBlogError(deleteError) || isUnauthorizedError(deleteError)) {
+        window.location.assign("/admin/login");
+        return;
+      }
+      setDeleteTarget(null);
+      setDeleteConfirmation("");
+      setError(deleteError instanceof Error ? deleteError.message : "Unable to delete this article.");
+      if (isBlogConflictError(deleteError)) void load();
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   return (
     <div className="space-y-5">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -659,6 +846,8 @@ export function BlogListModule() {
               onMove={(rowId, direction) => void move(rowId, direction)}
               onDragStart={setDraggingId}
               onDrop={(rowId) => void drop(rowId)}
+              onRequestDelete={requestDelete}
+              deleting={deletingId === item.id}
               key={item.id}
             />
           ))
@@ -681,6 +870,14 @@ export function BlogListModule() {
           </div>
         )}
       </section>
+      <BlogDeleteModal
+        target={deleteTarget}
+        confirmation={deleteConfirmation}
+        busy={deletingId !== null}
+        onConfirmationChange={setDeleteConfirmation}
+        onCancel={cancelDelete}
+        onConfirm={() => void deleteArticle()}
+      />
     </div>
   );
 }
@@ -894,6 +1091,8 @@ function BlogEditorActions({
   onSave,
   onPublish,
   onUnpublish,
+  onDelete,
+  deleting,
 }: {
   post: AdminBlogPost;
   isDirty: boolean;
@@ -902,6 +1101,8 @@ function BlogEditorActions({
   onSave: () => void;
   onPublish: () => void;
   onUnpublish: () => void;
+  onDelete: () => void;
+  deleting: boolean;
 }) {
   const isPublished = post.status === "PUBLISHED";
   const hasUnpublishedChanges =
@@ -987,6 +1188,14 @@ function BlogEditorActions({
           </button>
         ) : null}
         <button
+          className="min-h-10 flex-1 rounded-full border border-[#f1c6ce] bg-[#fff8f8] px-3.5 text-[12px] font-bold text-[#ad3148] transition-colors hover:bg-[#fce0e3] disabled:cursor-not-allowed disabled:opacity-55 sm:flex-none"
+          type="button"
+          onClick={onDelete}
+          disabled={saving || deleting}
+        >
+          {deleting ? "Deleting…" : "Delete"}
+        </button>
+        <button
           className="min-h-10 flex-1 rounded-full bg-[#071b3d] px-4 text-[12px] font-bold text-white transition-colors hover:bg-[#0055ff] disabled:cursor-not-allowed disabled:opacity-55 sm:flex-none"
           type="button"
           onClick={onPublish}
@@ -1021,6 +1230,9 @@ export function BlogEditorModule({ id }: { id: string }) {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [revisions, setRevisions] = useState<BlogRevision[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<DeleteBlogTarget | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -1177,6 +1389,45 @@ export function BlogEditorModule({ id }: { id: string }) {
       );
     } finally {
       setSaving(false);
+    }
+  }
+
+  function requestDelete() {
+    if (!post || deleting || saving) return;
+    setDeleteTarget({
+      title: currentTranslation?.title || "Untitled article",
+      slug: post.slug,
+      revision: post.revision,
+    });
+    setDeleteConfirmation("");
+    setNotice("");
+    setError("");
+  }
+
+  function cancelDelete() {
+    if (deleting) return;
+    setDeleteTarget(null);
+    setDeleteConfirmation("");
+  }
+
+  async function deleteArticle() {
+    const target = deleteTarget;
+    if (!post || !target || deleteConfirmation.trim().toLowerCase() !== "delete" || deleting) return;
+    setDeleting(true);
+    setError("");
+    try {
+      await deleteAdminBlogPost(post.id, target.revision);
+      window.location.assign("/admin/blog");
+    } catch (deleteError) {
+      if (isUnauthorizedBlogError(deleteError) || isUnauthorizedError(deleteError)) {
+        window.location.assign("/admin/login");
+        return;
+      }
+      setDeleteTarget(null);
+      setDeleteConfirmation("");
+      setError(deleteError instanceof Error ? deleteError.message : "Unable to delete this article.");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -1351,6 +1602,8 @@ export function BlogEditorModule({ id }: { id: string }) {
         onSave={() => void persist()}
         onPublish={() => void publish()}
         onUnpublish={() => void unpublish()}
+        onDelete={requestDelete}
+        deleting={deleting}
       />
       {notice ? (
         <p className="text-[12px] font-semibold text-[#29634d]" role="status">
@@ -1923,6 +2176,14 @@ export function BlogEditorModule({ id }: { id: string }) {
           </div>
         </div>
       ) : null}
+      <BlogDeleteModal
+        target={deleteTarget}
+        confirmation={deleteConfirmation}
+        busy={deleting}
+        onConfirmationChange={setDeleteConfirmation}
+        onCancel={cancelDelete}
+        onConfirm={() => void deleteArticle()}
+      />
     </div>
   );
 }

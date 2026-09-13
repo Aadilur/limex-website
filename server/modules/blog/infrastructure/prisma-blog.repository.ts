@@ -357,6 +357,29 @@ export class PrismaBlogRepository implements BlogRepository {
     });
   }
 
+  public async delete(id: string, expectedRevision: number) {
+    await this.client.$transaction(async (transaction) => {
+      const current = await transaction.blogPost.findUnique({
+        where: { id },
+        select: { id: true, revision: true },
+      });
+      if (!current) throw new BlogNotFoundError();
+      if (current.revision !== expectedRevision) {
+        throw new BlogConflictError("This article changed in another session. Reload it before deleting.");
+      }
+
+      // Blog translations, revisions, service connections, media links and
+      // redirects cascade from BlogPost. Reusable MediaAsset records remain
+      // in the media library so deleting an article cannot destroy shared media.
+      const deleted = await transaction.blogPost.deleteMany({
+        where: { id, revision: expectedRevision },
+      });
+      if (!deleted.count) {
+        throw new BlogConflictError("This article changed in another session. Reload it before deleting.");
+      }
+    });
+  }
+
   public async reorder(ids: string[]) {
     const current = await this.client.blogPost.findMany({ select: { id: true } });
     const currentIds = new Set(current.map((item) => item.id));

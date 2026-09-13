@@ -69,6 +69,7 @@ export interface BlogRepository {
   updateDraft(id: string, input: BlogPostInput, expectedRevision: number, updatedBy: string): Promise<unknown>;
   publish(id: string, expectedRevision: number, updatedBy: string): Promise<unknown>;
   unpublish(id: string, expectedRevision: number, updatedBy: string): Promise<unknown>;
+  delete(id: string, expectedRevision: number): Promise<void>;
   reorder(ids: string[]): Promise<BlogPostSummary[]>;
   createRedirect(fromSlug: string, toSlug: string, postId: string): Promise<void>;
 }
