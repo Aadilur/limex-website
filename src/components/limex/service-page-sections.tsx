@@ -104,7 +104,7 @@ export function ServiceHeroSection({ service }: { service: ServicePageContent })
       </div>
       <div className="mt-section-gap-xl grid gap-section-gap lg:grid-cols-[minmax(0,1fr)_minmax(360px,460px)] lg:items-center lg:gap-section-gap-xl">
         <div className="min-w-0">
-          <p className="text-overline text-[#de5778]">{service.category}</p>
+          <p className="text-overline text-[#0055ff]">{service.category}</p>
           <h1 className="mt-cluster max-w-[690px] font-brand text-page-title text-ink max-lg:text-page-title-mobile" id="service-page-title">{service.title}</h1>
           <p className="mt-cluster max-w-[620px] text-body-lg text-muted">{service.description}</p>
           <div className="mt-section-gap-lg flex flex-wrap items-center gap-cluster">
@@ -114,15 +114,15 @@ export function ServiceHeroSection({ service }: { service: ServicePageContent })
 
           <dl className="mt-section-gap-xl grid max-w-[650px] grid-cols-1 gap-section-gap border-t border-[#e0dee3] pt-card-pad-sm sm:grid-cols-3 sm:gap-cluster">
             <div>
-              <dt className="text-overline text-[#de5778]">{ui.startingPrice}</dt>
+              <dt className="text-overline text-[#0055ff]">{ui.startingPrice}</dt>
               <dd className="mt-cluster-xs text-body-xs font-semibold text-ink">{service.startingPrice}</dd>
             </div>
             <div>
-              <dt className="text-overline text-[#de5778]">{ui.deliveryTime}</dt>
+              <dt className="text-overline text-[#0055ff]">{ui.deliveryTime}</dt>
               <dd className="mt-cluster-xs text-body-xs font-semibold text-ink">{service.deliveryTime}</dd>
             </div>
             <div>
-              <dt className="text-overline text-[#de5778]">{ui.serviceMode}</dt>
+              <dt className="text-overline text-[#0055ff]">{ui.serviceMode}</dt>
               <dd className="mt-cluster-xs text-body-xs font-semibold text-ink">{service.serviceMode}</dd>
             </div>
           </dl>
@@ -133,7 +133,7 @@ export function ServiceHeroSection({ service }: { service: ServicePageContent })
           <img className={`absolute -right-6 -top-8 size-[180px] animate-hero-float motion-reduce:animate-none ${service.mediaUrl?.trim() ? "opacity-25" : ""}`.trim()} src="/figma/warm-glow.svg" alt="" aria-hidden="true" />
           <img className={`absolute bottom-[-10px] left-[-20px] size-[150px] animate-hero-float-reverse motion-reduce:animate-none ${service.mediaUrl?.trim() ? "opacity-25" : ""}`.trim()} src="/figma/cool-glow.svg" alt="" aria-hidden="true" />
           <img className={`absolute bottom-[-30px] right-[-10px] size-[115px] animate-hero-float-slow motion-reduce:animate-none ${service.mediaUrl?.trim() ? "opacity-25" : ""}`.trim()} src="/figma/center-glow.svg" alt="" aria-hidden="true" />
-          {!service.mediaUrl?.trim() ? <p className="absolute left-6 top-5 text-overline text-[#de5778]">{ui.mediaSlot}</p> : null}
+          {!service.mediaUrl?.trim() ? <p className="absolute left-6 top-5 text-overline text-[#0055ff]">{ui.mediaSlot}</p> : null}
           <div className={`absolute left-1/2 top-1/2 w-[min(336px,calc(100%-48px))] -translate-x-1/2 -translate-y-1/2 rounded-card px-card-pad py-section-y ${service.mediaUrl?.trim() ? "bg-navy/85 text-white" : "bg-white"}`.trim()}>
             <h2 className={`font-brand text-section-title ${service.mediaUrl?.trim() ? "text-white" : "text-ink"}`.trim()}>{service.mediaTitle}</h2>
             <p className={`mt-cluster text-body-xs ${service.mediaUrl?.trim() ? "text-white/75" : "text-muted"}`.trim()}>{service.mediaDescription}</p>
@@ -165,12 +165,12 @@ export function ServiceOverviewSection({ service }: { service: ServicePageConten
       <div className={`grid gap-section-gap ${service.facts.length ? "lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.7fr)] lg:gap-section-gap-xl" : ""}`.trim()}>
         <div className="min-w-0">
           {overviewHtml ? <RichTextContent id="service-overview-title" html={overviewHtml} fallback="" className={blogRichTextClass} /> : <>
-            <p className="text-overline text-[#de5778]">{service.overviewEyebrow}</p>
+            <p className="text-overline text-[#0055ff]">{service.overviewEyebrow}</p>
             <h2 className="mt-cluster max-w-[760px] font-brand text-page-title text-ink max-lg:text-page-title-mobile" id="service-overview-title">{service.overviewTitle}</h2>
             <RichTextContent html={service.overviewDescriptionHtml} fallback={service.overviewDescription} className={`${richTextClass} mt-cluster max-w-[720px]`} />
 
             <article className="mt-section-gap-lg rounded-nav border border-[#e0dee3] bg-white px-card-pad py-card-pad lg:px-section-y lg:py-section-y">
-              <p className="text-overline text-[#de5778]">{service.contentLabel}</p>
+              <p className="text-overline text-[#0055ff]">{service.contentLabel}</p>
               <h3 className="mt-cluster font-brand text-section-title text-ink">{service.contentTitle}</h3>
               <RichTextContent html={service.contentDescriptionHtml} fallback={service.contentDescription} className={`${richTextClass} mt-cluster max-w-[680px] text-body-sm`} />
               {service.contentLinkLabel ? <a className="mt-section-gap-lg inline-flex items-center gap-cluster-sm text-button font-bold text-ink transition-colors hover:text-pink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3" href={service.contentLinkHref || "#pricing"} {...externalLinkProps(service.contentLinkHref || "#pricing")}>
@@ -180,13 +180,13 @@ export function ServiceOverviewSection({ service }: { service: ServicePageConten
 
             {service.benefits?.length ? (
             <div className="mt-section-gap-lg grid gap-cluster sm:grid-cols-2">
-              {service.benefits.map((benefit) => <p className="flex items-start gap-cluster-sm text-body-sm text-ink" key={benefit}><span className="mt-2 size-2 shrink-0 rounded-full bg-[#de4d73]" aria-hidden="true" />{benefit}</p>)}
+              {service.benefits.map((benefit) => <p className="flex items-start gap-cluster-sm text-body-sm text-ink" key={benefit}><span className="mt-2 size-2 shrink-0 rounded-full bg-[#0055ff]" aria-hidden="true" />{benefit}</p>)}
             </div>
             ) : null}
 
             {service.steps?.length ? (
             <div className="mt-section-gap-xl grid gap-cluster sm:grid-cols-3">
-              {service.steps.map((step, index) => <div className="border-t border-[#e0dee3] pt-cluster" key={`${step.title}-${index}`}><span className="text-overline text-[#de5778]">{String(index + 1).padStart(2, "0")}</span><h3 className="mt-cluster-xs font-brand text-subheading-mobile text-ink">{step.title}</h3><p className="mt-cluster-xs text-body-xs text-muted">{step.description}</p></div>)}
+              {service.steps.map((step, index) => <div className="border-t border-[#e0dee3] pt-cluster" key={`${step.title}-${index}`}><span className="text-overline text-[#0055ff]">{String(index + 1).padStart(2, "0")}</span><h3 className="mt-cluster-xs font-brand text-subheading-mobile text-ink">{step.title}</h3><p className="mt-cluster-xs text-body-xs text-muted">{step.description}</p></div>)}
             </div>
             ) : null}
           </>}
@@ -194,7 +194,7 @@ export function ServiceOverviewSection({ service }: { service: ServicePageConten
         </div>
 
         {service.facts.length ? <aside className="lg:pt-[166px]" aria-label="Service key facts">
-          <p className="text-overline text-[#de5778]">{keyFactsLabel}</p>
+          <p className="text-overline text-[#0055ff]">{keyFactsLabel}</p>
           <dl className="mt-cluster divide-y divide-[#e0dee3] border-y border-[#e0dee3]">
             {service.facts.map((fact) => (
               <div className="grid grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] gap-cluster py-4" key={fact.label}>
@@ -208,9 +208,9 @@ export function ServiceOverviewSection({ service }: { service: ServicePageConten
 
       {service.relatedLinks?.length ? (
         <div className="mt-section-gap-xl border-t border-[#e0dee3] pt-section-y">
-          <p className="text-overline text-[#de5778]">{relatedOptionsLabel}</p>
+          <p className="text-overline text-[#0055ff]">{relatedOptionsLabel}</p>
           <div className="mt-cluster flex flex-wrap gap-2">
-            {service.relatedLinks.map((link) => <a className="inline-flex min-h-10 items-center gap-2 rounded-pill bg-white px-3.5 text-button font-semibold text-ink ring-1 ring-[#e0dee3] transition-colors hover:text-pink hover:ring-[#de5778]/40" href={link.href} {...externalLinkProps(link.href)} key={link.id}>{link.label}<span className="text-pink" aria-hidden="true">↗</span></a>)}
+            {service.relatedLinks.map((link) => <a className="inline-flex min-h-10 items-center gap-2 rounded-pill bg-white px-3.5 text-button font-semibold text-ink ring-1 ring-[#e0dee3] transition-colors hover:text-pink hover:ring-[#0055ff]/40" href={link.href} {...externalLinkProps(link.href)} key={link.id}>{link.label}<span className="text-pink" aria-hidden="true">↗</span></a>)}
           </div>
         </div>
       ) : null}
@@ -219,7 +219,7 @@ export function ServiceOverviewSection({ service }: { service: ServicePageConten
         <div className="mt-section-gap-xl border-t border-[#e0dee3] pt-section-y">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <p className="text-overline text-[#de5778]">{toolsEyebrow}</p>
+              <p className="text-overline text-[#0055ff]">{toolsEyebrow}</p>
               <h3 className="mt-cluster font-brand text-section-title text-ink">{toolsTitle}</h3>
             </div>
             <span className="text-micro font-semibold text-muted">{helpfulTools.length}</span>
@@ -232,10 +232,10 @@ export function ServiceOverviewSection({ service }: { service: ServicePageConten
           ) : null}
           {builderTools.length ? (
             <div className={calculatorTools.length ? "mt-section-gap-xl" : "mt-section-gap-lg"}>
-              {calculatorTools.length ? <p className="text-overline text-[#de5778]">{service.locale === "bn" ? "ডকুমেন্ট বিল্ডার" : "Document builders"}</p> : null}
+              {calculatorTools.length ? <p className="text-overline text-[#0055ff]">{service.locale === "bn" ? "ডকুমেন্ট বিল্ডার" : "Document builders"}</p> : null}
               <div className="mt-cluster grid gap-cluster sm:grid-cols-2 lg:grid-cols-3">
                 {builderTools.map((tool) => (
-                  <a className="group flex min-w-0 items-center justify-between gap-cluster rounded-card bg-white px-card-pad-sm py-cluster ring-1 ring-[#e0dee3] transition-colors hover:ring-[#de5778]/50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3" href={toolHref(tool.slug)} key={tool.slug}>
+                  <a className="group flex min-w-0 items-center justify-between gap-cluster rounded-card bg-white px-card-pad-sm py-cluster ring-1 ring-[#e0dee3] transition-colors hover:ring-[#0055ff]/50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3" href={toolHref(tool.slug)} key={tool.slug}>
                     <span className="min-w-0">
                       <span className="block truncate text-body-xs font-semibold text-ink group-hover:text-pink">{tool.title}</span>
                       <span className="mt-cluster-xs block truncate text-micro text-muted">{tool.description}</span>
@@ -257,15 +257,15 @@ function PriceCard({ tier, locale, serviceTitle, serviceKey, contact, mostPopula
   const whatsappHref = serviceWhatsAppUrl(contact, `Hello Limex, I’d like to discuss ${serviceTitle}${tier.name ? ` · ${tier.name}` : ""}.`);
 
   return (
-    <article className={`relative flex min-h-[292px] flex-col rounded-nav border bg-white p-card-pad ${tier.featured ? "border-[#de4d73]" : "border-[#e0dee3]"}`.trim()}>
-      {tier.featured ? <WaveLabel className="absolute left-5 top-4 text-[#de4d73]">{mostPopularLabel}</WaveLabel> : null}
-      <p className={`text-body font-semibold ${tier.featured ? "mt-8 text-[#de4d73]" : "text-muted"}`.trim()}>{tier.name}</p>
+    <article className={`relative flex min-h-[292px] flex-col rounded-nav border bg-white p-card-pad ${tier.featured ? "border-[#0055ff]" : "border-[#e0dee3]"}`.trim()}>
+      {tier.featured ? <WaveLabel className="absolute left-5 top-4 text-[#0055ff]">{mostPopularLabel}</WaveLabel> : null}
+      <p className={`text-body font-semibold ${tier.featured ? "mt-8 text-[#0055ff]" : "text-muted"}`.trim()}>{tier.name}</p>
       <p className="mt-cluster-sm font-brand text-section-title text-ink">{tier.price}</p>
       <p className="mt-cluster-sm text-body-xs text-muted">{tier.description}</p>
       <ul className="mt-cluster flex flex-col gap-cluster-sm p-0">
         {tier.features.map((feature) => (
           <li className="flex items-center gap-cluster-sm text-footer text-ink" key={feature}>
-            <span className={`size-1.5 shrink-0 rounded-full ${tier.featured ? "bg-[#de4d73]" : "bg-[#7d7594]"}`.trim()} aria-hidden="true" />
+            <span className={`size-1.5 shrink-0 rounded-full ${tier.featured ? "bg-[#0055ff]" : "bg-[#7d7594]"}`.trim()} aria-hidden="true" />
             {feature}
           </li>
         ))}
@@ -278,7 +278,7 @@ function PriceCard({ tier, locale, serviceTitle, serviceKey, contact, mostPopula
           buttonClassName="min-h-control-sm w-full justify-between px-3.5 text-micro"
           buttonLabel={tier.action || ui.bookNow}
         />
-        {whatsappHref ? <a className="inline-flex min-h-control-sm items-center justify-between gap-2 rounded-pill px-3.5 text-micro font-semibold text-[#29634d] ring-1 ring-[#b8d9c3] transition-colors hover:bg-[#e6f5eb] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3" href={whatsappHref} target="_blank" rel="noreferrer">
+        {whatsappHref ? <a className="inline-flex min-h-control-sm items-center justify-between gap-2 rounded-pill px-3.5 text-micro font-semibold text-[#006dce] ring-1 ring-[#b9ddff] transition-colors hover:bg-[#e8f3ff] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3" href={whatsappHref} target="_blank" rel="noreferrer">
           <span className="flex min-w-0 items-center gap-2"><img className="size-4 shrink-0" src="/figma/whatsapp-dot.svg" alt="" aria-hidden="true" /><span className="truncate">{tier.whatsappLabel || ui.whatsappNow}</span></span>
           <span aria-hidden="true">↗</span>
         </a> : null}
@@ -298,7 +298,7 @@ export function ServicePricingSection({ service, contact }: { service: ServicePa
 
   return (
     <section className="mt-section-gap-xl border-t border-[#e0dee3] bg-page pt-section-y lg:mt-section-gap-xl lg:pt-section-y-xl" id="pricing" aria-labelledby="service-pricing-title">
-      <p className="text-overline text-[#de5778]">{pricingEyebrow}</p>
+      <p className="text-overline text-[#0055ff]">{pricingEyebrow}</p>
           <h2 className="mt-cluster font-brand text-page-title text-ink max-lg:text-page-title-mobile" id="service-pricing-title">{pricingTitle}</h2>
       <p className="mt-cluster text-body-lg text-muted">{pricingDescription}</p>
       <div className="mt-section-gap-lg grid gap-cluster lg:grid-cols-3">
@@ -323,10 +323,10 @@ export function ServiceFaqSection({ service }: { service: ServicePageContent }) 
     <section className="mt-section-gap-xl border-t border-[#e0dee3] bg-page pt-section-y lg:mt-section-gap-xl lg:pt-section-y-xl" id="service-faq" aria-labelledby="service-faq-title">
       <div className="grid gap-section-gap lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-section-gap-xl">
         <div>
-          <p className="text-overline text-[#de5778]">{faqEyebrow}</p>
+          <p className="text-overline text-[#0055ff]">{faqEyebrow}</p>
           <h2 className="mt-cluster font-brand text-page-title text-ink max-lg:text-page-title-mobile" id="service-faq-title">{faqTitle}</h2>
           <p className="mt-cluster max-w-[560px] text-body-lg text-muted">{faqDescription}</p>
-          <p className="mt-section-gap-xl text-overline text-[#de5778]">{faqSupportLabel}</p>
+          <p className="mt-section-gap-xl text-overline text-[#0055ff]">{faqSupportLabel}</p>
           <p className="mt-cluster-sm max-w-[460px] text-body-xs text-muted">{faqSupportDescription}</p>
         </div>
 
@@ -372,7 +372,7 @@ export function ServiceContactSection({ service, contact }: { service: ServicePa
   return (
     <section className="mt-section-gap-xl flex flex-col gap-section-gap-lg rounded-nav bg-navy px-card-pad py-section-y text-white lg:mt-section-gap-xl lg:flex-row lg:items-center lg:justify-between lg:px-8 lg:py-section-y-xl" id="service-contact" aria-labelledby="service-contact-title">
       <div>
-        <p className="text-overline text-[#fac7cc]">{contactEyebrow}</p>
+        <p className="text-overline text-brand-cyan">{contactEyebrow}</p>
         <h2 className="mt-cluster max-w-[760px] font-brand text-page-title max-lg:text-page-title-mobile" id="service-contact-title">{contactTitle}</h2>
         <p className="mt-cluster max-w-[680px] text-body-sm text-[#c7cfe0]">{contactDescription} {service.title.toLowerCase()}.</p>
       </div>

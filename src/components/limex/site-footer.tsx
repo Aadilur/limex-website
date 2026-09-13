@@ -53,13 +53,13 @@ export function SiteFooter({ content }: { content?: FooterContent }) {
         {footer.columns.filter((column) => column.isVisible).map((column) => (
           <div className="flex flex-col gap-cluster-sm" key={column.id}>
             <h3 className="mb-cluster-sm text-micro font-bold uppercase tracking-eyebrow text-soft-muted">{column.title}</h3>
-            {column.links.filter((link) => link.isVisible).map((link) => <a className="text-footer text-white transition-colors hover:text-[#fac7cc]" href={link.href} key={link.id}>{link.label}</a>)}
+            {column.links.filter((link) => link.isVisible).map((link) => <a className="text-footer text-white transition-colors hover:text-brand-cyan" href={link.href} key={link.id}>{link.label}</a>)}
           </div>
         ))}
         <div className="flex flex-col gap-cluster-sm pl-0 lg:pl-5">
           <h3 className="mb-cluster-sm text-micro font-bold uppercase tracking-eyebrow text-soft-muted">{footer.contactTitle}</h3>
-          <a className="text-footer text-white transition-colors hover:text-[#fac7cc]" href={`mailto:${contactEmail}`}>{contactEmail}</a>
-          {contactPhone ? <a className="text-footer text-white transition-colors hover:text-[#fac7cc]" href={`tel:${contactPhone}`}>{contactPhone}</a> : null}
+          <a className="text-footer text-white transition-colors hover:text-brand-cyan" href={`mailto:${contactEmail}`}>{contactEmail}</a>
+          {contactPhone ? <a className="text-footer text-white transition-colors hover:text-brand-cyan" href={`tel:${contactPhone}`}>{contactPhone}</a> : null}
           <span className="text-footer text-soft-muted">{contactLocation}</span>
         </div>
       </div>

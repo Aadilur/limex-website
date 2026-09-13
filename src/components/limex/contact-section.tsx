@@ -488,7 +488,7 @@ export function ContactModal({ articleSlug, buttonClassName = "", buttonLabel = 
       <ActionButton variant={variant} className={buttonClassName} onClick={() => setIsOpen(true)}>{buttonLabel}</ActionButton>
       {isOpen ? (
         <div className="fixed inset-0 z-[100]" role="presentation">
-          <button className="absolute inset-0 size-full cursor-default bg-[#14131c]/45 backdrop-blur-[3px]" type="button" aria-label="Close contact form" onClick={() => setIsOpen(false)} />
+          <button className="absolute inset-0 size-full cursor-default bg-[#071b3d]/45 backdrop-blur-[3px]" type="button" aria-label="Close contact form" onClick={() => setIsOpen(false)} />
           <div className="relative flex min-h-dvh items-start justify-center overflow-y-auto px-3 py-3 sm:items-center sm:p-6">
             <div className="relative z-10 my-auto max-h-[calc(100dvh-1.5rem)] w-full max-w-[760px] overflow-y-auto rounded-[26px] bg-page shadow-[0_24px_80px_rgba(20,19,28,0.22)]" role="dialog" aria-modal="true" aria-labelledby={`${modalId}-title`}>
               <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-[#e2ddd4] bg-page/95 px-4 py-4 backdrop-blur sm:px-6">

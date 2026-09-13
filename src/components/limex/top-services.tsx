@@ -30,10 +30,10 @@ const mobilePriorityServices = [
 type PriorityService = Service & { displayTitle: string };
 
 const serviceToneByFilter: Record<LandingServiceItem["filter"], { color: string; surface: string }> = {
-  Startup: { color: "#2e6b4f", surface: "#edf7f0" },
-  "Tax & compliance": { color: "#5c4aa6", surface: "#f2effb" },
-  Trademark: { color: "#b83652", surface: "#fff0f2" },
-  "Business tools": { color: "#1f6e70", surface: "#edf9f8" },
+  Startup: { color: "#14dcff", surface: "#e9fbff" },
+  "Tax & compliance": { color: "#008cff", surface: "#eaf3ff" },
+  Trademark: { color: "#0055ff", surface: "#e8efff" },
+  "Business tools": { color: "#14dcff", surface: "#e9fbff" },
 };
 
 function getLinkProps(href: string) {
@@ -101,7 +101,7 @@ function FeaturedServiceLink({ service }: { service: PriorityService }) {
         <span className="block truncate text-body-xs font-semibold leading-tight transition-colors duration-200 group-hover:text-accent lg:text-button">{service.displayTitle}</span>
         <span className="mt-0.5 block min-h-[34px] line-clamp-2 text-micro leading-[1.4] text-muted lg:text-meta lg:leading-[1.4]">{service.description}</span>
       </span>
-      <span className="shrink-0 pr-1 text-icon-action text-[#de4d73] transition-transform duration-200 group-hover:translate-x-0.5 lg:hidden" aria-hidden="true">↗</span>
+      <span className="shrink-0 pr-1 text-icon-action text-[#0055ff] transition-transform duration-200 group-hover:translate-x-0.5 lg:hidden" aria-hidden="true">↗</span>
     </a>
   );
 }

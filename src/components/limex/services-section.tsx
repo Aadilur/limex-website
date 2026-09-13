@@ -20,8 +20,8 @@ function getLinkProps(href: string) {
 function ServiceCard({ service }: { service: LandingServiceItem }) {
   const { title, description, href, icon, color, surface } = {
     ...service,
-    color: service.filter === "Startup" ? "#2e6b4f" : service.filter === "Tax & compliance" ? "#5c4aa6" : service.filter === "Trademark" ? "#b83652" : "#1f6e70",
-    surface: service.filter === "Startup" ? "#edf7f0" : service.filter === "Tax & compliance" ? "#f2effb" : service.filter === "Trademark" ? "#fff0f2" : "#edf9f8",
+    color: service.filter === "Startup" ? "#14dcff" : service.filter === "Tax & compliance" ? "#008cff" : service.filter === "Trademark" ? "#0055ff" : "#14dcff",
+    surface: service.filter === "Startup" ? "#e9fbff" : service.filter === "Tax & compliance" ? "#eaf3ff" : service.filter === "Trademark" ? "#e8efff" : "#e9fbff",
   };
   const tone = getToneClasses(color, surface);
 
@@ -119,7 +119,7 @@ export function ServicesSection({ content = defaultLandingContent.services }: { 
               <button
                 key={filter}
                 className={`min-h-10 whitespace-nowrap rounded-[13px] border-0 px-4 text-button font-semibold transition-colors duration-150 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2 ${
-                  selectedFilter === filter ? "bg-[#14131a] text-white" : "bg-transparent text-[#544f4a] hover:bg-white/70"
+                  selectedFilter === filter ? "bg-[#071b3d] text-white" : "bg-transparent text-[#544f4a] hover:bg-white/70"
                 }`.trim()}
                 type="button"
                 role="tab"
@@ -138,7 +138,7 @@ export function ServicesSection({ content = defaultLandingContent.services }: { 
         {filteredServices.map((service) => <ServiceCard key={service.id} service={service} />)}
       </div>
 
-      <div className="mt-4 flex min-h-16 flex-col items-start justify-between gap-4 rounded-[20px] bg-[#14131a] p-4 sm:mt-cluster sm:p-5 lg:flex-row lg:items-center lg:gap-cluster-lg lg:px-4 lg:py-3">
+      <div className="mt-4 flex min-h-16 flex-col items-start justify-between gap-4 rounded-[20px] bg-[#071b3d] p-4 sm:mt-cluster sm:p-5 lg:flex-row lg:items-center lg:gap-cluster-lg lg:px-4 lg:py-3">
         <div className="flex flex-col gap-cluster-xs">
           <strong className="text-body-sm text-white">Not sure where to begin?</strong>
           <span className="max-w-[520px] text-body-xs leading-relaxed text-[#bdb8c7]">Tell us your business stage and we will point you to the right service.</span>

@@ -1,4 +1,5 @@
 import type { MouseEventHandler, ReactNode } from "react";
+import Image from "next/image";
 import Link from "next/link";
 
 export type BreadcrumbItem = {
@@ -42,13 +43,13 @@ type ActionButtonProps = {
 };
 
 const actionVariants = {
-  dark: "bg-[#14131a] text-white",
+  dark: "bg-brand-blue text-white",
   light: "border-border bg-white text-ink",
-  outline: "border-[#bdb8ad] bg-white/75 text-ink",
+  outline: "border-brand-line bg-white/75 text-ink",
   white: "border-white bg-white text-navy",
   soft: "border-transparent bg-soft text-ink",
-  ghost: "border-[#14131a]/35 bg-transparent text-ink",
-  "ghost-muted": "border-[#c9c0c4]/75 bg-transparent text-ink",
+  ghost: "border-brand-deep/35 bg-transparent text-ink",
+  "ghost-muted": "border-brand-line/75 bg-transparent text-ink",
 };
 
 const actionBase =
@@ -122,7 +123,7 @@ export function SectionSeparator({ label, className = "" }: { label?: ReactNode;
     <div className={`pointer-events-none relative z-10 flex h-0 items-center gap-4 overflow-visible px-page-gutter lg:px-page-gutter-lg ${className}`.trim()} aria-hidden="true">
       <span className="h-px flex-1 bg-gradient-to-r from-transparent via-[#c8c5bc] to-[#c8c5bc]" />
       {label ? (
-        <WaveLabel className="bg-page px-4 text-[#52705b]">{label}</WaveLabel>
+        <WaveLabel className="bg-page px-4 text-brand-blue">{label}</WaveLabel>
       ) : (
         <svg className="h-4 w-[clamp(88px,12vw,136px)] shrink-0 text-[#789382]" viewBox="0 0 136 12" preserveAspectRatio="none" fill="none">
           <path d="M1 6C12 6 14 1.5 25 1.5S38 6 49 6 62 1.5 73 1.5 86 6 97 6s13-4.5 24-4.5S129 6 135 6" stroke="currentColor" strokeLinecap="round" strokeWidth="1.7" vectorEffect="non-scaling-stroke" />
@@ -168,11 +169,17 @@ export function SectionTitle({
 export function LogoLockup({ light = false, className = "", href = "#top" }: { light?: boolean; className?: string; href?: string }) {
   return (
     <a
-      className={`flex w-[178px] min-w-[178px] flex-col justify-center ${className}`.trim()}
+      className={`flex w-[178px] min-w-[178px] items-center ${className}`.trim()}
       href={href}
       aria-label="Limex home"
     >
-      <span className={`font-brand text-logo font-display ${light ? "text-white" : "text-ink"}`.trim()}>LIMEX</span>
+      <Image
+        className="h-auto w-full object-contain object-left"
+        src={light ? "/brand/limex-logo-light.png" : "/brand/limex-logo.png"}
+        alt="Limex Consultancy Firm"
+        width={1600}
+        height={474}
+      />
     </a>
   );
 }

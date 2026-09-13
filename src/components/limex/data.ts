@@ -439,10 +439,10 @@ const serviceFilterByNavLabel: Record<string, Exclude<ServiceFilter, "All servic
 };
 
 const serviceToneByFilter: Record<Exclude<ServiceFilter, "All services">, { color: string; surface: string }> = {
-  Startup: { color: "#2e6b4f", surface: "#edf7f0" },
-  "Tax & compliance": { color: "#5c4aa6", surface: "#f2effb" },
-  Trademark: { color: "#b83652", surface: "#fff0f2" },
-  "Business tools": { color: "#1f6e70", surface: "#edf9f8" },
+  Startup: { color: "#14dcff", surface: "#e9fbff" },
+  "Tax & compliance": { color: "#008cff", surface: "#eaf3ff" },
+  Trademark: { color: "#0055ff", surface: "#e8efff" },
+  "Business tools": { color: "#14dcff", surface: "#e9fbff" },
 };
 
 const serviceIconByLabel: Partial<Record<string, ServiceIconName>> = {
@@ -536,8 +536,8 @@ export const packages = [
     description: "For a new business.",
     price: "From BDT ৳ 5,000",
     features: ["Company registration", "Trade license support", "TIN guidance"],
-    color: "#29634d",
-    surface: "#ccebdb",
+    color: "#008cff",
+    surface: "#eaf3ff",
   },
   {
     tag: "COMPLIANCE",
@@ -545,8 +545,8 @@ export const packages = [
     description: "For ongoing compliance.",
     price: "From BDT ৳ 4,500",
     features: ["VAT return support", "Income tax filing", "Annual compliance"],
-    color: "#594094",
-    surface: "#dbd4fa",
+    color: "#008cff",
+    surface: "#eaf3ff",
   },
   {
     tag: "BRAND PROTECTION",
@@ -554,8 +554,8 @@ export const packages = [
     description: "For protecting your brand.",
     price: "From BDT ৳ 6,000",
     features: ["Trademark search", "Filing assistance", "Status follow-up"],
-    color: "#9e3347",
-    surface: "#fac7cc",
+    color: "#0055ff",
+    surface: "#e8efff",
   },
 ];
 

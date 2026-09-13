@@ -71,11 +71,11 @@ export function AboutTrustStrip() {
 }
 
 const teamPhotoTones = [
-  "bg-[#d6ebde] text-[#2e6b4f]",
-  "bg-[#dedbfa] text-[#5c4aa6]",
-  "bg-[#fae5cc] text-[#9e5726]",
-  "bg-[#d1edeb] text-[#1f6e70]",
-  "bg-[#fcdbe0] text-[#b83652]",
+  "bg-[#e5fbff] text-[#007ea6]",
+  "bg-[#e8f3ff] text-[#006dce]",
+  "bg-[#e9efff] text-brand-blue",
+  "bg-[#e5fbff] text-[#007ea6]",
+  "bg-[#e8efff] text-brand-blue",
 ];
 
 function teamInitials(name: string) {
@@ -229,7 +229,7 @@ function AboutReelCard({ reel, index, playing, onPlay, onStop }: { reel: AboutRe
   return (
     <article className={[
       "group relative h-[420px] min-w-[min(306px,calc(100vw-72px))] basis-[min(306px,calc(100vw-72px))] snap-start overflow-hidden rounded-[20px] border bg-[#293a40] shadow-[0_14px_34px_rgba(27,34,30,0.08)] transition-transform duration-300 hover:-translate-y-1 lg:h-[520px] lg:min-w-[306px] lg:basis-[306px]",
-      playing ? "border-[#14131c]" : "border-[#d7d5d0]",
+      playing ? "border-[#071b3d]" : "border-[#d7d5d0]",
     ].join(" ")}>
       {playing ? (
         <div className="absolute inset-0 bg-[#11141a]">
@@ -241,16 +241,16 @@ function AboutReelCard({ reel, index, playing, onPlay, onStop }: { reel: AboutRe
             referrerPolicy="strict-origin-when-cross-origin"
             allowFullScreen
           />
-          <button className="absolute right-3 top-3 grid size-9 place-items-center rounded-full border border-white/20 bg-[#14131c]/80 text-white backdrop-blur-[10px] transition-colors hover:bg-[#14131c] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-white/70 focus-visible:outline-offset-2" type="button" aria-label={`Close ${title}`} onClick={onStop}><CloseIcon /></button>
+          <button className="absolute right-3 top-3 grid size-9 place-items-center rounded-full border border-white/20 bg-[#071b3d]/80 text-white backdrop-blur-[10px] transition-colors hover:bg-[#071b3d] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-white/70 focus-visible:outline-offset-2" type="button" aria-label={`Close ${title}`} onClick={onStop}><CloseIcon /></button>
         </div>
       ) : (
         <>
           <ReelThumbnail reel={reel} index={index} />
           <div className="absolute inset-x-0 bottom-0 flex min-h-[142px] flex-col justify-end gap-1.5 bg-gradient-to-b from-transparent via-[rgba(18,20,33,0.38)] to-[rgba(18,20,33,0.94)] px-5 pb-5 pt-16 text-[#ffebd7] drop-shadow-[0_1px_12px_rgba(18,20,33,0.32)]">
-            <p className="text-overline text-[#fac7cc]">{reel.title ? "LIMEX STORY" : "YOUTUBE STORY"}</p>
+            <p className="text-overline text-brand-cyan">{reel.title ? "LIMEX STORY" : "YOUTUBE STORY"}</p>
             <h3 className="max-w-[250px] line-clamp-2 text-card-title">{title}</h3>
           </div>
-          <button className="absolute left-1/2 top-1/2 z-10 grid size-[72px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-white/75 bg-white/95 text-[#17151c] shadow-[0_10px_26px_rgba(18,20,33,0.22)] ring-8 ring-white/20 transition-transform duration-200 hover:scale-105 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/50 focus-visible:outline-offset-3" type="button" aria-label={`Play ${title}`} onClick={onPlay}><PlayIcon /></button>
+          <button className="absolute left-1/2 top-1/2 z-10 grid size-[72px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-white/75 bg-white/95 text-[#071b3d] shadow-[0_10px_26px_rgba(18,20,33,0.22)] ring-8 ring-white/20 transition-transform duration-200 hover:scale-105 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/50 focus-visible:outline-offset-3" type="button" aria-label={`Play ${title}`} onClick={onPlay}><PlayIcon /></button>
         </>
       )}
     </article>
@@ -323,8 +323,8 @@ export function AboutReelsSection() {
         />
         {!loading && reels.length > 1 ? (
           <div className="flex shrink-0 items-center gap-2" aria-label="Video reel controls">
-            <button className="grid size-10 place-items-center rounded-full border border-[#d2cbc0] bg-white text-[#4f4b47] transition-all hover:-translate-y-0.5 hover:border-[#14131c] hover:text-[#14131c] disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/40 focus-visible:outline-offset-2" type="button" aria-label="Previous video reel" disabled={!canScrollPrevious} onClick={() => moveReels("previous")}><ArrowIcon direction="left" /></button>
-            <button className="grid size-10 place-items-center rounded-full bg-[#14131c] text-white transition-all hover:-translate-y-0.5 hover:bg-[#2a2933] disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/40 focus-visible:outline-offset-2" type="button" aria-label="Next video reel" disabled={!canScrollNext} onClick={() => moveReels("next")}><ArrowIcon direction="right" /></button>
+            <button className="grid size-10 place-items-center rounded-full border border-[#d2cbc0] bg-white text-[#4f4b47] transition-all hover:-translate-y-0.5 hover:border-[#071b3d] hover:text-[#071b3d] disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/40 focus-visible:outline-offset-2" type="button" aria-label="Previous video reel" disabled={!canScrollPrevious} onClick={() => moveReels("previous")}><ArrowIcon direction="left" /></button>
+            <button className="grid size-10 place-items-center rounded-full bg-[#071b3d] text-white transition-all hover:-translate-y-0.5 hover:bg-[#2a2933] disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/40 focus-visible:outline-offset-2" type="button" aria-label="Next video reel" disabled={!canScrollNext} onClick={() => moveReels("next")}><ArrowIcon direction="right" /></button>
           </div>
         ) : null}
       </div>
@@ -354,7 +354,7 @@ export function AboutReelsSection() {
 
 export function AboutContactCta() {
   return (
-    <section className="mt-[clamp(28px,3vw,44px)] flex flex-col gap-cluster-lg rounded-card bg-[#14131c] px-page-gutter py-card-pad-sm text-white sm:flex-row sm:items-center sm:justify-between lg:px-section-y lg:py-card-pad-sm" id="contact" aria-labelledby="about-contact-title">
+    <section className="mt-[clamp(28px,3vw,44px)] flex flex-col gap-cluster-lg rounded-card bg-[#071b3d] px-page-gutter py-card-pad-sm text-white sm:flex-row sm:items-center sm:justify-between lg:px-section-y lg:py-card-pad-sm" id="contact" aria-labelledby="about-contact-title">
       <div>
         <h2 className="font-brand text-subheading" id="about-contact-title">Let’s make the next step simple.</h2>
       </div>

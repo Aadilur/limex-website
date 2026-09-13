@@ -16,10 +16,10 @@ import { AboutReelsManager } from "./about-reels-module";
 const maxImageBytes = 5 * 1024 * 1024;
 const acceptedImageTypes = ["image/jpeg", "image/png", "image/webp"];
 const photoTones = [
-  "bg-[#d6ebde] text-[#2e6b4f]",
-  "bg-[#dedbfa] text-[#5c4aa6]",
-  "bg-[#fae5cc] text-[#9e5726]",
-  "bg-[#d1edeb] text-[#1f6e70]",
+  "bg-[#e5fbff] text-[#007ea6]",
+  "bg-[#e8f3ff] text-[#006dce]",
+  "bg-[#e9efff] text-[#0055ff]",
+  "bg-[#e5fbff] text-[#007ea6]",
 ];
 
 type MemberDraft = Omit<AboutTeamMemberInput, "sortOrder"> & { sortOrder: number };
@@ -169,21 +169,21 @@ function AboutMemberEditor({
     <form className="rounded-[22px] border border-[#d9d1c5] bg-white p-4 shadow-[0_14px_36px_rgba(49,42,35,0.06)] sm:p-5" onSubmit={handleSubmit}>
       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[#eee9e2] pb-4">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#e44762]">{member ? "Edit profile" : "New profile"}</p>
-          <h2 className="mt-1 font-brand text-[24px] font-bold tracking-[-0.04em] text-[#14131c]">About us team</h2>
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#0055ff]">{member ? "Edit profile" : "New profile"}</p>
+          <h2 className="mt-1 font-brand text-[24px] font-bold tracking-[-0.04em] text-[#071b3d]">About us team</h2>
         </div>
-        <button className="grid size-9 place-items-center rounded-full border border-[#ddd7ce] text-[18px] text-[#77736e] transition-colors hover:border-[#aaa197] hover:text-[#14131c]" type="button" aria-label="Close profile editor" onClick={onCancel}>×</button>
+        <button className="grid size-9 place-items-center rounded-full border border-[#ddd7ce] text-[18px] text-[#77736e] transition-colors hover:border-[#aaa197] hover:text-[#071b3d]" type="button" aria-label="Close profile editor" onClick={onCancel}>×</button>
       </div>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-[176px_minmax(0,1fr)]">
         <div>
           <div className="aspect-square overflow-hidden rounded-[18px] border border-[#e8e1d8] bg-[#faf9f6]">{preview}</div>
-          <label className="mt-3 inline-flex min-h-10 w-full cursor-pointer items-center justify-center rounded-full border border-[#d8d2c8] bg-white px-3 text-[12px] font-bold text-[#4f4b47] transition-colors hover:border-[#aaa197] hover:text-[#14131c]" htmlFor="about-team-image">
+          <label className="mt-3 inline-flex min-h-10 w-full cursor-pointer items-center justify-center rounded-full border border-[#d8d2c8] bg-white px-3 text-[12px] font-bold text-[#4f4b47] transition-colors hover:border-[#aaa197] hover:text-[#071b3d]" htmlFor="about-team-image">
             {image ? "Change photo" : "Choose photo"}
             <input className="sr-only" id="about-team-image" type="file" accept="image/jpeg,image/png,image/webp" onChange={handleImageChange} />
           </label>
           {member?.imageUrl && !image && !removeImage ? (
-            <button className="mt-2 w-full text-[11px] font-semibold text-[#a44255] transition-colors hover:text-[#14131c]" type="button" onClick={() => setRemoveImage(true)}>Remove photo</button>
+            <button className="mt-2 w-full text-[11px] font-semibold text-[#a44255] transition-colors hover:text-[#071b3d]" type="button" onClick={() => setRemoveImage(true)}>Remove photo</button>
           ) : null}
           {image ? <p className="mt-2 truncate text-[10px] text-[#9b958c]" title={image.name}>{image.name}</p> : <p className="mt-2 text-[10px] leading-[1.4] text-[#9b958c]">JPG, PNG or WebP · up to 5 MB</p>}
           {removeImage ? <p className="mt-2 text-[10px] font-semibold text-[#a44255]">Photo will be removed when saved.</p> : null}
@@ -193,22 +193,22 @@ function AboutMemberEditor({
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block min-w-0">
             <FieldLabel htmlFor="about-team-name">Name</FieldLabel>
-            <input className="mt-2 min-h-11 w-full rounded-[12px] border border-[#ddd7ce] bg-[#fffdfa] px-3.5 text-[13px] text-[#14131c] outline-none transition-colors placeholder:text-[#aaa49b] focus:border-[#e44762] focus:ring-4 focus:ring-[#f54763]/10" id="about-team-name" value={draft.name} placeholder="e.g. Nusrat Jahan" onChange={(event) => updateDraft("name", event.target.value)} />
+            <input className="mt-2 min-h-11 w-full rounded-[12px] border border-[#ddd7ce] bg-[#fffdfa] px-3.5 text-[13px] text-[#071b3d] outline-none transition-colors placeholder:text-[#aaa49b] focus:border-[#0055ff] focus:ring-4 focus:ring-[#008cff]/10" id="about-team-name" value={draft.name} placeholder="e.g. Nusrat Jahan" onChange={(event) => updateDraft("name", event.target.value)} />
           </label>
           <label className="block min-w-0">
             <FieldLabel htmlFor="about-team-title">Title</FieldLabel>
-            <input className="mt-2 min-h-11 w-full rounded-[12px] border border-[#ddd7ce] bg-[#fffdfa] px-3.5 text-[13px] text-[#14131c] outline-none transition-colors placeholder:text-[#aaa49b] focus:border-[#e44762] focus:ring-4 focus:ring-[#f54763]/10" id="about-team-title" value={draft.title} placeholder="e.g. Legal advisor" onChange={(event) => updateDraft("title", event.target.value)} />
+            <input className="mt-2 min-h-11 w-full rounded-[12px] border border-[#ddd7ce] bg-[#fffdfa] px-3.5 text-[13px] text-[#071b3d] outline-none transition-colors placeholder:text-[#aaa49b] focus:border-[#0055ff] focus:ring-4 focus:ring-[#008cff]/10" id="about-team-title" value={draft.title} placeholder="e.g. Legal advisor" onChange={(event) => updateDraft("title", event.target.value)} />
           </label>
           <label className="block min-w-0 sm:col-span-2">
             <FieldLabel htmlFor="about-team-description">Short description</FieldLabel>
-            <textarea className="mt-2 min-h-[106px] w-full resize-y rounded-[12px] border border-[#ddd7ce] bg-[#fffdfa] px-3.5 py-3 text-[13px] leading-[1.5] text-[#14131c] outline-none transition-colors placeholder:text-[#aaa49b] focus:border-[#e44762] focus:ring-4 focus:ring-[#f54763]/10" id="about-team-description" value={draft.description} placeholder="One clear sentence about what they help with." onChange={(event) => updateDraft("description", event.target.value)} />
+            <textarea className="mt-2 min-h-[106px] w-full resize-y rounded-[12px] border border-[#ddd7ce] bg-[#fffdfa] px-3.5 py-3 text-[13px] leading-[1.5] text-[#071b3d] outline-none transition-colors placeholder:text-[#aaa49b] focus:border-[#0055ff] focus:ring-4 focus:ring-[#008cff]/10" id="about-team-description" value={draft.description} placeholder="One clear sentence about what they help with." onChange={(event) => updateDraft("description", event.target.value)} />
           </label>
           <label className="block min-w-0">
             <FieldLabel htmlFor="about-team-order">Display order</FieldLabel>
-            <input className="mt-2 min-h-11 w-full rounded-[12px] border border-[#ddd7ce] bg-[#fffdfa] px-3.5 text-[13px] text-[#14131c] outline-none transition-colors focus:border-[#e44762] focus:ring-4 focus:ring-[#f54763]/10" id="about-team-order" type="number" min="0" max="999" value={draft.sortOrder} onChange={(event) => updateDraft("sortOrder", Number(event.target.value) || 0)} />
+            <input className="mt-2 min-h-11 w-full rounded-[12px] border border-[#ddd7ce] bg-[#fffdfa] px-3.5 text-[13px] text-[#071b3d] outline-none transition-colors focus:border-[#0055ff] focus:ring-4 focus:ring-[#008cff]/10" id="about-team-order" type="number" min="0" max="999" value={draft.sortOrder} onChange={(event) => updateDraft("sortOrder", Number(event.target.value) || 0)} />
           </label>
           <label className="flex min-h-11 items-center gap-3 self-end rounded-[12px] border border-[#e8e1d8] bg-[#faf9f6] px-3.5 text-[12px] font-semibold text-[#4f4b47]">
-            <input className="size-4 accent-[#e44762]" type="checkbox" checked={draft.isVisible} onChange={(event) => updateDraft("isVisible", event.target.checked)} />
+            <input className="size-4 accent-[#0055ff]" type="checkbox" checked={draft.isVisible} onChange={(event) => updateDraft("isVisible", event.target.checked)} />
             Show this profile publicly
           </label>
         </div>
@@ -216,8 +216,8 @@ function AboutMemberEditor({
 
       {formError ? <p className="mt-4 rounded-[12px] border border-[#f1c6ce] bg-[#fff8f8] px-3.5 py-3 text-[12px] text-[#ad3148]" role="alert">{formError}</p> : null}
       <div className="mt-5 flex flex-wrap justify-end gap-2 border-t border-[#eee9e2] pt-4">
-        <button className="inline-flex min-h-10 items-center justify-center rounded-full border border-[#d8d2c8] bg-white px-4 text-[12px] font-bold text-[#4f4b47] transition-colors hover:border-[#aaa197] hover:text-[#14131c] disabled:opacity-60" type="button" onClick={onCancel} disabled={saving}>Cancel</button>
-        <button className="inline-flex min-h-10 items-center justify-center rounded-full bg-[#14131c] px-5 text-[12px] font-bold text-white transition-transform hover:-translate-y-px disabled:cursor-wait disabled:opacity-60" type="submit" disabled={saving}>{saving ? "Saving…" : member ? "Save profile" : "Add profile"}</button>
+        <button className="inline-flex min-h-10 items-center justify-center rounded-full border border-[#d8d2c8] bg-white px-4 text-[12px] font-bold text-[#4f4b47] transition-colors hover:border-[#aaa197] hover:text-[#071b3d] disabled:opacity-60" type="button" onClick={onCancel} disabled={saving}>Cancel</button>
+        <button className="inline-flex min-h-10 items-center justify-center rounded-full bg-[#071b3d] px-5 text-[12px] font-bold text-white transition-transform hover:-translate-y-px disabled:cursor-wait disabled:opacity-60" type="submit" disabled={saving}>{saving ? "Saving…" : member ? "Save profile" : "Add profile"}</button>
       </div>
     </form>
   );
@@ -231,8 +231,8 @@ function AboutMemberCard({ member, index, onEdit, onDelete }: { member: AboutTea
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="truncate text-[10px] font-bold uppercase tracking-[0.12em] text-[#e44762]">{member.title}</p>
-              <h3 className="mt-1 truncate font-brand text-[21px] font-bold tracking-[-0.04em] text-[#14131c]">{member.name}</h3>
+              <p className="truncate text-[10px] font-bold uppercase tracking-[0.12em] text-[#0055ff]">{member.title}</p>
+              <h3 className="mt-1 truncate font-brand text-[21px] font-bold tracking-[-0.04em] text-[#071b3d]">{member.name}</h3>
             </div>
             <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${member.isVisible ? "bg-[#e9f4ed] text-[#29634d]" : "bg-[#f3f1ec] text-[#8b857e]"}`.trim()}>{member.isVisible ? "Visible" : "Hidden"}</span>
           </div>
@@ -242,7 +242,7 @@ function AboutMemberCard({ member, index, onEdit, onDelete }: { member: AboutTea
       <div className="flex items-center justify-between gap-3 border-t border-[#eee9e2] bg-[#faf9f6] px-4 py-3 sm:px-5">
         <span className="text-[11px] font-semibold text-[#9b958c]">Profile {String(member.sortOrder + 1).padStart(2, "0")}</span>
         <div className="flex items-center gap-2">
-          <button className="inline-flex min-h-9 items-center rounded-full border border-[#d8d2c8] bg-white px-3.5 text-[11px] font-bold text-[#4f4b47] transition-colors hover:border-[#aaa197] hover:text-[#14131c]" type="button" onClick={onEdit}>Edit</button>
+          <button className="inline-flex min-h-9 items-center rounded-full border border-[#d8d2c8] bg-white px-3.5 text-[11px] font-bold text-[#4f4b47] transition-colors hover:border-[#aaa197] hover:text-[#071b3d]" type="button" onClick={onEdit}>Edit</button>
           <button className="grid size-9 place-items-center rounded-full border border-[#f1c6ce] text-[16px] text-[#c63c56] transition-colors hover:bg-[#fce0e3]" type="button" aria-label={`Delete ${member.name}`} onClick={onDelete}>×</button>
         </div>
       </div>
@@ -330,7 +330,7 @@ export function AboutModule() {
     return (
       <section className="rounded-[24px] border border-[#f1c6ce] bg-[#fff8f8] p-6 sm:p-8">
         <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#c63c56]">About us unavailable</p>
-        <h1 className="mt-2 font-brand text-[30px] font-bold tracking-[-0.04em] text-[#14131c]">Connect the About us data first.</h1>
+        <h1 className="mt-2 font-brand text-[30px] font-bold tracking-[-0.04em] text-[#071b3d]">Connect the About us data first.</h1>
         <p className="mt-3 max-w-[620px] text-[14px] leading-[1.6] text-[#716c67]">Run the new Prisma migration, then reload this workspace.</p>
       </section>
     );
@@ -340,13 +340,13 @@ export function AboutModule() {
     <div className="space-y-6">
       <section className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#e44762]">Content workspace</p>
-          <h1 className="mt-2 font-brand text-[38px] font-bold leading-[1] tracking-[-0.05em] text-[#14131c] sm:text-[48px]">About us</h1>
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#0055ff]">Content workspace</p>
+          <h1 className="mt-2 font-brand text-[38px] font-bold leading-[1] tracking-[-0.05em] text-[#071b3d] sm:text-[48px]">About us</h1>
           <p className="mt-3 max-w-[560px] text-[14px] leading-[1.6] text-[#77736e]">Keep the people behind Limex current, clear and easy to trust.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <a className="inline-flex min-h-10 items-center justify-center rounded-full border border-[#d8d2c8] bg-white px-4 text-[12px] font-bold text-[#4f4b47] transition-colors hover:border-[#aaa197] hover:text-[#14131c]" href="/about" target="_blank" rel="noreferrer">Preview page ↗</a>
-          <button className="inline-flex min-h-10 items-center justify-center rounded-full bg-[#14131c] px-4 text-[12px] font-bold text-white transition-transform hover:-translate-y-px" type="button" onClick={() => { setError(""); setNotice(""); setEditingId("new"); }}>+ Add person</button>
+          <a className="inline-flex min-h-10 items-center justify-center rounded-full border border-[#d8d2c8] bg-white px-4 text-[12px] font-bold text-[#4f4b47] transition-colors hover:border-[#aaa197] hover:text-[#071b3d]" href="/about" target="_blank" rel="noreferrer">Preview page ↗</a>
+          <button className="inline-flex min-h-10 items-center justify-center rounded-full bg-[#071b3d] px-4 text-[12px] font-bold text-white transition-transform hover:-translate-y-px" type="button" onClick={() => { setError(""); setNotice(""); setEditingId("new"); }}>+ Add person</button>
         </div>
       </section>
 
@@ -358,9 +358,9 @@ export function AboutModule() {
       <section aria-labelledby="about-team-list-title">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#e44762]">The people</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#0055ff]">The people</p>
             <div className="mt-2 flex items-center gap-2">
-              <h2 className="font-brand text-[27px] font-bold tracking-[-0.04em] text-[#14131c]" id="about-team-list-title">Team profiles</h2>
+              <h2 className="font-brand text-[27px] font-bold tracking-[-0.04em] text-[#071b3d]" id="about-team-list-title">Team profiles</h2>
               <span className="rounded-full bg-[#f3f1ec] px-2.5 py-1 text-[10px] font-bold text-[#77736e]">{members.length}</span>
             </div>
           </div>
@@ -373,9 +373,9 @@ export function AboutModule() {
           </div>
         ) : (
           <div className="mt-4 rounded-[20px] border border-dashed border-[#d8d1c7] bg-white px-5 py-12 text-center">
-            <p className="font-brand text-[22px] font-bold tracking-[-0.03em] text-[#14131c]">Add the people behind Limex.</p>
+            <p className="font-brand text-[22px] font-bold tracking-[-0.03em] text-[#071b3d]">Add the people behind Limex.</p>
             <p className="mx-auto mt-2 max-w-[420px] text-[13px] leading-[1.55] text-[#8b857e]">Each profile needs only a name, title and one clear sentence. A photo is optional.</p>
-            <button className="mt-5 inline-flex min-h-10 items-center rounded-full bg-[#14131c] px-4 text-[12px] font-bold text-white" type="button" onClick={() => setEditingId("new")}>Add first profile</button>
+            <button className="mt-5 inline-flex min-h-10 items-center rounded-full bg-[#071b3d] px-4 text-[12px] font-bold text-white" type="button" onClick={() => setEditingId("new")}>Add first profile</button>
           </div>
         )}
       </section>

@@ -37,19 +37,19 @@ type RichTextEditorProps = {
 };
 
 const inputClass =
-  "min-h-10 w-full rounded-[10px] border border-[#ddd7ce] bg-[#fffdfa] px-3 text-[12px] text-[#14131c] outline-none transition-colors placeholder:text-[#aaa49b] focus:border-[#e44762] focus:ring-4 focus:ring-[#f54763]/10";
+  "min-h-10 w-full rounded-[10px] border border-[#ddd7ce] bg-[#fffdfa] px-3 text-[12px] text-[#071b3d] outline-none transition-colors placeholder:text-[#aaa49b] focus:border-[#0055ff] focus:ring-4 focus:ring-[#008cff]/10";
 
 function editorSurfaceClass(compact: boolean) {
   return [
   compact ? "min-h-[220px]" : "min-h-[320px]",
   "px-5 py-5 text-[15px] leading-[1.75] text-[#383531] outline-none",
   "[&_p]:my-3 [&_p:first-child]:mt-0 [&_p:last-child]:mb-0",
-  "[&_h2]:mb-3 [&_h2]:mt-7 [&_h2]:font-brand [&_h2]:text-[24px] [&_h2]:font-bold [&_h2]:leading-[1.15] [&_h2]:tracking-[-0.035em] [&_h2]:text-[#14131c]",
-  "[&_h3]:mb-2 [&_h3]:mt-6 [&_h3]:font-brand [&_h3]:text-[19px] [&_h3]:font-bold [&_h3]:leading-[1.2] [&_h3]:tracking-[-0.025em] [&_h3]:text-[#14131c]",
-  "[&_h4]:mb-2 [&_h4]:mt-5 [&_h4]:font-bold [&_h4]:text-[16px] [&_h4]:leading-[1.3] [&_h4]:text-[#14131c]",
+  "[&_h2]:mb-3 [&_h2]:mt-7 [&_h2]:font-brand [&_h2]:text-[24px] [&_h2]:font-bold [&_h2]:leading-[1.15] [&_h2]:tracking-[-0.035em] [&_h2]:text-[#071b3d]",
+  "[&_h3]:mb-2 [&_h3]:mt-6 [&_h3]:font-brand [&_h3]:text-[19px] [&_h3]:font-bold [&_h3]:leading-[1.2] [&_h3]:tracking-[-0.025em] [&_h3]:text-[#071b3d]",
+  "[&_h4]:mb-2 [&_h4]:mt-5 [&_h4]:font-bold [&_h4]:text-[16px] [&_h4]:leading-[1.3] [&_h4]:text-[#071b3d]",
   "[&_ul]:my-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:my-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:my-1",
-  "[&_blockquote]:my-5 [&_blockquote]:border-l-4 [&_blockquote]:border-[#e44762] [&_blockquote]:bg-[#fff4f5] [&_blockquote]:px-4 [&_blockquote]:py-2 [&_blockquote]:italic [&_blockquote]:text-[#625a58]",
-  "[&_a]:font-semibold [&_a]:text-[#d63c57] [&_a]:underline [&_a]:decoration-[#f4a2ae] [&_a]:underline-offset-2",
+  "[&_blockquote]:my-5 [&_blockquote]:border-l-4 [&_blockquote]:border-[#0055ff] [&_blockquote]:bg-[#eaf3ff] [&_blockquote]:px-4 [&_blockquote]:py-2 [&_blockquote]:italic [&_blockquote]:text-[#625a58]",
+  "[&_a]:font-semibold [&_a]:text-[#0055ff] [&_a]:underline [&_a]:decoration-[#14dcff] [&_a]:underline-offset-2",
   "[&_hr]:my-7 [&_hr]:border-0 [&_hr]:border-t [&_hr]:border-[#e8e2da]",
   "[&_img]:my-5 [&_img]:max-h-[460px] [&_img]:max-w-full [&_img]:rounded-[12px] [&_img]:object-contain",
   "[&_.is-empty:first-child::before]:pointer-events-none [&_.is-empty:first-child::before]:float-left [&_.is-empty:first-child::before]:h-0 [&_.is-empty:first-child::before]:text-[#aaa49b] [&_.is-empty:first-child::before]:content-[attr(data-placeholder)]",
@@ -139,8 +139,8 @@ function ToolbarButton({
   return (
     <button
       className={cn(
-        "grid size-8 place-items-center rounded-[8px] text-[#5f5a54] transition-colors hover:bg-white hover:text-[#e44762] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e44762]",
-        active && "bg-white text-[#e44762] shadow-[0_2px_8px_rgba(20,19,28,0.08)]",
+        "grid size-8 place-items-center rounded-[8px] text-[#5f5a54] transition-colors hover:bg-white hover:text-[#0055ff] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0055ff]",
+        active && "bg-white text-[#0055ff] shadow-[0_2px_8px_rgba(20,19,28,0.08)]",
         disabled && "cursor-not-allowed opacity-35 hover:bg-transparent hover:text-[#5f5a54]",
       )}
       type="button"
@@ -195,9 +195,9 @@ function LinkPanel({
         <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.1em] text-[#77736e]">Link URL</span>
         <input className={inputClass} value={value} placeholder="https:// or /internal-page" onChange={(event) => { onChange(event.target.value); onError(""); }} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); applyLink(); } }} autoFocus />
       </label>
-      <button className="min-h-10 rounded-[10px] bg-[#14131c] px-3.5 text-[11px] font-bold text-white transition-colors hover:bg-[#e44762]" type="button" onClick={applyLink}>Apply</button>
-      <button className="min-h-10 rounded-[10px] px-2.5 text-[11px] font-bold text-[#77736e] transition-colors hover:bg-[#f3eee7] hover:text-[#14131c]" type="button" onClick={() => { editor.chain().focus().extendMarkRange("link").unsetLink().run(); onClose(); }}>Remove</button>
-      <button className="min-h-10 rounded-[10px] px-2.5 text-[11px] font-bold text-[#77736e] transition-colors hover:bg-[#f3eee7] hover:text-[#14131c]" type="button" onClick={onClose}>Cancel</button>
+      <button className="min-h-10 rounded-[10px] bg-[#071b3d] px-3.5 text-[11px] font-bold text-white transition-colors hover:bg-[#0055ff]" type="button" onClick={applyLink}>Apply</button>
+      <button className="min-h-10 rounded-[10px] px-2.5 text-[11px] font-bold text-[#77736e] transition-colors hover:bg-[#f3eee7] hover:text-[#071b3d]" type="button" onClick={() => { editor.chain().focus().extendMarkRange("link").unsetLink().run(); onClose(); }}>Remove</button>
+      <button className="min-h-10 rounded-[10px] px-2.5 text-[11px] font-bold text-[#77736e] transition-colors hover:bg-[#f3eee7] hover:text-[#071b3d]" type="button" onClick={onClose}>Cancel</button>
       <p className="basis-full text-[10px] text-[#9b958c]" role="status">Select text in the article, then add a link. External links open in a new tab.</p>
     </div>
   );
@@ -240,8 +240,8 @@ function ImagePanel({
         <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.1em] text-[#77736e]">Alt text</span>
         <input className={inputClass} value={alt} placeholder="Describe the image" onChange={(event) => onAltChange(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); insertImage(); } }} />
       </label>
-      <button className="min-h-10 rounded-[10px] bg-[#14131c] px-3.5 text-[11px] font-bold text-white transition-colors hover:bg-[#e44762]" type="button" onClick={insertImage}>Insert</button>
-      <button className="min-h-10 rounded-[10px] px-2.5 text-[11px] font-bold text-[#77736e] transition-colors hover:bg-[#f3eee7] hover:text-[#14131c]" type="button" onClick={onClose}>Cancel</button>
+      <button className="min-h-10 rounded-[10px] bg-[#071b3d] px-3.5 text-[11px] font-bold text-white transition-colors hover:bg-[#0055ff]" type="button" onClick={insertImage}>Insert</button>
+      <button className="min-h-10 rounded-[10px] px-2.5 text-[11px] font-bold text-[#77736e] transition-colors hover:bg-[#f3eee7] hover:text-[#071b3d]" type="button" onClick={onClose}>Cancel</button>
       <p className="basis-full text-[10px] text-[#9b958c]" role="status">Add the image after uploading it through the Media tab so delivery stays optimized.</p>
     </div>
   );
@@ -373,10 +373,10 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
   }
 
   return (
-    <div className={cn("overflow-hidden rounded-[14px] border border-[#ddd7ce] bg-[#fffdfa] transition-colors focus-within:border-[#e44762] focus-within:ring-4 focus-within:ring-[#f54763]/10", className)}>
+    <div className={cn("overflow-hidden rounded-[14px] border border-[#ddd7ce] bg-[#fffdfa] transition-colors focus-within:border-[#0055ff] focus-within:ring-4 focus-within:ring-[#008cff]/10", className)}>
       <div className="flex flex-wrap items-center gap-1 border-b border-[#eee9e2] bg-[#faf7f2] px-2 py-1.5" aria-label="Article formatting toolbar">
         <label className="sr-only" htmlFor="article-block-style">Text style</label>
-        <select id="article-block-style" className="mr-1 h-8 rounded-[8px] bg-transparent px-2 text-[11px] font-bold text-[#4f4b47] outline-none transition-colors hover:bg-white focus:bg-white focus:ring-2 focus:ring-[#f54763]/20" value={activeStyle} onChange={(event) => updateBlockStyle(event.target.value as BlockStyle)} disabled={!editor || sourceMode}>
+        <select id="article-block-style" className="mr-1 h-8 rounded-[8px] bg-transparent px-2 text-[11px] font-bold text-[#4f4b47] outline-none transition-colors hover:bg-white focus:bg-white focus:ring-2 focus:ring-[#008cff]/20" value={activeStyle} onChange={(event) => updateBlockStyle(event.target.value as BlockStyle)} disabled={!editor || sourceMode}>
           <option value="paragraph">Paragraph</option>
           <option value="heading-2">Heading 2</option>
           <option value="heading-3">Heading 3</option>
@@ -398,7 +398,7 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
           <ToolbarDivider />
           <ToolbarButton label="Undo" icon="undo" disabled={!editor || sourceMode || !editor?.can().undo()} onClick={() => editor?.chain().focus().undo().run()} />
           <ToolbarButton label="Redo" icon="redo" disabled={!editor || sourceMode || !editor?.can().redo()} onClick={() => editor?.chain().focus().redo().run()} />
-          <button className={cn("ml-1 rounded-[8px] px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-[#77736e] transition-colors hover:bg-white hover:text-[#e44762]", sourceMode && "bg-white text-[#e44762]")} type="button" aria-pressed={sourceMode} onClick={toggleSourceMode}>{sourceMode ? "Visual editor" : "HTML source"}</button>
+          <button className={cn("ml-1 rounded-[8px] px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-[#77736e] transition-colors hover:bg-white hover:text-[#0055ff]", sourceMode && "bg-white text-[#0055ff]")} type="button" aria-pressed={sourceMode} onClick={toggleSourceMode}>{sourceMode ? "Visual editor" : "HTML source"}</button>
         </div>
       </div>
       {panelError ? <p className="border-b border-[#f4c9d0] bg-[#fff5f6] px-3 py-2 text-[10px] font-semibold text-[#ad3148]" role="alert">{panelError}</p> : null}

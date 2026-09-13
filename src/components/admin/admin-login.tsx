@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 import { getAdminSession, loginAdmin } from "@/lib/menu-api";
@@ -34,9 +35,9 @@ export function AdminLogin() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#14131c] px-4 py-5 text-white sm:px-8 sm:py-8">
-      <div className="pointer-events-none absolute -left-24 top-[-120px] size-[340px] rounded-full bg-[#f54763]/20 blur-3xl" aria-hidden="true" />
-      <div className="pointer-events-none absolute bottom-[-180px] right-[-100px] size-[430px] rounded-full bg-[#4d9c81]/20 blur-3xl" aria-hidden="true" />
+    <main className="relative min-h-screen overflow-hidden bg-[#071b3d] px-4 py-5 text-white sm:px-8 sm:py-8">
+      <div className="pointer-events-none absolute -left-24 top-[-120px] size-[340px] rounded-full bg-[#008cff]/20 blur-3xl" aria-hidden="true" />
+      <div className="pointer-events-none absolute bottom-[-180px] right-[-100px] size-[430px] rounded-full bg-brand-cyan/20 blur-3xl" aria-hidden="true" />
 
       <div className="relative mx-auto grid min-h-[calc(100vh-40px)] w-full max-w-[1180px] items-center gap-10 lg:grid-cols-[1fr_430px] lg:gap-20">
         <section className="hidden max-w-[560px] lg:block">
@@ -58,13 +59,13 @@ export function AdminLogin() {
         </section>
 
         <section className="mx-auto w-full max-w-[430px]">
-          <div className="rounded-[28px] border border-white/10 bg-[#fcfbf9] p-5 text-[#14131c] shadow-[0_24px_80px_rgba(0,0,0,0.22)] sm:p-8">
+          <div className="rounded-[28px] border border-white/10 bg-[#fcfbf9] p-5 text-[#071b3d] shadow-[0_24px_80px_rgba(0,0,0,0.22)] sm:p-8">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <span className="font-brand text-[22px] font-bold tracking-[0.02em]">LIMEX</span>
-                <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#e44762]">Admin sign in</p>
+                <Image className="h-auto w-[142px] object-contain object-left" src="/brand/limex-logo.png" alt="Limex Consultancy Firm" width={1600} height={474} />
+                <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#0055ff]">Admin sign in</p>
               </div>
-              <span className="grid size-10 place-items-center rounded-full bg-[#d7f0e3] text-[12px] font-bold text-[#29634d]">A</span>
+              <span className="grid size-10 place-items-center rounded-full bg-[#e5fbff] text-[12px] font-bold text-[#007ea6]">A</span>
             </div>
 
             <h2 className="mt-8 font-brand text-[31px] font-bold leading-[1.05] tracking-[-0.04em]">Welcome back.</h2>
@@ -74,7 +75,7 @@ export function AdminLogin() {
               <label className="block">
                 <span className="mb-2 block text-[12px] font-semibold text-[#4f4b47]">Username</span>
                 <input
-                  className="min-h-12 w-full rounded-[14px] border border-[#ddd7ce] bg-white px-4 text-[15px] text-[#14131c] outline-none transition-colors placeholder:text-[#aaa49b] focus:border-[#e44762] focus:ring-4 focus:ring-[#f54763]/10"
+                  className="min-h-12 w-full rounded-[14px] border border-[#ddd7ce] bg-white px-4 text-[15px] text-[#071b3d] outline-none transition-colors placeholder:text-[#aaa49b] focus:border-[#0055ff] focus:ring-4 focus:ring-[#008cff]/10"
                   type="text"
                   autoComplete="username"
                   placeholder="Enter your username"
@@ -86,7 +87,7 @@ export function AdminLogin() {
               <label className="block">
                 <span className="mb-2 block text-[12px] font-semibold text-[#4f4b47]">Password</span>
                 <input
-                  className="min-h-12 w-full rounded-[14px] border border-[#ddd7ce] bg-white px-4 text-[15px] text-[#14131c] outline-none transition-colors placeholder:text-[#aaa49b] focus:border-[#e44762] focus:ring-4 focus:ring-[#f54763]/10"
+                  className="min-h-12 w-full rounded-[14px] border border-[#ddd7ce] bg-white px-4 text-[15px] text-[#071b3d] outline-none transition-colors placeholder:text-[#aaa49b] focus:border-[#0055ff] focus:ring-4 focus:ring-[#008cff]/10"
                   type="password"
                   autoComplete="current-password"
                   placeholder="Enter your password"
@@ -98,9 +99,9 @@ export function AdminLogin() {
 
               {error ? <p className="rounded-[12px] bg-[#fce0e3] px-3.5 py-3 text-[13px] leading-[1.4] text-[#ad3148]" role="alert">{error}</p> : null}
 
-              <button className="flex min-h-12 w-full items-center justify-between rounded-full bg-[#14131c] px-5 text-[13px] font-bold text-white transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-60" type="submit" disabled={submitting}>
+              <button className="flex min-h-12 w-full items-center justify-between rounded-full bg-[#071b3d] px-5 text-[13px] font-bold text-white transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-60" type="submit" disabled={submitting}>
                 <span>{submitting ? "Signing in…" : "Continue to workspace"}</span>
-                <span className="text-[18px] text-[#f54763]" aria-hidden="true">↗</span>
+                <span className="text-[18px] text-[#008cff]" aria-hidden="true">↗</span>
               </button>
             </form>
 

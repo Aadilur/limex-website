@@ -53,7 +53,7 @@ export function TrustMetricsSection({ content = defaultLandingContent.metrics }:
         {metrics.map((metric, index) => (
           <div className={`flex min-h-[40px] flex-col items-center justify-center px-2 text-center ${index >= 2 ? "border-t border-[#e0e0e3] pt-2" : ""} ${index % 2 === 1 ? "border-l border-[#e0e0e3]" : ""} lg:min-h-[56px] lg:border-l lg:border-t-0 lg:px-cluster-lg lg:py-0 ${index === 0 ? "lg:border-l-0" : ""}`.trim()} key={metric.id}>
             <dt className="order-2 mt-0 text-micro text-[#616b7d] lg:mt-1">{metric.label}</dt>
-            <dd className="order-1 font-brand text-subheading-mobile text-[#121729] lg:text-subheading">{metric.value}</dd>
+            <dd className="order-1 font-brand text-subheading-mobile text-[#071b3d] lg:text-subheading">{metric.value}</dd>
           </div>
         ))}
       </dl>
@@ -87,7 +87,7 @@ export function HowItWorksSection({ content = defaultLandingContent.process }: {
             ))}
           </div>
         </div>
-        <aside className="relative isolate flex min-h-0 flex-col overflow-hidden rounded-[24px] bg-[#121729] p-5 text-white sm:p-6 lg:min-h-full lg:p-6">
+        <aside className="relative isolate flex min-h-0 flex-col overflow-hidden rounded-[24px] bg-[#071b3d] p-5 text-white sm:p-6 lg:min-h-full lg:p-6">
           <div className="pointer-events-none absolute -right-16 -top-16 size-40 rounded-full border border-white/[0.08]" aria-hidden="true" />
           <div className="relative flex items-start justify-between gap-3">
             <p className="text-overline text-[#a6b8eb]">{content.helperEyebrow}</p>

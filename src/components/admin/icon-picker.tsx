@@ -57,14 +57,14 @@ export function IconPicker({ value, onChange, disabled = false }: IconPickerProp
   return (
     <div className="relative" ref={pickerRef}>
       <button
-        className="flex min-h-11 w-full items-center gap-2.5 rounded-[12px] border border-[#ddd7ce] bg-white px-3 text-left text-[12px] font-semibold text-[#3f3c38] transition-colors hover:border-[#bbb3a8] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-[#f54763]/25 disabled:cursor-not-allowed disabled:opacity-60"
+        className="flex min-h-11 w-full items-center gap-2.5 rounded-[12px] border border-[#ddd7ce] bg-white px-3 text-left text-[12px] font-semibold text-[#3f3c38] transition-colors hover:border-[#bbb3a8] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-[#008cff]/25 disabled:cursor-not-allowed disabled:opacity-60"
         type="button"
         aria-haspopup="listbox"
         aria-expanded={open}
         disabled={disabled}
         onClick={() => setOpen((current) => !current)}
       >
-        <span className="grid size-7 shrink-0 place-items-center rounded-[9px] bg-[#f3f1ec] text-[#e44762]">
+        <span className="grid size-7 shrink-0 place-items-center rounded-[9px] bg-[#f3f1ec] text-[#0055ff]">
           <ServiceIcon name={selectedValue} className="size-[17px]" />
         </span>
         <span className="min-w-0 flex-1 truncate">{selectedOption.label}</span>
@@ -74,7 +74,7 @@ export function IconPicker({ value, onChange, disabled = false }: IconPickerProp
       {open ? (
         <div className="absolute left-0 top-[calc(100%+8px)] z-50 w-[min(300px,calc(100vw-48px))] rounded-[16px] border border-[#ddd7ce] bg-white p-2.5 shadow-[0_18px_45px_rgba(20,19,28,0.16)]" role="listbox" aria-label="Choose service icon">
           <input
-            className="min-h-10 w-full rounded-[10px] border border-[#e4dfd7] bg-[#f8f6f2] px-3 text-[12px] text-[#14131c] outline-none placeholder:text-[#a09a92] focus:border-[#e44762]"
+            className="min-h-10 w-full rounded-[10px] border border-[#e4dfd7] bg-[#f8f6f2] px-3 text-[12px] text-[#071b3d] outline-none placeholder:text-[#a09a92] focus:border-[#0055ff]"
             type="search"
             placeholder="Search icons"
             aria-label="Search icons"
@@ -88,7 +88,7 @@ export function IconPicker({ value, onChange, disabled = false }: IconPickerProp
 
               return (
                 <button
-                  className={`flex min-h-[62px] flex-col items-center justify-center gap-1 rounded-[10px] px-1 text-center transition-colors focus-visible:outline focus-visible:outline-[2px] focus-visible:outline-[#f54763] ${selected ? "bg-[#fce0e3] text-[#ad3148]" : "text-[#716c67] hover:bg-[#f6f2ed] hover:text-[#14131c]"}`.trim()}
+                  className={`flex min-h-[62px] flex-col items-center justify-center gap-1 rounded-[10px] px-1 text-center transition-colors focus-visible:outline focus-visible:outline-[2px] focus-visible:outline-[#008cff] ${selected ? "bg-[#e8efff] text-[#0055ff]" : "text-[#716c67] hover:bg-[#f6f2ed] hover:text-[#071b3d]"}`.trim()}
                   type="button"
                   role="option"
                   aria-selected={selected}

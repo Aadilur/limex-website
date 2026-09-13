@@ -26,7 +26,7 @@ import { ServiceIcon } from "@/components/limex/service-icons";
 import type { ServiceIconName } from "@/components/limex/data";
 import { IconPicker } from "./icon-picker";
 
-const fieldClass = "mt-2 min-h-11 w-full rounded-[12px] border border-[#ddd7ce] bg-white px-3.5 text-[13px] text-[#14131c] outline-none transition-colors placeholder:text-[#aaa49b] focus:border-[#e44762] focus:ring-4 focus:ring-[#f54763]/10";
+const fieldClass = "mt-2 min-h-11 w-full rounded-[12px] border border-[#ddd7ce] bg-white px-3.5 text-[13px] text-[#071b3d] outline-none transition-colors placeholder:text-[#aaa49b] focus:border-[#0055ff] focus:ring-4 focus:ring-[#008cff]/10";
 const textAreaClass = `${fieldClass} min-h-[88px] resize-y py-3 leading-[1.45]`;
 const toneOptions = ["green", "teal", "violet", "orange"] as const;
 
@@ -48,10 +48,10 @@ function getLinkProps(href: string) {
 }
 
 function toneClass(tone: string) {
-  if (tone === "teal") return "bg-[#d1edeb] text-[#1f6e70]";
-  if (tone === "violet") return "bg-[#dedbfa] text-[#5c4aa6]";
-  if (tone === "orange") return "bg-[#fae5cc] text-[#9e5726]";
-  return "bg-[#d6edde] text-[#2e6b4f]";
+  if (tone === "teal") return "bg-[#e5fbff] text-[#007ea6]";
+  if (tone === "violet") return "bg-[#e8f3ff] text-[#006dce]";
+  if (tone === "orange") return "bg-[#e9efff] text-[#0055ff]";
+  return "bg-[#e8f3ff] text-[#006dce]";
 }
 
 function Field({
@@ -109,7 +109,7 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
       aria-checked={checked}
       onClick={onChange}
     >
-      <span className={`relative h-5 w-9 rounded-full transition-colors ${checked ? "bg-[#29634d]" : "bg-[#c8c2b9]"}`.trim()} aria-hidden="true">
+      <span className={`relative h-5 w-9 rounded-full transition-colors ${checked ? "bg-[#008cff]" : "bg-[#c8c2b9]"}`.trim()} aria-hidden="true">
         <span className={`absolute top-1 size-3 rounded-full bg-white transition-transform ${checked ? "translate-x-5" : "translate-x-1"}`.trim()} />
       </span>
       {label}
@@ -120,7 +120,7 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
 function SaveButton({ label = "Save changes", saving, onClick }: { label?: string; saving: boolean; onClick: () => void }) {
   return (
     <button
-      className="inline-flex min-h-10 items-center justify-center rounded-full bg-[#14131c] px-4 text-[12px] font-bold text-white transition-transform hover:-translate-y-px disabled:cursor-wait disabled:opacity-60"
+      className="inline-flex min-h-10 items-center justify-center rounded-full bg-[#071b3d] px-4 text-[12px] font-bold text-white transition-transform hover:-translate-y-px disabled:cursor-wait disabled:opacity-60"
       type="button"
       disabled={saving}
       onClick={onClick}
@@ -133,7 +133,7 @@ function SaveButton({ label = "Save changes", saving, onClick }: { label?: strin
 function OutlineButton({ children, onClick, disabled = false, className = "" }: { children: ReactNode; onClick: () => void; disabled?: boolean; className?: string }) {
   return (
     <button
-      className={`inline-flex min-h-10 items-center justify-center rounded-full border border-[#d8d2c8] bg-white px-4 text-[12px] font-bold text-[#4f4b47] transition-colors hover:border-[#aaa197] hover:text-[#14131c] disabled:cursor-wait disabled:opacity-60 ${className}`.trim()}
+      className={`inline-flex min-h-10 items-center justify-center rounded-full border border-[#d8d2c8] bg-white px-4 text-[12px] font-bold text-[#4f4b47] transition-colors hover:border-[#aaa197] hover:text-[#071b3d] disabled:cursor-wait disabled:opacity-60 ${className}`.trim()}
       type="button"
       disabled={disabled}
       onClick={onClick}
@@ -165,13 +165,13 @@ function SectionSettings({
     <section className="rounded-[22px] border border-[#e1dcd4] bg-white p-4 sm:p-5" aria-labelledby="section-settings-title">
       <div className="flex flex-wrap items-center gap-3">
         <button className="flex min-w-0 flex-1 items-center gap-3 text-left" type="button" aria-expanded={open} onClick={() => setOpen((current) => !current)}>
-          <span className="grid size-9 shrink-0 place-items-center rounded-[11px] bg-[#f3f1ec] text-[15px] text-[#e44762]">⌘</span>
+          <span className="grid size-9 shrink-0 place-items-center rounded-[11px] bg-[#f3f1ec] text-[15px] text-[#0055ff]">⌘</span>
           <span className="min-w-0">
-            <span className="block truncate text-[14px] font-bold text-[#14131c]" id="section-settings-title">Section settings</span>
+            <span className="block truncate text-[14px] font-bold text-[#071b3d]" id="section-settings-title">Section settings</span>
             <span className="mt-0.5 block truncate text-[11px] text-[#9b958c]">{section.label} · {section.isVisible ? "Visible" : "Hidden"}</span>
           </span>
         </button>
-        <button className="inline-flex min-h-10 items-center gap-1 rounded-full px-2 text-[12px] font-bold text-[#77736e] transition-colors hover:text-[#14131c]" type="button" aria-expanded={open} onClick={() => setOpen((current) => !current)}>
+        <button className="inline-flex min-h-10 items-center gap-1 rounded-full px-2 text-[12px] font-bold text-[#77736e] transition-colors hover:text-[#071b3d]" type="button" aria-expanded={open} onClick={() => setOpen((current) => !current)}>
           {open ? "Close" : "Edit"}<span className={`text-[16px] transition-transform ${open ? "rotate-180" : ""}`.trim()}>⌄</span>
         </button>
         <div className="flex w-full items-center gap-2 sm:w-auto">
@@ -241,7 +241,7 @@ function LinkEditor({
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2 text-[11px] text-[#9b958c]">
           <span className={`size-1.5 shrink-0 rounded-full ${link.isVisible ? "bg-[#3d9b68]" : "bg-[#c8c2b9]"}`} aria-hidden="true" />
-          {link.href ? <a className="truncate font-semibold text-[#e44762] hover:underline" href={link.href} {...getLinkProps(link.href)}>Open destination ↗</a> : <span>No destination set</span>}
+          {link.href ? <a className="truncate font-semibold text-[#0055ff] hover:underline" href={link.href} {...getLinkProps(link.href)}>Open destination ↗</a> : <span>No destination set</span>}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Toggle label={link.isVisible ? "On" : "Off"} checked={link.isVisible} onChange={() => onChange({ isVisible: !link.isVisible })} />
@@ -256,24 +256,24 @@ function LinkEditor({
 function ServiceRow({ item, active, onSelect }: { item: AdminMenuItem; active: boolean; onSelect: () => void }) {
   return (
     <button
-      className={`flex w-full min-w-0 items-center gap-3 px-3 py-3 text-left transition-colors sm:px-4 ${active ? "bg-[#fff4f5]" : "bg-white hover:bg-[#fcfaf8]"}`.trim()}
+      className={`flex w-full min-w-0 items-center gap-3 px-3 py-3 text-left transition-colors sm:px-4 ${active ? "bg-[#e9efff]" : "bg-white hover:bg-[#f7fbff]"}`.trim()}
       type="button"
       aria-pressed={active}
       onClick={onSelect}
     >
-      <span className={`grid size-9 shrink-0 place-items-center rounded-[10px] ${active ? "bg-[#fce0e3] text-[#e44762]" : "bg-[#f3f1ec] text-[#6c6761]"}`.trim()}>
+      <span className={`grid size-9 shrink-0 place-items-center rounded-[10px] ${active ? "bg-[#e8efff] text-[#0055ff]" : "bg-[#f3f1ec] text-[#6c6761]"}`.trim()}>
         <ServiceIcon name={item.icon as ServiceIconName} className="size-[18px]" />
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex min-w-0 items-center gap-2">
-          <span className="truncate text-[13px] font-bold text-[#14131c]">{item.label || "Untitled service"}</span>
+          <span className="truncate text-[13px] font-bold text-[#071b3d]">{item.label || "Untitled service"}</span>
           {item.links.length ? <span className="shrink-0 rounded-full bg-[#f3f1ec] px-2 py-0.5 text-[10px] font-bold text-[#77736e]">{item.links.length} link{item.links.length === 1 ? "" : "s"}</span> : null}
         </span>
         <span className="mt-0.5 block truncate text-[11px] text-[#9b958c]">{item.href || "No destination set"}</span>
       </span>
       <span className="hidden rounded-full bg-[#f3f1ec] px-2 py-1 text-[10px] font-bold text-[#77736e] sm:inline-flex">{item.marker}</span>
       <span className={`hidden rounded-full px-2 py-1 text-[10px] font-bold md:inline-flex ${item.isVisible ? "bg-[#e9f4ed] text-[#29634d]" : "bg-[#f3f1ec] text-[#8b857e]"}`.trim()}>{item.isVisible ? "On" : "Off"}</span>
-      <span className={`grid size-8 shrink-0 place-items-center rounded-full text-[16px] transition-colors ${active ? "bg-[#14131c] text-white" : "text-[#8b857e]"}`.trim()} aria-hidden="true">{active ? "↑" : "→"}</span>
+      <span className={`grid size-8 shrink-0 place-items-center rounded-full text-[16px] transition-colors ${active ? "bg-[#071b3d] text-white" : "text-[#8b857e]"}`.trim()} aria-hidden="true">{active ? "↑" : "→"}</span>
     </button>
   );
 }
@@ -305,10 +305,10 @@ function ItemEditor({
     <article className="rounded-[18px] border border-[#e1dcd4] bg-white p-4 sm:p-5" aria-labelledby={`service-editor-${item.id}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="grid size-10 shrink-0 place-items-center rounded-[11px] bg-[#fce0e3] text-[#e44762]"><ServiceIcon name={item.icon as ServiceIconName} className="size-[19px]" /></span>
+          <span className="grid size-10 shrink-0 place-items-center rounded-[11px] bg-[#fce0e3] text-[#0055ff]"><ServiceIcon name={item.icon as ServiceIconName} className="size-[19px]" /></span>
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#e44762]">Editing service</p>
-            <h3 className="mt-1 truncate text-[17px] font-bold tracking-[-0.02em] text-[#14131c]" id={`service-editor-${item.id}`}>{item.label || "Untitled service"}</h3>
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#0055ff]">Editing service</p>
+            <h3 className="mt-1 truncate text-[17px] font-bold tracking-[-0.02em] text-[#071b3d]" id={`service-editor-${item.id}`}>{item.label || "Untitled service"}</h3>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -373,7 +373,7 @@ function CategoryRail({
     <aside className="rounded-[18px] border border-[#e1dcd4] bg-white p-3.5 lg:sticky lg:top-5" aria-label="Categories">
       <div className="flex items-center justify-between gap-2 px-1">
         <div>
-          <p className="text-[12px] font-bold text-[#14131c]">Categories</p>
+          <p className="text-[12px] font-bold text-[#071b3d]">Categories</p>
           <p className="mt-0.5 text-[11px] text-[#9b958c]">Choose a menu group to edit.</p>
         </div>
         <span className="rounded-full bg-[#f3f1ec] px-2 py-1 text-[10px] font-bold text-[#77736e]">{groups.length}</span>
@@ -383,13 +383,13 @@ function CategoryRail({
           const selected = group.id === activeGroupId;
           return (
             <button
-              className={`flex min-w-0 items-center gap-2.5 rounded-[13px] border p-2.5 text-left transition-colors lg:w-full ${selected ? "border-[#14131c] bg-[#14131c] text-white" : "border-[#eee9e2] bg-[#faf9f6] text-[#14131c] hover:border-[#cfc8be]"}`.trim()}
+              className={`flex min-w-0 items-center gap-2.5 rounded-[13px] border p-2.5 text-left transition-colors lg:w-full ${selected ? "border-[#071b3d] bg-[#071b3d] text-white" : "border-[#eee9e2] bg-[#faf9f6] text-[#071b3d] hover:border-[#cfc8be]"}`.trim()}
               type="button"
               aria-pressed={selected}
               key={group.id}
               onClick={() => onSelect(group)}
             >
-              <span className={`grid size-8 shrink-0 place-items-center rounded-[9px] text-[10px] font-bold ${selected ? "bg-white/10 text-[#f8bec8]" : "bg-white text-[#e44762]"}`.trim()}>{String(group.sortOrder + 1).padStart(2, "0")}</span>
+              <span className={`grid size-8 shrink-0 place-items-center rounded-[9px] text-[10px] font-bold ${selected ? "bg-white/10 text-[#f8bec8]" : "bg-white text-[#0055ff]"}`.trim()}>{String(group.sortOrder + 1).padStart(2, "0")}</span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[11px] font-bold uppercase tracking-[0.02em]">{group.label || "Untitled category"}</span>
                 <span className={`mt-0.5 block truncate text-[10px] ${selected ? "text-white/50" : "text-[#9b958c]"}`.trim()}>{group.items.length} service{group.items.length === 1 ? "" : "s"}</span>
@@ -421,10 +421,10 @@ function CategoryEditor({
     <section className="rounded-[18px] border border-[#e1dcd4] bg-white p-4 sm:p-5" aria-labelledby={`category-editor-${group.id}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="grid size-10 shrink-0 place-items-center rounded-[11px] bg-[#f3f1ec] text-[11px] font-bold text-[#e44762]">{String(group.sortOrder + 1).padStart(2, "0")}</span>
+          <span className="grid size-10 shrink-0 place-items-center rounded-[11px] bg-[#f3f1ec] text-[11px] font-bold text-[#0055ff]">{String(group.sortOrder + 1).padStart(2, "0")}</span>
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#e44762]">Active category</p>
-            <h2 className="mt-1 truncate text-[17px] font-bold tracking-[-0.02em] text-[#14131c]" id={`category-editor-${group.id}`}>{group.label || "Untitled category"}</h2>
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#0055ff]">Active category</p>
+            <h2 className="mt-1 truncate text-[17px] font-bold tracking-[-0.02em] text-[#071b3d]" id={`category-editor-${group.id}`}>{group.label || "Untitled category"}</h2>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -632,7 +632,7 @@ export function ServicesModule() {
     return (
       <section className="rounded-[24px] border border-[#f1c6ce] bg-[#fff8f8] p-6 sm:p-8">
         <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#c63c56]">Menu unavailable</p>
-        <h1 className="mt-2 font-brand text-[30px] font-bold tracking-[-0.04em] text-[#14131c]">Connect the menu database first.</h1>
+        <h1 className="mt-2 font-brand text-[30px] font-bold tracking-[-0.04em] text-[#071b3d]">Connect the menu database first.</h1>
         <p className="mt-3 max-w-[620px] text-[14px] leading-[1.6] text-[#716c67]">Run the Prisma migration and seed, then reload.</p>
         <p className="mt-4 rounded-[12px] bg-white px-3.5 py-3 text-[12px] font-semibold text-[#8b3a4b]">{loadError}</p>
       </section>
@@ -642,8 +642,8 @@ export function ServicesModule() {
   if (!activeSection) {
     return (
       <section className="rounded-[24px] border border-[#e1dcd4] bg-white p-6 sm:p-8">
-        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#e44762]">Services & menu</p>
-        <h1 className="mt-2 font-brand text-[30px] font-bold tracking-[-0.04em] text-[#14131c]">No menu sections yet.</h1>
+        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#0055ff]">Services & menu</p>
+        <h1 className="mt-2 font-brand text-[30px] font-bold tracking-[-0.04em] text-[#071b3d]">No menu sections yet.</h1>
         <p className="mt-3 max-w-[620px] text-[14px] leading-[1.6] text-[#716c67]">Run the database seed to load the Limex service areas.</p>
       </section>
     );
@@ -689,14 +689,14 @@ export function ServicesModule() {
     <div className="space-y-6">
       <section className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#e44762]">Content workspace</p>
-          <h1 className="mt-2 font-brand text-[38px] font-bold leading-[1] tracking-[-0.05em] text-[#14131c] sm:text-[48px]">Services & menu</h1>
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#0055ff]">Content workspace</p>
+          <h1 className="mt-2 font-brand text-[38px] font-bold leading-[1] tracking-[-0.05em] text-[#071b3d] sm:text-[48px]">Services & menu</h1>
           <p className="mt-3 max-w-[620px] text-[14px] leading-[1.6] text-[#77736e]">Organize categories, services, links and icons from one focused workspace.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <a className="inline-flex min-h-10 items-center justify-center rounded-full bg-[#14131c] px-4 text-[12px] font-bold text-white transition-colors hover:bg-[#2d2c37]" href="/admin/services/pages">Service pages</a>
-          <a className="inline-flex min-h-10 items-center justify-center rounded-full border border-[#d8d2c8] bg-white px-4 text-[12px] font-bold text-[#4f4b47] transition-colors hover:border-[#aaa197] hover:text-[#14131c]" href="/" target="_blank" rel="noreferrer">Preview website ↗</a>
-          <button className="inline-flex min-h-10 items-center justify-center rounded-full bg-[#14131c] px-4 text-[12px] font-bold text-white transition-transform hover:-translate-y-px" type="button" onClick={() => window.location.reload()}>Refresh data</button>
+          <a className="inline-flex min-h-10 items-center justify-center rounded-full bg-[#071b3d] px-4 text-[12px] font-bold text-white transition-colors hover:bg-[#2d2c37]" href="/admin/services/pages">Service pages</a>
+          <a className="inline-flex min-h-10 items-center justify-center rounded-full border border-[#d8d2c8] bg-white px-4 text-[12px] font-bold text-[#4f4b47] transition-colors hover:border-[#aaa197] hover:text-[#071b3d]" href="/" target="_blank" rel="noreferrer">Preview website ↗</a>
+          <button className="inline-flex min-h-10 items-center justify-center rounded-full bg-[#071b3d] px-4 text-[12px] font-bold text-white transition-transform hover:-translate-y-px" type="button" onClick={() => window.location.reload()}>Refresh data</button>
         </div>
       </section>
 
@@ -708,7 +708,7 @@ export function ServicesModule() {
           const selected = section.id === activeSection.id;
           return (
             <button
-              className={`flex min-w-[178px] shrink-0 items-center gap-3 rounded-[18px] border p-3 text-left transition-colors ${selected ? "border-[#14131c] bg-[#14131c] text-white" : "border-[#e1dcd4] bg-white text-[#14131c] hover:border-[#c7c0b6]"}`.trim()}
+              className={`flex min-w-[178px] shrink-0 items-center gap-3 rounded-[18px] border p-3 text-left transition-colors ${selected ? "border-[#071b3d] bg-[#071b3d] text-white" : "border-[#e1dcd4] bg-white text-[#071b3d] hover:border-[#c7c0b6]"}`.trim()}
               type="button"
               key={section.id}
               aria-current={selected ? "page" : undefined}
@@ -747,8 +747,8 @@ export function ServicesModule() {
       <section aria-labelledby="categories-title">
         <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#e44762]">Menu structure</p>
-            <h2 className="mt-2 font-brand text-[27px] font-bold tracking-[-0.04em] text-[#14131c]" id="categories-title">Categories & services</h2>
+            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#0055ff]">Menu structure</p>
+            <h2 className="mt-2 font-brand text-[27px] font-bold tracking-[-0.04em] text-[#071b3d]" id="categories-title">Categories & services</h2>
           </div>
           <p className="text-[12px] text-[#9b958c]">Select a category, then edit one service at a time.</p>
         </div>
@@ -788,7 +788,7 @@ export function ServicesModule() {
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#eee9e2] px-4 py-3.5 sm:px-5">
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="text-[14px] font-bold text-[#14131c]" id="services-list-title">Services</h3>
+                      <h3 className="text-[14px] font-bold text-[#071b3d]" id="services-list-title">Services</h3>
                       <span className="rounded-full bg-[#f3f1ec] px-2 py-1 text-[10px] font-bold text-[#77736e]">{activeGroup.items.length}</span>
                     </div>
                     <p className="mt-0.5 text-[11px] text-[#9b958c]">Choose a row to edit its icon, URL or links.</p>

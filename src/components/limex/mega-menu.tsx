@@ -6,24 +6,24 @@ import { WaveLabel } from "./ui";
 
 const toneClasses: Record<MegaMenuTone, { accent: string; marker: string; badge: string }> = {
   green: {
-    accent: "text-[#2e6b4f]",
-    marker: "bg-[#d6edde] text-[#2e6b4f]",
-    badge: "bg-[#d6edde] text-[#2e6b4f]",
+    accent: "text-[#007ea6]",
+    marker: "bg-[#e5fbff] text-[#007ea6]",
+    badge: "bg-[#e5fbff] text-[#007ea6]",
   },
   violet: {
-    accent: "text-[#5c4aa6]",
-    marker: "bg-[#dedbfa] text-[#5c4aa6]",
-    badge: "bg-[#dedbfa] text-[#5c4aa6]",
+    accent: "text-[#006dce]",
+    marker: "bg-[#e8f3ff] text-[#006dce]",
+    badge: "bg-[#e8f3ff] text-[#006dce]",
   },
   teal: {
-    accent: "text-[#1f6e70]",
-    marker: "bg-[#d1edeb] text-[#1f6e70]",
-    badge: "bg-[#d1edeb] text-[#1f6e70]",
+    accent: "text-brand-blue",
+    marker: "bg-[#e9efff] text-brand-blue",
+    badge: "bg-[#e9efff] text-brand-blue",
   },
   orange: {
-    accent: "text-[#9e5726]",
-    marker: "bg-[#fae5cc] text-[#9e5726]",
-    badge: "bg-[#fae5cc] text-[#9e5726]",
+    accent: "text-[#006dce]",
+    marker: "bg-[#eaf3ff] text-[#006dce]",
+    badge: "bg-[#eaf3ff] text-[#006dce]",
   },
 };
 
@@ -101,7 +101,7 @@ function Spotlight({ item, tone, onNavigate, pathname }: { item: NavItem; tone: 
   const href = resolveLocalHref(item.spotlight.ctaHref, pathname);
 
   return (
-    <aside className="relative hidden h-fit min-h-[244px] self-start overflow-hidden rounded-card border border-white/10 bg-[#14131c] p-4 text-white wide:flex">
+    <aside className="relative hidden h-fit min-h-[244px] self-start overflow-hidden rounded-card border border-white/10 bg-[#071b3d] p-4 text-white wide:flex">
       <div className={`absolute inset-x-0 top-0 h-1 ${palette.badge}`.trim()} aria-hidden="true" />
       <div className="flex min-h-[212px] flex-col justify-between">
         <div>
@@ -162,7 +162,7 @@ export function MegaMenuPanel({ item, onNavigate }: { item: NavItem; onNavigate:
           <p className="px-2 py-1.5 text-overline text-muted">Browse by need</p>
           <div className="space-y-1">
             <button
-              className={`flex min-h-8 w-full items-center justify-between rounded-pill px-2.5 text-left text-micro font-semibold transition-colors ${activeGroup === "all" ? "bg-[#14131c] text-white" : "text-ink hover:bg-white"}`.trim()}
+              className={`flex min-h-8 w-full items-center justify-between rounded-pill px-2.5 text-left text-micro font-semibold transition-colors ${activeGroup === "all" ? "bg-[#071b3d] text-white" : "text-ink hover:bg-white"}`.trim()}
               type="button"
               aria-pressed={activeGroup === "all"}
               onClick={() => setActiveGroup("all")}
@@ -234,7 +234,7 @@ export function MobileMegaMenuContent({ item, onNavigate }: { item: NavItem; onN
         </section>
       ))}
       {item.spotlight ? (
-        <a className="flex min-h-12 items-center justify-between gap-cluster overflow-hidden rounded-card bg-[#14131c] px-3.5 text-body-xs font-bold text-white" href={resolveLocalHref(item.spotlight.ctaHref, pathname)} onClick={onNavigate} {...getLinkProps(resolveLocalHref(item.spotlight.ctaHref, pathname))}>
+        <a className="flex min-h-12 items-center justify-between gap-cluster overflow-hidden rounded-card bg-[#071b3d] px-3.5 text-body-xs font-bold text-white" href={resolveLocalHref(item.spotlight.ctaHref, pathname)} onClick={onNavigate} {...getLinkProps(resolveLocalHref(item.spotlight.ctaHref, pathname))}>
           <span className="min-w-0 truncate whitespace-nowrap">{item.spotlight.ctaLabel}</span>
           <LinkArrow small />
         </a>

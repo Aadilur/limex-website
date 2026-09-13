@@ -4,22 +4,22 @@ import type { PackagesContent } from "@/lib/landing-types";
 
 const packageVisuals: Record<string, { label: string; wave: string; number: string; marker: string }> = {
   "Company setup": {
-    label: "text-[#607764]",
-    wave: "text-[#a6b7a8]",
-    number: "border-[#d2ded4] bg-[#f3f6f2] text-[#607764]",
-    marker: "border-[#d8e3da] bg-[#f7f9f6] text-[#607764]",
+    label: "text-[#007ea6]",
+    wave: "text-[#8bdff2]",
+    number: "border-[#c9edf5] bg-[#effbff] text-[#007ea6]",
+    marker: "border-[#d8f3fa] bg-[#f7fdff] text-[#007ea6]",
   },
   "Compliance care": {
-    label: "text-[#777183]",
-    wave: "text-[#c3bdca]",
-    number: "border-[#e0dce6] bg-[#f7f5f8] text-[#777183]",
-    marker: "border-[#e5e1ea] bg-[#faf9fb] text-[#777183]",
+    label: "text-[#006dce]",
+    wave: "text-[#a4ccf2]",
+    number: "border-[#d3e6fb] bg-[#f1f7ff] text-[#006dce]",
+    marker: "border-[#dcecfb] bg-[#f8fbff] text-[#006dce]",
   },
   "Trademark support": {
-    label: "text-[#8a7175]",
-    wave: "text-[#cdbabd]",
-    number: "border-[#e5dbdd] bg-[#faf7f7] text-[#8a7175]",
-    marker: "border-[#e9dfe1] bg-[#fcfafa] text-[#8a7175]",
+    label: "text-brand-blue",
+    wave: "text-[#9eb4ff]",
+    number: "border-[#d6ddff] bg-[#f2f5ff] text-brand-blue",
+    marker: "border-[#e0e6ff] bg-[#fafbff] text-brand-blue",
   },
 };
 

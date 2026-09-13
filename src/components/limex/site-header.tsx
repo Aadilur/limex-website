@@ -39,7 +39,7 @@ function DesktopNavTrigger({
     <div className="relative">
       <button
         className={`group relative inline-flex h-control items-center gap-cluster-xs rounded-control border-0 bg-transparent px-2 py-1 text-nav-compact whitespace-nowrap transition-colors duration-200 ease-out hover:text-pink xl:text-nav-medium wide:text-nav ${
-          isActive ? "bg-pink/10 font-bold text-[#de4d73]" : "text-ink"
+          isActive ? "bg-pink/10 font-bold text-[#0055ff]" : "text-ink"
         }`.trim()}
         type="button"
         aria-expanded={isOpen}
@@ -61,7 +61,7 @@ function MobileNavGroup({ item, onNavigate, isActive }: { item: NavItem; onNavig
   return (
     <div>
       <button
-        className={`flex min-h-nav-row w-full items-center justify-between gap-nav rounded-control border-0 border-b border-border px-0.5 text-left text-mobile-nav transition-colors duration-200 ease-out hover:text-pink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2 ${isActive ? "bg-pink/10 font-bold text-[#de4d73]" : "bg-transparent text-ink"}`.trim()}
+        className={`flex min-h-nav-row w-full items-center justify-between gap-nav rounded-control border-0 border-b border-border px-0.5 text-left text-mobile-nav transition-colors duration-200 ease-out hover:text-pink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2 ${isActive ? "bg-pink/10 font-bold text-[#0055ff]" : "bg-transparent text-ink"}`.trim()}
         type="button"
         aria-expanded={open}
         aria-controls={childrenId}
@@ -217,7 +217,7 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
             ) : (
               <a
                 key={item.label}
-                className={`group relative inline-flex h-control items-center rounded-control px-2 py-1 text-nav-compact whitespace-nowrap transition-colors duration-200 ease-out hover:text-pink xl:text-nav-medium wide:text-nav ${item.label === activeNavLabel ? "bg-pink/10 font-bold text-[#de4d73]" : "text-ink"}`.trim()}
+                className={`group relative inline-flex h-control items-center rounded-control px-2 py-1 text-nav-compact whitespace-nowrap transition-colors duration-200 ease-out hover:text-pink xl:text-nav-medium wide:text-nav ${item.label === activeNavLabel ? "bg-pink/10 font-bold text-[#0055ff]" : "text-ink"}`.trim()}
                 href={resolveLocalHref(item.href, pathname)}
                 onClick={() => setOpenMenu(null)}
                 aria-current={item.label === activeNavLabel ? "page" : undefined}
@@ -240,7 +240,7 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
             />
           </>
         ) : null}
-        <a className="group inline-flex h-11 w-[136px] min-w-[136px] items-center gap-cluster-xs rounded-pill border border-[#14131c] bg-[#14131c] px-1.5 text-button font-bold text-[#fcfbfa] transition-all duration-200 hover:-translate-y-px hover:border-accent hover:bg-accent hover:shadow-[0_8px_18px_rgba(222,77,115,0.2)] wide:gap-cluster-sm wide:px-1.5" href={contactHref}>
+        <a className="group inline-flex h-11 w-[136px] min-w-[136px] items-center gap-cluster-xs rounded-pill border border-brand-blue bg-brand-blue px-1.5 text-button font-bold text-white transition-all duration-200 hover:-translate-y-px hover:border-brand-deep hover:bg-brand-deep hover:shadow-[0_8px_18px_rgba(0,85,255,0.2)] wide:gap-cluster-sm wide:px-1.5" href={contactHref}>
           <span className="grid size-8 shrink-0 place-items-center rounded-full bg-white/10 transition-colors duration-200 group-hover:bg-white/20">
             <img className="size-5" src="/figma/whatsapp-dot.svg" alt="" aria-hidden="true" />
           </span>
@@ -250,9 +250,9 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
       </div>
 
       <div className={`relative mx-mobile-gutter flex min-h-[60px] items-center justify-between rounded-nav border border-[rgba(224,222,227,0.86)] bg-page px-4 py-cluster wide:hidden ${navMotionClassName}`.trim()}>
-        <LogoLockup href={homeHref} className="w-auto min-w-0" />
+        <LogoLockup href={homeHref} className="w-[150px] min-w-[150px]" />
         <button
-          className="relative grid size-[42px] place-items-center rounded-full border-0 bg-[#14131c] text-white transition-transform duration-200 hover:scale-105 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3"
+          className="relative grid size-[42px] place-items-center rounded-full border-0 bg-brand-blue text-white transition-transform duration-200 hover:scale-105 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3"
           type="button"
           aria-expanded={mobileOpen}
           aria-controls="mobile-navigation"
@@ -272,7 +272,7 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
           <aside className="absolute bottom-cluster-sm right-cluster-sm top-cluster-sm flex w-[min(390px,calc(100%-24px))] flex-col overflow-y-auto rounded-drawer bg-paper p-drawer-pad shadow-drawer animate-menu-in" aria-label="Mobile navigation">
             <div className="flex items-center justify-between border-b border-border pb-cluster text-label uppercase text-muted">
               <span>Navigate</span>
-              <button className="grid size-[34px] place-items-center rounded-full border-0 bg-[#14131c] text-icon-lg text-white transition-transform hover:scale-105 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2" type="button" onClick={closeMobileMenu} aria-label="Close menu">
+              <button className="grid size-[34px] place-items-center rounded-full border-0 bg-[#071b3d] text-icon-lg text-white transition-transform hover:scale-105 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2" type="button" onClick={closeMobileMenu} aria-label="Close menu">
                 ×
               </button>
             </div>
@@ -283,7 +283,7 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
                 ) : (
                   <a
                     key={item.label}
-                    className={`flex min-h-nav-row items-center justify-between gap-nav rounded-control border-b border-border px-0.5 text-mobile-nav transition-colors duration-200 ease-out hover:text-pink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2 ${item.label === activeNavLabel ? "bg-pink/10 font-bold text-[#de4d73]" : "text-ink"}`.trim()}
+                    className={`flex min-h-nav-row items-center justify-between gap-nav rounded-control border-b border-border px-0.5 text-mobile-nav transition-colors duration-200 ease-out hover:text-pink focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2 ${item.label === activeNavLabel ? "bg-pink/10 font-bold text-[#0055ff]" : "text-ink"}`.trim()}
                     href={resolveLocalHref(item.href, pathname)}
                     onClick={closeMobileMenu}
                     aria-current={item.label === activeNavLabel ? "page" : undefined}
@@ -294,7 +294,7 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
                 ),
               )}
             </nav>
-            <a className="mt-auto flex min-h-12 items-center gap-cluster-sm rounded-pill bg-[#14131c] px-3.5 text-body-xs font-bold text-white transition-transform hover:-translate-y-px" href={contactHref} onClick={closeMobileMenu}>
+            <a className="mt-auto flex min-h-12 items-center gap-cluster-sm rounded-pill bg-[#071b3d] px-3.5 text-body-xs font-bold text-white transition-transform hover:-translate-y-px" href={contactHref} onClick={closeMobileMenu}>
               <img className="size-5" src="/figma/whatsapp-dot.svg" alt="" aria-hidden="true" />
               <span className="flex-1">Contact us</span>
               <span aria-hidden="true">↗</span>

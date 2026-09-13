@@ -159,9 +159,9 @@ const childDescriptions: Record<string, { en: string; bn: string }> = {
 };
 
 const sectionTone: Record<string, { color: string; surface: string }> = {
-  "Startup & Licensing": { color: "#2e6b4f", surface: "#edf7f0" },
-  "IP & Trademark": { color: "#b83652", surface: "#fff0f2" },
-  "Compliance & Documentation": { color: "#5c4aa6", surface: "#f2effb" },
+  "Startup & Licensing": { color: "#14dcff", surface: "#e9fbff" },
+  "IP & Trademark": { color: "#0055ff", surface: "#e8efff" },
+  "Compliance & Documentation": { color: "#008cff", surface: "#eaf3ff" },
 };
 
 function slugify(value: string) {

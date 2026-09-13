@@ -99,7 +99,7 @@ function MediaThumbnail({ asset, className = "" }: { asset: MediaAsset; classNam
 
 function FolderCard({ folder, onOpen }: { folder: MediaFolder; onOpen: () => void }) {
   return (
-    <button className="group flex min-h-[82px] items-center gap-3 rounded-[15px] bg-[#faf9f6] px-3.5 text-left transition-colors hover:bg-[#fcecef] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e44762]" type="button" onClick={onOpen}>
+    <button className="group flex min-h-[82px] items-center gap-3 rounded-[15px] bg-[#faf9f6] px-3.5 text-left transition-colors hover:bg-[#fcecef] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0055ff]" type="button" onClick={onOpen}>
       <span className="grid size-10 shrink-0 place-items-center rounded-[11px] bg-[#f8e7cb] text-[#ac6c27] transition-colors group-hover:bg-white">
         <FolderIcon />
       </span>
@@ -107,14 +107,14 @@ function FolderCard({ folder, onOpen }: { folder: MediaFolder; onOpen: () => voi
         <span className="block truncate text-[13px] font-bold text-[#29252a]">{folder.name}</span>
         <span className="mt-1 block text-[11px] text-[#9b958c]">{folder.assetCount} {folder.assetCount === 1 ? "image" : "images"}</span>
       </span>
-      <span className="text-[16px] text-[#b1aaa1] transition-transform group-hover:translate-x-0.5 group-hover:text-[#e44762]" aria-hidden="true">→</span>
+      <span className="text-[16px] text-[#b1aaa1] transition-transform group-hover:translate-x-0.5 group-hover:text-[#0055ff]" aria-hidden="true">→</span>
     </button>
   );
 }
 
 function AssetCard({ asset, selected, onSelect }: { asset: MediaAsset; selected: boolean; onSelect: () => void }) {
   return (
-    <button className={"group min-w-0 overflow-hidden rounded-[16px] bg-white text-left ring-1 ring-[#e6e0d7] transition-all hover:-translate-y-0.5 hover:ring-[#e44762]/45 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e44762] " + (selected ? "ring-2 ring-[#e44762]" : "")} type="button" onClick={onSelect} aria-pressed={selected}>
+    <button className={"group min-w-0 overflow-hidden rounded-[16px] bg-white text-left ring-1 ring-[#e6e0d7] transition-all hover:-translate-y-0.5 hover:ring-[#0055ff]/45 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0055ff] " + (selected ? "ring-2 ring-[#0055ff]" : "")} type="button" onClick={onSelect} aria-pressed={selected}>
       <div className="aspect-[4/3] overflow-hidden bg-[#f3f1ec]">
         <MediaThumbnail asset={asset} className="transition-transform duration-300 group-hover:scale-[1.03]" />
       </div>
@@ -130,7 +130,7 @@ function DetailField({ label, value, onChange, multiline = false }: { label: str
   return (
     <label className="block">
       <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#77736e]">{label}</span>
-      {multiline ? <textarea className="mt-1.5 min-h-[74px] w-full resize-y rounded-[10px] border border-[#ddd7ce] bg-[#fffdfa] px-3 py-2.5 text-[12px] leading-[1.5] text-[#14131c] outline-none transition-colors placeholder:text-[#aaa49b] focus:border-[#e44762] focus:ring-4 focus:ring-[#f54763]/10" value={value} onChange={(event) => onChange(event.target.value)} /> : <input className="mt-1.5 min-h-10 w-full rounded-[10px] border border-[#ddd7ce] bg-[#fffdfa] px-3 text-[12px] text-[#14131c] outline-none transition-colors placeholder:text-[#aaa49b] focus:border-[#e44762] focus:ring-4 focus:ring-[#f54763]/10" value={value} onChange={(event) => onChange(event.target.value)} />}
+      {multiline ? <textarea className="mt-1.5 min-h-[74px] w-full resize-y rounded-[10px] border border-[#ddd7ce] bg-[#fffdfa] px-3 py-2.5 text-[12px] leading-[1.5] text-[#071b3d] outline-none transition-colors placeholder:text-[#aaa49b] focus:border-[#0055ff] focus:ring-4 focus:ring-[#008cff]/10" value={value} onChange={(event) => onChange(event.target.value)} /> : <input className="mt-1.5 min-h-10 w-full rounded-[10px] border border-[#ddd7ce] bg-[#fffdfa] px-3 text-[12px] text-[#071b3d] outline-none transition-colors placeholder:text-[#aaa49b] focus:border-[#0055ff] focus:ring-4 focus:ring-[#008cff]/10" value={value} onChange={(event) => onChange(event.target.value)} />}
     </label>
   );
 }
@@ -153,8 +153,8 @@ function AssetDetails({ asset, saving, onSave, onDelete, onCopy }: { asset: Medi
       </div>
       <div className="mt-4 flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#e44762]">Selected media</p>
-          <h2 className="mt-1 truncate font-brand text-[21px] font-bold tracking-[-0.035em] text-[#14131c]" id="media-details-title">{asset.displayName}</h2>
+          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#0055ff]">Selected media</p>
+          <h2 className="mt-1 truncate font-brand text-[21px] font-bold tracking-[-0.035em] text-[#071b3d]" id="media-details-title">{asset.displayName}</h2>
         </div>
         <span className="shrink-0 rounded-full bg-[#f3f1ec] px-2 py-1 text-[10px] font-bold text-[#77736e]">{asset.contentType.replace("image/", "").toUpperCase()}</span>
       </div>
@@ -166,10 +166,10 @@ function AssetDetails({ asset, saving, onSave, onDelete, onCopy }: { asset: Medi
       <div className="mt-4 space-y-2 text-[11px] text-[#77736e]">
         <p className="flex items-center justify-between gap-3"><span>Size</span><strong className="font-semibold text-[#4f4b47]">{formatBytes(asset.byteSize)}</strong></p>
         <p className="flex items-center justify-between gap-3"><span>Dimensions</span><strong className="font-semibold text-[#4f4b47]">{formatDimensions(asset)}</strong></p>
-        {asset.usage ? <p className="flex items-center justify-between gap-3"><span>Used in</span><a className="max-w-[150px] truncate font-semibold text-[#d63c57] hover:underline" href={asset.usage.href}>{asset.usage.label}</a></p> : <p className="flex items-center justify-between gap-3"><span>Used in</span><strong className="font-semibold text-[#29634d]">Nothing yet</strong></p>}
+        {asset.usage ? <p className="flex items-center justify-between gap-3"><span>Used in</span><a className="max-w-[150px] truncate font-semibold text-[#0055ff] hover:underline" href={asset.usage.href}>{asset.usage.label}</a></p> : <p className="flex items-center justify-between gap-3"><span>Used in</span><strong className="font-semibold text-[#29634d]">Nothing yet</strong></p>}
       </div>
       <div className="mt-4 grid grid-cols-2 gap-2">
-        <button className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full bg-[#14131c] px-3 text-[11px] font-bold text-white transition-colors hover:bg-[#e44762] disabled:opacity-60" type="button" onClick={() => onSave({ displayName, altText, caption })} disabled={saving}>Save details</button>
+        <button className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full bg-[#071b3d] px-3 text-[11px] font-bold text-white transition-colors hover:bg-[#0055ff] disabled:opacity-60" type="button" onClick={() => onSave({ displayName, altText, caption })} disabled={saving}>Save details</button>
         <button className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full bg-[#f3f1ec] px-3 text-[11px] font-bold text-[#4f4b47] transition-colors hover:bg-[#e9e4dc]" type="button" onClick={onCopy}><CopyIcon />Copy URL</button>
       </div>
       <button className="mt-3 inline-flex min-h-9 w-full items-center justify-center gap-1.5 rounded-full text-[11px] font-bold text-[#ad3148] transition-colors hover:bg-[#fff1f3]" type="button" onClick={onDelete} disabled={saving}><TrashIcon />Delete media</button>
@@ -338,13 +338,13 @@ export function MediaModule() {
     <div className="space-y-6">
       <section className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#e44762]">Content workspace</p>
-          <h1 className="mt-2 font-brand text-[38px] font-bold leading-[1] tracking-[-0.05em] text-[#14131c] sm:text-[48px]">Media library</h1>
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#0055ff]">Content workspace</p>
+          <h1 className="mt-2 font-brand text-[38px] font-bold leading-[1] tracking-[-0.05em] text-[#071b3d] sm:text-[48px]">Media library</h1>
           <p className="mt-3 max-w-[620px] text-[14px] leading-[1.6] text-[#77736e]">Keep every image in one organized place. Blog uploads are grouped automatically by article.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <button className="inline-flex min-h-10 items-center justify-center rounded-full border border-[#d8d2c8] bg-white px-4 text-[12px] font-bold text-[#4f4b47] transition-colors hover:border-[#aaa197] hover:text-[#14131c]" type="button" onClick={() => { setFolderFormOpen((open) => !open); setError(""); setNotice(""); }}>+ New folder</button>
-          {currentFolder ? <label className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#14131c] px-4 text-[12px] font-bold text-white transition-colors hover:bg-[#e44762]">
+          <button className="inline-flex min-h-10 items-center justify-center rounded-full border border-[#d8d2c8] bg-white px-4 text-[12px] font-bold text-[#4f4b47] transition-colors hover:border-[#aaa197] hover:text-[#071b3d]" type="button" onClick={() => { setFolderFormOpen((open) => !open); setError(""); setNotice(""); }}>+ New folder</button>
+          {currentFolder ? <label className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#071b3d] px-4 text-[12px] font-bold text-white transition-colors hover:bg-[#0055ff]">
             <UploadIcon />
             {uploading ? "Uploading…" : "Upload image"}
             <input className="sr-only" type="file" accept={acceptedImageTypes} multiple onChange={(event) => void handleUpload(event)} disabled={uploading} />
@@ -355,9 +355,9 @@ export function MediaModule() {
       {folderFormOpen ? <form className="flex flex-col gap-2 rounded-[16px] bg-[#fffdfa] p-3 ring-1 ring-[#e6e0d7] sm:flex-row sm:items-end" onSubmit={submitFolder}>
         <label className="min-w-0 flex-1">
           <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Folder name</span>
-          <input className="mt-1.5 min-h-10 w-full rounded-[10px] border border-[#ddd7ce] bg-white px-3 text-[12px] text-[#14131c] outline-none focus:border-[#e44762] focus:ring-4 focus:ring-[#f54763]/10" value={folderName} onChange={(event) => setFolderName(event.target.value)} placeholder={currentFolder ? "e.g. Campaign images" : "e.g. Brand assets"} autoFocus />
+          <input className="mt-1.5 min-h-10 w-full rounded-[10px] border border-[#ddd7ce] bg-white px-3 text-[12px] text-[#071b3d] outline-none focus:border-[#0055ff] focus:ring-4 focus:ring-[#008cff]/10" value={folderName} onChange={(event) => setFolderName(event.target.value)} placeholder={currentFolder ? "e.g. Campaign images" : "e.g. Brand assets"} autoFocus />
         </label>
-        <button className="min-h-10 rounded-[10px] bg-[#14131c] px-4 text-[11px] font-bold text-white hover:bg-[#e44762] disabled:opacity-60" type="submit" disabled={saving || !folderName.trim()}>{saving ? "Creating…" : "Create folder"}</button>
+        <button className="min-h-10 rounded-[10px] bg-[#071b3d] px-4 text-[11px] font-bold text-white hover:bg-[#0055ff] disabled:opacity-60" type="submit" disabled={saving || !folderName.trim()}>{saving ? "Creating…" : "Create folder"}</button>
         <button className="min-h-10 rounded-[10px] px-3 text-[11px] font-bold text-[#77736e] hover:bg-[#f3eee7]" type="button" onClick={() => setFolderFormOpen(false)}>Cancel</button>
       </form> : null}
 
@@ -366,23 +366,23 @@ export function MediaModule() {
 
       <section className="rounded-[20px] bg-white p-4 ring-1 ring-[#e1dcd4] sm:p-5">
         <div className="flex flex-wrap items-center gap-2 text-[12px] font-semibold">
-          <button className={currentFolder ? "text-[#77736e] hover:text-[#e44762]" : "text-[#14131c]"} type="button" onClick={() => openFolder(null)}>All media</button>
-          {library?.breadcrumbs.map((crumb) => <span className="flex items-center gap-2" key={crumb.id}><span className="text-[#c2bbb2]" aria-hidden="true">/</span><button className={crumb.id === currentFolder?.id ? "text-[#14131c]" : "text-[#77736e] hover:text-[#e44762]"} type="button" onClick={() => openFolder(crumb.id)}>{crumb.name}</button></span>)}
+          <button className={currentFolder ? "text-[#77736e] hover:text-[#0055ff]" : "text-[#071b3d]"} type="button" onClick={() => openFolder(null)}>All media</button>
+          {library?.breadcrumbs.map((crumb) => <span className="flex items-center gap-2" key={crumb.id}><span className="text-[#c2bbb2]" aria-hidden="true">/</span><button className={crumb.id === currentFolder?.id ? "text-[#071b3d]" : "text-[#77736e] hover:text-[#0055ff]"} type="button" onClick={() => openFolder(crumb.id)}>{crumb.name}</button></span>)}
         </div>
         <div className="mt-4 flex items-center justify-between gap-3 border-t border-[#eee9e2] pt-4">
           <div>
-            <p className="font-brand text-[23px] font-bold tracking-[-0.03em] text-[#14131c]">{currentFolder ? currentFolder.name : "Folders"}</p>
+            <p className="font-brand text-[23px] font-bold tracking-[-0.03em] text-[#071b3d]">{currentFolder ? currentFolder.name : "Folders"}</p>
             <p className="mt-1 text-[11px] text-[#9b958c]">{currentFolder ? "Images stored in this folder" : "Choose a folder to upload and manage media"}</p>
           </div>
-          {loading ? <span className="text-[11px] font-semibold text-[#e44762]">Refreshing…</span> : null}
+          {loading ? <span className="text-[11px] font-semibold text-[#0055ff]">Refreshing…</span> : null}
         </div>
 
         {folders.length ? <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">{folders.map((folder) => <FolderCard folder={folder} onOpen={() => openFolder(folder.id)} key={folder.id} />)}</div> : !currentFolder ? <div className="mt-4 rounded-[14px] bg-[#faf9f6] px-4 py-8 text-center"><FolderIcon /><p className="mt-2 text-[12px] font-semibold text-[#5f5a54]">No folders yet.</p><p className="mt-1 text-[11px] text-[#9b958c]">Create one to keep your media organized.</p></div> : null}
 
         {currentFolder ? <div className="mt-6 border-t border-[#eee9e2] pt-5">
           <div className="flex flex-wrap items-end justify-between gap-2">
-            <div><p className="font-brand text-[21px] font-bold tracking-[-0.03em] text-[#14131c]">Images</p><p className="mt-1 text-[11px] text-[#9b958c]">{assets.length} {assets.length === 1 ? "image" : "images"}</p></div>
-            {!assets.length ? <label className="cursor-pointer text-[11px] font-bold text-[#e44762] hover:text-[#14131c]">Upload the first image<input className="sr-only" type="file" accept={acceptedImageTypes} multiple onChange={(event) => void handleUpload(event)} disabled={uploading} /></label> : null}
+            <div><p className="font-brand text-[21px] font-bold tracking-[-0.03em] text-[#071b3d]">Images</p><p className="mt-1 text-[11px] text-[#9b958c]">{assets.length} {assets.length === 1 ? "image" : "images"}</p></div>
+            {!assets.length ? <label className="cursor-pointer text-[11px] font-bold text-[#0055ff] hover:text-[#071b3d]">Upload the first image<input className="sr-only" type="file" accept={acceptedImageTypes} multiple onChange={(event) => void handleUpload(event)} disabled={uploading} /></label> : null}
           </div>
           {assets.length ? <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">{assets.map((asset) => <AssetCard asset={asset} selected={asset.id === selectedId} onSelect={() => setSelectedId(asset.id)} key={asset.id} />)}</div> : <div className="mt-4 rounded-[14px] bg-[#faf9f6] px-4 py-10 text-center"><p className="text-[12px] font-semibold text-[#5f5a54]">This folder is empty.</p><p className="mt-1 text-[11px] text-[#9b958c]">Upload a compressed JPG, PNG or WebP image to get started.</p></div>}
         </div> : null}

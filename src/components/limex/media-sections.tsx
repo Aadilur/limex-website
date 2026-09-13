@@ -8,9 +8,9 @@ import { defaultLandingContent } from "@/lib/landing-defaults";
 import type { ArticleItem, ArticlesContent, TestimonialItem, TestimonialsContent } from "@/lib/landing-types";
 
 const blogVisuals: Record<BlogTone, { surface: string; text: string; glow: string }> = {
-  mint: { surface: "bg-[#eef3ee]", text: "text-[#6b806f]", glow: "bg-[#dce9df]" },
-  violet: { surface: "bg-[#f1eff5]", text: "text-[#766e84]", glow: "bg-[#e5dfed]" },
-  peach: { surface: "bg-[#f6efeb]", text: "text-[#92796b]", glow: "bg-[#edddd4]" },
+  mint: { surface: "bg-[#effbff]", text: "text-[#007ea6]", glow: "bg-[#c9f5ff]" },
+  violet: { surface: "bg-[#edf4ff]", text: "text-[#006dce]", glow: "bg-[#cbe3ff]" },
+  peach: { surface: "bg-[#e9efff]", text: "text-brand-blue", glow: "bg-[#cad9ff]" },
 };
 
 function getYouTubeVideoId(url: string) {
@@ -92,7 +92,7 @@ export function VideoReelsSection({ content = defaultLandingContent.testimonials
                 >
                   <img className="absolute inset-0 size-full" src="/figma/play-overlay.svg" alt="" aria-hidden="true" />
                   <span className="relative z-10 grid size-[58px] place-items-center rounded-full bg-[rgba(252,251,250,0.96)] shadow-play" aria-hidden="true">
-                    <span className={`ml-1 h-0 w-0 border-y-[10px] border-y-transparent border-l-[15px] border-l-[#17151c] ${selected ? "ml-0 h-[18px] w-[14px] border-0 border-l-[5px] border-r-[5px] border-solid border-[#17151c]" : ""}`.trim()} />
+                    <span className={`ml-1 h-0 w-0 border-y-[10px] border-y-transparent border-l-[15px] border-l-[#071b3d] ${selected ? "ml-0 h-[18px] w-[14px] border-0 border-l-[5px] border-r-[5px] border-solid border-[#071b3d]" : ""}`.trim()} />
                   </span>
                 </button>
               ) : null}
@@ -110,7 +110,7 @@ function ArticleVisual({ article }: { article: ArticleItem }) {
   return (
     <div className={`relative aspect-[852/430] overflow-hidden rounded-t-[22px] ${tone.text} ${tone.surface}`.trim()}>
       {article.coverUrl ? <img className="absolute inset-0 size-full object-cover" src={article.coverUrl} alt="" loading="lazy" decoding="async" /> : null}
-      <div className={`pointer-events-none absolute inset-0 ${article.coverUrl ? "bg-gradient-to-t from-[#17151c]/35 via-transparent to-white/10" : ""}`.trim()} aria-hidden="true" />
+      <div className={`pointer-events-none absolute inset-0 ${article.coverUrl ? "bg-gradient-to-t from-[#071b3d]/35 via-transparent to-white/10" : ""}`.trim()} aria-hidden="true" />
       <div className={`pointer-events-none absolute -right-14 -top-16 size-48 rounded-full opacity-60 blur-2xl ${tone.glow}`.trim()} aria-hidden="true" />
       {!article.coverUrl ? <>
         <img className="absolute -right-[116px] -top-[62px] block size-[260px] opacity-60" src="/figma/blog-orbit-a.svg" alt="" aria-hidden="true" />

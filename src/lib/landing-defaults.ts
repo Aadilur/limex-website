@@ -176,8 +176,8 @@ export const defaultLandingContent: LandingContent = {
       rows: [],
       action: "Open tool",
       href: toolHref(tool.slug),
-      color: "#4d6958",
-      surface: "#fbfbf7",
+      color: "#008cff",
+      surface: "#eaf3ff",
     })),
   },
   articles: {

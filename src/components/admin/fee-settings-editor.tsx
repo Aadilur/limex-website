@@ -47,8 +47,8 @@ export function FeeSettingsEditor({ settings, busy, slug, onSlugChange, updateSe
       <aside className="min-w-0 lg:pt-1">
         <div className="mb-3 flex items-end justify-between gap-3 lg:block">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#e44762]">Fee sections</p>
-            <h2 className="mt-1 text-[15px] font-semibold text-[#14131c]">Choose a service</h2>
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#0055ff]">Fee sections</p>
+            <h2 className="mt-1 text-[15px] font-semibold text-[#071b3d]">Choose a service</h2>
           </div>
           <span className="text-[11px] text-[#7a8177]">{feeTools.length} sections</span>
         </div>
@@ -78,8 +78,8 @@ export function FeeSettingsEditor({ settings, busy, slug, onSlugChange, updateSe
       <section className={styles.formPanel} aria-labelledby="fee-editor-title">
         <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[#e2e6de] pb-5">
           <div className="min-w-0">
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#e44762]">Selected service</p>
-            <h2 id="fee-editor-title" className="mt-1 text-[22px] font-semibold tracking-[-.025em] text-[#14131c]">{tool.title}</h2>
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#0055ff]">Selected service</p>
+            <h2 id="fee-editor-title" className="mt-1 text-[22px] font-semibold tracking-[-.025em] text-[#071b3d]">{tool.title}</h2>
             <p className="mt-1 max-w-[620px] text-[12px] leading-6 text-[#70796e]">{tool.description} Edit only this service’s fees and rules here.</p>
           </div>
           <a className={styles.textLink} href={`/business-tools/${slug}`} target="_blank" rel="noreferrer">Open calculator ↗</a>

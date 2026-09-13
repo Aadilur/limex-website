@@ -66,8 +66,8 @@ const sectionTabs: Array<{ key: LandingSectionKey; label: string; hint: string }
   { key: "footer", label: "Footer", hint: "Global links" },
 ];
 
-const fieldClassName = "mt-1.5 h-10 w-full rounded-[11px] border border-[#d9d3c9] bg-[#fcfbf8] px-3 text-[13px] text-[#242129] outline-none transition-colors placeholder:text-[#a19a91] focus:border-[#e44762] focus:ring-4 focus:ring-[#f8d9de]";
-const textareaClassName = "mt-1.5 min-h-20 w-full resize-y rounded-[11px] border border-[#d9d3c9] bg-[#fcfbf8] px-3 py-2.5 text-[13px] leading-[1.45] text-[#242129] outline-none transition-colors placeholder:text-[#a19a91] focus:border-[#e44762] focus:ring-4 focus:ring-[#f8d9de]";
+const fieldClassName = "mt-1.5 h-10 w-full rounded-[11px] border border-[#d9d3c9] bg-[#fcfbf8] px-3 text-[13px] text-[#242129] outline-none transition-colors placeholder:text-[#a19a91] focus:border-[#0055ff] focus:ring-4 focus:ring-[#f8d9de]";
+const textareaClassName = "mt-1.5 min-h-20 w-full resize-y rounded-[11px] border border-[#d9d3c9] bg-[#fcfbf8] px-3 py-2.5 text-[13px] leading-[1.45] text-[#242129] outline-none transition-colors placeholder:text-[#a19a91] focus:border-[#0055ff] focus:ring-4 focus:ring-[#f8d9de]";
 
 function uid(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -95,14 +95,14 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
   return (
     <label className="inline-flex cursor-pointer items-center gap-2 text-[12px] font-semibold text-[#5f5a54]">
       <input className="peer sr-only" type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} />
-      <span className="relative h-5 w-9 rounded-full bg-[#d5d0c8] transition-colors peer-checked:bg-[#e44762] after:absolute after:left-0.5 after:top-0.5 after:size-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-4" aria-hidden="true" />
+      <span className="relative h-5 w-9 rounded-full bg-[#d5d0c8] transition-colors peer-checked:bg-[#0055ff] after:absolute after:left-0.5 after:top-0.5 after:size-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-4" aria-hidden="true" />
       {label}
     </label>
   );
 }
 
 function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
-  const safeValue = /^#[0-9a-f]{6}$/i.test(value) ? value : "#14131c";
+  const safeValue = /^#[0-9a-f]{6}$/i.test(value) ? value : "#071b3d";
 
   return (
     <label className="block min-w-0 text-[11px] font-bold uppercase tracking-[0.12em] text-[#777168]">
@@ -176,7 +176,7 @@ function ClientLogoUpload({ item, onChange }: { item: ClientLogo; onChange: (pat
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <label className="inline-flex min-h-8 cursor-pointer items-center rounded-full bg-[#17151c] px-3 text-[11px] font-bold text-white transition-colors hover:bg-[#e44762]">
+          <label className="inline-flex min-h-8 cursor-pointer items-center rounded-full bg-[#071b3d] px-3 text-[11px] font-bold text-white transition-colors hover:bg-[#0055ff]">
             <input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" id={inputId} onChange={handleFileChange} disabled={uploading} />
             {uploading ? "Compressing…" : preview ? "Replace logo" : "Upload logo"}
           </label>
@@ -217,7 +217,7 @@ function SortableRows<T extends { id: string }>({ items, onChange, render }: { i
     <div className="space-y-2">
       {items.map((item, index) => (
         <div
-          className={`rounded-[14px] border bg-white p-3 transition-colors ${dragId === item.id ? "border-[#e44762] bg-[#fff8f8]" : "border-[#e4ded5]"}`.trim()}
+          className={`rounded-[14px] border bg-white p-3 transition-colors ${dragId === item.id ? "border-[#0055ff] bg-[#fff8f8]" : "border-[#e4ded5]"}`.trim()}
           key={item.id}
           draggable
           onDragStart={() => setDragId(item.id)}
@@ -229,8 +229,8 @@ function SortableRows<T extends { id: string }>({ items, onChange, render }: { i
             <span className="mt-1 cursor-grab select-none text-[17px] leading-none text-[#aaa39a]" title="Drag to reorder" aria-hidden="true">⠿</span>
             <div className="min-w-0 flex-1">{render(item, index)}</div>
             <div className="flex shrink-0 flex-row gap-1 sm:flex-col">
-              <button className="grid size-6 place-items-center rounded-md border border-[#e5dfd6] text-[12px] text-[#69635d] transition-colors hover:border-[#e44762] hover:text-[#e44762] disabled:opacity-30" type="button" onClick={() => move(item.id, -1)} disabled={index === 0} aria-label="Move item up">↑</button>
-              <button className="grid size-6 place-items-center rounded-md border border-[#e5dfd6] text-[12px] text-[#69635d] transition-colors hover:border-[#e44762] hover:text-[#e44762] disabled:opacity-30" type="button" onClick={() => move(item.id, 1)} disabled={index === items.length - 1} aria-label="Move item down">↓</button>
+              <button className="grid size-6 place-items-center rounded-md border border-[#e5dfd6] text-[12px] text-[#69635d] transition-colors hover:border-[#0055ff] hover:text-[#0055ff] disabled:opacity-30" type="button" onClick={() => move(item.id, -1)} disabled={index === 0} aria-label="Move item up">↑</button>
+              <button className="grid size-6 place-items-center rounded-md border border-[#e5dfd6] text-[12px] text-[#69635d] transition-colors hover:border-[#0055ff] hover:text-[#0055ff] disabled:opacity-30" type="button" onClick={() => move(item.id, 1)} disabled={index === items.length - 1} aria-label="Move item down">↓</button>
             </div>
           </div>
         </div>
@@ -243,7 +243,7 @@ function SectionHeader({ title, description, count }: { title: string; descripti
   return (
     <div className="flex flex-col gap-1.5 border-b border-[#e6e0d7] pb-4 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
       <div>
-        <h2 className="font-brand text-[23px] font-bold tracking-[-0.025em] text-[#17151c]">{title}</h2>
+        <h2 className="font-brand text-[23px] font-bold tracking-[-0.025em] text-[#071b3d]">{title}</h2>
         <p className="mt-1 max-w-[680px] text-[13px] leading-[1.45] text-[#817a72]">{description}</p>
       </div>
       {count === undefined ? null : <span className="w-max rounded-full bg-[#f7e8ea] px-2.5 py-1 text-[11px] font-bold text-[#c63d58]">{count} items</span>}
@@ -294,7 +294,7 @@ function AddBar({ label, options, onAdd }: { label: string; options?: Array<{ va
           {options.map((option) => <option value={option.value} key={option.value}>{option.label}</option>)}
         </select>
       ) : <span className="flex-1 text-[12px] font-semibold text-[#776f66]">{label}</span>}
-      <button className="min-h-10 rounded-[10px] bg-[#17151c] px-3.5 text-[12px] font-bold text-white transition-colors hover:bg-[#e44762] disabled:cursor-not-allowed disabled:opacity-40" type="button" disabled={Boolean(options && !value)} onClick={() => { onAdd(value || undefined); setValue(""); }}>Add</button>
+      <button className="min-h-10 rounded-[10px] bg-[#071b3d] px-3.5 text-[12px] font-bold text-white transition-colors hover:bg-[#0055ff] disabled:cursor-not-allowed disabled:opacity-40" type="button" disabled={Boolean(options && !value)} onClick={() => { onAdd(value || undefined); setValue(""); }}>Add</button>
     </div>
   );
 }
@@ -460,13 +460,13 @@ export function LandingModule() {
     <div className="space-y-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#e44762]">Landing</p>
-          <h1 className="mt-1 font-brand text-[32px] font-bold tracking-[-0.04em] text-[#17151c]">Shape the public page.</h1>
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#0055ff]">Landing</p>
+          <h1 className="mt-1 font-brand text-[32px] font-bold tracking-[-0.04em] text-[#071b3d]">Shape the public page.</h1>
           <p className="mt-1 max-w-[650px] text-[13px] leading-[1.5] text-[#817a72]">Manage each section independently. Drag rows to reorder, choose services from the live menu, then save the active section.</p>
         </div>
         <div className="flex w-full items-center gap-2 sm:w-auto">
           {message ? <span className="min-w-0 flex-1 rounded-full bg-[#e4f4e9] px-3 py-2 text-center text-[12px] font-bold text-[#2d7650] sm:flex-none">{message}</span> : null}
-          <button className="min-h-11 w-full rounded-full bg-[#17151c] px-5 text-[13px] font-bold text-white shadow-[0_8px_18px_rgba(20,19,28,0.14)] transition-all hover:-translate-y-0.5 hover:bg-[#e44762] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto" type="button" onClick={() => void saveSection()} disabled={saving || !updatedAt}>{saving ? "Saving…" : `Save ${activeTab.label}`}</button>
+          <button className="min-h-11 w-full rounded-full bg-[#071b3d] px-5 text-[13px] font-bold text-white shadow-[0_8px_18px_rgba(20,19,28,0.14)] transition-all hover:-translate-y-0.5 hover:bg-[#0055ff] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto" type="button" onClick={() => void saveSection()} disabled={saving || !updatedAt}>{saving ? "Saving…" : `Save ${activeTab.label}`}</button>
         </div>
       </div>
 
@@ -475,7 +475,7 @@ export function LandingModule() {
       <div className="overflow-hidden rounded-[22px] border border-[#e3ddd4] bg-white shadow-[0_10px_30px_rgba(64,52,43,0.04)]">
         <div className="hidden gap-1 overflow-x-auto border-b border-[#e9e3db] bg-[#fcfaf7] p-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex" role="tablist" aria-label="Landing sections">
           {sectionTabs.map((tab) => (
-            <button className={`min-w-max rounded-[12px] px-3 py-2 text-left transition-colors ${activeSection === tab.key ? "bg-[#17151c] text-white" : "text-[#6f6961] hover:bg-white hover:text-[#17151c]"}`.trim()} type="button" role="tab" aria-selected={activeSection === tab.key} onClick={() => { setActiveSection(tab.key); setMessage(""); setError(""); }} key={tab.key}>
+            <button className={`min-w-max rounded-[12px] px-3 py-2 text-left transition-colors ${activeSection === tab.key ? "bg-[#071b3d] text-white" : "text-[#6f6961] hover:bg-white hover:text-[#071b3d]"}`.trim()} type="button" role="tab" aria-selected={activeSection === tab.key} onClick={() => { setActiveSection(tab.key); setMessage(""); setError(""); }} key={tab.key}>
               <span className="block text-[12px] font-bold">{tab.label}</span>
               <span className={`mt-0.5 block text-[10px] ${activeSection === tab.key ? "text-white/60" : "text-[#a19a91]"}`.trim()}>{tab.hint}</span>
             </button>
@@ -547,7 +547,7 @@ function ClientsEditor({ content, onChange }: { content: LandingContent["clients
         </div>
         <Toggle label="Visible on public page" checked={item.isVisible} onChange={(isVisible) => onChange({ logos: updateById(content.logos, item.id, { isVisible }) })} />
       </div>} />
-      <AddBar label="Add client logo" onAdd={() => onChange({ logos: [...content.logos, { id: uid("client"), isVisible: true, name: "New client", logoUrl: "", textColor: "#14131c" }] })} />
+      <AddBar label="Add client logo" onAdd={() => onChange({ logos: [...content.logos, { id: uid("client"), isVisible: true, name: "New client", logoUrl: "", textColor: "#071b3d" }] })} />
     </div>
   );
 }
@@ -620,7 +620,7 @@ function TestimonialsEditor({ content, onChange }: { content: TestimonialsConten
         <Field label="Subtitle / metadata" value={item.subtitle} onChange={(subtitle) => onChange({ items: updateById(content.items, item.id, { subtitle }) })} />
         <div className="min-w-0">
           <Field label="YouTube URL" value={item.youtubeUrl} onChange={(youtubeUrl) => onChange({ items: updateById(content.items, item.id, { youtubeUrl }) })} placeholder="https://youtube.com/watch?v=" />
-          {!item.youtubeUrl ? <button className="mt-2 text-[12px] font-semibold text-[#355b45] underline underline-offset-4 hover:text-[#e44762]" type="button" onClick={() => onChange({ items: updateById(content.items, item.id, { youtubeUrl: landingTestVideoUrl }) })}>Use sample playback link ↗</button> : null}
+          {!item.youtubeUrl ? <button className="mt-2 text-[12px] font-semibold text-[#355b45] underline underline-offset-4 hover:text-[#0055ff]" type="button" onClick={() => onChange({ items: updateById(content.items, item.id, { youtubeUrl: landingTestVideoUrl }) })}>Use sample playback link ↗</button> : null}
         </div>
         <Field label="Fallback image URL" value={item.imageUrl} onChange={(imageUrl) => onChange({ items: updateById(content.items, item.id, { imageUrl }) })} placeholder="/figma/reel-1.png" />
         <Toggle label="Visible" checked={item.isVisible} onChange={(isVisible) => onChange({ items: updateById(content.items, item.id, { isVisible }) })} />
@@ -644,7 +644,7 @@ function PackagesEditor({ content, onChange }: { content: PackagesContent; onCha
         <div className="sm:col-span-2"><TextAreaField label="Features — one per line" value={item.features.join("\n")} onChange={(value) => onChange({ items: updateById(content.items, item.id, { features: value.split("\n").map((feature) => feature.trim()).filter(Boolean) }) })} /></div>
         <Toggle label="Recommended" checked={item.isFeatured} onChange={(isFeatured) => onChange({ items: updateById(content.items, item.id, { isFeatured }) })} /><Toggle label="Visible" checked={item.isVisible} onChange={(isVisible) => onChange({ items: updateById(content.items, item.id, { isVisible }) })} />
       </div>} />
-      <AddBar label="Add package" onAdd={() => onChange({ items: [...content.items, { id: uid("package"), isVisible: true, tag: "NEW", title: "New package", description: "Describe this package.", price: "From BDT", features: ["Feature one"], color: "#29634d", surface: "#ccebdb", href: "#contact", action: "View package", isFeatured: false }] })} />
+      <AddBar label="Add package" onAdd={() => onChange({ items: [...content.items, { id: uid("package"), isVisible: true, tag: "NEW", title: "New package", description: "Describe this package.", price: "From BDT", features: ["Feature one"], color: "#008cff", surface: "#eaf3ff", href: "#contact", action: "View package", isFeatured: false }] })} />
     </div>
   );
 }
@@ -653,7 +653,7 @@ function ToolsEditor({ content, onChange }: { content: ToolsContent; onChange: (
   return (
     <div className="space-y-6">
       <SectionHeader title="Business tools" description="Edit and reorder the homepage cards here. The catalogue is kept in sync with every calculator and document builder; fees, rules and requests are managed in Business tools." count={content.items.length} />
-      <a href="/admin/tools" className="inline-block text-[13px] font-semibold text-[#355b45] underline underline-offset-4">Manage fees & requests ↗</a>
+      <a href="/admin/tools" className="inline-block text-[13px] font-semibold text-[#006dce] underline underline-offset-4">Manage fees & requests ↗</a>
       <div className="grid gap-3 sm:grid-cols-2"><Field label="Section title" value={content.title} onChange={(title) => onChange({ title })} /><Field label="CTA label" value={content.ctaLabel} onChange={(ctaLabel) => onChange({ ctaLabel })} /><Field label="CTA link" value={content.ctaHref} onChange={(ctaHref) => onChange({ ctaHref })} /></div>
       <TextAreaField label="Description" value={content.description} onChange={(description) => onChange({ description })} />
       <SortableRows items={content.items} onChange={(items) => onChange({ items })} render={(item) => <div className="grid gap-2.5 sm:grid-cols-2">

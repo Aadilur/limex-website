@@ -32,7 +32,7 @@ import type { ServiceIconName } from "@/components/limex/data";
 import { getToneClasses } from "@/components/limex/styles";
 import { IconPicker, normalizeServiceIcon } from "./icon-picker";
 
-const fieldClass = "min-h-11 w-full rounded-[12px] border border-[#ddd6cc] bg-[#fffefa] px-3.5 text-[13px] leading-normal text-[#1c191d] shadow-[0_1px_2px_rgba(45,40,35,0.03)] outline-none transition-[border-color,box-shadow,background-color] placeholder:text-[#aaa49b] hover:border-[#c8c0b6] focus:border-[#e44762] focus:bg-white focus:ring-4 focus:ring-[#f54763]/10";
+const fieldClass = "min-h-11 w-full rounded-[12px] border border-[#ddd6cc] bg-[#fffefa] px-3.5 text-[13px] leading-normal text-[#1c191d] shadow-[0_1px_2px_rgba(45,40,35,0.03)] outline-none transition-[border-color,box-shadow,background-color] placeholder:text-[#aaa49b] hover:border-[#c8c0b6] focus:border-[#0055ff] focus:bg-white focus:ring-4 focus:ring-[#008cff]/10";
 const textAreaClass = `${fieldClass} min-h-[104px] resize-y py-3 leading-[1.55]`;
 const fieldLabelClass = "text-[10px] font-bold uppercase tracking-[0.12em] text-[#706b64]";
 function emptyDetail(): ServiceDetailContent {
@@ -176,7 +176,7 @@ function Field({ label, value, onChange, placeholder, className = "", type = "te
   const id = useId();
   return (
     <label className={`block min-w-0 ${className}`.trim()} htmlFor={id}>
-      <span className={fieldLabelClass}>{label}{required ? <span className="ml-1 text-[#e44762]" aria-hidden="true">*</span> : null}</span>
+      <span className={fieldLabelClass}>{label}{required ? <span className="ml-1 text-[#0055ff]" aria-hidden="true">*</span> : null}</span>
       <input id={id} className={`${fieldClass} mt-1.5`} type={type} value={value} placeholder={placeholder} onChange={onChange} required={required} />
       {hint ? <span className="mt-1.5 block text-[10px] leading-[1.45] text-[#989188]">{hint}</span> : null}
     </label>
@@ -187,7 +187,7 @@ function TextAreaField({ label, value, onChange, placeholder, className = "", re
   const id = useId();
   return (
     <label className={`block min-w-0 ${className}`.trim()} htmlFor={id}>
-      <span className={fieldLabelClass}>{label}{required ? <span className="ml-1 text-[#e44762]" aria-hidden="true">*</span> : null}</span>
+      <span className={fieldLabelClass}>{label}{required ? <span className="ml-1 text-[#0055ff]" aria-hidden="true">*</span> : null}</span>
       <textarea id={id} className={`${textAreaClass} mt-1.5`} value={value} placeholder={placeholder} onChange={onChange} required={required} />
       {hint ? <span className="mt-1.5 block text-[10px] leading-[1.45] text-[#989188]">{hint}</span> : null}
     </label>
@@ -195,7 +195,7 @@ function TextAreaField({ label, value, onChange, placeholder, className = "", re
 }
 
 function SaveButton({ children = "Save draft", disabled, onClick }: { children?: ReactNode; disabled?: boolean; onClick: () => void }) {
-  return <button className="inline-flex min-h-10 items-center justify-center rounded-full bg-[#14131c] px-4 text-[12px] font-bold text-white transition-transform hover:-translate-y-px disabled:cursor-wait disabled:opacity-55" type="button" disabled={disabled} onClick={onClick}>{children}</button>;
+  return <button className="inline-flex min-h-10 items-center justify-center rounded-full bg-[#071b3d] px-4 text-[12px] font-bold text-white transition-transform hover:-translate-y-px disabled:cursor-wait disabled:opacity-55" type="button" disabled={disabled} onClick={onClick}>{children}</button>;
 }
 
 function StatusPill({ service }: { service: AdminService }) {
@@ -209,12 +209,12 @@ function SectionDisclosure({ title, description, count, open = false, children }
     <details className="group border-b border-[#ece7df] last:border-b-0 transition-colors duration-200 group-open:bg-[#faf9f6]" open={open}>
       <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-4 text-left transition-colors sm:px-5 [&::-webkit-details-marker]:hidden">
         <span className="min-w-0 flex-1">
-          <span className="block text-[13px] font-bold text-[#29252a] transition-colors group-open:text-[#14131c]">{title}</span>
+          <span className="block text-[13px] font-bold text-[#29252a] transition-colors group-open:text-[#071b3d]">{title}</span>
           <span className="mt-1 block truncate text-[11px] leading-[1.45] text-[#948d84]">{description}</span>
         </span>
         <span className="flex shrink-0 items-center gap-2">
           {typeof count === "number" ? <span className="inline-flex min-w-6 justify-center rounded-full bg-[#f1eee8] px-1.5 py-0.5 text-[10px] font-bold text-[#777168]">{count}</span> : null}
-          <span className="grid size-7 place-items-center rounded-full bg-[#f2efe9] text-[16px] font-normal text-[#847d74] transition-[color,background-color,transform] group-open:rotate-45 group-open:bg-[#fff0f3] group-open:text-[#d63c57]" aria-hidden="true">+</span>
+          <span className="grid size-7 place-items-center rounded-full bg-[#f2efe9] text-[16px] font-normal text-[#847d74] transition-[color,background-color,transform] group-open:rotate-45 group-open:bg-[#fff0f3] group-open:text-[#0055ff]" aria-hidden="true">+</span>
         </span>
       </summary>
       <div className="border-t border-transparent px-4 pb-5 pt-4 group-open:border-[#eee8df] sm:px-5">{children}</div>
@@ -223,7 +223,7 @@ function SectionDisclosure({ title, description, count, open = false, children }
 }
 
 function AddButton({ children, onClick }: { children: ReactNode; onClick: () => void }) {
-  return <button className="inline-flex min-h-8 items-center rounded-full px-2.5 text-[11px] font-bold text-[#d63c57] transition-colors hover:bg-[#fff1f3]" type="button" onClick={onClick}>{children}</button>;
+  return <button className="inline-flex min-h-8 items-center rounded-full px-2.5 text-[11px] font-bold text-[#0055ff] transition-colors hover:bg-[#fff1f3]" type="button" onClick={onClick}>{children}</button>;
 }
 
 function RemoveButton({ label, onClick }: { label: string; onClick: () => void }) {
@@ -331,7 +331,7 @@ function MediaPicker({ value, onChange, disabled = false }: { value: string | nu
           <p className="mt-1 text-[11px] text-[#948d84]">Use a compressed library image for the most reliable public page.</p>
         </div>
         <div className="flex items-center gap-2">
-          <label className="inline-flex min-h-9 cursor-pointer items-center rounded-full bg-[#14131c] px-3.5 text-[11px] font-bold text-white transition-colors hover:bg-[#e44762]">
+          <label className="inline-flex min-h-9 cursor-pointer items-center rounded-full bg-[#071b3d] px-3.5 text-[11px] font-bold text-white transition-colors hover:bg-[#0055ff]">
             {uploading ? "Uploading…" : "Upload image"}
             <input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => void upload(event)} disabled={disabled || uploading || loading} />
           </label>
@@ -478,7 +478,7 @@ function DetailEditor({ detail, onChange, mediaAssetId, onMediaAssetChange }: { 
               <div className="flex items-center justify-between gap-3"><p className={fieldLabelClass}>Included features <span className="ml-1 font-medium text-[#9b958c]">{tier.features.length}</span></p><AddButton onClick={() => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, features: [...item.features, ""] } : item))}>+ Add feature</AddButton></div>
               {tier.features.length ? <div className="mt-2 divide-y divide-[#e9e3da]">{tier.features.map((feature, featureIndex) => <div className="flex items-center gap-2 py-2" key={`pricing-${index}-feature-${featureIndex}`}><label className="sr-only" htmlFor={`service-pricing-${index}-feature-${featureIndex}`}>Package {index + 1} feature {featureIndex + 1}</label><input className={fieldClass} id={`service-pricing-${index}-feature-${featureIndex}`} value={feature} placeholder="Included outcome or deliverable" onChange={(event) => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, features: item.features.map((candidate, candidateIndex) => candidateIndex === featureIndex ? event.target.value : candidate) } : item))} /><RemoveButton label="Remove package feature" onClick={() => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, features: item.features.filter((_, candidateIndex) => candidateIndex !== featureIndex) } : item))} /></div>)}</div> : <p className="mt-2 text-[11px] text-[#948d84]">No included features yet.</p>}
             </div>
-            <label className="mt-4 inline-flex min-h-9 items-center gap-2 rounded-full px-2.5 text-[11px] font-semibold text-[#5f5a54] transition-colors hover:bg-[#f4f1ec]"><input className="size-4 accent-[#de4d73]" type="checkbox" checked={Boolean(tier.featured)} onChange={(event) => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, featured: event.target.checked } : item))} />Mark as most popular</label>
+            <label className="mt-4 inline-flex min-h-9 items-center gap-2 rounded-full px-2.5 text-[11px] font-semibold text-[#5f5a54] transition-colors hover:bg-[#f4f1ec]"><input className="size-4 accent-[#0055ff]" type="checkbox" checked={Boolean(tier.featured)} onChange={(event) => update("pricing", detail.pricing.map((item, itemIndex) => itemIndex === index ? { ...item, featured: event.target.checked } : item))} />Mark as most popular</label>
           </div>)}
         </div> : <p className="mt-3 text-[11px] text-[#948d84]">No pricing yet. The pricing section stays hidden on the public page.</p>}
         <div className="mt-3">{detail.pricing.length < 6 ? <AddButton onClick={addPricing}>+ Add pricing package</AddButton> : <p className="text-[11px] text-[#948d84]">Six pricing packages is the maximum.</p>}</div>
@@ -646,14 +646,14 @@ function ServiceEditor({ service, menuOptions, onSaved }: { service: AdminServic
         <div className="min-w-0 flex-1">
           <p className="hidden text-[10px] font-bold uppercase tracking-[0.14em] text-accent sm:block">Service editor</p>
           <div className="flex min-w-0 items-center gap-2">
-            <h2 className="truncate font-brand text-[17px] font-bold tracking-[-0.035em] text-[#14131c] sm:text-[22px]" id="service-editor-title">{draft.titleEn || "Untitled service"}</h2>
+            <h2 className="truncate font-brand text-[17px] font-bold tracking-[-0.035em] text-[#071b3d] sm:text-[22px]" id="service-editor-title">{draft.titleEn || "Untitled service"}</h2>
             <StatusPill service={service} />
           </div>
           <p className="mt-1 hidden truncate text-[10px] text-[#9b958c] sm:block">{service.assignedMenu ? `${service.assignedMenu.sectionLabel} · ${service.assignedMenu.groupLabel}` : "Not connected to navigation"} · Updated {dateLabel(service.updatedAt)}</p>
         </div>
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           {hasUnsavedChanges ? <span className="hidden rounded-full bg-[#fff0e0] px-2 py-1 text-[10px] font-bold text-[#a45e24] md:inline-flex">Unsaved</span> : null}
-          {service.status === "PUBLISHED" ? <a className="hidden min-h-9 items-center justify-center rounded-full bg-white px-3 text-[11px] font-bold text-[#4f4b47] ring-1 ring-[#d8d2c8] transition-colors hover:border-[#c8c0b6] hover:text-[#e44762] sm:inline-flex" href={`/services/${service.slug}`} target="_blank" rel="noreferrer">Preview ↗</a> : null}
+          {service.status === "PUBLISHED" ? <a className="hidden min-h-9 items-center justify-center rounded-full bg-white px-3 text-[11px] font-bold text-[#4f4b47] ring-1 ring-[#d8d2c8] transition-colors hover:border-[#c8c0b6] hover:text-[#0055ff] sm:inline-flex" href={`/services/${service.slug}`} target="_blank" rel="noreferrer">Preview ↗</a> : null}
           <SaveButton disabled={saving || !service.profileId} onClick={() => void save()}>{saving ? <><span className="hidden sm:inline">Saving…</span><span className="sm:hidden">…</span></> : <><span className="hidden sm:inline">Save draft</span><span className="sm:hidden">Save</span></>}</SaveButton>
           {service.status === "PUBLISHED" ? <button className="min-h-9 rounded-full px-2 text-[10px] font-bold text-[#a34b5c] transition-colors hover:bg-[#fce7ea] disabled:opacity-50 sm:px-3 sm:text-[11px]" type="button" disabled={saving} onClick={() => void unpublish()}>Unpublish</button> : detailOpen ? <button className="min-h-9 rounded-full px-2 text-[10px] font-bold text-[#29634d] transition-colors hover:bg-[#e3f4e8] disabled:opacity-50 sm:px-3 sm:text-[11px]" type="button" disabled={saving || !service.profileId} onClick={() => void publish()}>Publish</button> : null}
         </div>
@@ -708,7 +708,7 @@ function ServiceEditor({ service, menuOptions, onSaved }: { service: AdminServic
             </label>
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
               <p className="min-w-0 flex-1 text-[11px] leading-[1.5] text-[#948d84]">{hasUnsavedChanges ? "Save this draft before changing the menu connection." : service.assignedMenu ? `Currently connected to ${service.assignedMenu.sectionLabel} / ${service.assignedMenu.groupLabel} / ${service.assignedMenu.label}.` : "You can publish this page before connecting it to navigation."}</p>
-              {selectedMenuKey === menuTargetKey(service.assignedMenu) ? <span className="shrink-0 text-[10px] font-semibold text-[#9a938a]">{service.assignedMenu ? "Menu is up to date" : "Choose a menu to connect"}</span> : <button className="min-h-10 shrink-0 rounded-full bg-[#14131c] px-3.5 text-[11px] font-bold text-white transition-transform hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-45" type="button" disabled={saving || hasUnsavedChanges || !menuOptions.length} onClick={() => void assignMenu()}>{selectedMenuKey ? "Connect menu" : "Remove menu"}</button>}
+              {selectedMenuKey === menuTargetKey(service.assignedMenu) ? <span className="shrink-0 text-[10px] font-semibold text-[#9a938a]">{service.assignedMenu ? "Menu is up to date" : "Choose a menu to connect"}</span> : <button className="min-h-10 shrink-0 rounded-full bg-[#071b3d] px-3.5 text-[11px] font-bold text-white transition-transform hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-45" type="button" disabled={saving || hasUnsavedChanges || !menuOptions.length} onClick={() => void assignMenu()}>{selectedMenuKey ? "Connect menu" : "Remove menu"}</button>}
             </div>
           </section>
         </div>
@@ -818,14 +818,14 @@ export function ServicePagesModule() {
     <div className="space-y-6">
       <section className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#e44762]">Content workspace</p>
-          <h1 className="mt-2 font-brand text-[38px] font-bold leading-[1] tracking-[-0.05em] text-[#14131c] sm:text-[48px]">Service pages</h1>
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#0055ff]">Content workspace</p>
+          <h1 className="mt-2 font-brand text-[38px] font-bold leading-[1] tracking-[-0.05em] text-[#071b3d] sm:text-[48px]">Service pages</h1>
           <p className="mt-3 max-w-[620px] text-[14px] leading-[1.6] text-[#77736e]">Create a service page first. Its editor handles the title, unique slug, optional localization, page content and menu assignment.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <a className="inline-flex min-h-10 items-center justify-center rounded-full border border-[#d8d2c8] bg-white px-4 text-[12px] font-bold text-[#4f4b47] hover:border-[#aaa197]" href="/services" target="_blank" rel="noreferrer">Preview catalogue ↗</a>
           <a className="inline-flex min-h-10 items-center justify-center rounded-full border border-[#d8d2c8] bg-transparent px-4 text-[12px] font-bold text-[#4f4b47] hover:border-[#aaa197]" href="/admin/services">Menu structure</a>
-          <button className="inline-flex min-h-10 items-center justify-center rounded-full bg-[#14131c] px-4 text-[12px] font-bold text-white transition-transform hover:-translate-y-px disabled:cursor-wait disabled:opacity-55" type="button" disabled={creating} onClick={() => void createService()}>{creating ? "Creating…" : "+ New service"}</button>
+          <button className="inline-flex min-h-10 items-center justify-center rounded-full bg-[#071b3d] px-4 text-[12px] font-bold text-white transition-transform hover:-translate-y-px disabled:cursor-wait disabled:opacity-55" type="button" disabled={creating} onClick={() => void createService()}>{creating ? "Creating…" : "+ New service"}</button>
         </div>
       </section>
 
@@ -847,7 +847,7 @@ export function ServicePagesModule() {
               <input className={fieldClass.replace("mt-2 ", "mt-0 ")} type="search" aria-label="Find a service page" placeholder="Find a service…" value={query} onChange={(event) => setQuery(event.target.value)} />
               <div className="flex gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {(["all", "assigned", "unassigned"] as const).map((item) => (
-                  <button className={"shrink-0 rounded-full px-2.5 py-1.5 text-[10px] font-bold " + (scope === item ? "bg-[#14131c] text-white" : "bg-[#f4f1ec] text-[#77736e]")} type="button" key={item} onClick={() => setScope(item)}>
+                  <button className={"shrink-0 rounded-full px-2.5 py-1.5 text-[10px] font-bold " + (scope === item ? "bg-[#071b3d] text-white" : "bg-[#f4f1ec] text-[#77736e]")} type="button" key={item} onClick={() => setScope(item)}>
                     {item === "all" ? "All " + services.length : item === "assigned" ? "Assigned " + services.filter((service) => service.assignedMenu).length : "Unassigned " + services.filter((service) => !service.assignedMenu).length}
                   </button>
                 ))}
@@ -866,7 +866,7 @@ export function ServicePagesModule() {
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                      <span className="truncate text-[14px] font-bold text-[#29252a] group-hover:text-[#e44762]">{service.titleEn || "Untitled service"}</span>
+                      <span className="truncate text-[14px] font-bold text-[#29252a] group-hover:text-[#0055ff]">{service.titleEn || "Untitled service"}</span>
                       <StatusPill service={service} />
                     </span>
                     <span className="mt-1 block truncate text-[11px] text-[#9b958c]">/services/{service.slug} · {service.assignedMenu ? service.assignedMenu.sectionLabel + " / " + service.assignedMenu.groupLabel : "Not assigned to menu"}</span>
@@ -875,7 +875,7 @@ export function ServicePagesModule() {
                     <span className="block text-[11px] font-semibold text-[#5f5a54]">{service.detail ? "Page content" : "Basic record"}</span>
                     <span className="mt-0.5 block text-[10px] text-[#a09a91]">{service.assignedMenu ? "Menu connected" : "Ready to connect"}</span>
                   </span>
-                  <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[#14131c] text-[14px] text-white transition-transform group-hover:-translate-y-px" aria-hidden="true">↗</span>
+                  <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[#071b3d] text-[14px] text-white transition-transform group-hover:-translate-y-px" aria-hidden="true">↗</span>
                 </a>
               );
             })}
@@ -888,7 +888,7 @@ export function ServicePagesModule() {
         <section className="rounded-[20px] bg-white/60 px-5 py-12 text-center ring-1 ring-[#ddd8cf]/80">
           <p className="font-brand text-[24px] font-bold tracking-[-0.03em] text-[#29252a]">Your service workspace is ready.</p>
           <p className="mx-auto mt-2 max-w-[460px] text-[13px] leading-[1.5] text-[#77736e]">Create a standalone service page, then attach it to any real menu entry from the editor.</p>
-          <button className="mt-4 min-h-10 rounded-full bg-[#14131c] px-4 text-[12px] font-bold text-white transition-transform hover:-translate-y-px disabled:opacity-55" type="button" disabled={creating} onClick={() => void createService()}>{creating ? "Creating…" : "+ Create first service"}</button>
+          <button className="mt-4 min-h-10 rounded-full bg-[#071b3d] px-4 text-[12px] font-bold text-white transition-transform hover:-translate-y-px disabled:opacity-55" type="button" disabled={creating} onClick={() => void createService()}>{creating ? "Creating…" : "+ Create first service"}</button>
         </section>
       ) : null}
     </div>
@@ -945,7 +945,7 @@ export function ServicePageEditorModule({ id }: { id: string }) {
   if (error || !service) {
     return (
       <div className="space-y-4">
-        <a className="text-[12px] font-semibold text-[#e44762] hover:text-[#14131c]" href="/admin/services/pages">← All service pages</a>
+        <a className="text-[12px] font-semibold text-[#0055ff] hover:text-[#071b3d]" href="/admin/services/pages">← All service pages</a>
         <p className="rounded-[14px] bg-[#fff4f5] px-4 py-3 text-[13px] font-semibold text-[#ad3148]" role="alert">{error || "This service page was not found."}</p>
       </div>
     );
@@ -953,7 +953,7 @@ export function ServicePageEditorModule({ id }: { id: string }) {
 
   return (
     <div className="space-y-5">
-      <a className="inline-flex min-h-9 items-center rounded-full bg-white px-3.5 text-[12px] font-bold text-[#5f5a54] ring-1 ring-[#d8d2c8] hover:text-[#e44762]" href="/admin/services/pages">← All service pages</a>
+      <a className="inline-flex min-h-9 items-center rounded-full bg-white px-3.5 text-[12px] font-bold text-[#5f5a54] ring-1 ring-[#d8d2c8] hover:text-[#0055ff]" href="/admin/services/pages">← All service pages</a>
       <ServiceEditor key={service.id + "-" + service.revision} service={service} menuOptions={menuOptions} onSaved={handleSaved} />
     </div>
   );
