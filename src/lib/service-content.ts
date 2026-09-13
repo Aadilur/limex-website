@@ -10,7 +10,10 @@ import type {
   ServiceDestination,
   ServiceLocale,
 } from "./service-types";
-import { getServiceOverviewHtml } from "./service-templates.js";
+// Keep this extensionless for Next's client/server bundler. The server-only
+// TypeScript runtime can resolve `.js` specifiers, but webpack does not map
+// that specifier back to the sibling `.ts` source during production builds.
+import { getServiceOverviewHtml } from "./service-templates";
 
 export type GeneratedService = {
   serviceKey: string;

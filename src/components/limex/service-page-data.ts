@@ -100,6 +100,8 @@ export const trademarkRegistrationService: ServicePageContent = {
   contentTitle: "Make the filing decision with more clarity.",
   contentDescription:
     "We help you understand the relevant class, prepare the core information and move through the registration process with practical next steps at every stage.",
+  contentLinkLabel: "View full requirements",
+  contentLinkHref: "#pricing",
   overviewHtml: `<h2>Trademark Registration in Bangladesh</h2>
 <p>Protecting your brand name, wordmark, logo, or tagline through statutory trademark registration grants exclusive nationwide proprietary rights under the Trademarks Act 2009. Registration establishes a definitive legal presumption of ownership, prevents competitor counterfeiting, and enables robust enforcement against unauthorized commercial exploitation.</p>
 
