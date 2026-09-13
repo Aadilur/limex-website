@@ -191,48 +191,6 @@ export function ServiceOverviewSection({ service }: { service: ServicePageConten
             ) : null}
           </>}
 
-          {service.relatedLinks?.length ? (
-            <div className="mt-section-gap-xl border-t border-[#e0dee3] pt-section-y">
-              <p className="text-overline text-[#de5778]">{relatedOptionsLabel}</p>
-              <div className="mt-cluster flex flex-wrap gap-2">
-                {service.relatedLinks.map((link) => <a className="inline-flex min-h-10 items-center gap-2 rounded-pill bg-white px-3.5 text-button font-semibold text-ink ring-1 ring-[#e0dee3] transition-colors hover:text-pink hover:ring-[#de5778]/40" href={link.href} {...externalLinkProps(link.href)} key={link.id}>{link.label}<span className="text-pink" aria-hidden="true">↗</span></a>)}
-              </div>
-            </div>
-          ) : null}
-
-          {helpfulTools.length ? (
-            <div className="mt-section-gap-xl border-t border-[#e0dee3] pt-section-y">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <p className="text-overline text-[#de5778]">{toolsEyebrow}</p>
-                  <h3 className="mt-cluster font-brand text-section-title text-ink">{toolsTitle}</h3>
-                </div>
-                <span className="text-micro font-semibold text-muted">{helpfulTools.length}</span>
-              </div>
-              <p className="mt-cluster max-w-[680px] text-body-sm text-muted">{toolsDescription}</p>
-              {calculatorTools.length ? (
-                <div className="mt-section-gap-lg space-y-section-gap-xl">
-                  {calculatorTools.map((tool) => <ToolWorkspace embedded key={tool.slug} tool={tool} />)}
-                </div>
-              ) : null}
-              {builderTools.length ? (
-                <div className={calculatorTools.length ? "mt-section-gap-xl" : "mt-section-gap-lg"}>
-                  {calculatorTools.length ? <p className="text-overline text-[#de5778]">{service.locale === "bn" ? "ডকুমেন্ট বিল্ডার" : "Document builders"}</p> : null}
-                  <div className="mt-cluster grid gap-cluster sm:grid-cols-2">
-                    {builderTools.map((tool) => (
-                      <a className="group flex min-w-0 items-center justify-between gap-cluster rounded-card bg-white px-card-pad-sm py-cluster ring-1 ring-[#e0dee3] transition-colors hover:ring-[#de5778]/50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3" href={toolHref(tool.slug)} key={tool.slug}>
-                        <span className="min-w-0">
-                          <span className="block truncate text-body-xs font-semibold text-ink group-hover:text-pink">{tool.title}</span>
-                          <span className="mt-cluster-xs block truncate text-micro text-muted">{tool.description}</span>
-                        </span>
-                        <span className="shrink-0 text-pink" aria-hidden="true">↗</span>
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          ) : null}
         </div>
 
         {service.facts.length ? <aside className="lg:pt-[166px]" aria-label="Service key facts">
@@ -247,6 +205,49 @@ export function ServiceOverviewSection({ service }: { service: ServicePageConten
           </dl>
         </aside> : null}
       </div>
+
+      {service.relatedLinks?.length ? (
+        <div className="mt-section-gap-xl border-t border-[#e0dee3] pt-section-y">
+          <p className="text-overline text-[#de5778]">{relatedOptionsLabel}</p>
+          <div className="mt-cluster flex flex-wrap gap-2">
+            {service.relatedLinks.map((link) => <a className="inline-flex min-h-10 items-center gap-2 rounded-pill bg-white px-3.5 text-button font-semibold text-ink ring-1 ring-[#e0dee3] transition-colors hover:text-pink hover:ring-[#de5778]/40" href={link.href} {...externalLinkProps(link.href)} key={link.id}>{link.label}<span className="text-pink" aria-hidden="true">↗</span></a>)}
+          </div>
+        </div>
+      ) : null}
+
+      {helpfulTools.length ? (
+        <div className="mt-section-gap-xl border-t border-[#e0dee3] pt-section-y">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p className="text-overline text-[#de5778]">{toolsEyebrow}</p>
+              <h3 className="mt-cluster font-brand text-section-title text-ink">{toolsTitle}</h3>
+            </div>
+            <span className="text-micro font-semibold text-muted">{helpfulTools.length}</span>
+          </div>
+          <p className="mt-cluster max-w-[860px] text-body-sm text-muted">{toolsDescription}</p>
+          {calculatorTools.length ? (
+            <div className="mt-section-gap-lg w-full space-y-section-gap-xl">
+              {calculatorTools.map((tool) => <ToolWorkspace embedded key={tool.slug} tool={tool} />)}
+            </div>
+          ) : null}
+          {builderTools.length ? (
+            <div className={calculatorTools.length ? "mt-section-gap-xl" : "mt-section-gap-lg"}>
+              {calculatorTools.length ? <p className="text-overline text-[#de5778]">{service.locale === "bn" ? "ডকুমেন্ট বিল্ডার" : "Document builders"}</p> : null}
+              <div className="mt-cluster grid gap-cluster sm:grid-cols-2 lg:grid-cols-3">
+                {builderTools.map((tool) => (
+                  <a className="group flex min-w-0 items-center justify-between gap-cluster rounded-card bg-white px-card-pad-sm py-cluster ring-1 ring-[#e0dee3] transition-colors hover:ring-[#de5778]/50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3" href={toolHref(tool.slug)} key={tool.slug}>
+                    <span className="min-w-0">
+                      <span className="block truncate text-body-xs font-semibold text-ink group-hover:text-pink">{tool.title}</span>
+                      <span className="mt-cluster-xs block truncate text-micro text-muted">{tool.description}</span>
+                    </span>
+                    <span className="shrink-0 text-pink" aria-hidden="true">↗</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </section>
   );
 }
