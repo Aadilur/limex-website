@@ -430,7 +430,14 @@ export function mergeGeneratedServiceCatalog(catalog: PublicServiceCatalog | nul
     });
     return {
       ...item,
-      ...(locale === "bn" ? { title: generated.titleBn, description: generated.descriptionBn } : {}),
+      ...(locale === "bn"
+        ? {
+            title: generated.titleBn,
+            description: generated.descriptionBn,
+            category: generated.sectionLabelBn,
+            groupLabel: generated.groupLabelBn,
+          }
+        : {}),
       children,
     };
   });

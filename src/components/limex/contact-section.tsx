@@ -9,6 +9,7 @@ import { defaultLandingContent } from "@/lib/landing-defaults";
 import type { ContactContent } from "@/lib/landing-types";
 import { getPublicContactSettings } from "@/lib/contact-api";
 import type { PublicContactSettings } from "@/lib/contact-types";
+import { CONTACT_TIME_SLOTS, formatContactTime, getDhakaDateValue, getDhakaDateValueAfter, isContactTimeSlot } from "@/lib/contact-schedule";
 
 type ContactValues = {
   services: string[];
@@ -41,24 +42,6 @@ const initialValues: ContactValues = {
 const fieldLabelClassName = "flex min-w-0 flex-col gap-2";
 const fieldLabelTextClassName = "text-button font-semibold text-[#49313a]";
 const fieldControlClassName = "w-full min-w-0 rounded-[14px] border-2 border-[#a4a39b] bg-page px-3.5 text-body-sm leading-normal text-[#172019] shadow-[inset_0_1px_0_rgba(255,255,255,0.55),0_1px_2px_rgba(54,54,49,0.06)] outline-none placeholder:text-[#777872] transition-colors hover:border-[#8f9089] focus:border-accent focus:bg-page focus:ring-4 focus:ring-[#f3d2da]";
-
-function getMinimumDateTimeInputValue() {
-  const minimum = new Date();
-  const minutes = minimum.getMinutes();
-  minimum.setSeconds(0, 0);
-  if (minutes === 0) minimum.setMinutes(0);
-  else if (minutes <= 30) minimum.setMinutes(30);
-  else minimum.setHours(minimum.getHours() + 1, 0, 0, 0);
-
-  if (minimum.getHours() < 9) minimum.setHours(9, 0, 0, 0);
-  if (minimum.getHours() > 18 || (minimum.getHours() === 18 && minimum.getMinutes() > 0)) {
-    minimum.setDate(minimum.getDate() + 1);
-    minimum.setHours(9, 0, 0, 0);
-  }
-
-  const localMinimum = new Date(minimum.getTime() - minimum.getTimezoneOffset() * 60_000);
-  return localMinimum.toISOString().slice(0, 16);
-}
 
 function getServiceGroups(menuNavigation: NavItem[]): ServiceGroup[] {
   return menuNavigation
@@ -185,7 +168,7 @@ export function ContactForm({ content = defaultLandingContent.contact, compact =
   const [formError, setFormError] = useState("");
   const [busy, setBusy] = useState(false);
   const [reference, setReference] = useState("");
-  const [minimumDateTimeValue, setMinimumDateTimeValue] = useState("");
+  const [scheduleDateBounds, setScheduleDateBounds] = useState({ minimum: "", maximum: "" });
   const [blogSource, setBlogSource] = useState<ContactRequestSource | null>(source);
   const submission = useRef<{ key: string; fingerprint: string } | null>(null);
   const serviceGroups = useMemo(() => getServiceGroups(menuNavigation), [menuNavigation]);
@@ -200,12 +183,18 @@ export function ContactForm({ content = defaultLandingContent.contact, compact =
     setValues((current) => ({ ...current, [field]: value }));
   };
 
-  const updateSchedule = (value: string) => {
-    const [preferredDate = "", preferredTime = ""] = value.split("T");
+  const updateScheduleDate = (preferredDate: string) => {
     setSubmitted(false);
     setReference("");
     setFormError("");
-    setValues((current) => ({ ...current, preferredDate, preferredTime }));
+    setValues((current) => ({ ...current, preferredDate, preferredTime: preferredDate ? current.preferredTime : "" }));
+  };
+
+  const updateScheduleTime = (preferredTime: string) => {
+    setSubmitted(false);
+    setReference("");
+    setFormError("");
+    setValues((current) => ({ ...current, preferredTime }));
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -227,6 +216,12 @@ export function ContactForm({ content = defaultLandingContent.contact, compact =
     if (Boolean(values.preferredDate) !== Boolean(values.preferredTime)) {
       setSubmitted(false);
       setFormError("Choose both a date and time, or leave the schedule blank.");
+      return;
+    }
+
+    if (values.preferredTime && !isContactTimeSlot(values.preferredTime)) {
+      setSubmitted(false);
+      setFormError("Choose one of the available 30-minute time slots.");
       return;
     }
 
@@ -265,7 +260,7 @@ export function ContactForm({ content = defaultLandingContent.contact, compact =
 
   useEffect(() => {
     let cancelled = false;
-    setMinimumDateTimeValue(getMinimumDateTimeInputValue());
+    setScheduleDateBounds({ minimum: getDhakaDateValue(), maximum: getDhakaDateValueAfter(180) });
 
     const params = new URLSearchParams(window.location.search);
     const article = params.get("article");
@@ -349,10 +344,19 @@ export function ContactForm({ content = defaultLandingContent.contact, compact =
             <legend className={fieldLabelTextClassName}>Preferred date &amp; time <span className="font-normal text-muted">(optional)</span></legend>
             <span className="text-micro text-muted">Dhaka time · 30-minute slots</span>
           </div>
-          <label className="relative block">
-            <span className="sr-only">Preferred date and time</span>
-            <input className={`h-12 ${fieldControlClassName}`} type="datetime-local" min={minimumDateTimeValue || undefined} step="1800" value={values.preferredDate && values.preferredTime ? `${values.preferredDate}T${values.preferredTime}` : ""} onChange={(event) => updateSchedule(event.target.value)} aria-label="Preferred date and time" />
-          </label>
+          <div className="grid grid-cols-1 gap-cluster sm:grid-cols-2">
+            <label className={fieldLabelClassName}>
+              <span className={fieldLabelTextClassName}>Date</span>
+              <input className={`h-12 ${fieldControlClassName}`} type="date" min={scheduleDateBounds.minimum || undefined} max={scheduleDateBounds.maximum || undefined} value={values.preferredDate} onChange={(event) => updateScheduleDate(event.target.value)} aria-label="Preferred date" />
+            </label>
+            <label className={fieldLabelClassName}>
+              <span className={fieldLabelTextClassName}>Time</span>
+              <select className={`h-12 ${fieldControlClassName} disabled:cursor-not-allowed disabled:opacity-60`} value={values.preferredTime} onChange={(event) => updateScheduleTime(event.target.value)} aria-label="Preferred time" disabled={busy || !values.preferredDate}>
+                <option value="">{values.preferredDate ? "Choose a time slot" : "Choose a date first"}</option>
+                {CONTACT_TIME_SLOTS.map((slot) => <option key={slot} value={slot}>{formatContactTime(slot)}</option>)}
+              </select>
+            </label>
+          </div>
           <p className="text-micro leading-relaxed text-muted">{content.scheduleHelper}</p>
         </fieldset>
 

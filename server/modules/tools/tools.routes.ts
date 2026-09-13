@@ -5,6 +5,7 @@ import { requireAdminSession } from "../../shared/auth/admin-session.js";
 import { prisma } from "../../shared/database/prisma.js";
 import { calculateTool, defaultToolsSettings, getTool, normalizeToolsSettings, toolsSettingsSchema, toolSlugs, validateFields } from "../../../src/lib/business-tools.js";
 import { createDocumentDraft, documentFields } from "../../../src/lib/business-documents.js";
+import { isContactTimeSlot } from "../../../src/lib/contact-schedule.js";
 import { createRateLimiter } from "../../shared/http/rate-limit.js";
 
 const paramsSchema = z.object({ slug: z.enum(toolSlugs) });
@@ -43,7 +44,7 @@ const optionalDate = z.preprocess(
 );
 const optionalTime = z.preprocess(
   blankToUndefined,
-  z.string().regex(/^(?:(?:09|1[0-7]):(?:00|30)|18:00)$/, "Choose a time between 09:00 and 18:00.").optional(),
+  z.string().refine((value) => isContactTimeSlot(value), "Choose a 30-minute slot between 09:00 and 18:00.").optional(),
 );
 const requestSchema = z.object({
   submissionId: z.string().uuid(),
