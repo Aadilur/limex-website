@@ -2,13 +2,22 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { ServiceIcon, serviceIconOptions } from "@/components/limex/service-icons";
+import {
+  ServiceIcon,
+  serviceIconOptions,
+} from "@/components/limex/service-icons";
 import type { ServiceIconName } from "@/components/limex/data";
 
-const validIconNames = new Set<ServiceIconName>(serviceIconOptions.map((option) => option.value));
+const validIconNames = new Set<ServiceIconName>(
+  serviceIconOptions.map((option) => option.value),
+);
 
-export function normalizeServiceIcon(value: string | null | undefined): ServiceIconName {
-  return value && validIconNames.has(value as ServiceIconName) ? value as ServiceIconName : "briefcase";
+export function normalizeServiceIcon(
+  value: string | null | undefined,
+): ServiceIconName {
+  return value && validIconNames.has(value as ServiceIconName)
+    ? (value as ServiceIconName)
+    : "briefcase";
 }
 
 type IconPickerProps = {
@@ -17,24 +26,36 @@ type IconPickerProps = {
   disabled?: boolean;
 };
 
-export function IconPicker({ value, onChange, disabled = false }: IconPickerProps) {
+export function IconPicker({
+  value,
+  onChange,
+  disabled = false,
+}: IconPickerProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const pickerRef = useRef<HTMLDivElement>(null);
   const selectedValue = normalizeServiceIcon(value);
-  const selectedOption = serviceIconOptions.find((option) => option.value === selectedValue) ?? serviceIconOptions[0];
+  const selectedOption =
+    serviceIconOptions.find((option) => option.value === selectedValue) ??
+    serviceIconOptions[0];
   const filteredOptions = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     if (!normalizedQuery) return serviceIconOptions;
 
-    return serviceIconOptions.filter((option) => `${option.label} ${option.value}`.toLowerCase().includes(normalizedQuery));
+    return serviceIconOptions.filter((option) =>
+      `${option.label} ${option.value}`.toLowerCase().includes(normalizedQuery),
+    );
   }, [query]);
 
   useEffect(() => {
     if (!open) return;
 
     const closeOnOutsideClick = (event: PointerEvent) => {
-      if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) setOpen(false);
+      if (
+        pickerRef.current &&
+        !pickerRef.current.contains(event.target as Node)
+      )
+        setOpen(false);
     };
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
@@ -76,7 +97,11 @@ export function IconPicker({ value, onChange, disabled = false }: IconPickerProp
           strokeWidth={2.2}
           aria-hidden="true"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M19 9l-7 7-7-7"
+          />
         </svg>
       </button>
 
@@ -87,9 +112,22 @@ export function IconPicker({ value, onChange, disabled = false }: IconPickerProp
           aria-label="Choose service icon"
         >
           <div className="relative">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9c958c]" aria-hidden="true">
-              <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            <span
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9c958c]"
+              aria-hidden="true"
+            >
+              <svg
+                className="size-3.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2.2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
               </svg>
             </span>
             <input
@@ -102,7 +140,10 @@ export function IconPicker({ value, onChange, disabled = false }: IconPickerProp
               autoFocus
             />
           </div>
-          <div className="mt-2.5 grid max-h-[230px] grid-cols-4 gap-1.5 overflow-y-auto pr-0.5" role="group">
+          <div
+            className="mt-2.5 grid max-h-[230px] grid-cols-4 gap-1.5 overflow-y-auto pr-0.5"
+            role="group"
+          >
             {filteredOptions.map((option) => {
               const selected = option.value === selectedValue;
 
@@ -121,12 +162,18 @@ export function IconPicker({ value, onChange, disabled = false }: IconPickerProp
                   onClick={() => chooseIcon(option.value)}
                 >
                   <ServiceIcon name={option.value} className="size-[20px]" />
-                  <span className="w-full truncate text-[9.5px] leading-tight">{option.label}</span>
+                  <span className="w-full truncate text-[9.5px] leading-tight">
+                    {option.label}
+                  </span>
                 </button>
               );
             })}
           </div>
-          {!filteredOptions.length ? <p className="px-2 py-4 text-center text-[11.5px] text-[#8b857e]">No icons match that search.</p> : null}
+          {!filteredOptions.length ? (
+            <p className="px-2 py-4 text-center text-[11.5px] text-[#8b857e]">
+              No icons match that search.
+            </p>
+          ) : null}
         </div>
       ) : null}
     </div>

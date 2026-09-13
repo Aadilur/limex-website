@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type ChangeEvent,
+  type ReactNode,
+} from "react";
 
 import {
   createMenuSection,
@@ -32,7 +38,13 @@ const textAreaClass = `${fieldClass} min-h-[96px] resize-y py-3 leading-[1.5]`;
 const toneOptions = ["green", "teal", "violet", "orange"] as const;
 
 function slugify(value: string) {
-  return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "new-category";
+  return (
+    value
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "") || "new-category"
+  );
 }
 
 function nextUnusedLabel(base: string, values: string[]) {
@@ -75,7 +87,14 @@ function Field({
   return (
     <label className={`block min-w-0 ${className}`.trim()}>
       <span className="text-[12px] font-semibold text-[#37332d]">{label}</span>
-      <input className={fieldClass} type={type} inputMode={inputMode} value={value} placeholder={placeholder} onChange={onChange} />
+      <input
+        className={fieldClass}
+        type={type}
+        inputMode={inputMode}
+        value={value}
+        placeholder={placeholder}
+        onChange={onChange}
+      />
     </label>
   );
 }
@@ -96,12 +115,25 @@ function TextAreaField({
   return (
     <label className={`block min-w-0 ${className}`.trim()}>
       <span className="text-[12px] font-semibold text-[#37332d]">{label}</span>
-      <textarea className={textAreaClass} value={value} placeholder={placeholder} onChange={onChange} />
+      <textarea
+        className={textAreaClass}
+        value={value}
+        placeholder={placeholder}
+        onChange={onChange}
+      />
     </label>
   );
 }
 
-function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: () => void }) {
+function Toggle({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: () => void;
+}) {
   return (
     <button
       className="inline-flex min-h-10 items-center gap-2.5 rounded-full border border-[#ddd7ce] bg-white px-3.5 text-[12px] font-semibold text-[#4f4b47] transition-all hover:border-[#bbb3a8] hover:bg-[#faf8f5] focus:outline-none focus:ring-2 focus:ring-[#008cff]/20"
@@ -127,7 +159,15 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
   );
 }
 
-function SaveButton({ label = "Save changes", saving, onClick }: { label?: string; saving: boolean; onClick: () => void }) {
+function SaveButton({
+  label = "Save changes",
+  saving,
+  onClick,
+}: {
+  label?: string;
+  saving: boolean;
+  onClick: () => void;
+}) {
   return (
     <button
       className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-full bg-[#071b3d] px-4 text-[12px] font-bold text-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] transition-all hover:bg-[#162744] hover:-translate-y-px disabled:cursor-wait disabled:opacity-60"
@@ -137,9 +177,24 @@ function SaveButton({ label = "Save changes", saving, onClick }: { label?: strin
     >
       {saving ? (
         <>
-          <svg className="size-3.5 animate-spin text-white/80" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+          <svg
+            className="size-3.5 animate-spin text-white/80"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8v8H4z"
+            />
           </svg>
           <span>Saving…</span>
         </>
@@ -190,7 +245,13 @@ function DeleteButton({
       disabled={disabled}
       onClick={onClick}
     >
-      <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <svg
+        className="size-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -217,16 +278,37 @@ function SectionSettings({
   onDelete: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const tone = toneOptions.includes(section.tone as (typeof toneOptions)[number]) ? section.tone : "green";
+  const tone = toneOptions.includes(
+    section.tone as (typeof toneOptions)[number],
+  )
+    ? section.tone
+    : "green";
 
   return (
-    <section className="rounded-[20px] border border-[#e2dcd4] bg-white p-4.5 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)]" aria-labelledby="section-settings-title">
+    <section
+      className="rounded-[20px] border border-[#e2dcd4] bg-white p-4.5 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)]"
+      aria-labelledby="section-settings-title"
+    >
       <div className="flex flex-wrap items-center gap-3">
-        <button className="flex min-w-0 flex-1 items-center gap-3 text-left" type="button" aria-expanded={open} onClick={() => setOpen((current) => !current)}>
-          <span className="grid size-9 shrink-0 place-items-center rounded-[11px] bg-[#f0f4ff] text-[15px] text-[#0055ff] border border-[#0055ff]/10">⌘</span>
+        <button
+          className="flex min-w-0 flex-1 items-center gap-3 text-left"
+          type="button"
+          aria-expanded={open}
+          onClick={() => setOpen((current) => !current)}
+        >
+          <span className="grid size-9 shrink-0 place-items-center rounded-[11px] bg-[#f0f4ff] text-[15px] text-[#0055ff] border border-[#0055ff]/10">
+            ⌘
+          </span>
           <span className="min-w-0">
-            <span className="block truncate text-[14px] font-bold text-[#071b3d]" id="section-settings-title">Section settings</span>
-            <span className="mt-0.5 block truncate text-[11.5px] text-[#9b958c]">{section.label} · {section.isVisible ? "Visible" : "Hidden"}</span>
+            <span
+              className="block truncate text-[14px] font-bold text-[#071b3d]"
+              id="section-settings-title"
+            >
+              Section settings
+            </span>
+            <span className="mt-0.5 block truncate text-[11.5px] text-[#9b958c]">
+              {section.label} · {section.isVisible ? "Visible" : "Hidden"}
+            </span>
           </span>
         </button>
         <button
@@ -243,24 +325,55 @@ function SectionSettings({
             stroke="currentColor"
             strokeWidth={2.2}
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M19 9l-7 7-7-7"
+            />
           </svg>
         </button>
         <div className="flex w-full items-center gap-2 sm:w-auto">
-          <Toggle label={section.isVisible ? "Visible" : "Hidden"} checked={section.isVisible} onChange={() => onChange({ isVisible: !section.isVisible })} />
+          <Toggle
+            label={section.isVisible ? "Visible" : "Hidden"}
+            checked={section.isVisible}
+            onChange={() => onChange({ isVisible: !section.isVisible })}
+          />
           <SaveButton saving={saving} onClick={onSave} />
-          {canDelete ? <DeleteButton ariaLabel={`Delete ${section.label}`} disabled={saving} onClick={onDelete} /> : null}
+          {canDelete ? (
+            <DeleteButton
+              ariaLabel={`Delete ${section.label}`}
+              disabled={saving}
+              onClick={onDelete}
+            />
+          ) : null}
         </div>
       </div>
 
       {open ? (
         <div className="mt-5 border-t border-[#eee9e2] pt-5">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Field label="Navigation label" value={section.label} onChange={(event) => onChange({ label: event.target.value })} />
-            <Field label="Public URL" value={section.href} onChange={(event) => onChange({ href: event.target.value })} inputMode="url" />
-            <Field label="Menu eyebrow" value={section.menuEyebrow ?? ""} onChange={(event) => onChange({ menuEyebrow: event.target.value })} />
+            <Field
+              label="Navigation label"
+              value={section.label}
+              onChange={(event) => onChange({ label: event.target.value })}
+            />
+            <Field
+              label="Public URL"
+              value={section.href}
+              onChange={(event) => onChange({ href: event.target.value })}
+              inputMode="url"
+            />
+            <Field
+              label="Menu eyebrow"
+              value={section.menuEyebrow ?? ""}
+              onChange={(event) =>
+                onChange({ menuEyebrow: event.target.value })
+              }
+            />
             <label className="block min-w-0">
-              <span className="text-[12px] font-semibold text-[#37332d]">Menu tone</span>
+              <span className="text-[12px] font-semibold text-[#37332d]">
+                Menu tone
+              </span>
               <div className="relative mt-1.5">
                 <select
                   className={`${fieldClass} mt-0 appearance-none pr-9 cursor-pointer`}
@@ -274,30 +387,90 @@ function SectionSettings({
                   ))}
                 </select>
                 <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-[#8b857e]">
-                  <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  <svg
+                    className="size-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M19 9l-7 7-7-7"
+                    />
                   </svg>
                 </div>
               </div>
             </label>
-            <Field className="sm:col-span-2" label="Menu title" value={section.menuTitle ?? ""} onChange={(event) => onChange({ menuTitle: event.target.value })} />
-            <TextAreaField className="sm:col-span-2" label="Menu description" value={section.menuDescription ?? ""} onChange={(event) => onChange({ menuDescription: event.target.value })} />
+            <Field
+              className="sm:col-span-2"
+              label="Menu title"
+              value={section.menuTitle ?? ""}
+              onChange={(event) => onChange({ menuTitle: event.target.value })}
+            />
+            <TextAreaField
+              className="sm:col-span-2"
+              label="Menu description"
+              value={section.menuDescription ?? ""}
+              onChange={(event) =>
+                onChange({ menuDescription: event.target.value })
+              }
+            />
           </div>
 
           <div className="mt-5 rounded-[16px] border border-[#ebe5dc] bg-[#faf8f5] p-4 sm:p-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <p className="text-[12.5px] font-bold text-[#37332d]">Recommendation card</p>
-                <p className="mt-0.5 text-[11px] text-[#9b958c]">Optional highlight card shown beside this menu category.</p>
+                <p className="text-[12.5px] font-bold text-[#37332d]">
+                  Recommendation card
+                </p>
+                <p className="mt-0.5 text-[11px] text-[#9b958c]">
+                  Optional highlight card shown beside this menu category.
+                </p>
               </div>
-              <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-[#9b958c] border border-[#e8e2d8]">Optional</span>
+              <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-[#9b958c] border border-[#e8e2d8]">
+                Optional
+              </span>
             </div>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <Field label="Badge" value={section.spotlightBadge ?? ""} onChange={(event) => onChange({ spotlightBadge: event.target.value })} />
-              <Field label="Card title" value={section.spotlightTitle ?? ""} onChange={(event) => onChange({ spotlightTitle: event.target.value })} />
-              <TextAreaField className="sm:col-span-2" label="Card description" value={section.spotlightDescription ?? ""} onChange={(event) => onChange({ spotlightDescription: event.target.value })} />
-              <Field label="Button label" value={section.spotlightCtaLabel ?? ""} onChange={(event) => onChange({ spotlightCtaLabel: event.target.value })} />
-              <Field label="Button URL" value={section.spotlightCtaHref ?? ""} onChange={(event) => onChange({ spotlightCtaHref: event.target.value })} inputMode="url" />
+              <Field
+                label="Badge"
+                value={section.spotlightBadge ?? ""}
+                onChange={(event) =>
+                  onChange({ spotlightBadge: event.target.value })
+                }
+              />
+              <Field
+                label="Card title"
+                value={section.spotlightTitle ?? ""}
+                onChange={(event) =>
+                  onChange({ spotlightTitle: event.target.value })
+                }
+              />
+              <TextAreaField
+                className="sm:col-span-2"
+                label="Card description"
+                value={section.spotlightDescription ?? ""}
+                onChange={(event) =>
+                  onChange({ spotlightDescription: event.target.value })
+                }
+              />
+              <Field
+                label="Button label"
+                value={section.spotlightCtaLabel ?? ""}
+                onChange={(event) =>
+                  onChange({ spotlightCtaLabel: event.target.value })
+                }
+              />
+              <Field
+                label="Button URL"
+                value={section.spotlightCtaHref ?? ""}
+                onChange={(event) =>
+                  onChange({ spotlightCtaHref: event.target.value })
+                }
+                inputMode="url"
+              />
             </div>
           </div>
         </div>
@@ -322,17 +495,43 @@ function LinkEditor({
   return (
     <div className="rounded-[14px] border border-[#ece6dc] bg-[#faf9f6] p-3.5 transition-all hover:border-[#ddd5c8]">
       <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <Field label="Sub-link label" value={link.label} onChange={(event) => onChange({ label: event.target.value })} />
-        <Field label="Destination URL" value={link.href} onChange={(event) => onChange({ href: event.target.value })} inputMode="url" />
+        <Field
+          label="Sub-link label"
+          value={link.label}
+          onChange={(event) => onChange({ label: event.target.value })}
+        />
+        <Field
+          label="Destination URL"
+          value={link.href}
+          onChange={(event) => onChange({ href: event.target.value })}
+          inputMode="url"
+        />
       </div>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2 text-[11.5px] text-[#9b958c]">
-          <span className={`size-2 shrink-0 rounded-full ${link.isVisible ? "bg-[#34c759]" : "bg-[#c8c2b9]"}`} aria-hidden="true" />
+          <span
+            className={`size-2 shrink-0 rounded-full ${link.isVisible ? "bg-[#34c759]" : "bg-[#c8c2b9]"}`}
+            aria-hidden="true"
+          />
           {link.href ? (
-            <a className="inline-flex items-center gap-1 truncate font-semibold text-[#0055ff] hover:underline" href={link.href} {...getLinkProps(link.href)}>
+            <a
+              className="inline-flex items-center gap-1 truncate font-semibold text-[#0055ff] hover:underline"
+              href={link.href}
+              {...getLinkProps(link.href)}
+            >
               <span>Open destination</span>
-              <svg className="size-3 text-[#0055ff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.4}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              <svg
+                className="size-3 text-[#0055ff]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2.4}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                />
               </svg>
             </a>
           ) : (
@@ -340,20 +539,38 @@ function LinkEditor({
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Toggle label={link.isVisible ? "On" : "Off"} checked={link.isVisible} onChange={() => onChange({ isVisible: !link.isVisible })} />
+          <Toggle
+            label={link.isVisible ? "On" : "Off"}
+            checked={link.isVisible}
+            onChange={() => onChange({ isVisible: !link.isVisible })}
+          />
           <SaveButton label="Save" saving={saving} onClick={onSave} />
-          <DeleteButton ariaLabel={`Delete ${link.label}`} disabled={saving} onClick={onDelete} />
+          <DeleteButton
+            ariaLabel={`Delete ${link.label}`}
+            disabled={saving}
+            onClick={onDelete}
+          />
         </div>
       </div>
     </div>
   );
 }
 
-function ServiceRow({ item, active, onSelect }: { item: AdminMenuItem; active: boolean; onSelect: () => void }) {
+function ServiceRow({
+  item,
+  active,
+  onSelect,
+}: {
+  item: AdminMenuItem;
+  active: boolean;
+  onSelect: () => void;
+}) {
   return (
     <button
       className={`flex w-full min-w-0 items-center gap-3 px-3.5 py-3 text-left transition-all sm:px-4 ${
-        active ? "bg-[#f2f6ff] border-l-4 border-l-[#0055ff]" : "bg-white hover:bg-[#faf8f5] border-l-4 border-l-transparent"
+        active
+          ? "bg-[#f2f6ff] border-l-4 border-l-[#0055ff]"
+          : "bg-white hover:bg-[#faf8f5] border-l-4 border-l-transparent"
       }`.trim()}
       type="button"
       aria-pressed={active}
@@ -361,14 +578,21 @@ function ServiceRow({ item, active, onSelect }: { item: AdminMenuItem; active: b
     >
       <span
         className={`grid size-9 shrink-0 place-items-center rounded-[11px] transition-colors ${
-          active ? "bg-[#0055ff] text-white shadow-sm" : "bg-[#f3efe9] text-[#55504a]"
+          active
+            ? "bg-[#0055ff] text-white shadow-sm"
+            : "bg-[#f3efe9] text-[#55504a]"
         }`.trim()}
       >
-        <ServiceIcon name={item.icon as ServiceIconName} className="size-[18px]" />
+        <ServiceIcon
+          name={item.icon as ServiceIconName}
+          className="size-[18px]"
+        />
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex min-w-0 items-center gap-2">
-          <span className={`truncate text-[13px] font-bold ${active ? "text-[#0055ff]" : "text-[#071b3d]"}`}>
+          <span
+            className={`truncate text-[13px] font-bold ${active ? "text-[#0055ff]" : "text-[#071b3d]"}`}
+          >
             {item.label || "Untitled service"}
           </span>
           {item.links.length ? (
@@ -377,15 +601,23 @@ function ServiceRow({ item, active, onSelect }: { item: AdminMenuItem; active: b
             </span>
           ) : null}
         </span>
-        <span className="mt-0.5 block truncate text-[11.5px] text-[#9b958c]">{item.href || "No destination set"}</span>
+        <span className="mt-0.5 block truncate text-[11.5px] text-[#9b958c]">
+          {item.href || "No destination set"}
+        </span>
       </span>
-      <span className="hidden rounded-full bg-[#f3efe9] px-2.5 py-0.5 text-[10px] font-bold text-[#77736e] sm:inline-flex">{item.marker}</span>
+      <span className="hidden rounded-full bg-[#f3efe9] px-2.5 py-0.5 text-[10px] font-bold text-[#77736e] sm:inline-flex">
+        {item.marker}
+      </span>
       <span
         className={`hidden items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10.5px] font-bold md:inline-flex ${
-          item.isVisible ? "bg-[#e8f7ee] text-[#1c6e43]" : "bg-[#f3efe9] text-[#8b857e]"
+          item.isVisible
+            ? "bg-[#e8f7ee] text-[#1c6e43]"
+            : "bg-[#f3efe9] text-[#8b857e]"
         }`.trim()}
       >
-        <span className={`size-1.5 rounded-full ${item.isVisible ? "bg-[#29975b]" : "bg-[#a8a197]"}`} />
+        <span
+          className={`size-1.5 rounded-full ${item.isVisible ? "bg-[#29975b]" : "bg-[#a8a197]"}`}
+        />
         {item.isVisible ? "Visible" : "Hidden"}
       </span>
       <span
@@ -394,7 +626,13 @@ function ServiceRow({ item, active, onSelect }: { item: AdminMenuItem; active: b
         }`.trim()}
         aria-hidden="true"
       >
-        <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.4}>
+        <svg
+          className="size-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2.4}
+        >
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
         </svg>
       </span>
@@ -426,44 +664,113 @@ function ItemEditor({
   const itemSaving = savingKey === `item:${item.id}`;
 
   return (
-    <article className="rounded-[20px] border border-[#e2dcd4] bg-white p-4.5 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)]" aria-labelledby={`service-editor-${item.id}`}>
+    <article
+      className="rounded-[20px] border border-[#e2dcd4] bg-white p-4.5 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)]"
+      aria-labelledby={`service-editor-${item.id}`}
+    >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <span className="grid size-10 shrink-0 place-items-center rounded-[12px] bg-[#f0f4ff] text-[#0055ff] border border-[#0055ff]/10">
-            <ServiceIcon name={item.icon as ServiceIconName} className="size-[20px]" />
+            <ServiceIcon
+              name={item.icon as ServiceIconName}
+              className="size-[20px]"
+            />
           </span>
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#0055ff]">Editing service</p>
-            <h3 className="mt-0.5 truncate text-[17px] font-bold tracking-[-0.02em] text-[#071b3d]" id={`service-editor-${item.id}`}>{item.label || "Untitled service"}</h3>
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#0055ff]">
+              Editing service
+            </p>
+            <h3
+              className="mt-0.5 truncate text-[17px] font-bold tracking-[-0.02em] text-[#071b3d]"
+              id={`service-editor-${item.id}`}
+            >
+              {item.label || "Untitled service"}
+            </h3>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Toggle label={item.isVisible ? "Visible" : "Hidden"} checked={item.isVisible} onChange={() => onChange({ isVisible: !item.isVisible })} />
-          <SaveButton label="Save service" saving={itemSaving} onClick={onSave} />
-          <DeleteButton ariaLabel={`Delete ${item.label}`} disabled={itemSaving} onClick={onDelete} />
+          <Toggle
+            label={item.isVisible ? "Visible" : "Hidden"}
+            checked={item.isVisible}
+            onChange={() => onChange({ isVisible: !item.isVisible })}
+          />
+          <SaveButton
+            label="Save service"
+            saving={itemSaving}
+            onClick={onSave}
+          />
+          <DeleteButton
+            ariaLabel={`Delete ${item.label}`}
+            disabled={itemSaving}
+            onClick={onDelete}
+          />
         </div>
       </div>
 
       <div className="mt-4 grid gap-4 border-t border-[#eee9e2] pt-4 sm:grid-cols-2 lg:grid-cols-[170px_minmax(0,1fr)_120px]">
         <label className="block min-w-0">
-          <span className="text-[12px] font-semibold text-[#37332d]">Service icon</span>
-          <div className="mt-1.5"><IconPicker value={item.icon} onChange={(icon) => onChange({ icon })} disabled={itemSaving} /></div>
+          <span className="text-[12px] font-semibold text-[#37332d]">
+            Service icon
+          </span>
+          <div className="mt-1.5">
+            <IconPicker
+              value={item.icon}
+              onChange={(icon) => onChange({ icon })}
+              disabled={itemSaving}
+            />
+          </div>
         </label>
-        <Field label="Service name" value={item.label} onChange={(event) => onChange({ label: event.target.value })} />
-        <Field label="Marker" value={item.marker} onChange={(event) => onChange({ marker: event.target.value })} />
-        <Field className="sm:col-span-2 lg:col-span-3" label="Destination URL" value={item.href} onChange={(event) => onChange({ href: event.target.value })} inputMode="url" />
-        <TextAreaField className="sm:col-span-2 lg:col-span-3" label="Description" value={item.description} onChange={(event) => onChange({ description: event.target.value })} />
+        <Field
+          label="Service name"
+          value={item.label}
+          onChange={(event) => onChange({ label: event.target.value })}
+        />
+        <Field
+          label="Marker"
+          value={item.marker}
+          onChange={(event) => onChange({ marker: event.target.value })}
+        />
+        <Field
+          className="sm:col-span-2 lg:col-span-3"
+          label="Destination URL"
+          value={item.href}
+          onChange={(event) => onChange({ href: event.target.value })}
+          inputMode="url"
+        />
+        <TextAreaField
+          className="sm:col-span-2 lg:col-span-3"
+          label="Description"
+          value={item.description}
+          onChange={(event) => onChange({ description: event.target.value })}
+        />
       </div>
 
       <div className="mt-5 border-t border-[#eee9e2] pt-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <p className="text-[13px] font-bold text-[#37332d]">Sub-links <span className="font-medium text-[#9b958c]">({item.links.length})</span></p>
-            <p className="mt-0.5 text-[11px] text-[#9b958c]">Optional child links shown beneath this service.</p>
+            <p className="text-[13px] font-bold text-[#37332d]">
+              Sub-links{" "}
+              <span className="font-medium text-[#9b958c]">
+                ({item.links.length})
+              </span>
+            </p>
+            <p className="mt-0.5 text-[11px] text-[#9b958c]">
+              Optional child links shown beneath this service.
+            </p>
           </div>
           <OutlineButton disabled={itemSaving} onClick={onAddLink}>
-            <svg className="mr-1.5 size-3.5 text-[#77736e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.4}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            <svg
+              className="mr-1.5 size-3.5 text-[#77736e]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2.4}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 4v16m8-8H4"
+              />
             </svg>
             Add sub-link
           </OutlineButton>
@@ -483,7 +790,8 @@ function ItemEditor({
           </div>
         ) : (
           <p className="mt-3 rounded-[12px] border border-dashed border-[#ded8cf] bg-[#faf8f5] px-3.5 py-3 text-[11.5px] text-[#9b958c]">
-            No sub-links yet. Click &ldquo;Add sub-link&rdquo; to create navigation links for this service.
+            No sub-links yet. Click &ldquo;Add sub-link&rdquo; to create
+            navigation links for this service.
           </p>
         )}
       </div>
@@ -505,13 +813,20 @@ function CategoryRail({
   disabled?: boolean;
 }) {
   return (
-    <aside className="rounded-[20px] border border-[#e2dcd4] bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.02)] lg:sticky lg:top-5" aria-label="Categories">
+    <aside
+      className="rounded-[20px] border border-[#e2dcd4] bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.02)] lg:sticky lg:top-5"
+      aria-label="Categories"
+    >
       <div className="flex items-center justify-between gap-2 px-1">
         <div>
           <p className="text-[13px] font-bold text-[#071b3d]">Categories</p>
-          <p className="mt-0.5 text-[11px] text-[#9b958c]">Choose a menu group to edit</p>
+          <p className="mt-0.5 text-[11px] text-[#9b958c]">
+            Choose a menu group to edit
+          </p>
         </div>
-        <span className="rounded-full bg-[#f3efe9] px-2.5 py-0.5 text-[11px] font-bold text-[#676159]">{groups.length}</span>
+        <span className="rounded-full bg-[#f3efe9] px-2.5 py-0.5 text-[11px] font-bold text-[#676159]">
+          {groups.length}
+        </span>
       </div>
       <div className="mt-3.5 grid grid-cols-2 gap-2 lg:block lg:space-y-2">
         {groups.map((group) => {
@@ -530,25 +845,49 @@ function CategoryRail({
             >
               <span
                 className={`grid size-8 shrink-0 place-items-center rounded-[10px] text-[11px] font-bold transition-colors ${
-                  selected ? "bg-white/15 text-white" : "bg-[#eee9e0] text-[#0055ff]"
+                  selected
+                    ? "bg-white/15 text-white"
+                    : "bg-[#eee9e0] text-[#0055ff]"
                 }`.trim()}
               >
                 {String(group.sortOrder + 1).padStart(2, "0")}
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[12px] font-bold tracking-[0.01em]">{group.label || "Untitled category"}</span>
-                <span className={`mt-0.5 block truncate text-[11px] ${selected ? "text-white/60" : "text-[#9b958c]"}`.trim()}>
-                  {group.items.length} service{group.items.length === 1 ? "" : "s"}
+                <span className="block truncate text-[12px] font-bold tracking-[0.01em]">
+                  {group.label || "Untitled category"}
+                </span>
+                <span
+                  className={`mt-0.5 block truncate text-[11px] ${selected ? "text-white/60" : "text-[#9b958c]"}`.trim()}
+                >
+                  {group.items.length} service
+                  {group.items.length === 1 ? "" : "s"}
                 </span>
               </span>
-              <span className={`hidden size-2 shrink-0 rounded-full sm:block ${group.isVisible ? "bg-[#34c759]" : "bg-[#c8c2b9]"}`} aria-label={group.isVisible ? "Visible" : "Hidden"} />
+              <span
+                className={`hidden size-2 shrink-0 rounded-full sm:block ${group.isVisible ? "bg-[#34c759]" : "bg-[#c8c2b9]"}`}
+                aria-label={group.isVisible ? "Visible" : "Hidden"}
+              />
             </button>
           );
         })}
       </div>
-      <OutlineButton className="mt-3.5 w-full" disabled={disabled} onClick={onAdd}>
-        <svg className="mr-1.5 size-3.5 text-[#77736e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.4}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+      <OutlineButton
+        className="mt-3.5 w-full"
+        disabled={disabled}
+        onClick={onAdd}
+      >
+        <svg
+          className="mr-1.5 size-3.5 text-[#77736e]"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2.4}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 4v16m8-8H4"
+          />
         </svg>
         Add category
       </OutlineButton>
@@ -570,31 +909,68 @@ function CategoryEditor({
   onDelete: () => void;
 }) {
   return (
-    <section className="rounded-[20px] border border-[#e2dcd4] bg-white p-4.5 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)]" aria-labelledby={`category-editor-${group.id}`}>
+    <section
+      className="rounded-[20px] border border-[#e2dcd4] bg-white p-4.5 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)]"
+      aria-labelledby={`category-editor-${group.id}`}
+    >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <span className="grid size-10 shrink-0 place-items-center rounded-[12px] bg-[#f0f4ff] text-[12px] font-bold text-[#0055ff]">
             {String(group.sortOrder + 1).padStart(2, "0")}
           </span>
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#0055ff]">Active category</p>
-            <h2 className="mt-0.5 truncate text-[17px] font-bold tracking-[-0.02em] text-[#071b3d]" id={`category-editor-${group.id}`}>
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#0055ff]">
+              Active category
+            </p>
+            <h2
+              className="mt-0.5 truncate text-[17px] font-bold tracking-[-0.02em] text-[#071b3d]"
+              id={`category-editor-${group.id}`}
+            >
               {group.label || "Untitled category"}
             </h2>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Toggle label={group.isVisible ? "Visible" : "Hidden"} checked={group.isVisible} onChange={() => onChange({ isVisible: !group.isVisible })} />
+          <Toggle
+            label={group.isVisible ? "Visible" : "Hidden"}
+            checked={group.isVisible}
+            onChange={() => onChange({ isVisible: !group.isVisible })}
+          />
           <SaveButton label="Save category" saving={saving} onClick={onSave} />
-          <DeleteButton ariaLabel={`Delete ${group.label}`} disabled={saving} onClick={onDelete} />
+          <DeleteButton
+            ariaLabel={`Delete ${group.label}`}
+            disabled={saving}
+            onClick={onDelete}
+          />
         </div>
       </div>
 
       <div className="mt-4 grid gap-4 border-t border-[#eee9e2] pt-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_180px_120px]">
-        <Field label="Category name" value={group.label} onChange={(event) => onChange({ label: event.target.value })} />
-        <Field label="Menu rail label" value={group.railLabel} onChange={(event) => onChange({ railLabel: event.target.value })} />
-        <Field label="Order" value={group.sortOrder} type="number" inputMode="numeric" onChange={(event) => onChange({ sortOrder: Number(event.target.value) || 0 })} />
-        <TextAreaField className="sm:col-span-2 lg:col-span-3" label="Category description" value={group.description} onChange={(event) => onChange({ description: event.target.value })} />
+        <Field
+          label="Category name"
+          value={group.label}
+          onChange={(event) => onChange({ label: event.target.value })}
+        />
+        <Field
+          label="Menu rail label"
+          value={group.railLabel}
+          onChange={(event) => onChange({ railLabel: event.target.value })}
+        />
+        <Field
+          label="Order"
+          value={group.sortOrder}
+          type="number"
+          inputMode="numeric"
+          onChange={(event) =>
+            onChange({ sortOrder: Number(event.target.value) || 0 })
+          }
+        />
+        <TextAreaField
+          className="sm:col-span-2 lg:col-span-3"
+          label="Category description"
+          value={group.description}
+          onChange={(event) => onChange({ description: event.target.value })}
+        />
       </div>
     </section>
   );
@@ -612,17 +988,26 @@ export function ServicesModule() {
   const [savingKey, setSavingKey] = useState<string | null>(null);
 
   const activeSection = useMemo(
-    () => sections.find((section) => section.id === activeSectionId) ?? sections[0] ?? null,
+    () =>
+      sections.find((section) => section.id === activeSectionId) ??
+      sections[0] ??
+      null,
     [activeSectionId, sections],
   );
 
   const activeGroup = useMemo(
-    () => activeSection?.groups.find((group) => group.id === activeGroupId) ?? activeSection?.groups[0] ?? null,
+    () =>
+      activeSection?.groups.find((group) => group.id === activeGroupId) ??
+      activeSection?.groups[0] ??
+      null,
     [activeGroupId, activeSection],
   );
 
   const activeItem = useMemo(
-    () => activeGroup?.items.find((item) => item.id === activeItemId) ?? activeGroup?.items[0] ?? null,
+    () =>
+      activeGroup?.items.find((item) => item.id === activeItemId) ??
+      activeGroup?.items[0] ??
+      null,
     [activeGroup, activeItemId],
   );
 
@@ -642,7 +1027,9 @@ export function ServicesModule() {
           window.location.assign("/admin/login");
           return;
         }
-        setLoadError("Menu data is not ready. Run the migration and seed, then refresh.");
+        setLoadError(
+          "Menu data is not ready. Run the migration and seed, then refresh.",
+        );
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -655,7 +1042,11 @@ export function ServicesModule() {
 
   useEffect(() => {
     if (!activeSection) return;
-    setActiveGroupId((current) => (activeSection.groups.some((group) => group.id === current) ? current : activeSection.groups[0]?.id ?? ""));
+    setActiveGroupId((current) =>
+      activeSection.groups.some((group) => group.id === current)
+        ? current
+        : (activeSection.groups[0]?.id ?? ""),
+    );
   }, [activeSection]);
 
   useEffect(() => {
@@ -663,24 +1054,49 @@ export function ServicesModule() {
       setActiveItemId("");
       return;
     }
-    setActiveItemId((current) => (activeGroup.items.some((item) => item.id === current) ? current : activeGroup.items[0]?.id ?? ""));
+    setActiveItemId((current) =>
+      activeGroup.items.some((item) => item.id === current)
+        ? current
+        : (activeGroup.items[0]?.id ?? ""),
+    );
   }, [activeGroup]);
 
-  function updateSectionInState(sectionId: string, patch: Partial<AdminMenuSection>) {
-    setSections((current) => current.map((section) => (section.id === sectionId ? { ...section, ...patch } : section)));
-  }
-
-  function updateGroupInState(sectionId: string, groupId: string, patch: Partial<AdminMenuGroup>) {
+  function updateSectionInState(
+    sectionId: string,
+    patch: Partial<AdminMenuSection>,
+  ) {
     setSections((current) =>
       current.map((section) =>
-        section.id !== sectionId
-          ? section
-          : { ...section, groups: section.groups.map((group) => (group.id === groupId ? { ...group, ...patch } : group)) },
+        section.id === sectionId ? { ...section, ...patch } : section,
       ),
     );
   }
 
-  function updateItemInState(sectionId: string, groupId: string, itemId: string, patch: Partial<AdminMenuItem>) {
+  function updateGroupInState(
+    sectionId: string,
+    groupId: string,
+    patch: Partial<AdminMenuGroup>,
+  ) {
+    setSections((current) =>
+      current.map((section) =>
+        section.id !== sectionId
+          ? section
+          : {
+              ...section,
+              groups: section.groups.map((group) =>
+                group.id === groupId ? { ...group, ...patch } : group,
+              ),
+            },
+      ),
+    );
+  }
+
+  function updateItemInState(
+    sectionId: string,
+    groupId: string,
+    itemId: string,
+    patch: Partial<AdminMenuItem>,
+  ) {
     setSections((current) =>
       current.map((section) =>
         section.id !== sectionId
@@ -690,14 +1106,25 @@ export function ServicesModule() {
               groups: section.groups.map((group) =>
                 group.id !== groupId
                   ? group
-                  : { ...group, items: group.items.map((item) => (item.id === itemId ? { ...item, ...patch } : item)) },
+                  : {
+                      ...group,
+                      items: group.items.map((item) =>
+                        item.id === itemId ? { ...item, ...patch } : item,
+                      ),
+                    },
               ),
             },
       ),
     );
   }
 
-  function updateLinkInState(sectionId: string, groupId: string, itemId: string, linkId: string, patch: Partial<AdminMenuLink>) {
+  function updateLinkInState(
+    sectionId: string,
+    groupId: string,
+    itemId: string,
+    linkId: string,
+    patch: Partial<AdminMenuLink>,
+  ) {
     setSections((current) =>
       current.map((section) =>
         section.id !== sectionId
@@ -712,7 +1139,14 @@ export function ServicesModule() {
                       items: group.items.map((item) =>
                         item.id !== itemId
                           ? item
-                          : { ...item, links: item.links.map((link) => (link.id === linkId ? { ...link, ...patch } : link)) },
+                          : {
+                              ...item,
+                              links: item.links.map((link) =>
+                                link.id === linkId
+                                  ? { ...link, ...patch }
+                                  : link,
+                              ),
+                            },
                       ),
                     },
               ),
@@ -721,7 +1155,12 @@ export function ServicesModule() {
     );
   }
 
-  async function mutate(key: string, action: () => Promise<AdminMenuSection[]>, message: string, onSuccess?: (nextSections: AdminMenuSection[]) => void) {
+  async function mutate(
+    key: string,
+    action: () => Promise<AdminMenuSection[]>,
+    message: string,
+    onSuccess?: (nextSections: AdminMenuSection[]) => void,
+  ) {
     if (savingKey) return;
     setSavingKey(key);
     setError("");
@@ -737,7 +1176,11 @@ export function ServicesModule() {
         window.location.assign("/admin/login");
         return;
       }
-      setError(mutationError instanceof Error ? mutationError.message : "Unable to save that change.");
+      setError(
+        mutationError instanceof Error
+          ? mutationError.message
+          : "Unable to save that change.",
+      );
     } finally {
       setSavingKey(null);
     }
@@ -821,7 +1264,9 @@ export function ServicesModule() {
   if (loading) {
     return (
       <div className="grid min-h-[420px] place-items-center rounded-[24px] border border-[#e1dcd4] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
-        <p className="text-[13px] font-semibold text-[#8b857e]">Loading your menu structure…</p>
+        <p className="text-[13px] font-semibold text-[#8b857e]">
+          Loading your menu structure…
+        </p>
       </div>
     );
   }
@@ -829,10 +1274,18 @@ export function ServicesModule() {
   if (loadError) {
     return (
       <section className="rounded-[24px] border border-[#f1c6ce] bg-[#fff8f8] p-6 sm:p-8">
-        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#c63c56]">Menu unavailable</p>
-        <h1 className="mt-2 font-brand text-[30px] font-bold tracking-[-0.04em] text-[#071b3d]">Connect the menu database first.</h1>
-        <p className="mt-3 max-w-[620px] text-[14px] leading-[1.6] text-[#716c67]">Run the Prisma migration and seed, then reload.</p>
-        <p className="mt-4 rounded-[12px] bg-white px-3.5 py-3 text-[12px] font-semibold text-[#8b3a4b]">{loadError}</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#c63c56]">
+          Menu unavailable
+        </p>
+        <h1 className="mt-2 font-brand text-[30px] font-bold tracking-[-0.04em] text-[#071b3d]">
+          Connect the menu database first.
+        </h1>
+        <p className="mt-3 max-w-[620px] text-[14px] leading-[1.6] text-[#716c67]">
+          Run the Prisma migration and seed, then reload.
+        </p>
+        <p className="mt-4 rounded-[12px] bg-white px-3.5 py-3 text-[12px] font-semibold text-[#8b3a4b]">
+          {loadError}
+        </p>
       </section>
     );
   }
@@ -840,22 +1293,40 @@ export function ServicesModule() {
   if (!activeSection) {
     return (
       <section className="rounded-[24px] border border-[#e1dcd4] bg-white p-6 sm:p-8">
-        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#0055ff]">Services & menu</p>
-        <h1 className="mt-2 font-brand text-[30px] font-bold tracking-[-0.04em] text-[#071b3d]">No menu sections yet.</h1>
-        <p className="mt-3 max-w-[620px] text-[14px] leading-[1.6] text-[#716c67]">Run the database seed to load the Limex service areas.</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#0055ff]">
+          Services & menu
+        </p>
+        <h1 className="mt-2 font-brand text-[30px] font-bold tracking-[-0.04em] text-[#071b3d]">
+          No menu sections yet.
+        </h1>
+        <p className="mt-3 max-w-[620px] text-[14px] leading-[1.6] text-[#716c67]">
+          Run the database seed to load the Limex service areas.
+        </p>
       </section>
     );
   }
 
   function addSection() {
-    const nextOrder = sections.length ? Math.max(...sections.map((section) => section.sortOrder)) + 1 : 0;
+    const nextOrder = sections.length
+      ? Math.max(...sections.map((section) => section.sortOrder)) + 1
+      : 0;
     const key = `${slugify("new-section")}-${Date.now()}`;
     void mutate(
       "create-section",
-      () => createMenuSection({ key, label: "New section", href: "#contact", tone: "green", sortOrder: nextOrder, isVisible: true }),
+      () =>
+        createMenuSection({
+          key,
+          label: "New section",
+          href: "#contact",
+          tone: "green",
+          sortOrder: nextOrder,
+          isVisible: true,
+        }),
       "New section added.",
       (nextSections) => {
-        const nextSection = nextSections.find((section) => section.key === key) ?? nextSections.at(-1);
+        const nextSection =
+          nextSections.find((section) => section.key === key) ??
+          nextSections.at(-1);
         const nextGroup = nextSection?.groups[0];
         setActiveSectionId(nextSection?.id ?? "");
         setActiveGroupId(nextGroup?.id ?? "");
@@ -865,7 +1336,9 @@ export function ServicesModule() {
   }
 
   function addCategory() {
-    const nextOrder = activeSection.groups.length ? Math.max(...activeSection.groups.map((group) => group.sortOrder)) + 1 : 0;
+    const nextOrder = activeSection.groups.length
+      ? Math.max(...activeSection.groups.map((group) => group.sortOrder)) + 1
+      : 0;
     const key = `${slugify(activeSection.label)}-${Date.now()}`;
     void mutate(
       `create-group:${activeSection.id}`,
@@ -880,8 +1353,12 @@ export function ServicesModule() {
         }),
       "New category added.",
       (nextSections) => {
-        const nextSection = nextSections.find((section) => section.id === activeSection.id);
-        const nextGroup = nextSection?.groups.find((group) => group.key === key);
+        const nextSection = nextSections.find(
+          (section) => section.id === activeSection.id,
+        );
+        const nextGroup = nextSection?.groups.find(
+          (group) => group.key === key,
+        );
         if (nextGroup) {
           setActiveGroupId(nextGroup.id);
           setActiveItemId(nextGroup.items[0]?.id ?? "");
@@ -891,8 +1368,13 @@ export function ServicesModule() {
   }
 
   function addService(group: AdminMenuGroup) {
-    const nextOrder = group.items.length ? Math.max(...group.items.map((item) => item.sortOrder)) + 1 : 0;
-    const label = nextUnusedLabel("New service", group.items.map((item) => item.label));
+    const nextOrder = group.items.length
+      ? Math.max(...group.items.map((item) => item.sortOrder)) + 1
+      : 0;
+    const label = nextUnusedLabel(
+      "New service",
+      group.items.map((item) => item.label),
+    );
     void mutate(
       `create-item:${group.id}`,
       () =>
@@ -907,8 +1389,12 @@ export function ServicesModule() {
         }),
       "New service added.",
       (nextSections) => {
-        const nextSection = nextSections.find((section) => section.id === activeSection.id);
-        const nextGroup = nextSection?.groups.find((nextGroupValue) => nextGroupValue.id === group.id);
+        const nextSection = nextSections.find(
+          (section) => section.id === activeSection.id,
+        );
+        const nextGroup = nextSection?.groups.find(
+          (nextGroupValue) => nextGroupValue.id === group.id,
+        );
         const nextItem = nextGroup?.items.find((item) => item.label === label);
         if (nextItem) setActiveItemId(nextItem.id);
       },
@@ -919,9 +1405,16 @@ export function ServicesModule() {
     <div className="space-y-6">
       <section className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#0055ff]">Content workspace</p>
-          <h1 className="mt-2 font-brand text-[38px] font-bold leading-[1] tracking-[-0.05em] text-[#071b3d] sm:text-[48px]">Services & menu</h1>
-          <p className="mt-3 max-w-[620px] text-[14px] leading-[1.6] text-[#77736e]">Organize categories, services, links and icons from one focused workspace.</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#0055ff]">
+            Content workspace
+          </p>
+          <h1 className="mt-2 font-brand text-[38px] font-bold leading-[1] tracking-[-0.05em] text-[#071b3d] sm:text-[48px]">
+            Services & menu
+          </h1>
+          <p className="mt-3 max-w-[620px] text-[14px] leading-[1.6] text-[#77736e]">
+            Organize categories, services, links and icons from one focused
+            workspace.
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <a
@@ -937,8 +1430,18 @@ export function ServicesModule() {
             rel="noreferrer"
           >
             <span>Preview website</span>
-            <svg className="size-3.5 text-[#8b857e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            <svg
+              className="size-3.5 text-[#8b857e]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2.2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+              />
             </svg>
           </a>
           <button
@@ -951,10 +1454,27 @@ export function ServicesModule() {
         </div>
       </section>
 
-      {error ? <p className="rounded-[14px] border border-[#f1c6ce] bg-[#fff8f8] px-4 py-3 text-[13px] text-[#ad3148]" role="alert">{error}</p> : null}
-      {notice ? <p className="rounded-[14px] border border-[#c6e5d3] bg-[#f2fbf5] px-4 py-3 text-[13px] text-[#29634d]" role="status">{notice}</p> : null}
+      {error ? (
+        <p
+          className="rounded-[14px] border border-[#f1c6ce] bg-[#fff8f8] px-4 py-3 text-[13px] text-[#ad3148]"
+          role="alert"
+        >
+          {error}
+        </p>
+      ) : null}
+      {notice ? (
+        <p
+          className="rounded-[14px] border border-[#c6e5d3] bg-[#f2fbf5] px-4 py-3 text-[13px] text-[#29634d]"
+          role="status"
+        >
+          {notice}
+        </p>
+      ) : null}
 
-      <nav className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="Choose main menu section">
+      <nav
+        className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        aria-label="Choose main menu section"
+      >
         {sections.map((section) => {
           const selected = section.id === activeSection.id;
           return (
@@ -981,17 +1501,40 @@ export function ServicesModule() {
                 {String(section.sortOrder + 1).padStart(2, "0")}
               </span>
               <span className="min-w-0">
-                <span className="block truncate text-[13px] font-bold">{section.label}</span>
-                <span className={`mt-0.5 block text-[11px] ${selected ? "text-white/60" : "text-[#9b958c]"}`.trim()}>
-                  {section.groups.length} categories · {section.groups.reduce((total, group) => total + group.items.length, 0)} services
+                <span className="block truncate text-[13px] font-bold">
+                  {section.label}
+                </span>
+                <span
+                  className={`mt-0.5 block text-[11px] ${selected ? "text-white/60" : "text-[#9b958c]"}`.trim()}
+                >
+                  {section.groups.length} categories ·{" "}
+                  {section.groups.reduce(
+                    (total, group) => total + group.items.length,
+                    0,
+                  )}{" "}
+                  services
                 </span>
               </span>
             </button>
           );
         })}
-        <OutlineButton className="min-w-[140px] shrink-0" disabled={savingKey !== null} onClick={addSection}>
-          <svg className="mr-1.5 size-3.5 text-[#77736e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.4}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+        <OutlineButton
+          className="min-w-[140px] shrink-0"
+          disabled={savingKey !== null}
+          onClick={addSection}
+        >
+          <svg
+            className="mr-1.5 size-3.5 text-[#77736e]"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2.4}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 4v16m8-8H4"
+            />
           </svg>
           Add section
         </OutlineButton>
@@ -1004,24 +1547,44 @@ export function ServicesModule() {
         onSave={() => saveSection(activeSection)}
         canDelete={sections.length > 1}
         onDelete={() => {
-          if (sections.length <= 1 || !confirmDelete(`Delete ${activeSection.label || "this section"} and all of its categories, services and links?`)) return;
-          void mutate(`delete-section:${activeSection.id}`, () => deleteMenuSection(activeSection.id), `${activeSection.label || "Section"} deleted.`, (nextSections) => {
-            const nextSection = nextSections[0];
-            const nextGroup = nextSection?.groups[0];
-            setActiveSectionId(nextSection?.id ?? "");
-            setActiveGroupId(nextGroup?.id ?? "");
-            setActiveItemId(nextGroup?.items[0]?.id ?? "");
-          });
+          if (
+            sections.length <= 1 ||
+            !confirmDelete(
+              `Delete ${activeSection.label || "this section"} and all of its categories, services and links?`,
+            )
+          )
+            return;
+          void mutate(
+            `delete-section:${activeSection.id}`,
+            () => deleteMenuSection(activeSection.id),
+            `${activeSection.label || "Section"} deleted.`,
+            (nextSections) => {
+              const nextSection = nextSections[0];
+              const nextGroup = nextSection?.groups[0];
+              setActiveSectionId(nextSection?.id ?? "");
+              setActiveGroupId(nextGroup?.id ?? "");
+              setActiveItemId(nextGroup?.items[0]?.id ?? "");
+            },
+          );
         }}
       />
 
       <section aria-labelledby="categories-title">
         <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#0055ff]">Menu structure</p>
-            <h2 className="mt-2 font-brand text-[27px] font-bold tracking-[-0.04em] text-[#071b3d]" id="categories-title">Categories & services</h2>
+            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#0055ff]">
+              Menu structure
+            </p>
+            <h2
+              className="mt-2 font-brand text-[27px] font-bold tracking-[-0.04em] text-[#071b3d]"
+              id="categories-title"
+            >
+              Categories & services
+            </h2>
           </div>
-          <p className="text-[12px] text-[#9b958c]">Select a category, then edit one service at a time.</p>
+          <p className="text-[12px] text-[#9b958c]">
+            Select a category, then edit one service at a time.
+          </p>
         </div>
 
         <div className="mt-4 grid gap-4 lg:grid-cols-[240px_minmax(0,1fr)] lg:items-start">
@@ -1041,32 +1604,72 @@ export function ServicesModule() {
               <CategoryEditor
                 group={activeGroup}
                 saving={savingKey === `group:${activeGroup.id}`}
-                onChange={(patch) => updateGroupInState(activeSection.id, activeGroup.id, patch)}
+                onChange={(patch) =>
+                  updateGroupInState(activeSection.id, activeGroup.id, patch)
+                }
                 onSave={() => saveGroup(activeGroup)}
                 onDelete={() => {
-                  if (!confirmDelete(`Delete ${activeGroup.label || "this category"} and all of its services?`)) return;
-                  void mutate(`delete-group:${activeGroup.id}`, () => deleteMenuGroup(activeGroup.id), `${activeGroup.label || "Category"} deleted.`, (nextSections) => {
-                    const nextSection = nextSections.find((section) => section.id === activeSection.id) ?? nextSections[0];
-                    const nextGroup = nextSection?.groups[0];
-                    setActiveSectionId(nextSection?.id ?? "");
-                    setActiveGroupId(nextGroup?.id ?? "");
-                    setActiveItemId(nextGroup?.items[0]?.id ?? "");
-                  });
+                  if (
+                    !confirmDelete(
+                      `Delete ${activeGroup.label || "this category"} and all of its services?`,
+                    )
+                  )
+                    return;
+                  void mutate(
+                    `delete-group:${activeGroup.id}`,
+                    () => deleteMenuGroup(activeGroup.id),
+                    `${activeGroup.label || "Category"} deleted.`,
+                    (nextSections) => {
+                      const nextSection =
+                        nextSections.find(
+                          (section) => section.id === activeSection.id,
+                        ) ?? nextSections[0];
+                      const nextGroup = nextSection?.groups[0];
+                      setActiveSectionId(nextSection?.id ?? "");
+                      setActiveGroupId(nextGroup?.id ?? "");
+                      setActiveItemId(nextGroup?.items[0]?.id ?? "");
+                    },
+                  );
                 }}
               />
 
-              <section className="overflow-hidden rounded-[20px] border border-[#e2dcd4] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.02)]" aria-labelledby="services-list-title">
+              <section
+                className="overflow-hidden rounded-[20px] border border-[#e2dcd4] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.02)]"
+                aria-labelledby="services-list-title"
+              >
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#eee9e2] px-4 py-3.5 sm:px-5">
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="text-[14px] font-bold text-[#071b3d]" id="services-list-title">Services</h3>
-                      <span className="rounded-full bg-[#f3efe9] px-2.5 py-0.5 text-[10.5px] font-bold text-[#676159]">{activeGroup.items.length}</span>
+                      <h3
+                        className="text-[14px] font-bold text-[#071b3d]"
+                        id="services-list-title"
+                      >
+                        Services
+                      </h3>
+                      <span className="rounded-full bg-[#f3efe9] px-2.5 py-0.5 text-[10.5px] font-bold text-[#676159]">
+                        {activeGroup.items.length}
+                      </span>
                     </div>
-                    <p className="mt-0.5 text-[11px] text-[#9b958c]">Choose a row to edit its icon, URL or links.</p>
+                    <p className="mt-0.5 text-[11px] text-[#9b958c]">
+                      Choose a row to edit its icon, URL or links.
+                    </p>
                   </div>
-                  <OutlineButton disabled={savingKey === `group:${activeGroup.id}`} onClick={() => addService(activeGroup)}>
-                    <svg className="mr-1.5 size-3.5 text-[#77736e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.4}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                  <OutlineButton
+                    disabled={savingKey === `group:${activeGroup.id}`}
+                    onClick={() => addService(activeGroup)}
+                  >
+                    <svg
+                      className="mr-1.5 size-3.5 text-[#77736e]"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2.4}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 4v16m8-8H4"
+                      />
                     </svg>
                     Add service
                   </OutlineButton>
@@ -1074,11 +1677,18 @@ export function ServicesModule() {
                 {activeGroup.items.length ? (
                   <div className="divide-y divide-[#eee9e2]">
                     {activeGroup.items.map((item) => (
-                      <ServiceRow key={item.id} item={item} active={item.id === activeItem?.id} onSelect={() => setActiveItemId(item.id)} />
+                      <ServiceRow
+                        key={item.id}
+                        item={item}
+                        active={item.id === activeItem?.id}
+                        onSelect={() => setActiveItemId(item.id)}
+                      />
                     ))}
                   </div>
                 ) : (
-                  <p className="px-4 py-6 text-center text-[12px] text-[#9b958c]">No services yet. Add the first service to this category.</p>
+                  <p className="px-4 py-6 text-center text-[12px] text-[#9b958c]">
+                    No services yet. Add the first service to this category.
+                  </p>
                 )}
               </section>
 
@@ -1086,27 +1696,79 @@ export function ServicesModule() {
                 <ItemEditor
                   item={activeItem}
                   savingKey={savingKey}
-                  onChange={(patch) => updateItemInState(activeSection.id, activeGroup.id, activeItem.id, patch)}
+                  onChange={(patch) =>
+                    updateItemInState(
+                      activeSection.id,
+                      activeGroup.id,
+                      activeItem.id,
+                      patch,
+                    )
+                  }
                   onSave={() => saveItem(activeItem)}
                   onDelete={() => {
-                    if (!confirmDelete(`Delete ${activeItem.label || "this service"} and its sub-links?`)) return;
-                    void mutate(`delete-item:${activeItem.id}`, () => deleteMenuItem(activeItem.id), `${activeItem.label || "Service"} deleted.`, (nextSections) => {
-                      const nextSection = nextSections.find((section) => section.id === activeSection.id) ?? nextSections[0];
-                      const nextGroup = nextSection?.groups.find((group) => group.id === activeGroup.id) ?? nextSection?.groups[0];
-                      setActiveSectionId(nextSection?.id ?? "");
-                      setActiveGroupId(nextGroup?.id ?? "");
-                      setActiveItemId(nextGroup?.items[0]?.id ?? "");
-                    });
+                    if (
+                      !confirmDelete(
+                        `Delete ${activeItem.label || "this service"} and its sub-links?`,
+                      )
+                    )
+                      return;
+                    void mutate(
+                      `delete-item:${activeItem.id}`,
+                      () => deleteMenuItem(activeItem.id),
+                      `${activeItem.label || "Service"} deleted.`,
+                      (nextSections) => {
+                        const nextSection =
+                          nextSections.find(
+                            (section) => section.id === activeSection.id,
+                          ) ?? nextSections[0];
+                        const nextGroup =
+                          nextSection?.groups.find(
+                            (group) => group.id === activeGroup.id,
+                          ) ?? nextSection?.groups[0];
+                        setActiveSectionId(nextSection?.id ?? "");
+                        setActiveGroupId(nextGroup?.id ?? "");
+                        setActiveItemId(nextGroup?.items[0]?.id ?? "");
+                      },
+                    );
                   }}
                   onAddLink={() => {
-                    const nextOrder = activeItem.links.length ? Math.max(...activeItem.links.map((link) => link.sortOrder)) + 1 : 0;
-                    void mutate(`create-link:${activeItem.id}`, () => createMenuLink({ itemId: activeItem.id, label: "New sub-link", href: "#contact", sortOrder: nextOrder }), "New sub-link added.");
+                    const nextOrder = activeItem.links.length
+                      ? Math.max(
+                          ...activeItem.links.map((link) => link.sortOrder),
+                        ) + 1
+                      : 0;
+                    void mutate(
+                      `create-link:${activeItem.id}`,
+                      () =>
+                        createMenuLink({
+                          itemId: activeItem.id,
+                          label: "New sub-link",
+                          href: "#contact",
+                          sortOrder: nextOrder,
+                        }),
+                      "New sub-link added.",
+                    );
                   }}
-                  onChangeLink={(linkId, patch) => updateLinkInState(activeSection.id, activeGroup.id, activeItem.id, linkId, patch)}
+                  onChangeLink={(linkId, patch) =>
+                    updateLinkInState(
+                      activeSection.id,
+                      activeGroup.id,
+                      activeItem.id,
+                      linkId,
+                      patch,
+                    )
+                  }
                   onSaveLink={(link) => saveLink(link)}
                   onDeleteLink={(link) => {
-                    if (!confirmDelete(`Delete ${link.label || "this sub-link"}?`)) return;
-                    void mutate(`delete-link:${link.id}`, () => deleteMenuLink(link.id), `${link.label || "Sub-link"} deleted.`);
+                    if (
+                      !confirmDelete(`Delete ${link.label || "this sub-link"}?`)
+                    )
+                      return;
+                    void mutate(
+                      `delete-link:${link.id}`,
+                      () => deleteMenuLink(link.id),
+                      `${link.label || "Sub-link"} deleted.`,
+                    );
                   }}
                 />
               ) : (
