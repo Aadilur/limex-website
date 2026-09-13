@@ -7,6 +7,7 @@ import type { PublicContactSettings } from "@/lib/contact-types";
 import { getTool, toolHref } from "@/lib/business-tools";
 import { sanitizeBlogHtml } from "@/lib/blog-content";
 import { ContactModal } from "./contact-section";
+import { ToolWorkspace } from "./tool-workspace";
 import { ActionButton, Breadcrumbs, WaveLabel } from "./ui";
 import { blogRichTextClass } from "./blog-rich-text";
 
@@ -156,6 +157,8 @@ export function ServiceOverviewSection({ service }: { service: ServicePageConten
     const tool = getTool(slug);
     return tool ? [tool] : [];
   });
+  const calculatorTools = helpfulTools.filter((tool) => tool.group === "calculator");
+  const builderTools = helpfulTools.filter((tool) => tool.group === "builder");
 
   return (
     <section className="mt-section-gap-xl border-t border-[#e0dee3] bg-page pt-section-y lg:mt-section-gap-xl lg:pt-section-y-xl" id="service-overview" aria-labelledby="service-overview-title">
@@ -207,17 +210,27 @@ export function ServiceOverviewSection({ service }: { service: ServicePageConten
                 <span className="text-micro font-semibold text-muted">{helpfulTools.length}</span>
               </div>
               <p className="mt-cluster max-w-[680px] text-body-sm text-muted">{toolsDescription}</p>
-              <div className="mt-cluster grid gap-cluster sm:grid-cols-2">
-                {helpfulTools.map((tool) => (
-                  <a className="group flex min-w-0 items-center justify-between gap-cluster rounded-card bg-white px-card-pad-sm py-cluster ring-1 ring-[#e0dee3] transition-colors hover:ring-[#de5778]/50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3" href={toolHref(tool.slug)} key={tool.slug}>
-                    <span className="min-w-0">
-                      <span className="block truncate text-body-xs font-semibold text-ink group-hover:text-pink">{tool.title}</span>
-                      <span className="mt-cluster-xs block truncate text-micro text-muted">{tool.description}</span>
-                    </span>
-                    <span className="shrink-0 text-pink" aria-hidden="true">↗</span>
-                  </a>
-                ))}
-              </div>
+              {calculatorTools.length ? (
+                <div className="mt-section-gap-lg space-y-section-gap-xl">
+                  {calculatorTools.map((tool) => <ToolWorkspace embedded key={tool.slug} tool={tool} />)}
+                </div>
+              ) : null}
+              {builderTools.length ? (
+                <div className={calculatorTools.length ? "mt-section-gap-xl" : "mt-section-gap-lg"}>
+                  {calculatorTools.length ? <p className="text-overline text-[#de5778]">{service.locale === "bn" ? "ডকুমেন্ট বিল্ডার" : "Document builders"}</p> : null}
+                  <div className="mt-cluster grid gap-cluster sm:grid-cols-2">
+                    {builderTools.map((tool) => (
+                      <a className="group flex min-w-0 items-center justify-between gap-cluster rounded-card bg-white px-card-pad-sm py-cluster ring-1 ring-[#e0dee3] transition-colors hover:ring-[#de5778]/50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3" href={toolHref(tool.slug)} key={tool.slug}>
+                        <span className="min-w-0">
+                          <span className="block truncate text-body-xs font-semibold text-ink group-hover:text-pink">{tool.title}</span>
+                          <span className="mt-cluster-xs block truncate text-micro text-muted">{tool.description}</span>
+                        </span>
+                        <span className="shrink-0 text-pink" aria-hidden="true">↗</span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </div>
           ) : null}
         </div>

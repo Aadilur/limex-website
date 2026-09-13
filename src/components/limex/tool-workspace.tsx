@@ -18,7 +18,7 @@ function downloadText(text: string, filename: string) {
 function Paper({ draft }: { draft: DocumentDraft }) {
   return <article className={styles.paper} lang={draft.language} data-document-paper><h2>{draft.title}</h2><p className={styles.warning}>{draft.warning}</p>{draft.sections.map((section) => <section key={section.heading}><h3>{section.heading}</h3><p>{section.body}</p></section>)}{draft.signatures.map((signature, index) => <p key={index} className={styles.signature}>{signature}<br />{draft.language === "bn" ? "স্বাক্ষর: __________________  তারিখ: __________" : "Signature: __________________  Date: __________"}</p>)}</article>;
 }
-export function ToolWorkspace({ tool }: { tool: ToolDefinition }) {
+export function ToolWorkspace({ tool, embedded = false }: { tool: ToolDefinition; embedded?: boolean }) {
   const isBuilder = tool.group === "builder";
   const [config, setConfig] = useState<ToolsConfig | null>(null); const [loadError, setLoadError] = useState(""); const [reload, setReload] = useState(0);
   const [values, setValues] = useState<ToolValues>(() => isBuilder ? initialToolValues(documentFields(tool.slug)) : {});
@@ -67,7 +67,7 @@ export function ToolWorkspace({ tool }: { tool: ToolDefinition }) {
     const print = popup.document.createElement("button"); print.textContent = "Print / Save as PDF"; print.onclick = () => popup.print(); popup.document.body.prepend(print); popup.focus(); popup.print();
   }
   return <div className={styles.workspace}>
-    <Breadcrumbs className="mb-5 lg:mb-[30px]" items={[{ label: "Home", href: "/" }, { label: "Business tools", href: "/business-tools" }, { label: tool.title }]} />
+    {!embedded ? <Breadcrumbs className="mb-5 lg:mb-[30px]" items={[{ label: "Home", href: "/" }, { label: "Business tools", href: "/business-tools" }, { label: tool.title }]} /> : null}
     <header className={styles.workspaceIntro}><h1 className={styles.heading}>{tool.title}{tool.slug === "income-tax" ? " calculator" : ""}</h1><p>{tool.description}</p></header>
     <div className={styles.tabs} aria-label="Tool views"><button type="button" className={styles.tab} aria-pressed={tab === "tool"} onClick={() => setTab("tool")}>{isBuilder ? "Build your document" : "Calculator"}</button><button type="button" className={styles.tab} aria-pressed={tab === "rules"} onClick={() => setTab("rules")}>{isBuilder ? "Before you begin" : "Rules & details"}</button></div>
     {tab === "rules" ? <ToolRules tool={tool} config={config} year={values.year} values={values} /> : <>
