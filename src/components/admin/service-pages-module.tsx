@@ -415,10 +415,6 @@ function DetailEditor({ detail, onChange, mediaAssetId, onMediaAssetChange }: { 
         </div>
       </SectionDisclosure>
 
-      <SectionDisclosure title="Related options" description="A label for the child links inherited from the assigned menu entry.">
-        <Field label="Section label" value={detail.relatedOptionsLabel ?? ""} onChange={(event) => update("relatedOptionsLabel", event.target.value)} placeholder="Related options" hint="The links themselves are managed in Menu structure." />
-      </SectionDisclosure>
-
       <SectionDisclosure title="Helpful tools" description="Attach calculators or document builders that support this service." count={selectedTools.length}>
         <div className="grid gap-x-4 gap-y-5 sm:grid-cols-2">
           <Field label="Section eyebrow" value={detail.toolsEyebrow ?? ""} onChange={(event) => update("toolsEyebrow", event.target.value)} placeholder="Helpful tools" />
