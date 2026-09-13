@@ -380,7 +380,7 @@ function DetailEditor({ detail, onChange, mediaAssetId, onMediaAssetChange }: { 
             <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">One rich-text source</span>
             <span className="text-[10px] text-[#aaa49b]">Controls the heading, approach, benefits and filing steps</span>
           </div>
-          <RichTextEditor compact ariaLabel="Complete service overview and guided filing" placeholder="Write the complete overview, approach, benefits and filing steps…" value={detail.overviewHtml !== undefined ? detail.overviewHtml : legacyOverviewHtml(detail)} onChange={(html) => update("overviewHtml", html)} />
+          <RichTextEditor ariaLabel="Complete service overview and guided filing" placeholder="Write the complete overview, approach, benefits and filing steps…" value={detail.overviewHtml !== undefined ? detail.overviewHtml : legacyOverviewHtml(detail)} onChange={(html) => update("overviewHtml", html)} />
           <p className="mt-2 text-[10px] leading-[1.45] text-[#aaa49b]">Use Heading 2 for the section title, Heading 3 for the approach title, and lists for benefits or steps. Existing structured content is kept as a fallback until you save this editor.</p>
         </div>
       </SectionDisclosure>

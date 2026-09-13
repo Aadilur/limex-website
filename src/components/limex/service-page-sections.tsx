@@ -5,8 +5,10 @@ import { useState } from "react";
 import type { ServicePageContent, ServicePriceTier } from "./service-page-data";
 import type { PublicContactSettings } from "@/lib/contact-types";
 import { getTool, toolHref } from "@/lib/business-tools";
+import { sanitizeBlogHtml } from "@/lib/blog-content";
 import { ContactModal } from "./contact-section";
 import { ActionButton, Breadcrumbs, WaveLabel } from "./ui";
+import { blogRichTextClass } from "./blog-rich-text";
 
 function externalLinkProps(href: string) {
   return /^https?:\/\//i.test(href) ? { target: "_blank" as const, rel: "noreferrer" } : {};
@@ -79,11 +81,10 @@ const serviceUi = {
 } as const;
 
 const richTextClass = "text-body-lg text-muted [&_a]:font-semibold [&_a]:text-pink [&_a]:underline [&_a]:decoration-pink/30 [&_a]:underline-offset-2 [&_blockquote]:my-cluster [&_blockquote]:border-l-2 [&_blockquote]:border-pink [&_blockquote]:pl-cluster [&_h2]:mt-section-gap-lg [&_h2]:font-brand [&_h2]:text-section-title [&_h2]:font-bold [&_h2]:text-ink [&_h3]:mt-section-gap [&_h3]:font-brand [&_h3]:text-subheading-mobile [&_h3]:font-bold [&_h3]:text-ink [&_img]:my-cluster [&_img]:max-w-full [&_img]:rounded-card [&_img]:object-contain [&_li]:ml-5 [&_li]:list-disc [&_li]:pl-1 [&_ol_li]:list-decimal [&_p+p]:mt-cluster [&_strong]:font-bold [&_ul]:my-cluster [&_ol]:my-cluster";
-const overviewRichTextClass = "text-body-lg text-muted [&>p:first-child]:text-overline [&>p:first-child]:font-bold [&>p:first-child]:uppercase [&>p:first-child]:tracking-[0.14em] [&>p:first-child]:text-[#de5778] [&>h2]:font-brand [&>h2]:text-page-title-mobile [&>h2]:font-bold [&>h2]:leading-[1.04] [&>h2]:tracking-[-0.045em] [&>h2]:text-ink lg:[&>h2]:text-page-title [&>h3]:font-brand [&>h3]:text-section-title [&>h3]:font-bold [&>h3]:leading-[1.08] [&>h3]:tracking-[-0.035em] [&>h3]:text-ink [&>p]:max-w-[720px] [&>ul]:grid [&>ul]:gap-cluster sm:[&>ul]:grid-cols-2 [&>ol]:grid [&>ol]:gap-section-gap [&>ol]:pl-0 sm:[&>ol]:grid-cols-3 [&>ol>li]:ml-0 [&>ol>li]:list-none [&>ol>li]:border-t [&>ol>li]:border-[#e0dee3] [&>ol>li]:pt-cluster [&>img]:max-w-full [&>img]:rounded-card";
 
 function RichTextContent({ id, html, fallback, className = richTextClass }: { id?: string; html?: string; fallback: string; className?: string }) {
   if (!html?.trim()) return <p className={className}>{fallback}</p>;
-  return <div id={id} className={className} dangerouslySetInnerHTML={{ __html: html }} />;
+  return <div id={id} className={className} dangerouslySetInnerHTML={{ __html: sanitizeBlogHtml(html) }} />;
 }
 
 export function ServiceHeroSection({ service }: { service: ServicePageContent }) {
@@ -160,7 +161,7 @@ export function ServiceOverviewSection({ service }: { service: ServicePageConten
     <section className="mt-section-gap-xl border-t border-[#e0dee3] bg-page pt-section-y lg:mt-section-gap-xl lg:pt-section-y-xl" id="service-overview" aria-labelledby="service-overview-title">
       <div className={`grid gap-section-gap ${service.facts.length ? "lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.7fr)] lg:gap-section-gap-xl" : ""}`.trim()}>
         <div className="min-w-0">
-          {overviewHtml ? <RichTextContent id="service-overview-title" html={overviewHtml} fallback="" className={`${overviewRichTextClass} space-y-cluster`} /> : <>
+          {overviewHtml ? <RichTextContent id="service-overview-title" html={overviewHtml} fallback="" className={blogRichTextClass} /> : <>
             <p className="text-overline text-[#de5778]">{service.overviewEyebrow}</p>
             <h2 className="mt-cluster max-w-[760px] font-brand text-page-title text-ink max-lg:text-page-title-mobile" id="service-overview-title">{service.overviewTitle}</h2>
             <RichTextContent html={service.overviewDescriptionHtml} fallback={service.overviewDescription} className={`${richTextClass} mt-cluster max-w-[720px]`} />
