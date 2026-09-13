@@ -35,6 +35,31 @@ export const feeSources: Record<string, string> = {
 const nonNegative = z.number().finite().min(0).max(1e12);
 const nullableFee = nonNegative.nullable();
 const publicUrl = z.string().url().refine((value) => /^https?:\/\//.test(value), "Use an http(s) source URL.");
+
+// Limex's package-level RJSC reference table. These are kept separate from
+// the component-level capital schedule below because the supplied reference
+// values represent a minimum government package at each published capital
+// point, not a formula that can safely be inferred for every amount in between.
+export const defaultRjscReferenceRows = [
+  { capital: 1_000_000, governmentFee: 16_003 },
+  { capital: 2_000_000, governmentFee: 16_923 },
+  { capital: 3_000_000, governmentFee: 17_843 },
+  { capital: 4_000_000, governmentFee: 18_763 },
+  { capital: 5_000_000, governmentFee: 39_683 },
+  { capital: 6_000_000, governmentFee: 41_178 },
+  { capital: 7_000_000, governmentFee: 42_673 },
+  { capital: 8_000_000, governmentFee: 44_168 },
+  { capital: 9_000_000, governmentFee: 45_663 },
+  { capital: 10_000_000, governmentFee: 47_158 },
+  { capital: 20_000_000, governmentFee: 62_108 },
+  { capital: 30_000_000, governmentFee: 77_058 },
+  { capital: 40_000_000, governmentFee: 92_008 },
+  { capital: 50_000_000, governmentFee: 106_958 },
+  { capital: 100_000_000, governmentFee: 181_708 },
+] as const;
+export type RjscReferenceRow = { capital: number; governmentFee: number };
+const rjscReferenceRowSchema = z.object({ capital: nonNegative.positive(), governmentFee: nonNegative }).strict();
+const orderedReferenceRows = (rows: RjscReferenceRow[]) => rows.every((row, index) => index === 0 || row.capital > rows[index - 1]!.capital);
 export const feeSettingSchema = z.object({
   serviceFee: nullableFee, governmentFee: nullableFee,
   chargeDefaults: z.record(nullableFee).default({}),
@@ -80,6 +105,7 @@ export const companyRegistrationSchema = z.object({
   moaStamp: nonNegative,
   aoaStampBands: z.array(stampFeeBandSchema).min(1).max(6).refine(orderedBands, "Articles of Association stamp bands must be ordered and end with an unlimited band."),
   capitalFeeBands: z.array(capitalFeeBandSchema).min(1).max(6).refine(orderedBands, "Authorized capital fee bands must be ordered and end with an unlimited band."),
+  rjscReferenceRows: z.array(rjscReferenceRowSchema).min(1).max(30).default(() => [...defaultRjscReferenceRows]).refine(orderedReferenceRows, "RJSC reference rows must be ordered by authorised capital."),
   sourceUrl: publicUrl,
   effectiveDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   note: z.string().max(1000),
@@ -412,6 +438,7 @@ export const defaultToolsSettings: ToolsSettings = {
       { upto: 5000000, unit: 100000, feePerUnit: 80 },
       { upto: null, unit: 100000, feePerUnit: 130 },
     ],
+    rjscReferenceRows: [...defaultRjscReferenceRows],
     sourceUrl: feeSources["limited-company"],
     effectiveDate: "2026-09-05",
     note: "Reviewed against the current RJSC fee schedule: name clearance is ৳500 per proposed name; filing is ৳1,200; MoA stamp is ৳1,000; AoA stamp is ৳2,000 up to ৳10 lakh, ৳4,000 up to ৳3 crore and ৳10,000 above; authorized-capital fees are nil up to ৳10 lakh, then ৳80 per ৳1 lakh or part up to ৳50 lakh and ৳130 per ৳1 lakh or part above that. Confirm the final assessment before filing.",
@@ -555,7 +582,7 @@ export function validateFields(fields: ToolField[], raw: unknown): ToolValues {
   }
   return clean;
 }
-export type CalculationResult = { title: string; total: number; complete: boolean; rows: { label: string; amount: number | null }[]; notes: string[]; sourceUrl: string; year?: string; slabs?: { label: string; rate: number; income: number; tax: number }[] };
+export type CalculationResult = { title: string; total: number; complete: boolean; rows: { label: string; amount: number | null }[]; notes: string[]; sourceUrl: string; year?: string; slabs?: { label: string; rate: number; income: number; tax: number }[]; reference?: { capital: number; governmentFee: number; serviceFee: number | null; minimumTotal: number | null } };
 const round = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
 export function getCapitalFeeBand(value: number, bands: CapitalFeeBand[]) {
   const index = bands.findIndex((band) => band.upto === null || value <= band.upto);
@@ -589,6 +616,11 @@ export function calculateAuthorisedCapitalFee(value: number, bands: CapitalFeeBa
     previous = upper;
   }
   return round(total);
+}
+export function formatCapitalReference(value: number) {
+  if (value >= 10_000_000 && value % 10_000_000 === 0) return `${value / 10_000_000} Crore (${money(value)})`;
+  if (value >= 100_000 && value % 100_000 === 0) return `${value / 100_000} Lakh (${money(value)})`;
+  return money(value);
 }
 function amountFromBands(value: number, bands: { upto: number | null; amount: number }[]) {
   return bands.find((band) => band.upto === null || value <= band.upto)?.amount ?? bands.at(-1)?.amount ?? 0;
@@ -633,6 +665,7 @@ export function calculateTool(slug: ToolSlug, input: unknown, settings: ToolsSet
     const schedule = settings.companyRegistration;
     const capital = n("capital");
     const nameCount = values.nameClearance === "Need name clearance" ? n("nameOptions") || 1 : 0;
+    const reference = schedule.rjscReferenceRows.find((row) => row.capital === capital);
     const rows: CalculationResult["rows"] = [
       { label: "RJSC filing fee · 6 documents", amount: schedule.filingFee },
       { label: "Memorandum of Association stamp", amount: schedule.moaStamp },
@@ -643,7 +676,8 @@ export function calculateTool(slug: ToolSlug, input: unknown, settings: ToolsSet
     ];
     const complete = rows.every((row) => row.amount !== null);
     const capitalFee = calculateAuthorisedCapitalFee(capital, schedule.capitalFeeBands);
-    return { values, result: { title: complete ? "Estimated company setup cost" : "Known company setup costs", total: round(rows.reduce((sum, row) => sum + (row.amount ?? 0), 0)), complete, rows, sourceUrl: schedule.sourceUrl, notes: [schedule.note, `Your authorised capital of ${money(capital)} falls ${capitalFeeBandRange(capital, schedule.capitalFeeBands)}. The calculated RJSC capital fee is ${money(capitalFee)}.`, "Government rows follow the published RJSC schedule. The Limex professional service fee is editable by an administrator. Final assessment can vary by entity, filing scope and any additional authority charge."] } };
+    const serviceFee = settings.fees["limited-company"].serviceFee;
+    return { values, result: { title: complete ? "Estimated company setup cost" : "Known company setup costs", total: round(rows.reduce((sum, row) => sum + (row.amount ?? 0), 0)), complete, rows, sourceUrl: schedule.sourceUrl, reference: reference ? { capital: reference.capital, governmentFee: reference.governmentFee, serviceFee, minimumTotal: serviceFee === null ? null : round(reference.governmentFee + serviceFee) } : undefined, notes: [schedule.note, `Your authorised capital of ${money(capital)} falls ${capitalFeeBandRange(capital, schedule.capitalFeeBands)}. The calculated RJSC capital fee is ${money(capitalFee)}.`, reference ? "The supplied RJSC reference table is shown as a separate minimum package view; it is not added again to the detailed rows above." : "The supplied reference table contains fixed capital points; use the table to compare the nearest published point when your amount is between rows.", "Government rows follow the published RJSC schedule. The Limex professional service fee is editable by an administrator. Final assessment can vary by entity, filing scope and any additional authority charge."] } };
   }
 
   if (slug === "rjsc" && values.serviceType === "Company registration" && ["Private limited company", "One-person company"].includes(values.entity)) {

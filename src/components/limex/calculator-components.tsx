@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 
 import { ActionButton, WaveLabel } from "./ui";
+import { defaultRjscReferenceRows, formatCapitalReference } from "@/lib/business-tools";
 
 const moneyFormatter = new Intl.NumberFormat("en-BD", {
   maximumFractionDigits: 0,
@@ -155,12 +156,7 @@ function ChoiceButton({
   );
 }
 
-const capitalOptions = [
-  { value: "1000000", label: "10 Lakh (১০ লক্ষ)", fee: 22158 },
-  { value: "5000000", label: "50 Lakh (৫০ লক্ষ)", fee: 32158 },
-  { value: "10000000", label: "1 Crore (১ কোটি)", fee: 47158 },
-  { value: "50000000", label: "5 Crore (৫ কোটি)", fee: 72158 },
-];
+const capitalOptions = defaultRjscReferenceRows.map((row) => ({ value: String(row.capital), label: formatCapitalReference(row.capital), fee: row.governmentFee }));
 
 const paidUpOptions = [
   { value: "500000", label: "Up to 5 Lakh (৫ লক্ষ)", fee: 8000 },

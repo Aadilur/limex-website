@@ -22,7 +22,7 @@ const config: Config = {
         "brand-cloud": "#eaf3ff",
         "brand-line": "#d3e2f0",
         "brand-wash": "#f4f9fd",
-        page: "#f4f8fc",
+        page: "#eeece7",
         paper: "#ffffff",
         cream: "#f9fbfe",
         accent: "#008cff",

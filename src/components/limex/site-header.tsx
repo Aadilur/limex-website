@@ -250,7 +250,7 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
       </div>
 
       <div className={`relative mx-mobile-gutter flex min-h-[60px] items-center justify-between rounded-nav border border-[rgba(224,222,227,0.86)] bg-page px-4 py-cluster wide:hidden ${navMotionClassName}`.trim()}>
-        <LogoLockup href={homeHref} className="w-[150px] min-w-[150px]" />
+        <LogoLockup href={homeHref} className="w-[124px] min-w-[124px] sm:w-[132px] sm:min-w-[132px]" />
         <button
           className="relative grid size-[42px] place-items-center rounded-full border-0 bg-brand-blue text-white transition-transform duration-200 hover:scale-105 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3"
           type="button"

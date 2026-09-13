@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { businessTools, calculateTool, calculatorFields, defaultToolsSettings, initialToolValues, toolsSettingsSchema, validateFields, type ToolSlug, type ToolValues } from "../src/lib/business-tools.js";
+import { businessTools, calculateTool, calculatorFields, defaultRjscReferenceRows, defaultToolsSettings, formatCapitalReference, initialToolValues, toolsSettingsSchema, validateFields, type ToolSlug, type ToolValues } from "../src/lib/business-tools.js";
 import { createDocumentDraft, documentFields, documentText } from "../src/lib/business-documents.js";
 import { defaultMouTemplate, defaultTemplateSettings, documentTemplateDraftSchema, expandTemplateBlockInstances, isTemplateFieldVisible, missingTemplateFields, normalizeDocumentTemplateDraft, resolveTemplateFieldValue, templateRepeaterFieldValueKey, type TemplateBlock } from "../src/lib/document-templates.js";
 import { renderTemplateDocx } from "../src/lib/document-template-docx.js";
@@ -299,6 +299,19 @@ test("company setup applies the published RJSC schedule", () => {
   assert.equal(rjscRegistration.rows.find((row) => row.label === "RJSC filing fee · 6 documents")?.amount, 1200);
   assert.equal(rjscRegistration.rows.find((row) => row.label === "Authorised share capital fee")?.amount, 3330);
   assert.match(rjscRegistration.notes[1] ?? "", /above ৳ 5,000,000/);
+});
+test("RJSC reference table keeps the supplied capital points and supports legacy settings", () => {
+  assert.equal(defaultRjscReferenceRows.length, 15);
+  assert.deepEqual(defaultRjscReferenceRows[0], { capital: 1000000, governmentFee: 16003 });
+  assert.deepEqual(defaultRjscReferenceRows.at(-1), { capital: 100000000, governmentFee: 181708 });
+  assert.equal(formatCapitalReference(1000000), "10 Lakh (৳ 1,000,000)");
+  assert.equal(formatCapitalReference(10000000), "1 Crore (৳ 10,000,000)");
+  const legacy = structuredClone(settings);
+  delete (legacy.companyRegistration as Partial<typeof legacy.companyRegistration>).rjscReferenceRows;
+  const parsed = toolsSettingsSchema.parse(legacy);
+  assert.deepEqual(parsed.companyRegistration.rjscReferenceRows, defaultRjscReferenceRows);
+  const estimate = calculate("limited-company", { capital: "1000000", nameClearance: "Already have name clearance" });
+  assert.deepEqual(estimate.reference, { capital: 1000000, governmentFee: 16003, serviceFee: 10000, minimumTotal: 26003 });
 });
 test("admin can change fees and rules with one consistent calculation engine", () => {
   const custom = structuredClone(settings); custom.fees.trademark.serviceFee = 1000;

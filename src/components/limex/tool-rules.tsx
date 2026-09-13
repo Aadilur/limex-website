@@ -1,4 +1,5 @@
 import { capitalFeeBandRate, feeSources, money, taxActUrl, taxCategoryLabels, type ToolDefinition, type ToolValues, type ToolsConfig } from "@/lib/business-tools";
+import { CompanyFeeReferenceTable } from "./company-fee-reference";
 import styles from "./tools.module.css";
 
 export function ToolRules({ tool, config, year, values }: { tool: ToolDefinition; config: ToolsConfig | null; year: string; values?: ToolValues }) {
@@ -25,6 +26,7 @@ export function ToolRules({ tool, config, year, values }: { tool: ToolDefinition
       return <tr key={`capital-${index}`}><td>Authorised capital · {range}</td><td>{fee}</td></tr>;
     });
     return <div className={styles.rules}>
+      <CompanyFeeReferenceTable settings={config.settings} selectedCapital={values?.capital} />
       <section className={styles.ruleCard}><h2 className={styles.panelTitle}>What your estimate includes</h2><p>Enter authorised capital and the name-clearance choice. The calculator applies the published RJSC schedule automatically, then adds the Limex professional service fee.</p><div className={styles.tableWrap}><table className={styles.table}><thead><tr><th scope="col">Charge</th><th scope="col">Reference</th></tr></thead><tbody><tr><td>RJSC filing fee · 6 documents</td><td>{money(companyFees.filingFee)}</td></tr><tr><td>MoA stamp</td><td>{money(companyFees.moaStamp)}</td></tr>{companyFees.aoaStampBands.map((band, index) => <tr key={`aoa-${index}`}><td>AoA stamp · {band.upto === null ? "above the last tier" : `up to ${money(band.upto)}`}</td><td>{money(band.amount)}</td></tr>)}{capitalFeeRows}<tr><td>Name clearance</td><td>{money(companyFees.nameClearanceFee)} per name</td></tr></tbody></table></div><p>For a tiered capital fee, each partial unit is rounded up to one full unit. The calculator uses your exact authorised capital to select the resulting amount.</p></section>
       <section className={styles.ruleCard}><h2 className={styles.panelTitle}>Current RJSC reference</h2><p>{companyFees.note}</p><p><a className={styles.textLink} href={companyFees.sourceUrl} target="_blank" rel="noreferrer">Open RJSC fee schedule ↗</a> · Reference date {companyFees.effectiveDate} · Settings version {config.version}</p></section>
     </div>;

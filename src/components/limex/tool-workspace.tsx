@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { calculatorFields, initialToolValues, money, validateFields, type CalculationResult, type ToolDefinition, type ToolsConfig, type ToolValues } from "@/lib/business-tools";
+import { calculatorFields, formatCapitalReference, initialToolValues, money, validateFields, type CalculationResult, type ToolDefinition, type ToolsConfig, type ToolValues } from "@/lib/business-tools";
 import { createDocumentDraft, documentFields, documentText, type DocumentDraft } from "@/lib/business-documents";
 import { request } from "@/lib/menu-api";
 import { ServiceIcon } from "./service-icons";
 import { ToolFields } from "./tool-fields";
 import { ToolRules } from "./tool-rules";
 import { ToolServiceRequest } from "./tool-service-request";
+import { CompanyFeeReferenceTable } from "./company-fee-reference";
 import { Breadcrumbs } from "./ui";
 import styles from "./tools.module.css";
 
@@ -72,7 +73,8 @@ export function ToolWorkspace({ tool, embedded = false }: { tool: ToolDefinition
     <div className={styles.tabs} aria-label="Tool views"><button type="button" className={styles.tab} aria-pressed={tab === "tool"} onClick={() => setTab("tool")}>{isBuilder ? "Build your document" : "Calculator"}</button><button type="button" className={styles.tab} aria-pressed={tab === "rules"} onClick={() => setTab("rules")}>{isBuilder ? "Before you begin" : "Rules & details"}</button></div>
     {tab === "rules" ? <ToolRules tool={tool} config={config} year={values.year} values={values} /> : <>
       {loadError ? <div className={styles.error} role="alert">{loadError}<button className={styles.quiet} onClick={() => setReload((value) => value + 1)} type="button">Try again</button></div> : null}
-      {!isBuilder && !config ? <p className={styles.muted} role="status">{loadError ? "The calculator will be available when settings can be loaded." : "Loading published settings…"}</p> : <div className={`${styles.columns} ${!isBuilder ? styles.calculatorColumns : ""}`}>
+      {!isBuilder && !config ? <p className={styles.muted} role="status">{loadError ? "The calculator will be available when settings can be loaded." : "Loading published settings…"}</p> : <>
+      <div className={`${styles.columns} ${!isBuilder ? styles.calculatorColumns : ""}`}>
         <form ref={formRef} className={`${styles.formPanel} scroll-mt-28`} onSubmit={submit}>
           <h2 className={styles.panelTitle}>{isBuilder ? step === 0 ? "Start with the essentials." : "Make the terms clear." : tool.slug === "limited-company" ? "Build your setup estimate" : "Your calculation"}</h2>
           <p className={styles.muted}>{isBuilder ? "Your entries aren’t saved unless you include them in a service request." : tool.slug === "limited-company" ? "Four inputs. A transparent RJSC and Limex cost breakdown." : "Amounts in Bangladeshi taka. Update any field to start a new estimate."}</p>
@@ -89,6 +91,7 @@ export function ToolWorkspace({ tool, embedded = false }: { tool: ToolDefinition
           {isBuilder && preview ? <><h2 className={styles.panelTitle}>{draft ? "Your draft" : "Live preview"}</h2><p className={`${styles.muted} mt-2`}>{draft ? "Ready to download. Professional review is recommended." : "Your document takes shape as you fill in the details."}</p><div className={styles.actions}><button type="button" className={`${styles.button} ${styles.secondary}`} disabled={!draft} onClick={() => draft && downloadText(documentText(draft), `limex-${tool.slug}.txt`)}>Download text</button><button type="button" className={styles.quiet} disabled={!draft} onClick={printDraft}>Print / PDF</button></div>{feedback ? <p className={`${styles.muted} mt-3`} role="status">{feedback}</p> : null}<Paper draft={preview} /></> : result ? <>
             <h2 className={styles.panelTitle}>Your estimate</h2>{result.year ? <p className={`${styles.muted} mt-2`}>Assessment year {result.year}</p> : null}<p className={styles.summaryTitle}>{result.title}</p><p className={styles.total}>{money(result.total)}</p>
             {!result.complete ? <p className={`${styles.muted} mt-3`}>Pending fees are not included in this amount.</p> : null}
+            {result.reference ? <div className="mt-4 rounded-[12px] bg-[#edf6ff] px-3.5 py-3.5" aria-label="RJSC minimum package reference"><div className="flex flex-wrap items-baseline justify-between gap-2"><strong className="text-[12px] font-bold text-[#071b3d]">Minimum package reference</strong><span className="text-[11px] font-semibold text-[#006dce]">{formatCapitalReference(result.reference.capital)}</span></div><div className="mt-2 grid gap-2 text-[11px] sm:grid-cols-3"><span className="flex justify-between gap-2 text-[#53657b] sm:block"><span className="block">Govt. RJSC fee</span><strong className="text-[#0055ff]">{money(result.reference.governmentFee)}</strong></span><span className="flex justify-between gap-2 text-[#53657b] sm:block"><span className="block">Service charge</span><strong className="text-[#26332c]">{result.reference.serviceFee === null ? "To confirm" : money(result.reference.serviceFee)}</strong></span><span className="flex justify-between gap-2 text-[#53657b] sm:block"><span className="block">Minimum total</span><strong className="text-[#26332c]">{result.reference.minimumTotal === null ? "To confirm" : money(result.reference.minimumTotal)}</strong></span></div></div> : null}
             <dl className={styles.rows}>{result.rows.map((row) => <div className={styles.row} key={row.label}><dt>{row.label}</dt><dd>{row.amount === null ? <span className={styles.pending}>To confirm</span> : money(row.amount)}</dd></div>)}</dl>
             {result.slabs ? <details className="mt-5"><summary className="cursor-pointer text-[12px] font-semibold">See the slab breakdown</summary><div className={styles.tableWrap}><table className={styles.table}><thead><tr><th>Rate</th><th>Income</th><th>Tax</th></tr></thead><tbody>{result.slabs.map((slab) => <tr key={slab.label}><td>{slab.rate}%</td><td>{money(slab.income)}</td><td>{money(slab.tax)}</td></tr>)}</tbody></table></div></details> : null}
             <button className={styles.button} type="button" onClick={() => setShowRequest(true)}>Have Limex check it <span aria-hidden="true">↗</span></button>
@@ -96,7 +99,9 @@ export function ToolWorkspace({ tool, embedded = false }: { tool: ToolDefinition
             <div className={styles.notes}>{result.notes.map((note) => <p className={styles.hint} key={note}>{note}</p>)}</div>
           </> : <div className={styles.emptySummary}><ServiceIcon name={tool.icon} className={styles.icon} /><h2 className={styles.panelTitle}>Clarity starts here.</h2><p className={`${styles.muted} mt-3`}>Add your details and calculate to see a simple, itemised result.</p><div className={styles.notes}><p className={styles.hint}>No signup. No payment. Your calculation isn’t stored unless you submit it for review.</p></div></div>}
         </div>
-      </div>}
+      </div>
+      {!isBuilder && tool.slug === "limited-company" && config ? <CompanyFeeReferenceTable compact selectedCapital={values.capital} settings={config.settings} /> : null}
+      </>}
     </>}
     <div className={styles.help}><div><h2 className={styles.panelTitle}>Take the next step with Limex.</h2><p className={styles.muted}>{isBuilder ? "Get your draft checked before it becomes an agreement." : "Get help confirming the fees or arranging the service."}</p></div><button className={`${styles.button} ${styles.secondary}`} type="button" onClick={() => setShowRequest((current) => !current)} aria-expanded={showRequest} aria-controls="tool-request">{showRequest ? "Close request" : "Request support"}<span aria-hidden="true">↗</span></button></div>
     {showRequest ? <div className={styles.request} ref={requestRef} id="tool-request"><ToolServiceRequest tool={tool} contextValues={result || draft ? values : undefined} /></div> : null}
