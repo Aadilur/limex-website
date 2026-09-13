@@ -1,5 +1,5 @@
 import { capitalFeeBandRate, feeSources, money, taxActUrl, taxCategoryLabels, type ToolDefinition, type ToolValues, type ToolsConfig } from "@/lib/business-tools";
-import { CompanyFeeReferenceTable } from "./company-fee-reference";
+import { AuthorisedCapitalFeeBandsTable, CompanyFeeReferenceTable } from "./company-fee-reference";
 import styles from "./tools.module.css";
 
 export function ToolRules({ tool, config, year, values }: { tool: ToolDefinition; config: ToolsConfig | null; year: string; values?: ToolValues }) {
@@ -50,18 +50,9 @@ export function ToolRules({ tool, config, year, values }: { tool: ToolDefinition
     const companyFees = config.settings.companyRegistration;
     const selectedEntity = values?.entity;
     const usesPublishedRegistrationSchedule = values?.serviceType === "Company registration" && ["Private limited company", "One-person company"].includes(selectedEntity ?? "");
-    const capitalFeeRows = companyFees.capitalFeeBands.map((band, index) => {
-      const previousLimit = companyFees.capitalFeeBands[index - 1]?.upto;
-      const range = band.upto === null
-        ? `Above ${money(previousLimit ?? 0)}`
-        : index === 0
-          ? `Up to ${money(band.upto)}`
-          : `Above ${money(previousLimit ?? 0)} · up to ${money(band.upto)}`;
-      return <tr key={`rjsc-capital-${index}`}><td>{range}</td><td>{capitalFeeBandRate(band)}</td></tr>;
-    });
     return <div className={styles.rules}>
       <section className={styles.ruleCard}><h2 className={styles.panelTitle}>Select the RJSC service</h2><p>Use this standalone estimate for company registration, name clearance, annual return, director or shareholder changes, share transfer, office changes or capital increases. Private-company registration uses the published capital schedule; other service types may need the authority assessment.</p>{usesPublishedRegistrationSchedule ? <p>Your selected {selectedEntity} registration will calculate filing, MoA, AoA and authorised-capital charges from the schedule below. Leave the assessment override blank unless it is a separate additional charge.</p> : null}</section>
-      <section className={styles.ruleCard}><h2 className={styles.panelTitle}>Authorised capital fee bands</h2><p>This shared schedule is used for private and one-person company registration, and for applicable capital-increase filings. Other RJSC services may require the authority’s assessment.</p><div className={styles.tableWrap}><table className={styles.table}><thead><tr><th scope="col">Authorised capital</th><th scope="col">Capital fee</th></tr></thead><tbody>{capitalFeeRows}</tbody></table></div><p>Each partial unit counts as one full unit. For example, capital above ৳10 lakh is charged at ৳80 per ৳1 lakh or part up to ৳50 lakh, then ৳130 per ৳1 lakh or part above ৳50 lakh.</p></section>
+      <AuthorisedCapitalFeeBandsTable settings={config.settings} selectedCapital={values?.capital} />
       <section className={styles.ruleCard}><h2 className={styles.panelTitle}>Registration is not availability</h2><p>RJSC charges vary by service and filing details. A blank assessment remains pending and a request lets Limex confirm the right fee with you.</p><p><a className={styles.textLink} href={fee.sourceUrl} target="_blank" rel="noreferrer">RJSC fee calculator ↗</a> · Reference date {companyFees.effectiveDate} · Settings version {config.version}</p></section>
     </div>;
   }
