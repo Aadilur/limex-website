@@ -299,7 +299,9 @@ export class PrismaServiceRepository implements ServiceRepository {
         ...detail,
         mediaUrl: current.mediaAssetId ? "/api/media/" + current.mediaAssetId : detail.mediaUrl,
       };
-      const overviewText = detail.overviewDescriptionHtml ? htmlToPlainText(detail.overviewDescriptionHtml) : detail.overviewDescription.trim();
+      const overviewText = detail.overviewHtml !== undefined
+        ? htmlToPlainText(detail.overviewHtml)
+        : detail.overviewDescriptionHtml ? htmlToPlainText(detail.overviewDescriptionHtml) : detail.overviewDescription.trim();
       if (!current.titleEn.trim() || !current.descriptionEn.trim() || !detail.overviewTitle.trim() || !overviewText) {
         throw new ServiceSafetyError("Add a service title, summary and overview before publishing.");
       }

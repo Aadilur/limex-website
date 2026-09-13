@@ -33,6 +33,7 @@ const detailSchema = z.object({
   overviewEyebrow: text(120),
   overviewTitle: text(240),
   overviewDescription: text(1200),
+  overviewHtml: z.string().trim().max(30000).optional(),
   overviewDescriptionHtml: text(30000),
   contentLabel: text(120),
   contentTitle: text(240),

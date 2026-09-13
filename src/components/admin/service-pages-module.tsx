@@ -94,6 +94,41 @@ function cloneDetail(detail: ServiceDetailContent | null) {
   };
 }
 
+function escapeHtml(value: string) {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+function legacyOverviewHtml(detail: ServiceDetailContent) {
+  const blocks: string[] = [];
+  const addParagraph = (value: string) => {
+    const trimmed = value.trim();
+    if (trimmed) blocks.push(`<p>${escapeHtml(trimmed)}</p>`);
+  };
+
+  if (detail.overviewEyebrow.trim()) addParagraph(detail.overviewEyebrow);
+  if (detail.overviewTitle.trim()) blocks.push(`<h2>${escapeHtml(detail.overviewTitle.trim())}</h2>`);
+  if (detail.overviewDescriptionHtml?.trim()) blocks.push(detail.overviewDescriptionHtml.trim());
+  else addParagraph(detail.overviewDescription);
+
+  if (detail.contentLabel.trim()) addParagraph(detail.contentLabel);
+  if (detail.contentTitle.trim()) blocks.push(`<h3>${escapeHtml(detail.contentTitle.trim())}</h3>`);
+  if (detail.contentDescriptionHtml?.trim()) blocks.push(detail.contentDescriptionHtml.trim());
+  else addParagraph(detail.contentDescription);
+  if (detail.contentLinkLabel.trim()) {
+    const href = escapeHtml(detail.contentLinkHref.trim() || "#service-contact");
+    blocks.push(`<p><a href="${href}">${escapeHtml(detail.contentLinkLabel.trim())}</a></p>`);
+  }
+
+  if (detail.benefits.length) {
+    blocks.push(`<ul>${detail.benefits.filter((benefit) => benefit.trim()).map((benefit) => `<li>${escapeHtml(benefit.trim())}</li>`).join("")}</ul>`);
+  }
+  if (detail.steps.length) {
+    blocks.push(`<ol>${detail.steps.filter((step) => step.title.trim() || step.description.trim()).map((step) => `<li><strong>${escapeHtml(step.title.trim())}</strong>${step.description.trim() ? ` — ${escapeHtml(step.description.trim())}` : ""}</li>`).join("")}</ol>`);
+  }
+
+  return blocks.join("");
+}
+
 function draftFromService(service: AdminService): ServiceProfileInput & { revision: number; profileId: string | null } {
   return {
     revision: service.revision,
@@ -314,10 +349,7 @@ function MediaPicker({ value, onChange, disabled = false }: { value: string | nu
 
 function DetailEditor({ detail, onChange, mediaAssetId, onMediaAssetChange }: { detail: ServiceDetailContent; onChange: (next: ServiceDetailContent) => void; mediaAssetId: string | null | undefined; onMediaAssetChange: (value: string | null) => void }) {
   const update = <K extends keyof ServiceDetailContent>(key: K, value: ServiceDetailContent[K]) => onChange({ ...detail, [key]: value });
-  const updateRichText = (key: "overviewDescriptionHtml" | "contentDescriptionHtml", legacyKey: "overviewDescription" | "contentDescription", html: string) => onChange({ ...detail, [key]: html, [legacyKey]: html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() });
-  const addBenefit = () => update("benefits", [...detail.benefits, ""]);
   const addFact = () => update("facts", [...detail.facts, { label: "", value: "" }]);
-  const addStep = () => update("steps", [...detail.steps, { title: "", description: "" }]);
   const addPricing = () => update("pricing", [...detail.pricing, { name: "New package", price: "Let's talk", description: "", features: [], action: "Book now", whatsappLabel: "Discuss on WhatsApp" }]);
   const addFaq = () => update("faqs", [...detail.faqs, { question: "", answer: "" }]);
   const selectedTools = detail.tools ?? [];
@@ -343,33 +375,13 @@ function DetailEditor({ detail, onChange, mediaAssetId, onMediaAssetChange }: { 
       </SectionDisclosure>
 
       <SectionDisclosure title="Overview / guided filing" open>
-        <div className="grid gap-4">
-          <Field label="Section eyebrow" value={detail.overviewEyebrow} onChange={(event) => update("overviewEyebrow", event.target.value)} />
-          <Field label="Section title" value={detail.overviewTitle} onChange={(event) => update("overviewTitle", event.target.value)} />
-          <div>
-            <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
-              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Overview content</span>
-              <span className="text-[10px] text-[#aaa49b]">Rich text · headings, lists, links and images</span>
-            </div>
-            <RichTextEditor compact ariaLabel="Service overview content" placeholder="Explain what this service includes and how the filing works…" value={detail.overviewDescriptionHtml || detail.overviewDescription} onChange={(html) => updateRichText("overviewDescriptionHtml", "overviewDescription", html)} />
+        <div>
+          <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">One rich-text source</span>
+            <span className="text-[10px] text-[#aaa49b]">Controls the heading, approach, benefits and filing steps</span>
           </div>
-          <div className="border-t border-[#ebe5dd] pt-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Approach eyebrow" value={detail.contentLabel} onChange={(event) => update("contentLabel", event.target.value)} />
-              <Field label="Approach title" value={detail.contentTitle} onChange={(event) => update("contentTitle", event.target.value)} />
-            </div>
-            <div className="mt-4">
-              <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
-                <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Approach content</span>
-                <span className="text-[10px] text-[#aaa49b]">Optional rich text</span>
-              </div>
-              <RichTextEditor compact ariaLabel="Service approach content" placeholder="Add the practical guidance and expectations…" value={detail.contentDescriptionHtml || detail.contentDescription} onChange={(html) => updateRichText("contentDescriptionHtml", "contentDescription", html)} />
-            </div>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <Field label="Approach link label" value={detail.contentLinkLabel} onChange={(event) => update("contentLinkLabel", event.target.value)} />
-              <Field label="Approach link URL" value={detail.contentLinkHref} onChange={(event) => update("contentLinkHref", event.target.value)} placeholder="#service-contact" />
-            </div>
-          </div>
+          <RichTextEditor compact ariaLabel="Complete service overview and guided filing" placeholder="Write the complete overview, approach, benefits and filing steps…" value={detail.overviewHtml !== undefined ? detail.overviewHtml : legacyOverviewHtml(detail)} onChange={(html) => update("overviewHtml", html)} />
+          <p className="mt-2 text-[10px] leading-[1.45] text-[#aaa49b]">Use Heading 2 for the section title, Heading 3 for the approach title, and lists for benefits or steps. Existing structured content is kept as a fallback until you save this editor.</p>
         </div>
       </SectionDisclosure>
 
@@ -422,23 +434,10 @@ function DetailEditor({ detail, onChange, mediaAssetId, onMediaAssetChange }: { 
         </div> : <p className="mt-3 text-[11px] text-[#9b958c]">No tools attached. This section stays hidden on the public page until you add one.</p>}
       </SectionDisclosure>
 
-      <SectionDisclosure title="What customers receive" count={detail.benefits.length}>
-        {detail.benefits.length ? <div className="divide-y divide-[#ebe5dd] border-y border-[#ebe5dd]">
-          {detail.benefits.map((benefit, index) => <div className="flex items-center gap-2 py-2" key={`benefit-${index}`}><input className={`${fieldClass} mt-0`} value={benefit} placeholder="A clear customer outcome" onChange={(event) => update("benefits", detail.benefits.map((item, itemIndex) => itemIndex === index ? event.target.value : item))} /><RemoveButton label="Remove benefit" onClick={() => update("benefits", detail.benefits.filter((_, itemIndex) => itemIndex !== index))} /></div>)}
-        </div> : <p className="text-[11px] text-[#9b958c]">No benefits yet. The public benefits section stays hidden.</p>}
-        <div className="mt-3"><AddButton onClick={addBenefit}>+ Add benefit</AddButton></div>
-      </SectionDisclosure>
-
-      <SectionDisclosure title="Steps and key facts" count={detail.steps.length + detail.facts.length}>
-        <div className="space-y-5">
-          <div>
-            <div className="flex items-center justify-between gap-3"><p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Steps</p><AddButton onClick={addStep}>+ Add step</AddButton></div>
-            {detail.steps.length ? <div className="mt-2 divide-y divide-[#ebe5dd] border-y border-[#ebe5dd]">{detail.steps.map((step, index) => <div className="grid gap-2 py-2 sm:grid-cols-[minmax(0,0.7fr)_minmax(0,1fr)_32px]" key={`step-${index}`}><input className={`${fieldClass} mt-0`} value={step.title} placeholder="Step title" onChange={(event) => update("steps", detail.steps.map((item, itemIndex) => itemIndex === index ? { ...item, title: event.target.value } : item))} /><input className={`${fieldClass} mt-0`} value={step.description} placeholder="Short explanation" onChange={(event) => update("steps", detail.steps.map((item, itemIndex) => itemIndex === index ? { ...item, description: event.target.value } : item))} /><RemoveButton label="Remove step" onClick={() => update("steps", detail.steps.filter((_, itemIndex) => itemIndex !== index))} /></div>)}</div> : <p className="mt-2 text-[11px] text-[#9b958c]">No filing steps yet. This section stays hidden.</p>}
-          </div>
-          <div>
-            <div className="flex items-center justify-between gap-3"><div><p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Key facts</p><p className="mt-1 text-[10px] text-[#aaa49b]">Optional. Empty facts do not leave a blank column on the public page.</p></div><AddButton onClick={addFact}>+ Add fact</AddButton></div>
-            {detail.facts.length ? <div className="mt-2 divide-y divide-[#ebe5dd] border-y border-[#ebe5dd]">{detail.facts.map((fact, index) => <div className="grid gap-2 py-2 sm:grid-cols-2" key={`fact-${index}`}><input className={`${fieldClass} mt-0`} value={fact.label} placeholder="Label" onChange={(event) => update("facts", detail.facts.map((item, itemIndex) => itemIndex === index ? { ...item, label: event.target.value } : item))} /><div className="flex gap-2"><input className={`${fieldClass} mt-0`} value={fact.value} placeholder="Value" onChange={(event) => update("facts", detail.facts.map((item, itemIndex) => itemIndex === index ? { ...item, value: event.target.value } : item))} /><RemoveButton label="Remove fact" onClick={() => update("facts", detail.facts.filter((_, itemIndex) => itemIndex !== index))} /></div></div>)}</div> : <p className="mt-2 text-[11px] text-[#9b958c]">No key facts added. The facts column will not render publicly.</p>}
-          </div>
+      <SectionDisclosure title="Key facts" count={detail.facts.length}>
+        <div>
+          <div className="flex items-center justify-between gap-3"><div><p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#77736e]">Optional sidebar facts</p><p className="mt-1 text-[10px] text-[#aaa49b]">Leave empty to hide the facts column on the public page.</p></div><AddButton onClick={addFact}>+ Add fact</AddButton></div>
+          {detail.facts.length ? <div className="mt-2 divide-y divide-[#ebe5dd] border-y border-[#ebe5dd]">{detail.facts.map((fact, index) => <div className="grid gap-2 py-2 sm:grid-cols-2" key={`fact-${index}`}><input className={`${fieldClass} mt-0`} value={fact.label} placeholder="Label" onChange={(event) => update("facts", detail.facts.map((item, itemIndex) => itemIndex === index ? { ...item, label: event.target.value } : item))} /><div className="flex gap-2"><input className={`${fieldClass} mt-0`} value={fact.value} placeholder="Value" onChange={(event) => update("facts", detail.facts.map((item, itemIndex) => itemIndex === index ? { ...item, value: event.target.value } : item))} /><RemoveButton label="Remove fact" onClick={() => update("facts", detail.facts.filter((_, itemIndex) => itemIndex !== index))} /></div></div>)}</div> : <p className="mt-2 text-[11px] text-[#9b958c]">No key facts added. The facts column will not render publicly.</p>}
         </div>
       </SectionDisclosure>
 

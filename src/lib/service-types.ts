@@ -43,6 +43,8 @@ export type ServiceDetailContent = {
   overviewEyebrow: string;
   overviewTitle: string;
   overviewDescription: string;
+  /** Full rich-text source for the overview / guided-filing section. */
+  overviewHtml?: string;
   overviewDescriptionHtml?: string;
   contentLabel: string;
   contentTitle: string;

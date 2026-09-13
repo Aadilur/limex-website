@@ -10,7 +10,7 @@ import type {
   ServiceProfileInput,
 } from "../../../../src/lib/service-types.js";
 import { toolSlugs } from "../../../../src/lib/business-tools.js";
-import { htmlToPlainText, sanitizeBlogHtml } from "../../../../src/lib/blog-content.js";
+import { sanitizeBlogHtml } from "../../../../src/lib/blog-content.js";
 import type { MenuItem, MenuSection } from "../../admin/domain/menu.js";
 
 export type ServiceProfileStatus = "LINK_ONLY" | "DRAFT" | "PUBLISHED";
@@ -196,6 +196,7 @@ export function emptyServiceDetail(): ServiceDetailContent {
     overviewEyebrow: "OVERVIEW",
     overviewTitle: "A practical path forward",
     overviewDescription: "Share the scope of this service and the next step your customer should take.",
+    overviewHtml: "",
     overviewDescriptionHtml: "",
     contentLabel: "THE LIMEX APPROACH",
     contentTitle: "Make the next step easier to understand.",
@@ -303,7 +304,7 @@ export function normalizeServiceDetail(value: unknown): ServiceDetailContent {
   const record = asRecord(value);
   if (!record) return base;
 
-  return {
+  const normalized: ServiceDetailContent = {
     ctaLabel: cleanString(record.ctaLabel, base.ctaLabel),
     startingPrice: cleanString(record.startingPrice, base.startingPrice),
     deliveryTime: cleanString(record.deliveryTime, base.deliveryTime),
@@ -347,6 +348,12 @@ export function normalizeServiceDetail(value: unknown): ServiceDetailContent {
     faqs: cleanFaqs(record.faqs),
     tools: cleanToolSlugs(record.tools),
   };
+
+  // Keep this property absent for older records so the editor and public page
+  // can safely fall back to their legacy structured overview until an admin
+  // explicitly saves the new full-section rich-text source.
+  if (typeof record.overviewHtml === "string") normalized.overviewHtml = sanitizeBlogHtml(record.overviewHtml);
+  return normalized;
 }
 
 export function profileStatus(value: unknown): ServiceProfileStatus {

@@ -20,6 +20,7 @@ export type ServicePageContent = {
   overviewEyebrow: string;
   overviewTitle: string;
   overviewDescription: string;
+  overviewHtml?: string;
   overviewDescriptionHtml?: string;
   contentLabel: string;
   contentTitle: string;
