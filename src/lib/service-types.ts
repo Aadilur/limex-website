@@ -99,6 +99,8 @@ export type PublicService = {
   serviceKey: string;
   menuItemId: string | null;
   menuLinkId: string | null;
+  /** Parent menu label for a sub-service entry; null for a top-level service. */
+  parentLabel?: string | null;
   slug: string;
   title: string;
   description: string;

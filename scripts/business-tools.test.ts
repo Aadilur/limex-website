@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { businessTools, calculateTool, calculatorFields, defaultRjscReferenceRows, defaultToolsSettings, formatCapitalReference, initialToolValues, toolsSettingsSchema, validateFields, type ToolSlug, type ToolValues } from "../src/lib/business-tools.js";
+import { businessTools, calculateTool, calculatorFields, defaultRjscReferenceRows, defaultToolsSettings, formatCapitalReference, initialToolValues, normalizeToolsSettings, toolsSettingsSchema, validateFields, type ToolSlug, type ToolValues } from "../src/lib/business-tools.js";
 import { createDocumentDraft, documentFields, documentText } from "../src/lib/business-documents.js";
 import { defaultMouTemplate, defaultTemplateSettings, documentTemplateDraftSchema, expandTemplateBlockInstances, isTemplateFieldVisible, missingTemplateFields, normalizeDocumentTemplateDraft, resolveTemplateFieldValue, templateRepeaterFieldValueKey, type TemplateBlock } from "../src/lib/document-templates.js";
 import { renderTemplateDocx } from "../src/lib/document-template-docx.js";
@@ -268,6 +268,30 @@ test("unknown trade licence fees remain pending and zero is distinct for other a
 test("trademark de-duplicates classes and rejects invalid classes", () => {
   const result = calculate("trademark", { brandName: "Limex", classes: "9,35,9", governmentFee: "5000" }); assert.equal(result.rows[0].amount, 10000);
   for (const classes of ["0", "46", "1.5", "9,not-a-class"]) assert.throws(() => calculate("trademark", { brandName: "Limex", classes }));
+});
+test("trademark uses the configured stage schedule and supports filing-level fees", () => {
+  const scheduled = calculate("trademark", { brandName: "Limex", stage: "Application", classes: "9,35", extras: "0" });
+  assert.match(scheduled.rows[0]?.label ?? "", /TM-1/);
+  assert.equal(scheduled.rows[0]?.amount, 10000);
+  assert.equal(scheduled.rows[2]?.amount, 0);
+  assert.equal(scheduled.complete, false);
+
+  const custom = structuredClone(settings);
+  custom.fees.trademark.serviceFee = 1000;
+  custom.fees.trademark.stages = custom.fees.trademark.stages.map((stage) => stage.key === "registration" ? { ...stage, governmentFee: 20000, basis: "flat" } : stage);
+  const registered = calculateTool("trademark", { ...initialToolValues(calculatorFields("trademark", custom)), brandName: "Limex", stage: "Registration", classes: "9,35", extras: "0" }, custom).result;
+  assert.equal(registered.rows[0]?.amount, 20000);
+  assert.equal(registered.rows[1]?.amount, 2000);
+  assert.equal(registered.total, 22000);
+  assert.equal(registered.complete, true);
+
+  const legacy = structuredClone(settings);
+  delete (legacy.fees.trademark as Partial<typeof legacy.fees.trademark>).stages;
+  legacy.fees.trademark.governmentFee = 1234;
+  legacy.fees.trademark.effectiveDate = null;
+  const migrated = normalizeToolsSettings(legacy);
+  assert.equal(migrated.fees.trademark.stages.every((stage) => stage.governmentFee === 1234), true);
+  assert.equal(migrated.fees.trademark.effectiveDate, "2021-12-28");
 });
 test("company capital, IRC ceiling and unsupported inputs are validated", () => {
   assert.throws(() => calculate("limited-company", { capital: "0" }));

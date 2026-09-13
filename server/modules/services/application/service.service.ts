@@ -89,13 +89,21 @@ function toPublicService(context: ServiceMenuContext, profile: ServiceProfileRow
     surface: tone.surface,
     href: destination.href,
     destination,
-    children: context.item.links.filter((link) => link.isVisible).map((link) => ({
-      id: link.id,
-      label: link.label,
-      href: link.href,
-      isVisible: link.isVisible,
-      sortOrder: link.sortOrder,
-    })),
+    parentLabel: null,
+    children: context.item.links.filter((link) => link.isVisible).map((link) => {
+      const childProfile = link.serviceProfile;
+      const childTitle = locale === "bn"
+        ? childProfile?.titleBn?.trim() || childProfile?.titleEn?.trim() || link.label
+        : childProfile?.titleEn?.trim() || link.label;
+      const childHasDetailPage = Boolean(childProfile?.publishedDetail);
+      return {
+        id: link.id,
+        label: childTitle,
+        href: publicDestination(link.href, childHasDetailPage).href,
+        isVisible: link.isVisible,
+        sortOrder: link.sortOrder,
+      };
+    }),
     status: hasDetailPage ? "PUBLISHED" : "LINK_ONLY",
     hasDetailPage,
     sortOrder: context.item.sortOrder,
@@ -104,25 +112,29 @@ function toPublicService(context: ServiceMenuContext, profile: ServiceProfileRow
   };
 }
 
-function toPublicServiceTarget(target: ServiceMenuTarget, profile: ServiceProfileRow, locale: ServiceLocale): PublicService {
+function toPublicServiceTarget(target: ServiceMenuTarget, profile: ServiceProfileRow | null, locale: ServiceLocale): PublicService {
   const base = toPublicService({ section: target.section, group: target.group, item: target.item }, profile, locale);
   const hasDetailPage = hasPublishedDetail(profile);
   const destination = publicDestination(target.href, hasDetailPage);
+  const targetSlug = profile?.slug
+    ?? slugFromHref(target.href)
+    ?? slugify(`${target.section.key}-${target.group.key}-${target.parentLabel ?? target.item.label}-${target.label}`);
   return {
     ...base,
-    id: profile.id,
+    id: profile?.id ?? `menu-${target.id}`,
     menuItemId: null,
     menuLinkId: target.menuLinkId,
-    slug: profile.slug,
-    title: locale === "bn" ? profile.titleBn.trim() || profile.titleEn : profile.titleEn,
-    description: locale === "bn" ? profile.descriptionBn.trim() || profile.descriptionEn : profile.descriptionEn,
-    icon: profile.icon || target.icon,
+    parentLabel: target.parentLabel,
+    slug: targetSlug,
+    title: locale === "bn" ? profile?.titleBn.trim() || profile?.titleEn || target.label : profile?.titleEn || target.label,
+    description: locale === "bn" ? profile?.descriptionBn.trim() || profile?.descriptionEn || target.description : profile?.descriptionEn || target.description,
+    icon: profile?.icon || target.icon,
     href: destination.href,
     destination,
     children: [],
     sortOrder: target.sortOrder,
     isVisible: target.isVisible,
-    updatedAt: profile.updatedAt.toISOString(),
+    updatedAt: profile?.updatedAt.toISOString() ?? target.item.updatedAt.toISOString(),
   };
 }
 
@@ -242,14 +254,14 @@ export class ServiceService {
 
   public async getPublicCatalog(): Promise<PublicServiceCatalog> {
     const [sections, profiles] = await Promise.all([this.services.findMenuTree(), this.services.findProfiles()]);
-    const contexts = serviceContexts(sections);
-    const items = contexts.map((context) => toPublicService(context, profileByMenuItemId(profiles, context.item.id)));
-    const linkServices = serviceMenuTargets(sections).flatMap((target) => {
-      if (target.targetType !== "LINK") return [];
-      const profile = profileByMenuLinkId(profiles, target.id);
-      return profile ? [toPublicServiceTarget(target, profile, "en")] : [];
+    const items = serviceMenuTargets(sections).map((target) => {
+      const profile = target.targetType === "ITEM"
+        ? profileByMenuItemId(profiles, target.id)
+        : profileByMenuLinkId(profiles, target.id);
+      return target.targetType === "ITEM"
+        ? toPublicService({ section: target.section, group: target.group, item: target.item }, profile)
+        : toPublicServiceTarget(target, profile, "en");
     });
-    items.push(...linkServices);
     const categoryMap = new Map<string, { key: string; label: string; count: number }>();
 
     for (const item of items) {

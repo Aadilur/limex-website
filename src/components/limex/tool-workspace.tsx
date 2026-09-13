@@ -9,6 +9,7 @@ import { ToolFields } from "./tool-fields";
 import { ToolRules } from "./tool-rules";
 import { ToolServiceRequest } from "./tool-service-request";
 import { AuthorisedCapitalFeeBandsTable, CompanyFeeReferenceTable } from "./company-fee-reference";
+import { TrademarkFeeReferenceTable } from "./trademark-fee-reference";
 import { Breadcrumbs } from "./ui";
 import styles from "./tools.module.css";
 
@@ -100,7 +101,7 @@ export function ToolWorkspace({ tool, embedded = false }: { tool: ToolDefinition
           </> : <div className={styles.emptySummary}><ServiceIcon name={tool.icon} className={styles.icon} /><h2 className={styles.panelTitle}>Clarity starts here.</h2><p className={`${styles.muted} mt-3`}>Add your details and calculate to see a simple, itemised result.</p><div className={styles.notes}><p className={styles.hint}>No signup. No payment. Your calculation isn’t stored unless you submit it for review.</p></div></div>}
         </div>
       </div>
-      {!isBuilder && config ? tool.slug === "limited-company" ? <CompanyFeeReferenceTable compact selectedCapital={values.capital} settings={config.settings} /> : tool.slug === "rjsc" ? <AuthorisedCapitalFeeBandsTable compact selectedCapital={values.capital} settings={config.settings} /> : null : null}
+      {!isBuilder && config ? tool.slug === "limited-company" ? <CompanyFeeReferenceTable compact selectedCapital={values.capital} settings={config.settings} /> : tool.slug === "rjsc" ? <AuthorisedCapitalFeeBandsTable compact selectedCapital={values.capital} settings={config.settings} /> : tool.slug === "trademark" ? <TrademarkFeeReferenceTable compact selectedStage={values.stage} settings={config.settings} /> : null : null}
       </>}
     </>}
     <div className={styles.help}><div><h2 className={styles.panelTitle}>Take the next step with Limex.</h2><p className={styles.muted}>{isBuilder ? "Get your draft checked before it becomes an agreement." : "Get help confirming the fees or arranging the service."}</p></div><button className={`${styles.button} ${styles.secondary}`} type="button" onClick={() => setShowRequest((current) => !current)} aria-expanded={showRequest} aria-controls="tool-request">{showRequest ? "Close request" : "Request support"}<span aria-hidden="true">↗</span></button></div>

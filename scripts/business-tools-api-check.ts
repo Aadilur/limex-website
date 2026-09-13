@@ -24,6 +24,8 @@ try {
   assert.equal(config.settings.companyRegistration.capitalFeeBands.length, 5);
   assert.equal(config.settings.companyRegistration.rjscReferenceRows.length, 15);
   assert.equal(config.settings.companyRegistration.rjscReferenceRows.find((row) => row.capital === 5000000)?.governmentFee, 39683);
+  assert.equal(config.settings.fees.trademark.stages.length, 5);
+  assert.equal(config.settings.fees.trademark.stages.find((stage) => stage.key === "application")?.governmentFee, 5000);
   assert.ok(config.settings.tradeLicense.dncc.tariffRows.length >= 100);
   assert.ok(config.settings.tradeLicense.dscc.tariffRows.length >= 100);
   assert.equal(config.settings.tradeLicense.dncc.signboardRates.identificationPerSqFt, 80);

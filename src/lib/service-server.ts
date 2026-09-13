@@ -47,6 +47,7 @@ function fallbackItem(service: (typeof services)[number], index: number): Public
     serviceKey: service.title,
     menuItemId: null,
     menuLinkId: null,
+    parentLabel: null,
     slug,
     title: service.title,
     description: service.description,

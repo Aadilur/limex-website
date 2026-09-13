@@ -36,6 +36,29 @@ const nonNegative = z.number().finite().min(0).max(1e12);
 const nullableFee = nonNegative.nullable();
 const publicUrl = z.string().url().refine((value) => /^https?:\/\//.test(value), "Use an http(s) source URL.");
 
+export const trademarkFeeStageKeys = ["search", "application", "publication", "registration", "renewal"] as const;
+export type TrademarkFeeStageKey = typeof trademarkFeeStageKeys[number];
+export type TrademarkFeeStage = {
+  key: TrademarkFeeStageKey;
+  label: string;
+  form: string;
+  governmentFee: number | null;
+  basis: "perClass" | "flat";
+  note: string;
+};
+
+// The baseline amounts are the DPDT's re-fixed fees published in the
+// 28 December 2021 gazette. Administrators can change the schedule and its
+// basis when the authority publishes a new notice or gives a case-specific
+// assessment.
+export const defaultTrademarkFeeStages: TrademarkFeeStage[] = [
+  { key: "search", label: "Search", form: "TM-4", governmentFee: 2000, basis: "perClass", note: "Application for a trademark search." },
+  { key: "application", label: "Application", form: "TM-1", governmentFee: 5000, basis: "perClass", note: "Application to register a trademark." },
+  { key: "publication", label: "Publication", form: "TM-9", governmentFee: 3000, basis: "perClass", note: "Publication of the notice of acceptance in the journal." },
+  { key: "registration", label: "Registration certificate", form: "TM-11", governmentFee: 20000, basis: "perClass", note: "Application for registration and issue of the certificate." },
+  { key: "renewal", label: "Renewal", form: "TM-12", governmentFee: 20000, basis: "perClass", note: "Application to renew trademark registration." },
+];
+
 // Limex's package-level RJSC reference table. These are kept separate from
 // the component-level capital schedule below because the supplied reference
 // values represent a minimum government package at each published capital
@@ -60,12 +83,25 @@ export const defaultRjscReferenceRows = [
 export type RjscReferenceRow = { capital: number; governmentFee: number };
 const rjscReferenceRowSchema = z.object({ capital: nonNegative.positive(), governmentFee: nonNegative }).strict();
 const orderedReferenceRows = (rows: RjscReferenceRow[]) => rows.every((row, index) => index === 0 || row.capital > rows[index - 1]!.capital);
-export const feeSettingSchema = z.object({
+const feeSettingBaseSchema = z.object({
   serviceFee: nullableFee, governmentFee: nullableFee,
   chargeDefaults: z.record(nullableFee).default({}),
   sourceUrl: publicUrl, effectiveDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
   note: z.string().max(1000),
-}).strict().refine((value) => value.governmentFee === null || value.effectiveDate !== null, "A published government fee needs an effective date.");
+}).strict();
+export const feeSettingSchema = feeSettingBaseSchema.refine((value) => value.governmentFee === null || value.effectiveDate !== null, "A published government fee needs an effective date.");
+const trademarkFeeStageSchema = z.object({
+  key: z.enum(trademarkFeeStageKeys),
+  label: z.string().min(1).max(100),
+  form: z.string().min(1).max(30),
+  governmentFee: nullableFee,
+  basis: z.enum(["perClass", "flat"]),
+  note: z.string().max(500),
+}).strict();
+const trademarkFeeSettingSchema = feeSettingBaseSchema.extend({
+  stages: z.array(trademarkFeeStageSchema).length(trademarkFeeStageKeys.length).default(() => defaultTrademarkFeeStages.map((stage) => ({ ...stage }))).refine((stages) => new Set(stages.map((stage) => stage.key)).size === trademarkFeeStageKeys.length, "Trademark fee stages must be unique."),
+}).refine((value) => value.governmentFee === null || value.effectiveDate !== null, "A published government fee needs an effective date.")
+  .refine((value) => value.stages.every((stage) => stage.governmentFee === null || value.effectiveDate !== null), "A published trademark stage fee needs an effective date.");
 export const taxYearSchema = z.object({
   year: z.string().regex(/^\d{4}-\d{2}$/),
   thresholds: z.object({ general: nonNegative, female: nonNegative, senior: nonNegative, disability: nonNegative, thirdGender: nonNegative, freedom: nonNegative, july: nonNegative }).strict(),
@@ -112,7 +148,7 @@ export const companyRegistrationSchema = z.object({
 }).strict();
 export const toolsSettingsSchema = z.object({
   taxYears: z.array(taxYearSchema).min(1).max(10).refine((years) => new Set(years.map((year) => year.year)).size === years.length, "Assessment years must be unique."),
-  fees: z.object({ "limited-company": feeSettingSchema, rjsc: feeSettingSchema, "trade-license": feeSettingSchema, trademark: feeSettingSchema, "irc-erc": feeSettingSchema }).strict(),
+  fees: z.object({ "limited-company": feeSettingSchema, rjsc: feeSettingSchema, "trade-license": feeSettingSchema, trademark: trademarkFeeSettingSchema, "irc-erc": feeSettingSchema }).strict(),
   companyRegistration: companyRegistrationSchema,
   tradeLicense: tradeLicenseSchema,
 }).strict();
@@ -423,7 +459,7 @@ export const defaultToolsSettings: ToolsSettings = {
     "limited-company": { ...feeSetting("limited-company", "The Limex support fee is editable by an administrator. Government charges below follow the published RJSC schedule and remain a planning estimate until the authority assesses the filing."), serviceFee: 10000 },
     rjsc: feeSetting("rjsc", "Use the fee assessment from RJSC for the selected entity and capital. Do not count stamp or filing charges twice if already included in the assessment."),
     "trade-license": feeSetting("trade-license", "Licence and signboard charges depend on the authority and business activity. Enter the amounts on your authority’s assessment; blank amounts remain pending, not zero."),
-    trademark: feeSetting("trademark", "Fees are per class and filing stage. Search, application, publication and registration are separate stages. This tool does not check trademark availability."),
+    trademark: { ...feeSetting("trademark", "DPDT fees are configured by filing stage. The calculator keeps authority fees separate from Limex support and does not check trademark availability."), effectiveDate: "2021-12-28", stages: defaultTrademarkFeeStages.map((stage) => ({ ...stage })) },
     "irc-erc": feeSetting("irc-erc", "Use the CCI&E assessment for your registration type, import ceiling and new/renewal application. Chamber membership, bank charges and late fees may be additional."),
   },
   companyRegistration: {
@@ -456,13 +492,34 @@ function mergeScheduleRows<T extends { key: string }>(defaults: T[], current: T[
 }
 export function normalizeToolsSettings(input: unknown): ToolsSettings {
   const raw = input && typeof input === "object" ? input as Record<string, unknown> : {};
-  const parsed = toolsSettingsSchema.parse({ ...raw, tradeLicense: raw.tradeLicense ?? defaultToolsSettings.tradeLicense });
+  const rawFees = raw.fees && typeof raw.fees === "object" ? raw.fees as Record<string, unknown> : {};
+  const rawTrademark = rawFees.trademark && typeof rawFees.trademark === "object" ? rawFees.trademark as Record<string, unknown> : {};
+  const legacyGovernmentFee = typeof rawTrademark.governmentFee === "number" ? rawTrademark.governmentFee : null;
+  const hasStoredTrademarkStages = Array.isArray(rawTrademark.stages);
+  const trademarkStages = hasStoredTrademarkStages
+    ? rawTrademark.stages
+    : defaultTrademarkFeeStages.map((stage) => ({ ...stage, governmentFee: legacyGovernmentFee ?? stage.governmentFee }));
+  const parsed = toolsSettingsSchema.parse({
+    ...raw,
+    fees: { ...rawFees, trademark: { ...rawTrademark, ...(hasStoredTrademarkStages || rawTrademark.effectiveDate ? {} : { effectiveDate: "2021-12-28" }), stages: trademarkStages } },
+    tradeLicense: raw.tradeLicense ?? defaultToolsSettings.tradeLicense,
+  });
   const normalizeAuthority = (authority: "dncc" | "dscc"): TradeLicenseAuthoritySchedule => ({
     ...parsed.tradeLicense[authority],
     tariffRows: mergeScheduleRows(defaultToolsSettings.tradeLicense[authority].tariffRows, parsed.tradeLicense[authority].tariffRows),
     advertisingRates: mergeScheduleRows(defaultToolsSettings.tradeLicense[authority].advertisingRates, parsed.tradeLicense[authority].advertisingRates),
   });
   return { ...parsed, tradeLicense: { dncc: normalizeAuthority("dncc"), dscc: normalizeAuthority("dscc") } };
+}
+
+export function trademarkStageLabel(key: TrademarkFeeStageKey, stages: TrademarkFeeStage[] = defaultTrademarkFeeStages) {
+  return stages.find((stage) => stage.key === key)?.label ?? defaultTrademarkFeeStages.find((stage) => stage.key === key)?.label ?? key;
+}
+export function trademarkStageForm(key: TrademarkFeeStageKey, stages: TrademarkFeeStage[] = defaultTrademarkFeeStages) {
+  return stages.find((stage) => stage.key === key)?.form ?? defaultTrademarkFeeStages.find((stage) => stage.key === key)?.form ?? "—";
+}
+export function trademarkStageBasisLabel(basis: TrademarkFeeStage["basis"]) {
+  return basis === "perClass" ? "Per class" : "Flat per filing";
 }
 
 const assessedFee: ToolField = { key: "governmentFee", label: "Government assessment (৳)", hint: "From the authority’s fee slip. Leave blank if not known.", kind: "number" };
@@ -549,11 +606,11 @@ export function calculatorFields(slug: ToolSlug, settings: ToolsSettings): ToolF
     { key: "brandName", label: "Brand / trademark name", kind: "text", required: true, hint: "Enter the name or identifier you want to protect." },
     { key: "ownerType", label: "Applicant type", kind: "select", options: options("Individual", "Company", "Partnership"), defaultValue: "Company" },
     { key: "markType", label: "Trademark type", kind: "select", options: options("Word mark", "Logo / device", "Combined word and logo"), defaultValue: "Word mark" },
-    { key: "stage", label: "Filing stage", kind: "select", options: options("Search", "Application", "Publication", "Registration", "Renewal"), defaultValue: "Application" },
+    { key: "stage", label: "Filing stage", kind: "select", options: settings.fees.trademark.stages.map((stage) => ({ value: stage.key, label: `${stage.label} · ${stage.form}` })), defaultValue: settings.fees.trademark.stages.find((stage) => stage.key === "application")?.key ?? "application" },
     { key: "goodsServices", label: "Goods / services description (optional)", kind: "textarea", hint: "Briefly describe what the mark will cover." },
     { key: "classes", label: "Nice class numbers", kind: "text", required: true, hint: "Comma-separated, e.g. 9, 35, 42. Goods: 1–34; services: 35–45." },
-    { ...assessedFee, label: "Government fee per class (৳)", defaultValue: settings.fees.trademark.governmentFee === null ? "" : String(settings.fees.trademark.governmentFee), hint: "Enter the current DPDT fee for your selected stage." },
-    { key: "extras", label: "Other assessed charges (৳)", kind: "number", defaultValue: settings.fees.trademark.chargeDefaults.extras === null || settings.fees.trademark.chargeDefaults.extras === undefined ? "0" : String(settings.fees.trademark.chargeDefaults.extras) },
+    { ...assessedFee, label: "DPDT fee override (৳)", defaultValue: "", hint: "Optional. Leave blank to use the selected stage’s published admin schedule." },
+    { key: "extras", label: "Other assessed charges (৳)", kind: "number", defaultValue: settings.fees.trademark.chargeDefaults.extras === null || settings.fees.trademark.chargeDefaults.extras === undefined ? "0" : String(settings.fees.trademark.chargeDefaults.extras), hint: "Add only a confirmed charge that is not already in the selected stage fee." },
   ];
   return [
     { key: "certificate", label: "Certificate", kind: "select", options: options("Commercial IRC", "Industrial IRC", "ERC"), defaultValue: "Commercial IRC" },
@@ -625,9 +682,19 @@ export function formatCapitalReference(value: number) {
 function amountFromBands(value: number, bands: { upto: number | null; amount: number }[]) {
   return bands.find((band) => band.upto === null || value <= band.upto)?.amount ?? bands.at(-1)?.amount ?? 0;
 }
+function normalizeTrademarkInput(input: unknown, stages: TrademarkFeeStage[]) {
+  if (!input || typeof input !== "object" || Array.isArray(input)) return input;
+  const raw = { ...(input as Record<string, unknown>) };
+  const stageValue = typeof raw.stage === "string" ? raw.stage.toLowerCase() : "";
+  if (stageValue) {
+    const stage = stages.find((item) => item.key === stageValue || item.label.toLowerCase() === stageValue || `${item.label} · ${item.form}`.toLowerCase() === stageValue);
+    if (stage) raw.stage = stage.key;
+  }
+  return raw;
+}
 export function calculateTool(slug: ToolSlug, input: unknown, settings: ToolsSettings): { values: ToolValues; result: CalculationResult } {
   if (getTool(slug)?.group !== "calculator") throw new Error("Choose a calculator.");
-  const values = validateFields(calculatorFields(slug, settings), input);
+  const values = validateFields(calculatorFields(slug, settings), slug === "trademark" ? normalizeTrademarkInput(input, settings.fees.trademark.stages) : input);
   const n = (key: string) => Number(values[key] || 0);
   if (slug === "vat") {
     const base = values.mode === "Including VAT" ? n("amount") / (1 + n("rate") / 100) : n("amount");
@@ -766,9 +833,11 @@ export function calculateTool(slug: ToolSlug, input: unknown, settings: ToolsSet
   // A blank authority amount is unknown. Never silently represent it as a zero fee.
   const hasValue = (key: string) => values[key] !== undefined && values[key] !== "";
   const amountOrPending = (key: string) => hasValue(key) ? n(key) : null;
-  const assessed = hasValue("governmentFee") ? n("governmentFee") : config.governmentFee;
+  const trademarkStage = slug === "trademark" ? settings.fees.trademark.stages.find((stage) => stage.key === values.stage) : undefined;
+  const assessed = hasValue("governmentFee") ? n("governmentFee") : slug === "trademark" ? trademarkStage?.governmentFee ?? config.governmentFee : config.governmentFee;
+  const trademarkGovernmentUnits = trademarkStage?.basis === "flat" ? 1 : classes;
   const primaryLabel = slug === "trademark"
-    ? `Government fee · ${values.stage} · ${classes} class${classes > 1 ? "es" : ""}`
+    ? `DPDT fee · ${trademarkStage?.label ?? values.stage}${trademarkStage?.form ? ` · ${trademarkStage.form}` : ""} · ${trademarkStage?.basis === "flat" ? "flat filing" : `${classes} class${classes > 1 ? "es" : ""}`}`
     : slug === "rjsc"
       ? `RJSC · ${values.serviceType}${values.entity ? ` · ${values.entity}` : ""}`
       : slug === "trade-license"
@@ -781,12 +850,15 @@ export function calculateTool(slug: ToolSlug, input: unknown, settings: ToolsSet
     ? calculateAuthorisedCapitalFee(n("capital"), settings.companyRegistration.capitalFeeBands)
     : null;
   const rows: CalculationResult["rows"] = [
-    { label: primaryLabel, amount: assessed === null ? null : assessed * classes },
+    { label: primaryLabel, amount: assessed === null ? null : assessed * (slug === "trademark" ? trademarkGovernmentUnits : classes) },
     ...(rjscCapitalFee === null ? [] : [{ label: "Authorised share capital fee", amount: rjscCapitalFee }]),
     { label: slug === "trademark" ? "Limex support · all selected classes" : "Limex support", amount: config.serviceFee === null ? null : config.serviceFee * classes },
   ];
   if (slug === "trade-license") rows.push({ label: "Signboard charge", amount: amountOrPending("signboard") });
   rows.push({ label: "Other assessed charges", amount: amountOrPending("extras") });
   const complete = rows.every((row) => row.amount !== null);
-  return { values, result: { title: complete ? "Estimated total" : "Known costs so far", complete, total: round(rows.reduce((sum, row) => sum + (row.amount ?? 0), 0)), rows, sourceUrl: config.sourceUrl, notes: [config.note, ...(rjscCapitalFee === null ? [] : [`The authorised-capital fee for ${money(n("capital"))} is calculated from the shared RJSC capital bands: ${money(rjscCapitalFee)}.`]), ...(complete ? [] : ["Pending amounts are not included. Request a fee check to complete this budget."]), "This is a planning estimate, not a quotation or completed government application. A Limex advisor will confirm scope and charges."] } };
+  const trademarkNote = trademarkStage
+    ? `${trademarkStage.label} (${trademarkStage.form}) uses ${trademarkStage.basis === "perClass" ? "the configured fee for each selected Nice class" : "one configured fee for the filing"}${hasValue("governmentFee") ? " from your assessment override" : " from the published admin schedule"}.`
+    : undefined;
+  return { values, result: { title: complete ? "Estimated total" : "Known costs so far", complete, total: round(rows.reduce((sum, row) => sum + (row.amount ?? 0), 0)), rows, sourceUrl: config.sourceUrl, notes: [config.note, ...(trademarkNote ? [trademarkNote] : []), ...(rjscCapitalFee === null ? [] : [`The authorised-capital fee for ${money(n("capital"))} is calculated from the shared RJSC capital bands: ${money(rjscCapitalFee)}.`]), ...(complete ? [] : ["Pending amounts are not included. Request a fee check to complete this budget."]), "This is a planning estimate, not a quotation or completed government application. A Limex advisor will confirm scope and charges."] } };
 }

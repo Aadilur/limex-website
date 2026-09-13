@@ -1,5 +1,6 @@
 import { capitalFeeBandRate, feeSources, money, taxActUrl, taxCategoryLabels, type ToolDefinition, type ToolValues, type ToolsConfig } from "@/lib/business-tools";
 import { AuthorisedCapitalFeeBandsTable, CompanyFeeReferenceTable } from "./company-fee-reference";
+import { TrademarkFeeReferenceTable } from "./trademark-fee-reference";
 import styles from "./tools.module.css";
 
 export function ToolRules({ tool, config, year, values }: { tool: ToolDefinition; config: ToolsConfig | null; year: string; values?: ToolValues }) {
@@ -43,8 +44,9 @@ export function ToolRules({ tool, config, year, values }: { tool: ToolDefinition
     </div>;
   }
   if (tool.slug === "trademark") return <div className={styles.rules}>
-    <section className={styles.ruleCard}><h2 className={styles.panelTitle}>Choose the protection you need</h2><p>Enter the brand name, applicant type, mark type, filing stage and Nice classes. Goods generally use classes 1–34 and services use classes 35–45; repeated class numbers are counted once.</p><p>Search, application, publication, registration and renewal are separate stages. The calculator uses the government amount per selected class and does not check availability.</p></section>
-    <section className={styles.ruleCard}><h2 className={styles.panelTitle}>Keep the estimate transparent</h2><p>Government fees and Limex support are shown separately. Add other charges only when they are confirmed for the filing.</p><p><a className={styles.textLink} href={fee.sourceUrl} target="_blank" rel="noreferrer">DPDT reference ↗</a> · Settings version {config.version}</p></section>
+    <section className={styles.ruleCard}><h2 className={styles.panelTitle}>Build a class-based estimate</h2><p>Enter the mark, applicant and Nice class numbers. Goods generally use classes 1–34 and services use classes 35–45; repeated class numbers are counted once. Each class is treated as a separate filing context.</p><p>Choose the stage you are planning for. Leave the DPDT override blank to use the published admin schedule, or enter the exact authority assessment when your case includes a different amount.</p></section>
+    <TrademarkFeeReferenceTable settings={config.settings} selectedStage={values?.stage} />
+    <section className={styles.ruleCard}><h2 className={styles.panelTitle}>Keep the estimate transparent</h2><p>Government fees, Limex support and other assessed charges stay separate. The schedule is editable by an administrator and existing requests keep their original calculation snapshot.</p><p><a className={styles.textLink} href={fee.sourceUrl} target="_blank" rel="noreferrer">Open DPDT fee schedule ↗</a> · Settings version {config.version}</p></section>
   </div>;
   if (tool.slug === "rjsc") {
     const companyFees = config.settings.companyRegistration;

@@ -250,6 +250,7 @@ function ImagePanel({
 
 export function RichTextEditor({ value, onChange, placeholder = "Start writing your article…", ariaLabel = "Article body", compact = false, className = "" }: RichTextEditorProps) {
   const [sourceMode, setSourceMode] = useState(false);
+  const [cssPanelOpen, setCssPanelOpen] = useState(false);
   const [selectionVersion, setSelectionVersion] = useState(0);
   const [linkPanelOpen, setLinkPanelOpen] = useState(false);
   const [imagePanelOpen, setImagePanelOpen] = useState(false);
@@ -260,6 +261,8 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
   const initialContent = useRef(value || "");
   const previousValue = useRef(value || "");
   const preservedCss = useRef(sanitizeBlogContent(value).css);
+  const internalValueUpdate = useRef(false);
+  const [customCss, setCustomCss] = useState(() => sanitizeBlogContent(value).css);
 
   const extensions = useMemo(
     () => [
@@ -307,7 +310,7 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
     editorProps,
     onUpdate: ({ editor: nextEditor }) => {
       const html = nextEditor.getHTML();
-      onChange(preservedCss.current ? `<style>${preservedCss.current}</style>${html}` : html, nextEditor.getJSON());
+      emitChange(preservedCss.current ? `<style>${preservedCss.current}</style>${html}` : html, nextEditor.getJSON());
     },
     onSelectionUpdate: () => setSelectionVersion((current) => current + 1),
   });
@@ -315,17 +318,20 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
   useEffect(() => {
     const nextHtml = value || "";
     const lastPropValue = previousValue.current;
+    const wasInternalUpdate = internalValueUpdate.current;
+    internalValueUpdate.current = false;
     previousValue.current = nextHtml;
-    preservedCss.current = sanitizeBlogContent(nextHtml).css;
+    const nextContent = sanitizeBlogContent(nextHtml);
+    preservedCss.current = nextContent.css;
+    if (!wasInternalUpdate) setCustomCss(nextContent.css);
     if (!editor || sourceMode) return;
-    const nextContent = sanitizeBlogContent(nextHtml).html;
     const currentHtml = editor.getHTML();
-    if (currentHtml === nextHtml || currentHtml === nextContent || (nextHtml === "" && currentHtml === "<p></p>")) return;
+    if (currentHtml === nextHtml || currentHtml === nextContent.html || (nextHtml === "" && currentHtml === "<p></p>")) return;
     // A local transaction updates the editor before the parent state update
     // reaches this component. Do not push the stale parent value back into
     // the editor while it still has focus, or the cursor jumps/resets.
     if (editor.isFocused && nextHtml === lastPropValue) return;
-    editor.commands.setContent(nextContent, false);
+    editor.commands.setContent(nextContent.html, false);
   }, [editor, sourceMode, value]);
 
   const activeStyle = useMemo<BlockStyle>(() => {
@@ -339,6 +345,22 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
   const bodyText = sourceMode ? value.replace(/<[^>]+>/g, " ") : editor?.getText() || "";
   const wordCount = countWords(bodyText);
   const characterCount = bodyText.replace(/\s/g, "").length;
+
+  function emitChange(html: string, document: RichTextDocument) {
+    internalValueUpdate.current = true;
+    onChange(html, document);
+  }
+
+  function updateCustomCss(nextValue: string) {
+    const sanitizedCss = sanitizeBlogContent(`<style>${nextValue}</style>`).css;
+    const html = sanitizeBlogContent(value).html;
+    const nextHtml = sanitizedCss ? `<style>${sanitizedCss}</style>${html}` : html;
+    // Keep the draft text visible while the user is typing an incomplete rule;
+    // the sanitized version is what gets embedded and persisted.
+    setCustomCss(nextValue);
+    preservedCss.current = sanitizedCss;
+    emitChange(nextHtml, { version: 1, html: nextHtml });
+  }
 
   function openLinkPanel() {
     if (!editor) return;
@@ -404,16 +426,27 @@ export function RichTextEditor({ value, onChange, placeholder = "Start writing y
           <ToolbarDivider />
           <ToolbarButton label="Undo" icon="undo" disabled={!editor || sourceMode || !editor?.can().undo()} onClick={() => editor?.chain().focus().undo().run()} />
           <ToolbarButton label="Redo" icon="redo" disabled={!editor || sourceMode || !editor?.can().redo()} onClick={() => editor?.chain().focus().redo().run()} />
-          <button className={cn("ml-1 rounded-[8px] px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-[#77736e] transition-colors hover:bg-white hover:text-[#0055ff]", sourceMode && "bg-white text-[#0055ff]")} type="button" aria-pressed={sourceMode} onClick={toggleSourceMode}>{sourceMode ? "Visual editor" : "HTML source"}</button>
+          <button className={cn("ml-1 rounded-[8px] px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-[#77736e] transition-colors hover:bg-white hover:text-[#0055ff]", cssPanelOpen && "bg-white text-[#0055ff]")} type="button" aria-expanded={cssPanelOpen} onClick={() => { if (!cssPanelOpen) setCustomCss(sanitizeBlogContent(value).css); setCssPanelOpen((current) => !current); }}>{cssPanelOpen ? "Hide CSS" : "Custom CSS"}</button>
+          <button className={cn("rounded-[8px] px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-[#77736e] transition-colors hover:bg-white hover:text-[#0055ff]", sourceMode && "bg-white text-[#0055ff]")} type="button" aria-pressed={sourceMode} onClick={toggleSourceMode}>{sourceMode ? "Visual editor" : "HTML source"}</button>
         </div>
       </div>
       {panelError ? <p className="border-b border-[#f4c9d0] bg-[#fff5f6] px-3 py-2 text-[10px] font-semibold text-[#ad3148]" role="alert">{panelError}</p> : null}
       {linkPanelOpen && editor ? <LinkPanel editor={editor} value={linkUrl} onChange={setLinkUrl} onClose={() => setLinkPanelOpen(false)} onError={setPanelError} /> : null}
       {imagePanelOpen && editor ? <ImagePanel editor={editor} url={imageUrl} alt={imageAlt} onUrlChange={setImageUrl} onAltChange={setImageAlt} onClose={() => setImagePanelOpen(false)} onError={setPanelError} /> : null}
-      {sourceMode ? <textarea className={cn(compact ? "min-h-[220px]" : "min-h-[320px]", "w-full resize-y border-0 bg-[#fffdfa] px-5 py-5 font-mono text-[12px] leading-[1.7] text-[#3f3b37] outline-none")} value={value} onChange={(event) => { preservedCss.current = sanitizeBlogContent(event.target.value).css; onChange(event.target.value, { version: 1, html: event.target.value }); }} spellCheck={false} aria-label={`${ariaLabel} HTML source`} /> : editor ? <EditorContent editor={editor} /> : <div className={cn(compact ? "min-h-[220px]" : "min-h-[320px]", "px-5 py-5 text-[13px] text-[#aaa49b]")}>Loading editor…</div>}
+      {cssPanelOpen ? <div className="border-b border-[#eee9e2] bg-[#f7fbff] px-3 py-3 sm:px-4">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-[#0055ff]">Custom CSS</p>
+            <p className="mt-1 text-[10px] leading-[1.45] text-[#77736e]">Add classes in HTML source, then style them here. Rules are scoped to this article body and sanitized on save.</p>
+          </div>
+          <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold text-[#77736e]">Safe &amp; scoped</span>
+        </div>
+        <textarea className="mt-3 min-h-[150px] w-full resize-y rounded-[10px] border border-[#cfe0f4] bg-white px-3 py-3 font-mono text-[12px] leading-[1.65] text-[#071b3d] outline-none transition-colors placeholder:text-[#9b958c] focus:border-[#0055ff] focus:ring-4 focus:ring-[#008cff]/10" value={customCss} onChange={(event) => updateCustomCss(event.target.value)} spellCheck={false} aria-label={`${ariaLabel} custom CSS`} placeholder={".guide-card {\n  border-radius: 16px;\n}\n\n@media (max-width: 640px) {\n  .guide-card { padding: 16px; }\n}"} />
+      </div> : null}
+      {sourceMode ? <textarea className={cn(compact ? "min-h-[220px]" : "min-h-[320px]", "w-full resize-y border-0 bg-[#fffdfa] px-5 py-5 font-mono text-[12px] leading-[1.7] text-[#3f3b37] outline-none")} value={value} onChange={(event) => { const nextContent = sanitizeBlogContent(event.target.value); preservedCss.current = nextContent.css; setCustomCss(nextContent.css); emitChange(event.target.value, { version: 1, html: event.target.value }); }} spellCheck={false} aria-label={`${ariaLabel} HTML source`} /> : editor ? <EditorContent editor={editor} /> : <div className={cn(compact ? "min-h-[220px]" : "min-h-[320px]", "px-5 py-5 text-[13px] text-[#aaa49b]")}>Loading editor…</div>}
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#eee9e2] px-4 py-2 text-[10px] text-[#9b958c]">
         <span>{wordCount.toLocaleString()} words · {characterCount.toLocaleString()} characters</span>
-        <span>{sourceMode ? "HTML source · custom CSS supported" : "Visual editor"} · sanitized on save</span>
+        <span>{sourceMode ? "HTML source" : "Visual editor"}{customCss ? " · custom CSS" : ""} · sanitized on save</span>
       </div>
     </div>
   );

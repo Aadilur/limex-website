@@ -392,16 +392,8 @@ export function BlogDetailContent({ article, relatedArticles, locale = "en" }: {
           <article className="min-w-0">
             <BlogCover article={article} variant="hero" />
             {article.coverCaption ? <p className="mt-cluster text-body-xs text-muted">{article.coverCaption}</p> : null}
-            <BlogRelatedServices article={article} />
-            {article.intro ? <p className="mt-6 text-[20px] leading-[1.35] text-ink lg:mt-section-gap-lg lg:text-subheading">{article.intro}</p> : null}
-            {article.atAGlance ? <div className="mt-6 flex gap-3 rounded-[16px] border border-[#e5e0d6] bg-white px-4 py-3.5 lg:mt-section-gap-lg lg:gap-cluster lg:rounded-panel-mobile lg:px-card-pad-sm lg:py-card-pad-sm">
-              <span className="h-auto min-h-[52px] w-1 shrink-0 rounded-sm bg-pink" aria-hidden="true" />
-              <div>
-                <p className="text-meta font-semibold text-pink">AT A GLANCE</p>
-                <p className="mt-cluster-sm text-body-sm font-text text-ink">{article.atAGlance}</p>
-              </div>
-            </div> : null}
             <BlogBody article={article} />
+            <BlogRelatedServices article={article} />
             <div className="mt-8 rounded-[18px] bg-navy px-4 py-4 text-white lg:mt-section-y lg:rounded-card lg:px-card-pad lg:py-card-pad">
               <p className="text-meta font-semibold text-[#f5b8c7]">GET SUPPORT</p>
               <p className="mt-cluster-sm max-w-[620px] font-brand text-subheading">Want a clear next step for your business?</p>

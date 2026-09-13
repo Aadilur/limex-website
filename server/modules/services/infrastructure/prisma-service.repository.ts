@@ -73,7 +73,10 @@ export class PrismaServiceRepository implements ServiceRepository {
             items: {
               orderBy: { sortOrder: "asc" },
               include: {
-                links: { orderBy: { sortOrder: "asc" } },
+                links: {
+                  orderBy: { sortOrder: "asc" },
+                  include: { serviceProfile: { select: { slug: true, publishedDetail: true, titleEn: true, titleBn: true, descriptionEn: true, descriptionBn: true } } },
+                },
               },
             },
           },

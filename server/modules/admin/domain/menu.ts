@@ -1,10 +1,19 @@
+export type MenuServiceProfileReference = {
+  slug: string;
+  publishedDetail: unknown;
+  titleEn?: string;
+  titleBn?: string;
+  descriptionEn?: string;
+  descriptionBn?: string;
+};
+
 export type MenuLink = {
   id: string;
   label: string;
   href: string;
   sortOrder: number;
   isVisible: boolean;
-  serviceProfile?: { slug: string; publishedDetail: unknown } | null;
+  serviceProfile?: MenuServiceProfileReference | null;
 };
 
 export type MenuItem = {
@@ -18,7 +27,7 @@ export type MenuItem = {
   isVisible: boolean;
   updatedAt: Date;
   links: MenuLink[];
-  serviceProfile?: { slug: string; publishedDetail: unknown } | null;
+  serviceProfile?: MenuServiceProfileReference | null;
 };
 
 export type MenuGroup = {

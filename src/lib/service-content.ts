@@ -391,6 +391,7 @@ export function generatedServiceToPublic(entry: GeneratedService, locale: Servic
     serviceKey: entry.serviceKey,
     menuItemId: null,
     menuLinkId: null,
+    parentLabel: entry.parentLabel,
     slug: entry.slug,
     title,
     description,

@@ -3,6 +3,7 @@
 import { businessTools, type ToolsSettings } from "@/lib/business-tools";
 import { CompanyFeeEditor } from "./company-fee-editor";
 import { TradeLicenseFeeEditor } from "./trade-license-fee-editor";
+import { TrademarkFeeEditor } from "./trademark-fee-editor";
 import styles from "../limex/tools.module.css";
 
 export const feeSlugs = ["limited-company", "rjsc", "trade-license", "trademark", "irc-erc"] as const;
@@ -87,13 +88,18 @@ export function FeeSettingsEditor({ settings, busy, slug, onSlugChange, updateSe
 
         <div className={`${styles.fields} mt-6`}>
           <label className={styles.field}>
-            <span className={styles.label}>{slug === "limited-company" ? "Limex professional service fee (৳)" : "Limex support fee (৳)"}</span>
+            <span className={styles.label}>{slug === "limited-company" ? "Limex professional service fee (৳)" : slug === "trademark" ? "Limex support fee per class (৳)" : "Limex support fee (৳)"}</span>
             <input className={styles.control} type="number" min={0} max={1e12} step="0.01" placeholder="To confirm" value={fee.serviceFee ?? ""} onChange={(event) => updateFee("serviceFee", event.target.value === "" ? null : Number(event.target.value))} />
           </label>
           {slug === "limited-company" ? (
             <div className="flex min-w-0 flex-col justify-center rounded-[13px] bg-[#f4f7f1] px-4 py-3">
               <span className={styles.label}>Government charges</span>
               <span className="mt-1 text-[11px] leading-5 text-[#6b7669]">Managed by the RJSC company setup schedule below.</span>
+            </div>
+          ) : slug === "trademark" ? (
+            <div className="flex min-w-0 flex-col justify-center rounded-[13px] bg-[#f4f7f1] px-4 py-3">
+              <span className={styles.label}>DPDT government charges</span>
+              <span className="mt-1 text-[11px] leading-5 text-[#6b7669]">Managed by the filing-stage schedule below.</span>
             </div>
           ) : (
             <label className={styles.field}>
@@ -121,6 +127,7 @@ export function FeeSettingsEditor({ settings, busy, slug, onSlugChange, updateSe
 
         {slug === "limited-company" || slug === "rjsc" ? <CompanyFeeEditor value={settings.companyRegistration} disabled={busy} onChange={(value) => updateSettings((current) => ({ ...current, companyRegistration: value }))} /> : null}
         {slug === "trade-license" ? <TradeLicenseFeeEditor value={settings.tradeLicense} disabled={busy} onChange={(value) => updateSettings((current) => ({ ...current, tradeLicense: value }))} /> : null}
+        {slug === "trademark" ? <TrademarkFeeEditor value={settings.fees.trademark} disabled={busy} onChange={(value) => updateSettings((current) => ({ ...current, fees: { ...current.fees, trademark: value } }))} /> : null}
 
         {chargeFields.length ? <div className={`${styles.fields} mt-6 border-t border-[#e2e6de] pt-6`}>
           <p className={`${styles.muted} ${styles.fieldWide}`}>Case-specific defaults prefill the calculator. Users can replace them with the current authority assessment.</p>
