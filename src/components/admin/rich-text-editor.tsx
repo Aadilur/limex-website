@@ -28,7 +28,7 @@ type EditorIconName =
   | "external";
 
 type BlockStyle = "paragraph" | "heading-2" | "heading-3" | "heading-4";
-type EditorMode = "visual" | "source" | "preview";
+type EditorMode = "visual" | "html" | "css" | "preview";
 
 type RichTextEditorProps = {
   value: string;
@@ -50,7 +50,7 @@ function editorSurfaceClass(compact: boolean) {
     "[&_h2]:mb-3 [&_h2]:mt-7 [&_h2]:font-brand [&_h2]:text-[24px] [&_h2]:font-bold [&_h2]:leading-[1.15] [&_h2]:tracking-[-0.035em] [&_h2]:text-[#071b3d]",
     "[&_h3]:mb-2 [&_h3]:mt-6 [&_h3]:font-brand [&_h3]:text-[19px] [&_h3]:font-bold [&_h3]:leading-[1.2] [&_h3]:tracking-[-0.025em] [&_h3]:text-[#071b3d]",
     "[&_h4]:mb-2 [&_h4]:mt-5 [&_h4]:font-bold [&_h4]:text-[16px] [&_h4]:leading-[1.3] [&_h4]:text-[#071b3d]",
-    "[&_ul]:my-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:my-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:my-1",
+    "[&_ul]:my-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:my-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:my-1 [&_.list-none]:list-none",
     "[&_blockquote]:my-5 [&_blockquote]:border-l-4 [&_blockquote]:border-[#0055ff] [&_blockquote]:bg-[#eaf3ff] [&_blockquote]:px-4 [&_blockquote]:py-2 [&_blockquote]:italic [&_blockquote]:text-[#625a58]",
     "[&_a]:font-semibold [&_a]:text-[#0055ff] [&_a]:underline [&_a]:decoration-[#14dcff] [&_a]:underline-offset-2",
     "[&_hr]:my-7 [&_hr]:border-0 [&_hr]:border-t [&_hr]:border-[#e8e2da]",
@@ -162,31 +162,6 @@ function RichTextPreview({
         )}
       </div>
     </div>
-  );
-}
-
-function ModeButton({
-  active,
-  children,
-  onClick,
-}: {
-  active: boolean;
-  children: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      className={cn(
-        "rounded-[8px] px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-[#77736e] transition-colors hover:bg-white hover:text-[#0055ff]",
-        active &&
-          "bg-white text-[#0055ff] shadow-[0_2px_8px_rgba(20,19,28,0.08)]",
-      )}
-      type="button"
-      aria-pressed={active}
-      onClick={onClick}
-    >
-      {children}
-    </button>
   );
 }
 
@@ -505,7 +480,9 @@ export function RichTextEditor({
   const [editorMode, setEditorMode] = useState<EditorMode>(() =>
     initialHasCustomStructure.current ? "preview" : "visual",
   );
-  const [cssPanelOpen, setCssPanelOpen] = useState(false);
+  const [htmlSource, setHtmlSource] = useState(
+    () => sanitizeBlogContent(value).html,
+  );
   const [selectionVersion, setSelectionVersion] = useState(0);
   const [linkPanelOpen, setLinkPanelOpen] = useState(false);
   const [imagePanelOpen, setImagePanelOpen] = useState(false);
@@ -601,6 +578,7 @@ export function RichTextEditor({
 
           preservedCss.current = combinedCss;
           setCustomCss(combinedCss);
+          setHtmlSource(combinedHtml);
           internalValueUpdate.current = true;
           onChangeRef.current(nextHtml, { version: 1, html: nextHtml });
           setEditorMode("preview");
@@ -616,9 +594,6 @@ export function RichTextEditor({
 
   const editor = useEditor({
     immediatelyRender: false,
-    // The parent already receives every content update. Avoid an additional
-    // TipTap-driven React render for each keypress so the browser selection
-    // remains owned by the same contenteditable node.
     shouldRerenderOnTransaction: false,
     extensions,
     content: initialHasCustomStructure.current
@@ -645,7 +620,10 @@ export function RichTextEditor({
     previousValue.current = nextHtml;
     const nextContent = sanitizeBlogContent(nextHtml);
     preservedCss.current = nextContent.css;
-    if (!wasInternalUpdate) setCustomCss(nextContent.css);
+    if (!wasInternalUpdate) {
+      setCustomCss(nextContent.css);
+      setHtmlSource(nextContent.html);
+    }
     if (hasCustomRichTextStructure(nextContent.html, nextContent.css)) {
       if (editorMode === "visual") setEditorMode("preview");
       return;
@@ -658,9 +636,6 @@ export function RichTextEditor({
       (nextHtml === "" && currentHtml === "<p></p>")
     )
       return;
-    // A local transaction updates the editor before the parent state update
-    // reaches this component. Do not push the stale parent value back into
-    // the editor while it still has focus, or the cursor jumps/resets.
     if (editor.isFocused && nextHtml === lastPropValue) return;
     editor.commands.setContent(nextContent.html, false);
   }, [editor, editorMode, value]);
@@ -681,11 +656,13 @@ export function RichTextEditor({
   const characterCount = bodyText.replace(/\s/g, "").length;
   const visualMode = editorMode === "visual";
   const modeLabel =
-    editorMode === "source"
+    editorMode === "html"
       ? "HTML source"
-      : editorMode === "preview"
-        ? "Rendered preview"
-        : "Visual editor";
+      : editorMode === "css"
+        ? "Custom CSS"
+        : editorMode === "preview"
+          ? "Rendered preview"
+          : "Visual editor";
 
   function emitChange(html: string, document: RichTextDocument) {
     internalValueUpdate.current = true;
@@ -694,15 +671,32 @@ export function RichTextEditor({
 
   function updateCustomCss(nextValue: string) {
     const sanitizedCss = sanitizeBlogContent(`<style>${nextValue}</style>`).css;
-    const html = sanitizeBlogContent(value).html;
+    const html = htmlSource || sanitizeBlogContent(value).html;
     const nextHtml = sanitizedCss
       ? `<style>${sanitizedCss}</style>${html}`
       : html;
-    // Keep the draft text visible while the user is typing an incomplete rule;
-    // the sanitized version is what gets embedded and persisted.
     setCustomCss(nextValue);
     preservedCss.current = sanitizedCss;
     emitChange(nextHtml, { version: 1, html: nextHtml });
+  }
+
+  function updateHtmlSource(nextValue: string) {
+    setHtmlSource(nextValue);
+    if (nextValue.includes("<style")) {
+      const parsed = sanitizeBlogContent(nextValue);
+      const combinedCss = [customCss, parsed.css].filter(Boolean).join("\n\n");
+      preservedCss.current = combinedCss;
+      setCustomCss(combinedCss);
+      const nextHtml = combinedCss
+        ? `<style>${combinedCss}</style>${parsed.html}`
+        : parsed.html;
+      emitChange(nextHtml, { version: 1, html: nextHtml });
+    } else {
+      const nextHtml = preservedCss.current
+        ? `<style>${preservedCss.current}</style>${nextValue}`
+        : nextValue;
+      emitChange(nextHtml, { version: 1, html: nextHtml });
+    }
   }
 
   function openLinkPanel() {
@@ -726,7 +720,7 @@ export function RichTextEditor({
       const nextContent = sanitizeBlogContent(value);
       if (hasCustomRichTextStructure(nextContent.html, nextContent.css)) {
         setPanelError(
-          "This article uses custom HTML/CSS. Use HTML source to edit it and Preview to check the exact result.",
+          "This article uses custom HTML/CSS. Use HTML or CSS to edit it and Preview to inspect the exact result.",
         );
         setEditorMode("preview");
         return;
@@ -759,143 +753,204 @@ export function RichTextEditor({
       )}
     >
       <div
-        className="flex flex-wrap items-center gap-1 border-b border-[#eee9e2] bg-[#faf7f2] px-2 py-1.5"
+        className="flex flex-wrap items-center justify-between gap-2 border-b border-[#eee9e2] bg-[#faf7f2] px-2.5 py-1.5"
         aria-label="Article formatting toolbar"
       >
-        <label className="sr-only" htmlFor="article-block-style">
-          Text style
-        </label>
-        <select
-          id="article-block-style"
-          className="mr-1 h-8 rounded-[8px] bg-transparent px-2 text-[11px] font-bold text-[#4f4b47] outline-none transition-colors hover:bg-white focus:bg-white focus:ring-2 focus:ring-[#008cff]/20"
-          value={activeStyle}
-          onChange={(event) =>
-            updateBlockStyle(event.target.value as BlockStyle)
-          }
-          disabled={!editor || !visualMode}
+        {editorMode === "visual" ? (
+          <div className="flex flex-wrap items-center gap-1">
+            <label className="sr-only" htmlFor="article-block-style">
+              Text style
+            </label>
+            <select
+              id="article-block-style"
+              className="mr-1 h-8 rounded-[8px] bg-transparent px-2 text-[11px] font-bold text-[#4f4b47] outline-none transition-colors hover:bg-white focus:bg-white focus:ring-2 focus:ring-[#008cff]/20"
+              value={activeStyle}
+              onChange={(event) =>
+                updateBlockStyle(event.target.value as BlockStyle)
+              }
+              disabled={!editor}
+            >
+              <option value="paragraph">Paragraph</option>
+              <option value="heading-2">Heading 2</option>
+              <option value="heading-3">Heading 3</option>
+              <option value="heading-4">Heading 4</option>
+            </select>
+            <ToolbarDivider />
+            <ToolbarButton
+              label="Bold"
+              icon="bold"
+              active={editor?.isActive("bold") ?? false}
+              onClick={() => editor?.chain().focus().toggleBold().run()}
+            />
+            <ToolbarButton
+              label="Italic"
+              icon="italic"
+              active={editor?.isActive("italic") ?? false}
+              onClick={() => editor?.chain().focus().toggleItalic().run()}
+            />
+            <ToolbarButton
+              label="Underline"
+              icon="underline"
+              active={editor?.isActive("underline") ?? false}
+              onClick={() => editor?.chain().focus().toggleUnderline().run()}
+            />
+            <ToolbarButton
+              label="Strikethrough"
+              icon="strike"
+              active={editor?.isActive("strike") ?? false}
+              onClick={() => editor?.chain().focus().toggleStrike().run()}
+            />
+            <ToolbarDivider />
+            <ToolbarButton
+              label="Bulleted list"
+              icon="bullet-list"
+              active={editor?.isActive("bulletList") ?? false}
+              onClick={() => editor?.chain().focus().toggleBulletList().run()}
+            />
+            <ToolbarButton
+              label="Numbered list"
+              icon="ordered-list"
+              active={editor?.isActive("orderedList") ?? false}
+              onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+            />
+            <ToolbarButton
+              label="Quote"
+              icon="quote"
+              active={editor?.isActive("blockquote") ?? false}
+              onClick={() => editor?.chain().focus().toggleBlockquote().run()}
+            />
+            <ToolbarButton
+              label="Horizontal divider"
+              icon="divider"
+              onClick={() => editor?.chain().focus().setHorizontalRule().run()}
+            />
+            <ToolbarDivider />
+            <ToolbarButton
+              label="Add or edit link"
+              icon="link"
+              active={linkPanelOpen || (editor?.isActive("link") ?? false)}
+              onClick={openLinkPanel}
+            />
+            <ToolbarButton
+              label="Insert image"
+              icon="image"
+              active={imagePanelOpen}
+              onClick={openImagePanel}
+            />
+            <ToolbarDivider />
+            <ToolbarButton
+              label="Undo"
+              icon="undo"
+              disabled={!editor?.can().undo()}
+              onClick={() => editor?.chain().focus().undo().run()}
+            />
+            <ToolbarButton
+              label="Redo"
+              icon="redo"
+              disabled={!editor?.can().redo()}
+              onClick={() => editor?.chain().focus().redo().run()}
+            />
+          </div>
+        ) : editorMode === "html" ? (
+          <div className="flex items-center gap-2 px-1 text-[12px] font-semibold text-[#5f5a54]">
+            <span className="rounded bg-[#e8e4dc] px-1.5 py-0.5 font-mono text-[10px] font-bold text-[#071b3d]">
+              &lt;/&gt;
+            </span>
+            <span className="font-bold text-[#071b3d]">HTML Source</span>
+            <span className="hidden text-[11px] text-[#9b958c] sm:inline">
+              · Paste or edit raw HTML tags, classes and attributes
+            </span>
+          </div>
+        ) : editorMode === "css" ? (
+          <div className="flex items-center gap-2 px-1 text-[12px] font-semibold text-[#5f5a54]">
+            <span className="rounded bg-[#e8f0fe] px-1.5 py-0.5 font-mono text-[10px] font-bold text-[#0055ff]">
+              &#123; &#125;
+            </span>
+            <span className="font-bold text-[#071b3d]">Custom CSS</span>
+            <span className="hidden text-[11px] text-[#9b958c] sm:inline">
+              · Scoped to this article (.blog-rich-text)
+            </span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 px-1 text-[12px] font-semibold text-[#5f5a54]">
+            <span className="rounded bg-[#e8f4ec] px-1.5 py-0.5 text-[10px] font-bold text-[#29634d]">
+              👁
+            </span>
+            <span className="font-bold text-[#071b3d]">Rendered Preview</span>
+            <span className="hidden text-[11px] text-[#9b958c] sm:inline">
+              · Exact output with full scoped CSS applied
+            </span>
+          </div>
+        )}
+
+        {/* Clean right side mode switcher */}
+        <div
+          className="ml-auto flex shrink-0 items-center rounded-[9px] bg-[#eee9e2] p-0.5"
+          role="tablist"
+          aria-label="Editor view mode"
         >
-          <option value="paragraph">Paragraph</option>
-          <option value="heading-2">Heading 2</option>
-          <option value="heading-3">Heading 3</option>
-          <option value="heading-4">Heading 4</option>
-        </select>
-        <ToolbarDivider />
-        <ToolbarButton
-          label="Bold"
-          icon="bold"
-          active={editor?.isActive("bold") ?? false}
-          disabled={!editor || !visualMode}
-          onClick={() => editor?.chain().focus().toggleBold().run()}
-        />
-        <ToolbarButton
-          label="Italic"
-          icon="italic"
-          active={editor?.isActive("italic") ?? false}
-          disabled={!editor || !visualMode}
-          onClick={() => editor?.chain().focus().toggleItalic().run()}
-        />
-        <ToolbarButton
-          label="Underline"
-          icon="underline"
-          active={editor?.isActive("underline") ?? false}
-          disabled={!editor || !visualMode}
-          onClick={() => editor?.chain().focus().toggleUnderline().run()}
-        />
-        <ToolbarButton
-          label="Strikethrough"
-          icon="strike"
-          active={editor?.isActive("strike") ?? false}
-          disabled={!editor || !visualMode}
-          onClick={() => editor?.chain().focus().toggleStrike().run()}
-        />
-        <ToolbarDivider />
-        <ToolbarButton
-          label="Bulleted list"
-          icon="bullet-list"
-          active={editor?.isActive("bulletList") ?? false}
-          disabled={!editor || !visualMode}
-          onClick={() => editor?.chain().focus().toggleBulletList().run()}
-        />
-        <ToolbarButton
-          label="Numbered list"
-          icon="ordered-list"
-          active={editor?.isActive("orderedList") ?? false}
-          disabled={!editor || !visualMode}
-          onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-        />
-        <ToolbarButton
-          label="Quote"
-          icon="quote"
-          active={editor?.isActive("blockquote") ?? false}
-          disabled={!editor || !visualMode}
-          onClick={() => editor?.chain().focus().toggleBlockquote().run()}
-        />
-        <ToolbarButton
-          label="Horizontal divider"
-          icon="divider"
-          disabled={!editor || !visualMode}
-          onClick={() => editor?.chain().focus().setHorizontalRule().run()}
-        />
-        <div className="ml-auto flex items-center gap-1">
-          <ToolbarButton
-            label="Add or edit link"
-            icon="link"
-            active={linkPanelOpen || (editor?.isActive("link") ?? false)}
-            disabled={!editor || !visualMode}
-            onClick={openLinkPanel}
-          />
-          <ToolbarButton
-            label="Insert image"
-            icon="image"
-            active={imagePanelOpen}
-            disabled={!editor || !visualMode}
-            onClick={openImagePanel}
-          />
-          <ToolbarDivider />
-          <ToolbarButton
-            label="Undo"
-            icon="undo"
-            disabled={!editor || !visualMode || !editor?.can().undo()}
-            onClick={() => editor?.chain().focus().undo().run()}
-          />
-          <ToolbarButton
-            label="Redo"
-            icon="redo"
-            disabled={!editor || !visualMode || !editor?.can().redo()}
-            onClick={() => editor?.chain().focus().redo().run()}
-          />
           <button
-            className={cn(
-              "ml-1 rounded-[8px] px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-[#77736e] transition-colors hover:bg-white hover:text-[#0055ff]",
-              cssPanelOpen && "bg-white text-[#0055ff]",
-            )}
             type="button"
-            aria-expanded={cssPanelOpen}
-            onClick={() => {
-              if (!cssPanelOpen) setCustomCss(sanitizeBlogContent(value).css);
-              setCssPanelOpen((current) => !current);
-            }}
-          >
-            {cssPanelOpen ? "Hide CSS" : "Custom CSS"}
-          </button>
-          <ModeButton
-            active={editorMode === "source"}
-            onClick={() => changeEditorMode("source")}
-          >
-            HTML
-          </ModeButton>
-          <ModeButton
-            active={editorMode === "preview"}
-            onClick={() => changeEditorMode("preview")}
-          >
-            Preview
-          </ModeButton>
-          <ModeButton
-            active={visualMode}
+            role="tab"
+            aria-selected={editorMode === "visual"}
             onClick={() => changeEditorMode("visual")}
+            className={cn(
+              "rounded-[7px] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] transition-all",
+              editorMode === "visual"
+                ? "bg-white text-[#0055ff] shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
+                : "text-[#68635c] hover:text-[#071b3d]",
+            )}
           >
             Visual
-          </ModeButton>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={editorMode === "html"}
+            onClick={() => changeEditorMode("html")}
+            className={cn(
+              "rounded-[7px] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] transition-all",
+              editorMode === "html"
+                ? "bg-white text-[#0055ff] shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
+                : "text-[#68635c] hover:text-[#071b3d]",
+            )}
+          >
+            HTML
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={editorMode === "css"}
+            onClick={() => changeEditorMode("css")}
+            className={cn(
+              "inline-flex items-center gap-1 rounded-[7px] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] transition-all",
+              editorMode === "css"
+                ? "bg-white text-[#0055ff] shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
+                : "text-[#68635c] hover:text-[#071b3d]",
+            )}
+          >
+            CSS
+            {customCss.trim() ? (
+              <span
+                className="size-1.5 rounded-full bg-[#0055ff]"
+                title="Custom CSS active"
+              />
+            ) : null}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={editorMode === "preview"}
+            onClick={() => changeEditorMode("preview")}
+            className={cn(
+              "rounded-[7px] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] transition-all",
+              editorMode === "preview"
+                ? "bg-white text-[#0055ff] shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
+                : "text-[#68635c] hover:text-[#071b3d]",
+            )}
+          >
+            Preview
+          </button>
         </div>
       </div>
       {panelError ? (
@@ -907,12 +962,12 @@ export function RichTextEditor({
         </p>
       ) : null}
       {hasCustomStructure ? (
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#d8e9df] bg-[#f3faf5] px-3 py-2.5 text-[10px] leading-[1.45] text-[#3d6650]">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#d8e9df] bg-[#f3faf5] px-3 py-2 text-[10px] leading-[1.45] text-[#3d6650]">
           <span className="font-bold uppercase tracking-[0.1em]">
             Custom layout protected
           </span>
           <span>
-            Use HTML to edit it. Preview renders the same scoped HTML and CSS
+            Use HTML or CSS to edit it. Preview renders the exact scoped styles
             that the public article receives.
           </span>
         </div>
@@ -937,53 +992,53 @@ export function RichTextEditor({
           onError={setPanelError}
         />
       ) : null}
-      {cssPanelOpen ? (
-        <div className="border-b border-[#eee9e2] bg-[#f7fbff] px-3 py-3 sm:px-4">
-          <div className="flex flex-wrap items-start justify-between gap-2">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-[#0055ff]">
-                Custom CSS
-              </p>
-              <p className="mt-1 text-[10px] leading-[1.45] text-[#77736e]">
-                Add classes in HTML source, then style them here. Rules are
-                scoped to this article body and sanitized on save.
-              </p>
-            </div>
-            <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold text-[#77736e]">
-              Safe &amp; scoped
+      {editorMode === "html" ? (
+        <div className="bg-[#fffdfa] p-3 sm:p-4">
+          <div className="mb-2 flex items-center justify-between text-[11px] text-[#77736e]">
+            <span>
+              Raw HTML markup · &lt;style&gt; blocks pasted here automatically
+              move to CSS
+            </span>
+            <span className="rounded bg-[#f0ece4] px-1.5 py-0.5 font-mono text-[10px] font-bold text-[#555]">
+              HTML
             </span>
           </div>
           <textarea
-            className="mt-3 min-h-[150px] w-full resize-y rounded-[10px] border border-[#cfe0f4] bg-white px-3 py-3 font-mono text-[12px] leading-[1.65] text-[#071b3d] outline-none transition-colors placeholder:text-[#9b958c] focus:border-[#0055ff] focus:ring-4 focus:ring-[#008cff]/10"
+            className={cn(
+              compact ? "min-h-[220px]" : "min-h-[360px]",
+              "w-full resize-y rounded-[10px] border border-[#ddd7ce] bg-white p-4 font-mono text-[12px] leading-[1.7] text-[#3f3b37] outline-none transition-colors placeholder:text-[#9b958c] focus:border-[#0055ff] focus:ring-4 focus:ring-[#008cff]/10",
+            )}
+            value={htmlSource}
+            onChange={(event) => updateHtmlSource(event.target.value)}
+            spellCheck={false}
+            aria-label={`${ariaLabel} HTML source`}
+            placeholder='<article class="guide-card">\n  <h2>Guide Title</h2>\n  <p>Content goes here…</p>\n</article>'
+          />
+        </div>
+      ) : editorMode === "css" ? (
+        <div className="bg-[#fffdfa] p-3 sm:p-4">
+          <div className="mb-2 flex items-center justify-between text-[11px] text-[#77736e]">
+            <span>
+              Custom CSS rules · Automatically scoped to .blog-rich-text on save
+            </span>
+            <span className="rounded bg-[#e8f0fe] px-1.5 py-0.5 font-mono text-[10px] font-bold text-[#0055ff]">
+              CSS
+            </span>
+          </div>
+          <textarea
+            className={cn(
+              compact ? "min-h-[220px]" : "min-h-[360px]",
+              "w-full resize-y rounded-[10px] border border-[#cfe0f4] bg-white p-4 font-mono text-[12px] leading-[1.7] text-[#071b3d] outline-none transition-colors placeholder:text-[#9b958c] focus:border-[#0055ff] focus:ring-4 focus:ring-[#008cff]/10",
+            )}
             value={customCss}
             onChange={(event) => updateCustomCss(event.target.value)}
             spellCheck={false}
             aria-label={`${ariaLabel} custom CSS`}
             placeholder={
-              ".guide-card {\n  border-radius: 16px;\n}\n\n@media (max-width: 640px) {\n  .guide-card { padding: 16px; }\n}"
+              ".guide-card {\n  border-radius: 16px;\n  background: #f8fafc;\n}\n\n@media (max-width: 640px) {\n  .guide-card {\n    padding: 16px;\n  }\n}"
             }
           />
         </div>
-      ) : null}
-      {editorMode === "source" ? (
-        <textarea
-          className={cn(
-            compact ? "min-h-[220px]" : "min-h-[320px]",
-            "w-full resize-y border-0 bg-[#fffdfa] px-5 py-5 font-mono text-[12px] leading-[1.7] text-[#3f3b37] outline-none",
-          )}
-          value={value}
-          onChange={(event) => {
-            const nextContent = sanitizeBlogContent(event.target.value);
-            preservedCss.current = nextContent.css;
-            setCustomCss(nextContent.css);
-            emitChange(event.target.value, {
-              version: 1,
-              html: event.target.value,
-            });
-          }}
-          spellCheck={false}
-          aria-label={`${ariaLabel} HTML source`}
-        />
       ) : editorMode === "preview" ? (
         <RichTextPreview
           html={renderedContent.html}
@@ -1019,7 +1074,8 @@ export function RichTextEditor({
         </span>
         <span>
           {modeLabel}
-          {customCss ? " · custom CSS" : ""} · scoped and sanitized on save
+          {customCss ? " · custom CSS active" : ""} · scoped and sanitized on
+          save
         </span>
       </div>
     </div>

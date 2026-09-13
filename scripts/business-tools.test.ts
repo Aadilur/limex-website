@@ -49,6 +49,7 @@ import {
   sanitizeBlogContent,
   sanitizeBlogHtml,
 } from "../src/lib/blog-content.js";
+import { blogRichTextClass } from "../src/components/limex/blog-rich-text.js";
 
 const settings = defaultToolsSettings;
 function calculate(slug: ToolSlug, values: ToolValues) {
@@ -173,6 +174,35 @@ test("rich text preserves all CSS classes and handles full document pastes", () 
     /@keyframes pulse\{0%\{opacity: 1\}50%\{opacity: 0\.5\}100%\{opacity: 1\}\}/,
   );
 });
+
+test("blog rich text styles lists via ul and ol without forcing duplicate markers on li", () => {
+  // ul gets disc, ol gets decimal, li does NOT get list-disc (which causes double dots/bullets)
+  assert.match(blogRichTextClass, /\[&_ul\]:list-disc/);
+  assert.match(blogRichTextClass, /\[&_ol\]:list-decimal/);
+  assert.doesNotMatch(blogRichTextClass, /\[&_li\]:list-disc/);
+  assert.match(blogRichTextClass, /\[&_\.list-none\]:list-none/);
+
+  // Custom list with list-style: none and custom pseudo dot shouldn't be overridden
+  const customListHtml = `
+    <style>
+      .bg-type-list { list-style: none; margin: 0; padding: 0; }
+      .bg-type-list li { position: relative; padding-left: 16px; }
+      .bg-type-list li::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: #000; }
+    </style>
+    <ul class="bg-type-list">
+      <li>First point</li>
+      <li>Second point</li>
+    </ul>
+  `;
+  const sanitized = sanitizeBlogContent(customListHtml);
+  assert.match(
+    sanitized.css,
+    /\.blog-rich-text \.bg-type-list\{list-style: none/,
+  );
+  assert.match(sanitized.html, /<ul class="bg-type-list">/);
+  assert.match(sanitized.html, /<li>First point<\/li>/);
+});
+
 test("catalogue contains seven distinct calculators and six builders", () => {
   assert.equal(
     businessTools.filter((tool) => tool.group === "calculator").length,
