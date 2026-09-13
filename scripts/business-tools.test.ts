@@ -1343,3 +1343,24 @@ test("services module and icon picker use refined SVG arrows, styled dropdowns, 
   assert.doesNotMatch(iconPickerContent, />⌄</);
   assert.match(iconPickerContent, /Search icons/);
 });
+
+test("tools module service requests render as a responsive table with headers and mobile layout", async () => {
+  const fs = await import("node:fs/promises");
+  const toolsModuleContent = await fs.readFile(
+    new URL("../src/components/admin/tools-module.tsx", import.meta.url),
+    "utf8",
+  );
+
+  // Verifies real table structure with responsive wrapper
+  assert.match(toolsModuleContent, /<table className="w-full min-w-\[840px\]/);
+  assert.match(toolsModuleContent, /<th[^>]*>Client \/ Contact<\/th>/);
+  assert.match(toolsModuleContent, /<th[^>]*>Source Tool<\/th>/);
+  assert.match(toolsModuleContent, /<th[^>]*>Contact Channel<\/th>/);
+  assert.match(toolsModuleContent, /<th[^>]*>Status<\/th>/);
+
+  // Verifies mobile layout support
+  assert.match(toolsModuleContent, /md:hidden/);
+  assert.match(toolsModuleContent, /RequestDetailDrawer/);
+  assert.match(toolsModuleContent, /ServiceRequestsTable/);
+});
+
