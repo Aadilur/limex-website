@@ -40,7 +40,6 @@ function serviceWhatsAppUrl(
 
 const serviceUi = {
   en: {
-    switchLabel: "বাংলা",
     mediaSlot: "Media slot",
     optionalMedia: "Optional CMS media",
     startingPrice: "Starting price",
@@ -93,7 +92,6 @@ const serviceUi = {
     formSubmitLabel: "Submit enquiry",
   },
   bn: {
-    switchLabel: "English",
     mediaSlot: "মিডিয়া স্লট",
     optionalMedia: "ঐচ্ছিক CMS মিডিয়া",
     startingPrice: "প্রাথমিক মূল্য",
@@ -205,16 +203,6 @@ export function ServiceHeroSection({
     >
       <div className="flex flex-wrap items-center justify-between gap-cluster">
         <Breadcrumbs items={breadcrumbItems} />
-        <a
-          className="inline-flex items-center gap-1.5 rounded-full border border-[#d8d3c7] bg-page px-3.5 py-1 text-xs font-semibold text-[#07142e] transition-all hover:border-[#0055ff] hover:text-[#0055ff] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-2"
-          href={
-            locale === "bn"
-              ? `/services/${service.slug}`
-              : `/bn/services/${service.slug}`
-          }
-        >
-          {ui.switchLabel}
-        </a>
       </div>
       <div className="mt-section-gap-lg grid gap-section-gap lg:grid-cols-[minmax(0,1fr)_minmax(360px,460px)] lg:items-center lg:gap-section-gap-xl">
         <div className="min-w-0">
@@ -565,8 +553,7 @@ export function ServiceOverviewSection({
                 serviceIconNames.includes(option.icon as ServiceIconName)
                   ? (option.icon as ServiceIconName)
                   : "briefcase";
-              const actionText =
-                option.actionLabel?.trim() || ui.exploreOption;
+              const actionText = option.actionLabel?.trim() || ui.exploreOption;
 
               return (
                 <a

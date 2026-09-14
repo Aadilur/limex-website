@@ -135,7 +135,8 @@ function fallbackDetail(): PublicServiceDetail {
     keyFactsLabel: trademarkRegistrationService.keyFactsLabel,
     relatedOptionsLabel: trademarkRegistrationService.relatedOptionsLabel,
     relatedOptionsTitle: trademarkRegistrationService.relatedOptionsTitle,
-    relatedOptionsDescription: trademarkRegistrationService.relatedOptionsDescription,
+    relatedOptionsDescription:
+      trademarkRegistrationService.relatedOptionsDescription,
     relatedOptions: trademarkRegistrationService.relatedOptions,
     benefits: trademarkRegistrationService.benefits ?? [],
     steps: trademarkRegistrationService.steps ?? [],

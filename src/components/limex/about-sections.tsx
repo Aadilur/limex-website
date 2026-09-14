@@ -2,7 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { getPublicAboutReels, getPublicAboutTeam, type AboutReel, type AboutTeamMember } from "@/lib/about-api";
+import {
+  getPublicAboutReels,
+  getPublicAboutTeam,
+  type AboutReel,
+  type AboutTeamMember,
+} from "@/lib/about-api";
 import { ContactModal } from "./contact-section";
 import { ActionButton, SectionTitle } from "./ui";
 
@@ -14,34 +19,67 @@ const approachPoints = [
 
 export function AboutHero() {
   return (
-    <section className="grid gap-cluster-lg lg:grid-cols-[minmax(0,1.42fr)_minmax(340px,0.92fr)] lg:items-stretch lg:gap-section-gap" aria-labelledby="about-title">
+    <section
+      className="grid gap-cluster-lg lg:grid-cols-[minmax(0,1.42fr)_minmax(340px,0.92fr)] lg:items-stretch lg:gap-section-gap"
+      aria-labelledby="about-title"
+    >
       <div className="flex min-h-[224px] flex-col items-start justify-center lg:min-h-[236px]">
-        <h1 className="max-w-[760px] font-brand text-page-title text-ink max-lg:text-page-title-mobile" id="about-title">
+        <h1
+          className="max-w-[760px] font-brand text-page-title text-ink max-lg:text-page-title-mobile"
+          id="about-title"
+        >
           Business clarity, built around people.
         </h1>
         <p className="mt-cluster max-w-[650px] text-body-sm text-muted">
-          We make the work behind your business easier to understand and simpler to navigate.
+          We make the work behind your business easier to understand and simpler
+          to navigate.
         </p>
         <div className="mt-cluster-lg">
-          <ActionButton href="#team" variant="dark" arrow="text" className="min-h-control min-w-[148px] px-4 text-button">
+          <ActionButton
+            href="#team"
+            variant="dark"
+            arrow="text"
+            className="min-h-control min-w-[148px] px-4 text-button"
+          >
             Meet the team
           </ActionButton>
         </div>
       </div>
 
-      <aside className="rounded-card border border-warm bg-[#faf9f6] px-card-pad-sm py-card-pad-sm lg:min-h-[236px] lg:px-card-pad" id="approach" aria-labelledby="approach-title">
-        <h2 className="font-brand text-subheading text-ink" id="approach-title">Clear from the first conversation.</h2>
+      <aside
+        className="rounded-card border border-warm bg-[#faf9f6] px-card-pad-sm py-card-pad-sm lg:min-h-[236px] lg:px-card-pad"
+        id="approach"
+        aria-labelledby="approach-title"
+      >
+        <h2 className="font-brand text-subheading text-ink" id="approach-title">
+          Clear from the first conversation.
+        </h2>
         <ul className="mt-cluster-lg space-y-2.5">
           {approachPoints.map((point) => (
             <li className="flex items-start gap-cluster-sm" key={point.label}>
-              <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-[#071b3d]/[0.07] text-[#071b3d]" aria-hidden="true">
-                <svg className="size-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <span
+                className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-[#071b3d]/[0.07] text-[#071b3d]"
+                aria-hidden="true"
+              >
+                <svg
+                  className="size-3"
+                  viewBox="0 0 12 12"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M2.5 6.5l2.5 2.5 4.5-5" />
                 </svg>
               </span>
               <span className="min-w-0">
-                <strong className="block text-footer font-semibold text-ink">{point.label}</strong>
-                <span className="mt-0.5 block text-micro text-muted">{point.description}</span>
+                <strong className="block text-footer font-semibold text-ink">
+                  {point.label}
+                </strong>
+                <span className="mt-0.5 block text-micro text-muted">
+                  {point.description}
+                </span>
               </span>
             </li>
           ))}
@@ -52,25 +90,49 @@ export function AboutHero() {
 }
 
 const trustMetrics = [
-  { value: "01", label: "Understand", description: "Start with your real goal." },
+  {
+    value: "01",
+    label: "Understand",
+    description: "Start with your real goal.",
+  },
   { value: "02", label: "Guide", description: "Make the next decision clear." },
-  { value: "03", label: "Stay close", description: "Keep every detail moving." },
+  {
+    value: "03",
+    label: "Stay close",
+    description: "Keep every detail moving.",
+  },
 ];
 
 export function AboutTrustStrip() {
   return (
-    <section className="mt-[clamp(28px,3vw,44px)] grid gap-cluster-lg rounded-nav border border-warm bg-[#f7f4ef] px-card-pad-sm py-card-pad-sm lg:grid-cols-[220px_repeat(3,minmax(0,1fr))] lg:gap-0 lg:px-6 lg:py-5" aria-label="About Limex working principles">
+    <section
+      className="mt-[clamp(28px,3vw,44px)] grid gap-cluster-lg rounded-nav border border-warm bg-[#f7f4ef] px-card-pad-sm py-card-pad-sm lg:grid-cols-[220px_repeat(3,minmax(0,1fr))] lg:gap-0 lg:px-6 lg:py-5"
+      aria-label="About Limex working principles"
+    >
       <div className="flex flex-col justify-center gap-1 lg:pr-6">
-        <p className="font-brand text-footer font-semibold text-ink">A simple rhythm</p>
-        <p className="text-micro text-muted">Clear principles for every engagement.</p>
+        <p className="font-brand text-footer font-semibold text-ink">
+          A simple rhythm
+        </p>
+        <p className="text-micro text-muted">
+          Clear principles for every engagement.
+        </p>
       </div>
       {trustMetrics.map((metric) => (
-        <div className="border-t border-warm/80 pt-4 lg:border-l lg:border-t-0 lg:px-6 lg:pt-0" key={metric.label}>
+        <div
+          className="border-t border-warm/80 pt-4 lg:border-l lg:border-t-0 lg:px-6 lg:pt-0"
+          key={metric.label}
+        >
           <div className="flex items-center gap-2">
-            <span className="font-mono text-[11px] font-semibold text-muted/60">{metric.value}</span>
-            <h3 className="font-semibold text-footer text-ink">{metric.label}</h3>
+            <span className="font-mono text-[11px] font-semibold text-muted/60">
+              {metric.value}
+            </span>
+            <h3 className="font-semibold text-footer text-ink">
+              {metric.label}
+            </h3>
           </div>
-          <p className="mt-1 text-micro text-muted leading-relaxed">{metric.description}</p>
+          <p className="mt-1 text-micro text-muted leading-relaxed">
+            {metric.description}
+          </p>
         </div>
       ))}
     </section>
@@ -87,10 +149,24 @@ const teamPhotoTones = [
 
 function teamInitials(name: string) {
   const words = name.trim().split(/\s+/).filter(Boolean);
-  return words.length ? words.slice(0, 2).map((word) => word[0]).join("").toUpperCase() : "LM";
+  return words.length
+    ? words
+        .slice(0, 2)
+        .map((word) => word[0])
+        .join("")
+        .toUpperCase()
+    : "LM";
 }
 
-function TeamMemberPhoto({ member, index, onError }: { member: AboutTeamMember; index: number; onError: () => void }) {
+function TeamMemberPhoto({
+  member,
+  index,
+  onError,
+}: {
+  member: AboutTeamMember;
+  index: number;
+  onError: () => void;
+}) {
   const [failed, setFailed] = useState(false);
 
   useEffect(() => setFailed(false), [member.imageUrl]);
@@ -112,22 +188,41 @@ function TeamMemberPhoto({ member, index, onError }: { member: AboutTeamMember; 
   }
 
   return (
-    <div className={`grid size-full place-items-center ${teamPhotoTones[index % teamPhotoTones.length]}`.trim()} aria-hidden="true">
-      <span className="font-brand text-3xl font-bold leading-none tracking-tight sm:text-4xl">{teamInitials(member.name)}</span>
+    <div
+      className={`grid size-full place-items-center ${teamPhotoTones[index % teamPhotoTones.length]}`.trim()}
+      aria-hidden="true"
+    >
+      <span className="font-brand text-3xl font-bold leading-none tracking-tight sm:text-4xl">
+        {teamInitials(member.name)}
+      </span>
     </div>
   );
 }
 
-function TeamMemberCard({ member, index, onImageError }: { member: AboutTeamMember; index: number; onImageError: () => void }) {
+function TeamMemberCard({
+  member,
+  index,
+  onImageError,
+}: {
+  member: AboutTeamMember;
+  index: number;
+  onImageError: () => void;
+}) {
   return (
     <article className="group flex min-h-[144px] items-center gap-3.5 rounded-[22px] border border-[#e6e1d8] bg-[#f7f4ef] p-3.5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#d9d2c6] hover:bg-[#f3efe8] hover:shadow-[0_8px_24px_rgba(7,27,61,0.06)] sm:min-h-[156px] sm:gap-4 sm:p-4">
       <div className="size-[108px] shrink-0 overflow-hidden rounded-[18px] border border-[#e2ddd5] bg-[#ece7df] shadow-sm sm:size-[120px] lg:size-[126px]">
         <TeamMemberPhoto member={member} index={index} onError={onImageError} />
       </div>
       <div className="min-w-0 flex-1">
-        <h3 className="truncate font-brand text-[17px] font-bold text-ink sm:text-[18px]">{member.name}</h3>
-        <p className="mt-0.5 truncate text-[12px] font-medium text-[#007ea6] sm:text-[13px]">{member.title}</p>
-        <p className="mt-2 line-clamp-2 text-micro leading-relaxed text-muted">{member.description}</p>
+        <h3 className="truncate font-brand text-[17px] font-bold text-ink sm:text-[18px]">
+          {member.name}
+        </h3>
+        <p className="mt-0.5 truncate text-[12px] font-medium text-[#007ea6] sm:text-[13px]">
+          {member.title}
+        </p>
+        <p className="mt-2 line-clamp-2 text-micro leading-relaxed text-muted">
+          {member.description}
+        </p>
       </div>
     </article>
   );
@@ -157,7 +252,11 @@ export function AboutTeamSection() {
 
   function handleImageError(memberId: string) {
     if (imageRetries.current.has(memberId)) {
-      setMembers((current) => current.map((member) => member.id === memberId ? { ...member, imageUrl: null } : member));
+      setMembers((current) =>
+        current.map((member) =>
+          member.id === memberId ? { ...member, imageUrl: null } : member,
+        ),
+      );
       return;
     }
 
@@ -166,7 +265,11 @@ export function AboutTeamSection() {
   }
 
   return (
-    <section className="mt-[clamp(28px,3vw,44px)] rounded-panel border border-warm bg-page p-card-pad-sm lg:px-8 lg:py-7" id="team" aria-labelledby="team-title">
+    <section
+      className="mt-[clamp(28px,3vw,44px)] rounded-panel border border-warm bg-page p-card-pad-sm lg:px-8 lg:py-7"
+      id="team"
+      aria-labelledby="team-title"
+    >
       <div className="flex flex-col gap-cluster-sm sm:flex-row sm:items-start sm:justify-between">
         <SectionTitle
           id="team-title"
@@ -203,9 +306,13 @@ export function AboutTeamSection() {
           ))
         ) : (
           <div className="rounded-[22px] border border-dashed border-[#d8d1c7] bg-[#f7f4ef] px-5 py-10 text-center sm:col-span-2 lg:col-span-3">
-            <p className="font-brand text-subheading font-bold text-ink">The people behind Limex are on their way.</p>
+            <p className="font-brand text-subheading font-bold text-ink">
+              The people behind Limex are on their way.
+            </p>
             <p className="mt-1.5 text-micro text-muted">
-              {loadError ? "Please check back soon." : "Our team profiles are being updated."}
+              {loadError
+                ? "Please check back soon."
+                : "Our team profiles are being updated."}
             </p>
           </div>
         )}
@@ -231,36 +338,98 @@ function ReelThumbnail({ reel, index }: { reel: AboutReel; index: number }) {
   useEffect(() => setFailed(false), [reel.thumbnailUrl]);
 
   if (reel.thumbnailUrl && !failed) {
-    return <img className="absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-[1.035]" src={reel.thumbnailUrl} alt="" loading="lazy" decoding="async" onError={() => setFailed(true)} />;
+    return (
+      <img
+        className="absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-[1.035]"
+        src={reel.thumbnailUrl}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        onError={() => setFailed(true)}
+      />
+    );
   }
 
   return (
-    <div className={`absolute inset-0 grid place-items-center ${reelFallbackTones[index % reelFallbackTones.length]}`.trim()} aria-hidden="true">
-      <span className="font-brand text-5xl font-bold tracking-[-0.08em]">LIMEX</span>
+    <div
+      className={`absolute inset-0 grid place-items-center ${reelFallbackTones[index % reelFallbackTones.length]}`.trim()}
+      aria-hidden="true"
+    >
+      <span className="font-brand text-5xl font-bold tracking-[-0.08em]">
+        LIMEX
+      </span>
     </div>
   );
 }
 
 function PlayIcon() {
-  return <svg className="ml-0.5 size-5 fill-current" viewBox="0 0 20 20" aria-hidden="true"><path d="M6.6 4.3a1 1 0 0 1 1.5-.86l6.5 4.7a1 1 0 0 1 0 1.62l-6.5 4.7a1 1 0 0 1-1.5-.86V4.3Z" /></svg>;
+  return (
+    <svg
+      className="ml-0.5 size-5 fill-current"
+      viewBox="0 0 20 20"
+      aria-hidden="true"
+    >
+      <path d="M6.6 4.3a1 1 0 0 1 1.5-.86l6.5 4.7a1 1 0 0 1 0 1.62l-6.5 4.7a1 1 0 0 1-1.5-.86V4.3Z" />
+    </svg>
+  );
 }
 
 function CloseIcon() {
-  return <svg className="size-4" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" /></svg>;
+  return (
+    <svg className="size-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path
+        d="m5 5 10 10M15 5 5 15"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
 }
 
 function ArrowIcon({ direction }: { direction: "left" | "right" }) {
-  return <svg className={`size-4 ${direction === "left" ? "rotate-180" : ""}`.trim()} viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10h11M10.5 4.5 16 10l-5.5 5.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.7" /></svg>;
+  return (
+    <svg
+      className={`size-4 ${direction === "left" ? "rotate-180" : ""}`.trim()}
+      viewBox="0 0 20 20"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M4 10h11M10.5 4.5 16 10l-5.5 5.5"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.7"
+      />
+    </svg>
+  );
 }
 
-function AboutReelCard({ reel, index, playing, onPlay, onStop }: { reel: AboutReel; index: number; playing: boolean; onPlay: () => void; onStop: () => void }) {
+function AboutReelCard({
+  reel,
+  index,
+  playing,
+  onPlay,
+  onStop,
+}: {
+  reel: AboutReel;
+  index: number;
+  playing: boolean;
+  onPlay: () => void;
+  onStop: () => void;
+}) {
   const title = reelDisplayTitle(reel);
 
   return (
-    <article className={[
-      "group relative h-[420px] min-w-[min(306px,calc(100vw-72px))] basis-[min(306px,calc(100vw-72px))] snap-start overflow-hidden rounded-[20px] border bg-[#1c282e] shadow-[0_14px_34px_rgba(27,34,30,0.08)] transition-all duration-300 hover:-translate-y-1 lg:h-[520px] lg:min-w-[306px] lg:basis-[306px]",
-      playing ? "border-[#071b3d]" : "border-[#d7d5d0] hover:border-[#b8b3a8]",
-    ].join(" ")}>
+    <article
+      className={[
+        "group relative h-[420px] min-w-[min(306px,calc(100vw-72px))] basis-[min(306px,calc(100vw-72px))] snap-start overflow-hidden rounded-[20px] border bg-[#1c282e] shadow-[0_14px_34px_rgba(27,34,30,0.08)] transition-all duration-300 hover:-translate-y-1 lg:h-[520px] lg:min-w-[306px] lg:basis-[306px]",
+        playing
+          ? "border-[#071b3d]"
+          : "border-[#d7d5d0] hover:border-[#b8b3a8]",
+      ].join(" ")}
+    >
       {playing ? (
         <div className="absolute inset-0 bg-[#11141a]">
           <iframe
@@ -271,7 +440,14 @@ function AboutReelCard({ reel, index, playing, onPlay, onStop }: { reel: AboutRe
             referrerPolicy="strict-origin-when-cross-origin"
             allowFullScreen
           />
-          <button className="absolute right-3 top-3 grid size-9 place-items-center rounded-full border border-white/20 bg-[#071b3d]/80 text-white backdrop-blur-[10px] transition-colors hover:bg-[#071b3d] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-white/70 focus-visible:outline-offset-2" type="button" aria-label={`Close ${title}`} onClick={onStop}><CloseIcon /></button>
+          <button
+            className="absolute right-3 top-3 grid size-9 place-items-center rounded-full border border-white/20 bg-[#071b3d]/80 text-white backdrop-blur-[10px] transition-colors hover:bg-[#071b3d] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-white/70 focus-visible:outline-offset-2"
+            type="button"
+            aria-label={`Close ${title}`}
+            onClick={onStop}
+          >
+            <CloseIcon />
+          </button>
         </div>
       ) : (
         <>
@@ -279,11 +455,22 @@ function AboutReelCard({ reel, index, playing, onPlay, onStop }: { reel: AboutRe
           <div className="absolute inset-x-0 bottom-0 flex min-h-[142px] flex-col justify-end gap-1.5 bg-gradient-to-b from-transparent via-[rgba(18,20,33,0.45)] to-[rgba(18,20,33,0.95)] px-5 pb-5 pt-16 text-white drop-shadow-[0_1px_12px_rgba(18,20,33,0.32)]">
             <div className="flex items-center gap-1.5">
               <span className="size-1.5 rounded-full bg-emerald-400" />
-              <span className="text-[11px] font-medium tracking-wide text-white/80">{reel.title ? "Limex Story" : "Video"}</span>
+              <span className="text-[11px] font-medium tracking-wide text-white/80">
+                {reel.title ? "Limex Story" : "Video"}
+              </span>
             </div>
-            <h3 className="max-w-[250px] line-clamp-2 font-brand text-card-title text-white">{title}</h3>
+            <h3 className="max-w-[250px] line-clamp-2 font-brand text-card-title text-white">
+              {title}
+            </h3>
           </div>
-          <button className="absolute left-1/2 top-1/2 z-10 grid size-[68px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-white/80 bg-white/95 text-[#071b3d] shadow-[0_10px_26px_rgba(18,20,33,0.22)] ring-4 ring-white/20 transition-transform duration-200 group-hover:scale-105 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/50 focus-visible:outline-offset-3" type="button" aria-label={`Play ${title}`} onClick={onPlay}><PlayIcon /></button>
+          <button
+            className="absolute left-1/2 top-1/2 z-10 grid size-[68px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-white/80 bg-white/95 text-[#071b3d] shadow-[0_10px_26px_rgba(18,20,33,0.22)] ring-4 ring-white/20 transition-transform duration-200 group-hover:scale-105 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/50 focus-visible:outline-offset-3"
+            type="button"
+            aria-label={`Play ${title}`}
+            onClick={onPlay}
+          >
+            <PlayIcon />
+          </button>
         </>
       )}
     </article>
@@ -319,14 +506,20 @@ export function AboutReelsSection() {
     if (!scroller) return;
 
     const updateScrollState = () => {
-      const maxScrollLeft = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
+      const maxScrollLeft = Math.max(
+        0,
+        scroller.scrollWidth - scroller.clientWidth,
+      );
       setCanScrollPrevious(scroller.scrollLeft > 4);
       setCanScrollNext(scroller.scrollLeft < maxScrollLeft - 4);
     };
 
     updateScrollState();
     scroller.addEventListener("scroll", updateScrollState, { passive: true });
-    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(updateScrollState);
+    const observer =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(updateScrollState);
     observer?.observe(scroller);
 
     return () => {
@@ -337,15 +530,27 @@ export function AboutReelsSection() {
 
   useEffect(() => {
     if (!activeReelId) return;
-    document.getElementById(`about-reel-${activeReelId}`)?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    document
+      .getElementById(`about-reel-${activeReelId}`)
+      ?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "center",
+      });
   }, [activeReelId]);
 
   function moveReels(direction: "previous" | "next") {
-    reelScrollerRef.current?.scrollBy({ left: (direction === "next" ? 1 : -1) * 322, behavior: "smooth" });
+    reelScrollerRef.current?.scrollBy({
+      left: (direction === "next" ? 1 : -1) * 322,
+      behavior: "smooth",
+    });
   }
 
   return (
-    <section className="mt-[clamp(28px,3vw,44px)] rounded-panel border border-[#e0dcd4] bg-[#f7f4ef] p-card-pad-sm lg:p-card-pad" aria-labelledby="about-reels-title">
+    <section
+      className="mt-[clamp(28px,3vw,44px)] rounded-panel border border-[#e0dcd4] bg-[#f7f4ef] p-card-pad-sm lg:p-card-pad"
+      aria-labelledby="about-reels-title"
+    >
       <div className="flex flex-col gap-cluster-lg sm:flex-row sm:items-end sm:justify-between">
         <SectionTitle
           id="about-reels-title"
@@ -355,30 +560,82 @@ export function AboutReelsSection() {
           size="compact"
         />
         {!loading && reels.length > 1 ? (
-          <div className="flex shrink-0 items-center gap-2" aria-label="Video reel controls">
-            <button className="grid size-10 place-items-center rounded-full border border-[#d2cbc0] bg-white text-[#4f4b47] transition-all hover:-translate-y-0.5 hover:border-[#071b3d] hover:text-[#071b3d] disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/40 focus-visible:outline-offset-2" type="button" aria-label="Previous video reel" disabled={!canScrollPrevious} onClick={() => moveReels("previous")}><ArrowIcon direction="left" /></button>
-            <button className="grid size-10 place-items-center rounded-full bg-[#071b3d] text-white transition-all hover:-translate-y-0.5 hover:bg-[#2a2933] disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/40 focus-visible:outline-offset-2" type="button" aria-label="Next video reel" disabled={!canScrollNext} onClick={() => moveReels("next")}><ArrowIcon direction="right" /></button>
+          <div
+            className="flex shrink-0 items-center gap-2"
+            aria-label="Video reel controls"
+          >
+            <button
+              className="grid size-10 place-items-center rounded-full border border-[#d2cbc0] bg-white text-[#4f4b47] transition-all hover:-translate-y-0.5 hover:border-[#071b3d] hover:text-[#071b3d] disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/40 focus-visible:outline-offset-2"
+              type="button"
+              aria-label="Previous video reel"
+              disabled={!canScrollPrevious}
+              onClick={() => moveReels("previous")}
+            >
+              <ArrowIcon direction="left" />
+            </button>
+            <button
+              className="grid size-10 place-items-center rounded-full bg-[#071b3d] text-white transition-all hover:-translate-y-0.5 hover:bg-[#2a2933] disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/40 focus-visible:outline-offset-2"
+              type="button"
+              aria-label="Next video reel"
+              disabled={!canScrollNext}
+              onClick={() => moveReels("next")}
+            >
+              <ArrowIcon direction="right" />
+            </button>
           </div>
         ) : null}
       </div>
 
       {loading ? (
-        <div className="mt-section-gap-lg flex min-h-0 gap-card-gap overflow-hidden" aria-label="Loading video reels">
-          {[0, 1, 2].map((index) => <div className="h-[420px] min-w-[min(306px,calc(100vw-72px))] animate-pulse rounded-[20px] border border-[#e0dcd4] bg-[#ebe7df] lg:h-[520px] lg:min-w-[306px]" key={index} />)}
+        <div
+          className="mt-section-gap-lg flex min-h-0 gap-card-gap overflow-hidden"
+          aria-label="Loading video reels"
+        >
+          {[0, 1, 2].map((index) => (
+            <div
+              className="h-[420px] min-w-[min(306px,calc(100vw-72px))] animate-pulse rounded-[20px] border border-[#e0dcd4] bg-[#ebe7df] lg:h-[520px] lg:min-w-[306px]"
+              key={index}
+            />
+          ))}
         </div>
       ) : loadError ? (
         <div className="mt-section-gap-lg rounded-[18px] border border-dashed border-[#d4ccc1] bg-white/65 px-5 py-10 text-center">
-          <p className="font-brand text-subheading-mobile font-bold text-ink">Our stories are taking shape.</p>
-          <p className="mt-1.5 text-micro text-muted">Please check back soon for Limex on video.</p>
+          <p className="font-brand text-subheading-mobile font-bold text-ink">
+            Our stories are taking shape.
+          </p>
+          <p className="mt-1.5 text-micro text-muted">
+            Please check back soon for Limex on video.
+          </p>
         </div>
       ) : reels.length ? (
-        <div ref={reelScrollerRef} className="mt-section-gap-lg flex min-h-0 snap-x snap-proximity gap-card-gap overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {reels.map((reel, index) => <div className="shrink-0" id={`about-reel-${reel.id}`} key={reel.id}><AboutReelCard reel={reel} index={index} playing={activeReelId === reel.id} onPlay={() => setActiveReelId(reel.id)} onStop={() => setActiveReelId(null)} /></div>)}
+        <div
+          ref={reelScrollerRef}
+          className="mt-section-gap-lg flex min-h-0 snap-x snap-proximity gap-card-gap overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {reels.map((reel, index) => (
+            <div
+              className="shrink-0"
+              id={`about-reel-${reel.id}`}
+              key={reel.id}
+            >
+              <AboutReelCard
+                reel={reel}
+                index={index}
+                playing={activeReelId === reel.id}
+                onPlay={() => setActiveReelId(reel.id)}
+                onStop={() => setActiveReelId(null)}
+              />
+            </div>
+          ))}
         </div>
       ) : (
         <div className="mt-section-gap-lg rounded-[18px] border border-dashed border-[#d4ccc1] bg-white/65 px-5 py-10 text-center">
-          <p className="font-brand text-subheading-mobile font-bold text-ink">Our story is coming soon.</p>
-          <p className="mt-1.5 text-micro text-muted">New Limex video stories will appear here.</p>
+          <p className="font-brand text-subheading-mobile font-bold text-ink">
+            Our story is coming soon.
+          </p>
+          <p className="mt-1.5 text-micro text-muted">
+            New Limex video stories will appear here.
+          </p>
         </div>
       )}
     </section>
@@ -387,12 +644,24 @@ export function AboutReelsSection() {
 
 export function AboutContactCta() {
   return (
-    <section className="mt-[clamp(28px,3vw,44px)] flex flex-col gap-cluster-lg rounded-card bg-[#071b3d] px-page-gutter py-card-pad-sm text-white sm:flex-row sm:items-center sm:justify-between lg:px-section-y lg:py-card-pad-sm" id="contact" aria-labelledby="about-contact-title">
+    <section
+      className="mt-[clamp(28px,3vw,44px)] flex flex-col gap-cluster-lg rounded-card bg-[#071b3d] px-page-gutter py-card-pad-sm text-white sm:flex-row sm:items-center sm:justify-between lg:px-section-y lg:py-card-pad-sm"
+      id="contact"
+      aria-labelledby="about-contact-title"
+    >
       <div>
-        <h2 className="font-brand text-subheading" id="about-contact-title">Let’s make the next step simple.</h2>
-        <p className="mt-1 text-micro text-white/70">Connect with an advisor for clear guidance on your business goals.</p>
+        <h2 className="font-brand text-subheading" id="about-contact-title">
+          Let’s make the next step simple.
+        </h2>
+        <p className="mt-1 text-micro text-white/70">
+          Connect with an advisor for clear guidance on your business goals.
+        </p>
       </div>
-      <ContactModal variant="white" buttonClassName="min-h-control w-[176px] shrink-0 text-button" buttonLabel="Talk to an advisor" />
+      <ContactModal
+        variant="white"
+        buttonClassName="min-h-control w-[176px] shrink-0 text-button"
+        buttonLabel="Talk to an advisor"
+      />
     </section>
   );
 }

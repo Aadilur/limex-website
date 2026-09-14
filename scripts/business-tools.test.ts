@@ -1631,3 +1631,24 @@ test("about page has larger team portraits, executive typography, no odd eyebrow
   assert.match(aboutSectionsContent, /rounded-panel\s+border\s+border-warm\s+bg-page/);
 });
 
+test("bangla language toggle is hidden from service and blog pages", async () => {
+  const fs = await import("node:fs/promises");
+  const serviceSectionsTsx = await fs.readFile(
+    new URL("../src/components/limex/service-page-sections.tsx", import.meta.url),
+    "utf8",
+  );
+  const blogSectionsTsx = await fs.readFile(
+    new URL("../src/components/limex/blog-sections.tsx", import.meta.url),
+    "utf8",
+  );
+
+  // 1. Service page header does not contain language toggle button or switchLabel
+  assert.doesNotMatch(serviceSectionsTsx, /ui\.switchLabel/);
+  assert.doesNotMatch(serviceSectionsTsx, /switchLabel:\s*"বাংলা"/);
+  assert.doesNotMatch(serviceSectionsTsx, /switchLabel:\s*"English"/);
+
+  // 2. Blog hero search card does not contain language toggle
+  assert.doesNotMatch(blogSectionsTsx, /locale === "bn" \? "\/blog" : "\/bn\/blog"/);
+  assert.doesNotMatch(blogSectionsTsx, /locale === "bn" \? "English" : "বাংলা"/);
+});
+

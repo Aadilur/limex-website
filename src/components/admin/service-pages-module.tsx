@@ -1062,13 +1062,17 @@ function DetailEditor({
           <Field
             label="Section eyebrow"
             value={detail.relatedOptionsLabel ?? ""}
-            onChange={(event) => update("relatedOptionsLabel", event.target.value)}
+            onChange={(event) =>
+              update("relatedOptionsLabel", event.target.value)
+            }
             placeholder="Related options"
           />
           <Field
             label="Section title"
             value={detail.relatedOptionsTitle ?? ""}
-            onChange={(event) => update("relatedOptionsTitle", event.target.value)}
+            onChange={(event) =>
+              update("relatedOptionsTitle", event.target.value)
+            }
             placeholder="Explore related services & options"
           />
           <TextAreaField
@@ -1087,10 +1091,14 @@ function DetailEditor({
             <div>
               <p className={fieldLabelClass}>Custom related options</p>
               <p className="mt-1 text-[11px] text-[#948d84]">
-                Add custom options with icons and buttons. When left empty, the public page automatically falls back to assigned child or sibling services.
+                Add custom options with icons and buttons. When left empty, the
+                public page automatically falls back to assigned child or
+                sibling services.
               </p>
             </div>
-            <AddButton onClick={addRelatedOption}>+ Add related option</AddButton>
+            <AddButton onClick={addRelatedOption}>
+              + Add related option
+            </AddButton>
           </div>
 
           {(detail.relatedOptions ?? []).length ? (
@@ -1156,10 +1164,11 @@ function DetailEditor({
                       onChange={(event) =>
                         update(
                           "relatedOptions",
-                          (detail.relatedOptions ?? []).map((item, itemIndex) =>
-                            itemIndex === index
-                              ? { ...item, title: event.target.value }
-                              : item,
+                          (detail.relatedOptions ?? []).map(
+                            (item, itemIndex) =>
+                              itemIndex === index
+                                ? { ...item, title: event.target.value }
+                                : item,
                           ),
                         )
                       }
@@ -1203,10 +1212,11 @@ function DetailEditor({
                       onChange={(event) =>
                         update(
                           "relatedOptions",
-                          (detail.relatedOptions ?? []).map((item, itemIndex) =>
-                            itemIndex === index
-                              ? { ...item, href: event.target.value }
-                              : item,
+                          (detail.relatedOptions ?? []).map(
+                            (item, itemIndex) =>
+                              itemIndex === index
+                                ? { ...item, href: event.target.value }
+                                : item,
                           ),
                         )
                       }
@@ -1219,10 +1229,11 @@ function DetailEditor({
                       onChange={(event) =>
                         update(
                           "relatedOptions",
-                          (detail.relatedOptions ?? []).map((item, itemIndex) =>
-                            itemIndex === index
-                              ? { ...item, badge: event.target.value }
-                              : item,
+                          (detail.relatedOptions ?? []).map(
+                            (item, itemIndex) =>
+                              itemIndex === index
+                                ? { ...item, badge: event.target.value }
+                                : item,
                           ),
                         )
                       }
@@ -1235,10 +1246,11 @@ function DetailEditor({
                       onChange={(event) =>
                         update(
                           "relatedOptions",
-                          (detail.relatedOptions ?? []).map((item, itemIndex) =>
-                            itemIndex === index
-                              ? { ...item, actionLabel: event.target.value }
-                              : item,
+                          (detail.relatedOptions ?? []).map(
+                            (item, itemIndex) =>
+                              itemIndex === index
+                                ? { ...item, actionLabel: event.target.value }
+                                : item,
                           ),
                         )
                       }
@@ -1252,10 +1264,11 @@ function DetailEditor({
                       onChange={(event) =>
                         update(
                           "relatedOptions",
-                          (detail.relatedOptions ?? []).map((item, itemIndex) =>
-                            itemIndex === index
-                              ? { ...item, description: event.target.value }
-                              : item,
+                          (detail.relatedOptions ?? []).map(
+                            (item, itemIndex) =>
+                              itemIndex === index
+                                ? { ...item, description: event.target.value }
+                                : item,
                           ),
                         )
                       }
@@ -1266,7 +1279,9 @@ function DetailEditor({
             </div>
           ) : (
             <p className="mt-3 text-[11px] text-[#948d84]">
-              No custom options added. Sibling or child services from the service catalogue will be automatically displayed on the public page.
+              No custom options added. Sibling or child services from the
+              service catalogue will be automatically displayed on the public
+              page.
             </p>
           )}
         </div>

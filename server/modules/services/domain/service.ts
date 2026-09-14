@@ -48,14 +48,16 @@ export function isLegacySeedProfile(profile: ServiceProfileRow) {
   // standalone-service migration have the new column's default (`ADMIN`).
   // Recognise only an untouched, first-revision parent-menu placeholder so a
   // newly created standalone draft can never disappear from the admin list.
-  return profile.origin === "ADMIN"
-    && profile.menuItemId !== null
-    && profile.menuLinkId === null
-    && profile.status === "LINK_ONLY"
-    && profile.detail === null
-    && profile.publishedDetail === null
-    && profile.revision === 1
-    && profile.publishedRevision === null;
+  return (
+    profile.origin === "ADMIN" &&
+    profile.menuItemId !== null &&
+    profile.menuLinkId === null &&
+    profile.status === "LINK_ONLY" &&
+    profile.detail === null &&
+    profile.publishedDetail === null &&
+    profile.revision === 1 &&
+    profile.publishedRevision === null
+  );
 }
 
 export type ServiceMenuContext = {
@@ -90,20 +92,45 @@ export type ServiceMenuAssignment = {
 export type ServiceRepository = {
   findMenuTree(): Promise<MenuSection[]>;
   findProfiles(): Promise<ServiceProfileRow[]>;
-  findProfileByMenuItemId(menuItemId: string): Promise<ServiceProfileRow | null>;
+  findProfileByMenuItemId(
+    menuItemId: string,
+  ): Promise<ServiceProfileRow | null>;
   findProfileById(id: string): Promise<ServiceProfileRow | null>;
   findProfileBySlug(slug: string): Promise<ServiceProfileRow | null>;
-  createProfile(input: ServiceProfileInput, updatedBy: string): Promise<ServiceProfileRow>;
-  updateProfile(id: string, input: ServiceProfileInput, expectedRevision: number, updatedBy: string): Promise<ServiceProfileRow>;
-  assignProfile(id: string, target: ServiceMenuAssignment | null, expectedRevision: number, updatedBy: string): Promise<ServiceProfileRow>;
-  publishProfile(id: string, expectedRevision: number, updatedBy: string): Promise<ServiceProfileRow>;
-  unpublishProfile(id: string, expectedRevision: number, updatedBy: string): Promise<ServiceProfileRow>;
+  createProfile(
+    input: ServiceProfileInput,
+    updatedBy: string,
+  ): Promise<ServiceProfileRow>;
+  updateProfile(
+    id: string,
+    input: ServiceProfileInput,
+    expectedRevision: number,
+    updatedBy: string,
+  ): Promise<ServiceProfileRow>;
+  assignProfile(
+    id: string,
+    target: ServiceMenuAssignment | null,
+    expectedRevision: number,
+    updatedBy: string,
+  ): Promise<ServiceProfileRow>;
+  publishProfile(
+    id: string,
+    expectedRevision: number,
+    updatedBy: string,
+  ): Promise<ServiceProfileRow>;
+  unpublishProfile(
+    id: string,
+    expectedRevision: number,
+    updatedBy: string,
+  ): Promise<ServiceProfileRow>;
 };
 
 export class ServiceConflictError extends Error {
   public readonly statusCode = 409;
 
-  public constructor(message = "This service changed in another session. Reload before saving.") {
+  public constructor(
+    message = "This service changed in another session. Reload before saving.",
+  ) {
     super(message);
     this.name = "ServiceConflictError";
   }
@@ -112,7 +139,9 @@ export class ServiceConflictError extends Error {
 export class ServiceSafetyError extends Error {
   public readonly statusCode = 422;
 
-  public constructor(message = "The service update is incomplete and was not saved. Reload before trying again.") {
+  public constructor(
+    message = "The service update is incomplete and was not saved. Reload before trying again.",
+  ) {
     super(message);
     this.name = "ServiceSafetyError";
   }
@@ -137,12 +166,14 @@ export class ServiceInputError extends Error {
 }
 
 export function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 160) || "service";
+  return (
+    value
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 160) || "service"
+  );
 }
 
 export function isSafeServiceHref(value: string) {
@@ -162,9 +193,17 @@ export function destinationFromHref(href: string): ServiceDestination {
   let type: ServiceDestinationType = "INTERNAL";
 
   if (normalizedHref.startsWith("/services/")) type = "DETAIL";
-  else if (normalizedHref.startsWith("/blog/") || normalizedHref.startsWith("/bn/blog/")) type = "BLOG";
+  else if (
+    normalizedHref.startsWith("/blog/") ||
+    normalizedHref.startsWith("/bn/blog/")
+  )
+    type = "BLOG";
   else if (normalizedHref.startsWith("/business-tools/")) type = "TOOL";
-  else if (normalizedHref === "#contact" || normalizedHref.startsWith("#contact-")) type = "CONTACT";
+  else if (
+    normalizedHref === "#contact" ||
+    normalizedHref.startsWith("#contact-")
+  )
+    type = "CONTACT";
   else if (/^https?:\/\//i.test(normalizedHref)) type = "EXTERNAL";
 
   const labels: Record<ServiceDestinationType, string> = {
@@ -191,39 +230,47 @@ export function emptyServiceDetail(): ServiceDetailContent {
     deliveryTime: "Confirmed after review",
     serviceMode: "Online or offline",
     mediaTitle: "A clearer next step",
-    mediaDescription: "Add an optional image or video to introduce this service.",
+    mediaDescription:
+      "Add an optional image or video to introduce this service.",
     mediaUrl: "",
     mediaAlt: "",
     overviewEyebrow: "OVERVIEW",
     overviewTitle: "A practical path forward",
-    overviewDescription: "Share the scope of this service and the next step your customer should take.",
+    overviewDescription:
+      "Share the scope of this service and the next step your customer should take.",
     overviewHtml: "",
     overviewDescriptionHtml: "",
     contentLabel: "THE LIMEX APPROACH",
     contentTitle: "Make the next step easier to understand.",
-    contentDescription: "Add the key guidance, inclusions and expectations for this service.",
+    contentDescription:
+      "Add the key guidance, inclusions and expectations for this service.",
     contentDescriptionHtml: "",
     contentLinkLabel: "Talk to an advisor",
     contentLinkHref: "#service-contact",
     keyFactsLabel: "Key facts",
     relatedOptionsLabel: "Related options",
     relatedOptionsTitle: "Explore related services & options",
-    relatedOptionsDescription: "Complementary filings, legal protections, and licenses commonly needed alongside this service.",
+    relatedOptionsDescription:
+      "Complementary filings, legal protections, and licenses commonly needed alongside this service.",
     toolsEyebrow: "Helpful tools",
     toolsTitle: "Keep the next step close at hand.",
-    toolsDescription: "Link a calculator or document builder that helps customers move forward.",
+    toolsDescription:
+      "Link a calculator or document builder that helps customers move forward.",
     pricingEyebrow: "Optional / pricing",
     pricingTitle: "Show the right price for this service",
-    pricingDescription: "Use a starting price, package cards or a custom quote depending on the scope.",
+    pricingDescription:
+      "Use a starting price, package cards or a custom quote depending on the scope.",
     mostPopularLabel: "Most popular",
     faqEyebrow: "Optional / FAQ",
     faqTitle: "Common questions",
     faqDescription: "A few clear answers before you choose the next step.",
     faqSupportLabel: "Still deciding?",
-    faqSupportDescription: "Talk to an advisor when the right path needs a little context.",
+    faqSupportDescription:
+      "Talk to an advisor when the right path needs a little context.",
     contactEyebrow: "Ready when you are",
     contactTitle: "Need help choosing the right option?",
-    contactDescription: "A short conversation is enough to recommend the right path for",
+    contactDescription:
+      "A short conversation is enough to recommend the right path for",
     contactButtonLabel: "Talk to an advisor",
     benefits: [],
     steps: [],
@@ -236,7 +283,9 @@ export function emptyServiceDetail(): ServiceDetailContent {
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
 }
 
 function cleanString(value: unknown, fallback = "") {
@@ -244,81 +293,108 @@ function cleanString(value: unknown, fallback = "") {
 }
 
 function cleanStringList(value: unknown) {
-  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string").map((item) => item.trim()).filter(Boolean).slice(0, 30) : [];
+  return Array.isArray(value)
+    ? value
+        .filter((item): item is string => typeof item === "string")
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .slice(0, 30)
+    : [];
 }
 
 function cleanToolSlugs(value: unknown) {
   const allowed = new Set<string>(toolSlugs);
   return Array.isArray(value)
-    ? value.filter((item): item is string => typeof item === "string" && allowed.has(item)).slice(0, 8)
+    ? value
+        .filter(
+          (item): item is string =>
+            typeof item === "string" && allowed.has(item),
+        )
+        .slice(0, 8)
     : [];
 }
 
 function cleanFacts(value: unknown) {
   if (!Array.isArray(value)) return [];
-  return value.flatMap((item) => {
-    const record = asRecord(item);
-    const label = cleanString(record?.label);
-    const factValue = cleanString(record?.value);
-    return label && factValue ? [{ label, value: factValue }] : [];
-  }).slice(0, 12);
+  return value
+    .flatMap((item) => {
+      const record = asRecord(item);
+      const label = cleanString(record?.label);
+      const factValue = cleanString(record?.value);
+      return label && factValue ? [{ label, value: factValue }] : [];
+    })
+    .slice(0, 12);
 }
 
 function cleanSteps(value: unknown) {
   if (!Array.isArray(value)) return [];
-  return value.flatMap((item) => {
-    const record = asRecord(item);
-    const title = cleanString(record?.title);
-    const description = cleanString(record?.description);
-    return title ? [{ title, description }] : [];
-  }).slice(0, 12);
+  return value
+    .flatMap((item) => {
+      const record = asRecord(item);
+      const title = cleanString(record?.title);
+      const description = cleanString(record?.description);
+      return title ? [{ title, description }] : [];
+    })
+    .slice(0, 12);
 }
 
 function cleanPricing(value: unknown) {
   if (!Array.isArray(value)) return [];
-  return value.flatMap((item) => {
-    const record = asRecord(item);
-    const name = cleanString(record?.name);
-    const price = cleanString(record?.price);
-    if (!name || !price) return [];
-    return [{
-      name,
-      price,
-      description: cleanString(record?.description),
-      features: cleanStringList(record?.features).slice(0, 12),
-      action: cleanString(record?.action, "Get started"),
-      ...(cleanString(record?.whatsappLabel) ? { whatsappLabel: cleanString(record?.whatsappLabel) } : {}),
-      ...(record?.featured === true ? { featured: true } : {}),
-    }];
-  }).slice(0, 6);
+  return value
+    .flatMap((item) => {
+      const record = asRecord(item);
+      const name = cleanString(record?.name);
+      const price = cleanString(record?.price);
+      if (!name || !price) return [];
+      return [
+        {
+          name,
+          price,
+          description: cleanString(record?.description),
+          features: cleanStringList(record?.features).slice(0, 12),
+          action: cleanString(record?.action, "Get started"),
+          ...(cleanString(record?.whatsappLabel)
+            ? { whatsappLabel: cleanString(record?.whatsappLabel) }
+            : {}),
+          ...(record?.featured === true ? { featured: true } : {}),
+        },
+      ];
+    })
+    .slice(0, 6);
 }
 
 function cleanFaqs(value: unknown) {
   if (!Array.isArray(value)) return [];
-  return value.flatMap((item) => {
-    const record = asRecord(item);
-    const question = cleanString(record?.question);
-    const answer = cleanString(record?.answer);
-    return question && answer ? [{ question, answer }] : [];
-  }).slice(0, 30);
+  return value
+    .flatMap((item) => {
+      const record = asRecord(item);
+      const question = cleanString(record?.question);
+      const answer = cleanString(record?.answer);
+      return question && answer ? [{ question, answer }] : [];
+    })
+    .slice(0, 30);
 }
 
 function cleanRelatedOptions(value: unknown): ServiceRelatedOption[] {
   if (!Array.isArray(value)) return [];
-  return value.flatMap((item) => {
-    const record = asRecord(item);
-    const title = cleanString(record?.title);
-    const href = cleanString(record?.href);
-    if (!title || !href) return [];
-    return [{
-      title,
-      href,
-      description: cleanString(record?.description),
-      icon: cleanString(record?.icon, "briefcase"),
-      badge: cleanString(record?.badge),
-      actionLabel: cleanString(record?.actionLabel),
-    }];
-  }).slice(0, 12);
+  return value
+    .flatMap((item) => {
+      const record = asRecord(item);
+      const title = cleanString(record?.title);
+      const href = cleanString(record?.href);
+      if (!title || !href) return [];
+      return [
+        {
+          title,
+          href,
+          description: cleanString(record?.description),
+          icon: cleanString(record?.icon, "briefcase"),
+          badge: cleanString(record?.badge),
+          actionLabel: cleanString(record?.actionLabel),
+        },
+      ];
+    })
+    .slice(0, 12);
 }
 
 export function normalizeServiceDetail(value: unknown): ServiceDetailContent {
@@ -332,39 +408,78 @@ export function normalizeServiceDetail(value: unknown): ServiceDetailContent {
     deliveryTime: cleanString(record.deliveryTime, base.deliveryTime),
     serviceMode: cleanString(record.serviceMode, base.serviceMode),
     mediaTitle: cleanString(record.mediaTitle, base.mediaTitle),
-    mediaDescription: cleanString(record.mediaDescription, base.mediaDescription),
+    mediaDescription: cleanString(
+      record.mediaDescription,
+      base.mediaDescription,
+    ),
     mediaUrl: cleanString(record.mediaUrl),
     mediaAlt: cleanString(record.mediaAlt),
     overviewEyebrow: cleanString(record.overviewEyebrow, base.overviewEyebrow),
     overviewTitle: cleanString(record.overviewTitle, base.overviewTitle),
-    overviewDescription: cleanString(record.overviewDescription, base.overviewDescription),
+    overviewDescription: cleanString(
+      record.overviewDescription,
+      base.overviewDescription,
+    ),
     overviewDescriptionHtml: sanitizeBlogHtml(record.overviewDescriptionHtml),
     contentLabel: cleanString(record.contentLabel, base.contentLabel),
     contentTitle: cleanString(record.contentTitle, base.contentTitle),
-    contentDescription: cleanString(record.contentDescription, base.contentDescription),
+    contentDescription: cleanString(
+      record.contentDescription,
+      base.contentDescription,
+    ),
     contentDescriptionHtml: sanitizeBlogHtml(record.contentDescriptionHtml),
-    contentLinkLabel: cleanString(record.contentLinkLabel, base.contentLinkLabel),
+    contentLinkLabel: cleanString(
+      record.contentLinkLabel,
+      base.contentLinkLabel,
+    ),
     contentLinkHref: cleanString(record.contentLinkHref, base.contentLinkHref),
     keyFactsLabel: cleanString(record.keyFactsLabel, base.keyFactsLabel),
-    relatedOptionsLabel: cleanString(record.relatedOptionsLabel, base.relatedOptionsLabel),
-    relatedOptionsTitle: cleanString(record.relatedOptionsTitle, base.relatedOptionsTitle),
-    relatedOptionsDescription: cleanString(record.relatedOptionsDescription, base.relatedOptionsDescription),
+    relatedOptionsLabel: cleanString(
+      record.relatedOptionsLabel,
+      base.relatedOptionsLabel,
+    ),
+    relatedOptionsTitle: cleanString(
+      record.relatedOptionsTitle,
+      base.relatedOptionsTitle,
+    ),
+    relatedOptionsDescription: cleanString(
+      record.relatedOptionsDescription,
+      base.relatedOptionsDescription,
+    ),
     toolsEyebrow: cleanString(record.toolsEyebrow, base.toolsEyebrow),
     toolsTitle: cleanString(record.toolsTitle, base.toolsTitle),
-    toolsDescription: cleanString(record.toolsDescription, base.toolsDescription),
+    toolsDescription: cleanString(
+      record.toolsDescription,
+      base.toolsDescription,
+    ),
     pricingEyebrow: cleanString(record.pricingEyebrow, base.pricingEyebrow),
     pricingTitle: cleanString(record.pricingTitle, base.pricingTitle),
-    pricingDescription: cleanString(record.pricingDescription, base.pricingDescription),
-    mostPopularLabel: cleanString(record.mostPopularLabel, base.mostPopularLabel),
+    pricingDescription: cleanString(
+      record.pricingDescription,
+      base.pricingDescription,
+    ),
+    mostPopularLabel: cleanString(
+      record.mostPopularLabel,
+      base.mostPopularLabel,
+    ),
     faqEyebrow: cleanString(record.faqEyebrow, base.faqEyebrow),
     faqTitle: cleanString(record.faqTitle, base.faqTitle),
     faqDescription: cleanString(record.faqDescription, base.faqDescription),
     faqSupportLabel: cleanString(record.faqSupportLabel, base.faqSupportLabel),
-    faqSupportDescription: cleanString(record.faqSupportDescription, base.faqSupportDescription),
+    faqSupportDescription: cleanString(
+      record.faqSupportDescription,
+      base.faqSupportDescription,
+    ),
     contactEyebrow: cleanString(record.contactEyebrow, base.contactEyebrow),
     contactTitle: cleanString(record.contactTitle, base.contactTitle),
-    contactDescription: cleanString(record.contactDescription, base.contactDescription),
-    contactButtonLabel: cleanString(record.contactButtonLabel, base.contactButtonLabel),
+    contactDescription: cleanString(
+      record.contactDescription,
+      base.contactDescription,
+    ),
+    contactButtonLabel: cleanString(
+      record.contactButtonLabel,
+      base.contactButtonLabel,
+    ),
     benefits: cleanStringList(record.benefits),
     steps: cleanSteps(record.steps),
     facts: cleanFacts(record.facts),
@@ -377,7 +492,8 @@ export function normalizeServiceDetail(value: unknown): ServiceDetailContent {
   // Keep this property absent for older records so the editor and public page
   // can safely fall back to their legacy structured overview until an admin
   // explicitly saves the new full-section rich-text source.
-  if (typeof record.overviewHtml === "string") normalized.overviewHtml = sanitizeBlogHtml(record.overviewHtml);
+  if (typeof record.overviewHtml === "string")
+    normalized.overviewHtml = sanitizeBlogHtml(record.overviewHtml);
   return normalized;
 }
 
@@ -385,7 +501,10 @@ export function profileStatus(value: unknown): ServiceProfileStatus {
   return value === "DRAFT" || value === "PUBLISHED" ? value : "LINK_ONLY";
 }
 
-export function serviceContexts(sections: MenuSection[], includeHidden = false): ServiceMenuContext[] {
+export function serviceContexts(
+  sections: MenuSection[],
+  includeHidden = false,
+): ServiceMenuContext[] {
   return sections.flatMap((section) => {
     if (!includeHidden && !section.isVisible) return [];
     return section.groups.flatMap((group) => {
@@ -398,7 +517,10 @@ export function serviceContexts(sections: MenuSection[], includeHidden = false):
   });
 }
 
-export function serviceMenuTargets(sections: MenuSection[], includeHidden = false): ServiceMenuTarget[] {
+export function serviceMenuTargets(
+  sections: MenuSection[],
+  includeHidden = false,
+): ServiceMenuTarget[] {
   return serviceContexts(sections, includeHidden).flatMap((context) => {
     const itemTarget: ServiceMenuTarget = {
       targetType: "ITEM",
@@ -417,39 +539,52 @@ export function serviceMenuTargets(sections: MenuSection[], includeHidden = fals
       menuLinkId: null,
       parentLabel: null,
     };
-    const linkTargets = context.item.links.flatMap((link): ServiceMenuTarget[] => {
-      if (!includeHidden && !link.isVisible) return [];
-      return [{
-        targetType: "LINK",
-        id: link.id,
-        label: link.label,
-        description: "",
-        href: link.href,
-        icon: context.item.icon || "briefcase",
-        marker: context.item.marker,
-        sortOrder: link.sortOrder,
-        isVisible: link.isVisible,
-        section: context.section,
-        group: context.group,
-        item: context.item,
-        menuItemId: null,
-        menuLinkId: link.id,
-        parentLabel: context.item.label,
-      }];
-    });
+    const linkTargets = context.item.links.flatMap(
+      (link): ServiceMenuTarget[] => {
+        if (!includeHidden && !link.isVisible) return [];
+        return [
+          {
+            targetType: "LINK",
+            id: link.id,
+            label: link.label,
+            description: "",
+            href: link.href,
+            icon: context.item.icon || "briefcase",
+            marker: context.item.marker,
+            sortOrder: link.sortOrder,
+            isVisible: link.isVisible,
+            section: context.section,
+            group: context.group,
+            item: context.item,
+            menuItemId: null,
+            menuLinkId: link.id,
+            parentLabel: context.item.label,
+          },
+        ];
+      },
+    );
     return [itemTarget, ...linkTargets];
   });
 }
 
 export function sectionTone(section: MenuSection) {
   const label = `${section.key} ${section.label}`.toLowerCase();
-  if (label.includes("trademark") || label.includes("intellectual")) return { color: "#b83652", surface: "#fff0f2" };
-  if (label.includes("compliance") || label.includes("documentation") || label.includes("tax")) return { color: "#5c4aa6", surface: "#f2effb" };
+  if (label.includes("trademark") || label.includes("intellectual"))
+    return { color: "#b83652", surface: "#fff0f2" };
+  if (
+    label.includes("compliance") ||
+    label.includes("documentation") ||
+    label.includes("tax")
+  )
+    return { color: "#5c4aa6", surface: "#f2effb" };
   if (label.includes("tool")) return { color: "#1f6e70", surface: "#edf9f8" };
   return { color: "#2e6b4f", surface: "#edf7f0" };
 }
 
-export function profileSnapshot(row: ServiceProfileRow, detail: ServiceDetailContent | null) {
+export function profileSnapshot(
+  row: ServiceProfileRow,
+  detail: ServiceDetailContent | null,
+) {
   return {
     serviceKey: row.serviceKey,
     slug: row.slug,

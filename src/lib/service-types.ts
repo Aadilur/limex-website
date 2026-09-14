@@ -1,4 +1,11 @@
-export const serviceDestinationTypes = ["DETAIL", "BLOG", "TOOL", "INTERNAL", "EXTERNAL", "CONTACT"] as const;
+export const serviceDestinationTypes = [
+  "DETAIL",
+  "BLOG",
+  "TOOL",
+  "INTERNAL",
+  "EXTERNAL",
+  "CONTACT",
+] as const;
 export type ServiceDestinationType = (typeof serviceDestinationTypes)[number];
 export type ServiceLocale = "en" | "bn";
 export type ServiceMenuTargetType = "ITEM" | "LINK";
