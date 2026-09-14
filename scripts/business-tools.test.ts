@@ -1813,3 +1813,41 @@ test("rich text editor permanently preserves cursor focus and legal pages have f
   assert.match(landingApiTs, /return \{ \.\.\.link, href: "\/privacy" \}/);
   assert.match(landingApiTs, /return \{ \.\.\.link, href: "\/terms" \}/);
 });
+
+test("contact modal prevents page scroll-up on open and keeps all form fields in compact mode", async () => {
+  const fs = await import("node:fs/promises");
+  const contactSectionTsx = await fs.readFile(
+    new URL("../src/components/limex/contact-section.tsx", import.meta.url),
+    "utf8",
+  );
+
+  // 1. Prevent scroll-to-top on open
+  assert.match(
+    contactSectionTsx,
+    /closeButtonRef\.current\?\.focus\(\{\s*preventScroll:\s*true\s*\}\)/,
+  );
+  assert.match(contactSectionTsx, /const scrollY = window\.scrollY/);
+  assert.match(contactSectionTsx, /window\.scrollTo\(\{\s*top:\s*scrollY/);
+
+  // 2. Compact modal container styling
+  assert.match(contactSectionTsx, /max-w-\[620px\]/);
+  assert.match(contactSectionTsx, /rounded-\[22px\]/);
+
+  // 3. Direct lines strip retains WhatsApp, Phone, Email, and Address
+  assert.match(contactSectionTsx, /aria-label="Direct contact details"/);
+  assert.match(contactSectionTsx, /WhatsApp/);
+  assert.match(contactSectionTsx, /Phone/);
+  assert.match(contactSectionTsx, /Email/);
+  assert.match(contactSectionTsx, /Office/);
+
+  // 4. All form fields are present in ContactForm
+  assert.match(contactSectionTsx, /ServiceMultiSelect/);
+  assert.match(contactSectionTsx, /placeholder="Your name"/);
+  assert.match(contactSectionTsx, /placeholder="\+880 1XXX XXXXXX"/);
+  assert.match(contactSectionTsx, /placeholder="you@example\.com"/);
+  assert.match(contactSectionTsx, /aria-label="Preferred date"/);
+  assert.match(contactSectionTsx, /aria-label="Preferred time"/);
+  assert.match(contactSectionTsx, /placeholder="Tell us what you need help with\."/);
+  assert.match(contactSectionTsx, /name="website"/); // honeypot
+  assert.match(contactSectionTsx, /content\.privacyNote/);
+});

@@ -143,7 +143,6 @@ export function withLandingFallback(
     },
     faq: { ...defaultLandingContent.faq, ...(content?.faq ?? {}) },
     contact: { ...defaultLandingContent.contact, ...(content?.contact ?? {}) },
-    footer: { ...defaultLandingContent.footer, ...(content?.footer ?? {}) },
     footer: {
       ...defaultLandingContent.footer,
       ...(content?.footer ?? {}),

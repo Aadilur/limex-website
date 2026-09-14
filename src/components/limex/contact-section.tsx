@@ -56,6 +56,9 @@ const fieldLabelClassName = "flex min-w-0 flex-col gap-2";
 const fieldLabelTextClassName = "text-button font-semibold text-[#49313a]";
 const fieldControlClassName =
   "w-full min-w-0 rounded-[14px] border-2 border-[#a4a39b] bg-page px-3.5 text-body-sm leading-normal text-[#172019] shadow-[inset_0_1px_0_rgba(255,255,255,0.55),0_1px_2px_rgba(54,54,49,0.06)] outline-none placeholder:text-[#777872] transition-colors hover:border-[#8f9089] focus:border-accent focus:bg-page focus:ring-4 focus:ring-[#f3d2da]";
+const compactFieldControlClassName =
+  "w-full min-w-0 rounded-[12px] border border-[#cfcac0] bg-white px-3 text-[13px] text-[#172019] shadow-[0_1px_2px_rgba(54,54,49,0.04)] outline-none placeholder:text-[#88837a] transition-colors hover:border-[#a09a8f] focus:border-accent focus:ring-2 focus:ring-accent/15";
+
 
 function getServiceGroups(menuNavigation: NavItem[]): ServiceGroup[] {
   return menuNavigation
@@ -128,6 +131,7 @@ function ServiceMultiSelect({
   hasError,
   helperText,
   instanceId,
+  compact = false,
 }: {
   groups: ServiceGroup[];
   value: string[];
@@ -135,6 +139,7 @@ function ServiceMultiSelect({
   hasError: boolean;
   helperText: string;
   instanceId: string;
+  compact?: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -191,7 +196,7 @@ function ServiceMultiSelect({
   return (
     <div className="relative" ref={containerRef}>
       <button
-        className={`${fieldControlClassName} flex h-12 items-center justify-between gap-3 text-left ${hasError ? "border-accent ring-4 ring-[#f3d2da]" : ""}`.trim()}
+        className={`${compact ? `${compactFieldControlClassName} h-10 sm:h-[42px] text-[13px]` : `${fieldControlClassName} h-12 text-body-sm`} flex items-center justify-between gap-3 text-left ${hasError ? (compact ? "border-accent ring-2 ring-accent/20" : "border-accent ring-4 ring-[#f3d2da]") : ""}`.trim()}
         type="button"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
@@ -206,10 +211,10 @@ function ServiceMultiSelect({
           {summary}
         </span>
         <ChevronDownIcon
-          className={`size-5 shrink-0 text-[#65665f] transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`.trim()}
+          className={`${compact ? "size-4" : "size-5"} shrink-0 text-[#65665f] transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`.trim()}
         />
       </button>
-      <p className="mt-1 text-micro text-muted">{helperText}</p>
+      <p className={`mt-1 text-muted ${compact ? "text-[10px] sm:text-[11px]" : "text-micro"}`}>{helperText}</p>
 
       {isOpen ? (
         <div
@@ -478,12 +483,26 @@ export function ContactForm({
     };
   }, [initialService, source?.service, source?.slug]);
 
+  const controlClass = compact
+    ? compactFieldControlClassName
+    : fieldControlClassName;
+  const controlHeight = compact ? "h-10 sm:h-[42px]" : "h-12";
+  const labelClass = compact
+    ? "flex min-w-0 flex-col gap-1"
+    : fieldLabelClassName;
+  const labelTextClass = compact
+    ? "text-[11px] font-bold uppercase tracking-[0.08em] text-[#554e47]"
+    : fieldLabelTextClassName;
+  const rowGridClass = compact
+    ? "grid grid-cols-1 gap-2.5 sm:grid-cols-2"
+    : "grid grid-cols-1 gap-cluster lg:grid-cols-2";
+
   const formClassName = className
     ? className
     : compact
       ? "relative flex min-h-0 flex-col p-4 sm:p-6"
       : "relative flex min-h-0 flex-col rounded-[24px] border border-[#c8c6be] bg-page p-card-pad-sm shadow-[0_12px_30px_rgba(42,44,39,0.04)] lg:min-h-[560px] lg:p-[32px]";
-  const fieldGap = compact ? "gap-3" : "gap-cluster";
+  const fieldGap = compact ? "gap-2.5 sm:gap-3" : "gap-cluster";
 
   return (
     <form
@@ -493,20 +512,12 @@ export function ContactForm({
       onSubmit={handleSubmit}
     >
       {!compact ? (
-        <span
-          className="pointer-events-none absolute left-4 top-0 h-1 w-14 rounded-b-full bg-accent lg:left-8"
-          aria-hidden="true"
-        />
-      ) : null}
-      <div
-        className={`border-b border-[#d3d0c8] ${compact ? "pb-4" : "pb-section-gap-lg"}`.trim()}
-      >
-        {compact ? (
-          <h3 className="text-overline text-accent" id={formTitleId}>
-            Your details
-          </h3>
-        ) : (
-          <>
+        <>
+          <span
+            className="pointer-events-none absolute left-4 top-0 h-1 w-14 rounded-b-full bg-accent lg:left-8"
+            aria-hidden="true"
+          />
+          <div className="border-b border-[#d3d0c8] pb-section-gap-lg">
             <p className="text-overline text-accent">{content.formEyebrow}</p>
             <h3
               className="mt-2 font-brand text-subheading text-ink"
@@ -517,16 +528,16 @@ export function ContactForm({
             <p className="mt-cluster-xs text-body-xs text-muted">
               {content.formDescription}
             </p>
-          </>
-        )}
-      </div>
+          </div>
+        </>
+      ) : null}
 
       <div
-        className={`${compact ? "mt-4" : "mt-section-gap-lg"} flex flex-col ${fieldGap}`.trim()}
+        className={`${compact ? "mt-0" : "mt-section-gap-lg"} flex flex-col ${fieldGap}`.trim()}
       >
-        <div className="grid grid-cols-1 gap-cluster lg:grid-cols-2">
-          <div className={fieldLabelClassName}>
-            <span className={fieldLabelTextClassName}>Service</span>
+        <div className={rowGridClass}>
+          <div className={labelClass}>
+            <span className={labelTextClass}>Service</span>
             <ServiceMultiSelect
               groups={serviceGroups}
               value={values.services}
@@ -534,12 +545,13 @@ export function ContactForm({
               hasError={Boolean(formError && values.services.length === 0)}
               helperText={content.serviceHelper}
               instanceId={instanceId}
+              compact={compact}
             />
           </div>
-          <label className={fieldLabelClassName}>
-            <span className={fieldLabelTextClassName}>Name</span>
+          <label className={labelClass}>
+            <span className={labelTextClass}>Name</span>
             <input
-              className={`h-12 ${fieldControlClassName}`}
+              className={`${controlHeight} ${controlClass}`}
               autoComplete="name"
               value={values.name}
               onChange={(event) => updateValue("name", event.target.value)}
@@ -549,11 +561,11 @@ export function ContactForm({
           </label>
         </div>
 
-        <div className="grid grid-cols-1 gap-cluster lg:grid-cols-2">
-          <label className={fieldLabelClassName}>
-            <span className={fieldLabelTextClassName}>Phone / WhatsApp</span>
+        <div className={rowGridClass}>
+          <label className={labelClass}>
+            <span className={labelTextClass}>Phone / WhatsApp</span>
             <input
-              className={`h-12 ${fieldControlClassName}`}
+              className={`${controlHeight} ${controlClass}`}
               type="tel"
               inputMode="tel"
               autoComplete="tel"
@@ -563,10 +575,10 @@ export function ContactForm({
               aria-describedby={contactMethodHelpId}
             />
           </label>
-          <label className={fieldLabelClassName}>
-            <span className={fieldLabelTextClassName}>Email</span>
+          <label className={labelClass}>
+            <span className={labelTextClass}>Email</span>
             <input
-              className={`h-12 ${fieldControlClassName}`}
+              className={`${controlHeight} ${controlClass}`}
               type="email"
               inputMode="email"
               autoComplete="email"
@@ -577,7 +589,7 @@ export function ContactForm({
             />
           </label>
         </div>
-        <p className="-mt-1 text-micro text-muted" id={contactMethodHelpId}>
+        <p className={`-mt-1 ${compact ? "text-[10px] sm:text-[11px]" : "text-micro"} text-muted`} id={contactMethodHelpId}>
           {content.contactMethodHelper}
         </p>
         {formError ? (
@@ -589,21 +601,15 @@ export function ContactForm({
           </p>
         ) : null}
 
-        <fieldset className="flex min-w-0 flex-col gap-2">
-          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-            <legend className={fieldLabelTextClassName}>
-              Preferred date &amp; time{" "}
-              <span className="font-normal text-muted">(optional)</span>
-            </legend>
-            <span className="text-micro text-muted">
-              Dhaka time · 30-minute slots
-            </span>
-          </div>
-          <div className="grid grid-cols-1 gap-cluster sm:grid-cols-2">
-            <label className={fieldLabelClassName}>
-              <span className={fieldLabelTextClassName}>Date</span>
+        <div className="flex min-w-0 flex-col gap-1">
+          <div className={rowGridClass}>
+            <label className={labelClass}>
+              <span className={labelTextClass}>
+                Preferred date{" "}
+                <span className="font-normal lowercase text-muted">(optional)</span>
+              </span>
               <input
-                className={`h-12 ${fieldControlClassName}`}
+                className={`${controlHeight} ${controlClass}`}
                 type="date"
                 min={scheduleDateBounds.minimum || undefined}
                 max={scheduleDateBounds.maximum || undefined}
@@ -612,10 +618,13 @@ export function ContactForm({
                 aria-label="Preferred date"
               />
             </label>
-            <label className={fieldLabelClassName}>
-              <span className={fieldLabelTextClassName}>Time</span>
+            <label className={labelClass}>
+              <span className={labelTextClass}>
+                Preferred time{" "}
+                <span className="font-normal lowercase text-muted">(optional)</span>
+              </span>
               <select
-                className={`h-12 ${fieldControlClassName} disabled:cursor-not-allowed disabled:opacity-60`}
+                className={`${controlHeight} ${controlClass} disabled:cursor-not-allowed disabled:opacity-60`}
                 value={values.preferredTime}
                 onChange={(event) => updateScheduleTime(event.target.value)}
                 aria-label="Preferred time"
@@ -624,7 +633,7 @@ export function ContactForm({
                 <option value="">
                   {values.preferredDate
                     ? "Choose a time slot"
-                    : "Choose a date first"}
+                    : "Choose date first"}
                 </option>
                 {CONTACT_TIME_SLOTS.map((slot) => (
                   <option key={slot} value={slot}>
@@ -634,18 +643,18 @@ export function ContactForm({
               </select>
             </label>
           </div>
-          <p className="text-micro leading-relaxed text-muted">
-            {content.scheduleHelper}
+          <p className={`${compact ? "text-[10px] sm:text-[11px]" : "text-micro leading-relaxed"} text-muted`}>
+            Dhaka time · 30-minute slots. {content.scheduleHelper}
           </p>
-        </fieldset>
+        </div>
 
-        <label className={fieldLabelClassName}>
-          <span className={fieldLabelTextClassName}>
+        <label className={labelClass}>
+          <span className={labelTextClass}>
             Short message{" "}
-            <span className="font-normal text-muted">(optional)</span>
+            <span className="font-normal lowercase text-muted">(optional)</span>
           </span>
           <textarea
-            className={`min-h-[88px] ${fieldControlClassName} resize-y py-3`}
+            className={`${compact ? "min-h-[58px] sm:min-h-[62px]" : "min-h-[88px]"} ${controlClass} resize-y py-2`}
             maxLength={500}
             value={values.message}
             onChange={(event) => updateValue("message", event.target.value)}
@@ -654,7 +663,7 @@ export function ContactForm({
         </label>
       </div>
 
-      <div className="mt-auto pt-section-gap-lg">
+      <div className={compact ? "mt-3 pt-1" : "mt-auto pt-section-gap-lg"}>
         <div className="hidden" aria-hidden="true">
           <label>
             Website
@@ -662,7 +671,7 @@ export function ContactForm({
           </label>
         </div>
         <button
-          className="group mt-4 flex h-12 w-full items-center justify-between rounded-[14px] border border-accent bg-accent px-5 text-button font-strong text-white shadow-[0_8px_16px_rgba(222,77,115,0.18)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[#c53f62] hover:bg-[#c53f62] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-3 disabled:cursor-wait disabled:opacity-65"
+          className={`group flex ${compact ? "h-[42px] sm:h-11 rounded-[12px] text-[13px]" : "h-12 rounded-[14px] text-button"} w-full items-center justify-between border border-accent bg-accent px-5 font-strong text-white shadow-[0_8px_16px_rgba(222,77,115,0.18)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[#c53f62] hover:bg-[#c53f62] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-3 disabled:cursor-wait disabled:opacity-65`}
           type="submit"
           disabled={busy}
           aria-busy={busy}
@@ -681,10 +690,10 @@ export function ContactForm({
             {busy ? "…" : submitted ? "✓" : "↗"}
           </span>
         </button>
-        <p className="mt-cluster text-body-xs text-muted/70" aria-live="polite">
+        <p className={`mt-2 ${compact ? "text-[11px] text-muted" : "mt-cluster text-body-xs text-muted/70"}`} aria-live="polite">
           {submitted
             ? `${content.submittedNote} Reference: ${reference}`
-            : content.privacyNote}
+            : `🔒 ${content.privacyNote}`}
         </p>
       </div>
     </form>
@@ -849,16 +858,27 @@ export function ContactModal({
 
   useEffect(() => {
     if (!isOpen) return;
+    const scrollY = window.scrollY;
     const previousOverflow = document.body.style.overflow;
+    const previousPaddingRight = document.body.style.paddingRight;
+    const scrollbarWidth =
+      window.innerWidth - document.documentElement.clientWidth;
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
     document.body.style.overflow = "hidden";
-    closeButtonRef.current?.focus();
+    closeButtonRef.current?.focus({ preventScroll: true });
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setIsOpen(false);
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => {
       document.body.style.overflow = previousOverflow;
+      document.body.style.paddingRight = previousPaddingRight;
       document.removeEventListener("keydown", handleKeyDown);
+      if (typeof window !== "undefined" && window.scrollY !== scrollY) {
+        window.scrollTo({ top: scrollY, behavior: "instant" });
+      }
     };
   }, [isOpen]);
 
@@ -906,18 +926,20 @@ export function ContactModal({
             aria-label="Close contact form"
             onClick={() => setIsOpen(false)}
           />
-          <div className="relative flex min-h-dvh items-start justify-center overflow-y-auto px-3 py-3 sm:items-center sm:p-6">
+          <div className="relative flex min-h-dvh items-start justify-center overflow-y-auto px-3 py-3 sm:items-center sm:p-5">
             <div
-              className="relative z-10 my-auto max-h-[calc(100dvh-1.5rem)] w-full max-w-[760px] overflow-y-auto rounded-[26px] bg-page shadow-[0_24px_80px_rgba(20,19,28,0.22)]"
+              className="relative z-10 my-auto max-h-[calc(100dvh-1.5rem)] w-full max-w-[620px] overflow-y-auto rounded-[22px] bg-page shadow-[0_24px_80px_rgba(20,19,28,0.22)] sm:rounded-[26px]"
               role="dialog"
               aria-modal="true"
               aria-labelledby={`${modalId}-title`}
             >
-              <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-[#e2ddd4] bg-page/95 px-4 py-4 backdrop-blur sm:px-6">
+              <div className="sticky top-0 z-20 flex items-center justify-between border-b border-[#e5e0d7] bg-page/98 px-5 py-3.5 backdrop-blur sm:px-6">
                 <div>
-                  <p className="text-overline text-accent">LET’S TALK</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-accent">
+                    Let’s Talk
+                  </p>
                   <h2
-                    className="mt-1 font-brand text-subheading text-ink"
+                    className="mt-0.5 font-brand text-[19px] font-bold leading-tight text-ink sm:text-[21px]"
                     id={`${modalId}-title`}
                   >
                     Tell us what you need.
@@ -925,7 +947,7 @@ export function ContactModal({
                 </div>
                 <button
                   ref={closeButtonRef}
-                  className="grid size-10 shrink-0 place-items-center rounded-full border border-[#d5d0c8] bg-white text-[22px] leading-none text-ink transition-colors hover:border-accent hover:text-accent focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2"
+                  className="grid size-9 shrink-0 place-items-center rounded-full border border-[#d8d3c9] bg-white text-[20px] leading-none text-ink/75 transition-colors hover:border-accent hover:text-accent focus-visible:outline focus-visible:outline-[2px] focus-visible:outline-accent"
                   type="button"
                   aria-label="Close contact form"
                   onClick={() => setIsOpen(false)}
@@ -934,66 +956,70 @@ export function ContactModal({
                 </button>
               </div>
               <div
-                className="border-b border-[#e2ddd4] bg-[#f7f4ef] px-4 py-3 sm:px-6"
-                aria-label="Contact details"
+                className="flex flex-wrap items-center gap-x-3.5 gap-y-1 border-b border-[#eae6dd] bg-[#f9f7f2] px-5 py-2 text-[11px] text-[#4f4841] sm:px-6"
+                aria-label="Direct contact details"
               >
-                <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
-                  <div className="min-w-0">
-                    <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-[#9b6a76]">
-                      WhatsApp
+                <div className="inline-flex items-center gap-1.5">
+                  <span className="font-bold uppercase tracking-[0.08em] text-[#9b6a76]">
+                    WhatsApp
+                  </span>
+                  {whatsappUrl ? (
+                    <a
+                      className="font-medium text-[#2d2823] underline decoration-[#e5a9b6] underline-offset-2 transition-colors hover:text-accent"
+                      href={whatsappUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {whatsappDisplay}
+                    </a>
+                  ) : (
+                    <span className="font-medium text-[#2d2823]">
+                      {whatsappDisplay}
                     </span>
-                    {whatsappUrl ? (
-                      <a
-                        className="mt-1 block truncate text-[12px] font-semibold text-[#49313a] underline decoration-[#e5a9b6] underline-offset-2 transition-colors hover:text-accent"
-                        href={whatsappUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {whatsappDisplay}
-                      </a>
-                    ) : (
-                      <span className="mt-1 block truncate text-[12px] font-semibold text-[#49313a]">
-                        {whatsappDisplay}
-                      </span>
-                    )}
-                  </div>
-                  {phoneUrl ? (
-                    <div className="min-w-0">
-                      <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-[#9b6a76]">
-                        Phone
-                      </span>
-                      <a
-                        className="mt-1 block truncate text-[12px] font-semibold text-[#49313a] underline decoration-[#e5a9b6] underline-offset-2 transition-colors hover:text-accent"
-                        href={phoneUrl}
-                      >
-                        {phone}
-                      </a>
-                    </div>
-                  ) : null}
-                  {emailUrl ? (
-                    <div className="min-w-0">
-                      <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-[#9b6a76]">
-                        Email
-                      </span>
-                      <a
-                        className="mt-1 block truncate text-[12px] font-semibold text-[#49313a] underline decoration-[#e5a9b6] underline-offset-2 transition-colors hover:text-accent"
-                        href={emailUrl}
-                      >
-                        {email}
-                      </a>
-                    </div>
-                  ) : null}
-                  {address ? (
-                    <div className="col-span-2 min-w-0 sm:col-span-1">
-                      <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-[#9b6a76]">
-                        Address
-                      </span>
-                      <address className="mt-1 max-h-9 overflow-hidden whitespace-pre-line break-words text-[12px] font-semibold not-italic leading-[1.35] text-[#49313a]">
-                        {address}
-                      </address>
-                    </div>
-                  ) : null}
+                  )}
                 </div>
+                {phoneUrl ? (
+                  <div className="inline-flex items-center gap-1.5">
+                    <span className="text-[#cbc5ba]">·</span>
+                    <span className="font-bold uppercase tracking-[0.08em] text-[#9b6a76]">
+                      Phone
+                    </span>
+                    <a
+                      className="font-medium text-[#2d2823] underline decoration-[#e5a9b6] underline-offset-2 transition-colors hover:text-accent"
+                      href={phoneUrl}
+                    >
+                      {phone}
+                    </a>
+                  </div>
+                ) : null}
+                {emailUrl ? (
+                  <div className="inline-flex items-center gap-1.5">
+                    <span className="text-[#cbc5ba]">·</span>
+                    <span className="font-bold uppercase tracking-[0.08em] text-[#9b6a76]">
+                      Email
+                    </span>
+                    <a
+                      className="font-medium text-[#2d2823] underline decoration-[#e5a9b6] underline-offset-2 transition-colors hover:text-accent"
+                      href={emailUrl}
+                    >
+                      {email}
+                    </a>
+                  </div>
+                ) : null}
+                {address ? (
+                  <div className="inline-flex items-center gap-1.5">
+                    <span className="text-[#cbc5ba]">·</span>
+                    <span className="font-bold uppercase tracking-[0.08em] text-[#9b6a76]">
+                      Office
+                    </span>
+                    <span
+                      className="max-w-[200px] truncate font-medium text-[#2d2823] sm:max-w-[240px]"
+                      title={address}
+                    >
+                      {address.replace(/\n/g, ", ")}
+                    </span>
+                  </div>
+                ) : null}
               </div>
               <ContactForm
                 content={content}
