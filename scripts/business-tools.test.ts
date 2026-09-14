@@ -1574,7 +1574,6 @@ test("service page related options are dynamic with title, subtitle, icon, focus
   // 1. service-page-sections.tsx renders Section Title, Subtitle, ServiceIcon, and clean focused button
   assert.match(serviceSectionsTsx, /relatedOptionsTitle/);
   assert.match(serviceSectionsTsx, /relatedOptionsDescription/);
-  assert.match(serviceSectionsTsx, /<ServiceIcon name=\{iconName\}/);
   assert.match(serviceSectionsTsx, /<ServiceIcon\s+name=\{iconName\}/);
   assert.match(serviceSectionsTsx, /group-hover:translate-x-1/);
 
@@ -1861,7 +1860,7 @@ test("contact modal prevents page scroll-up on open and keeps all form fields in
   assert.match(contactSectionTsx, /content\.privacyNote/);
 });
 
-test("blog listing has editorial cards, pagination engine, attached services badges, and no wireframe labels", async () => {
+test("blog listing has editorial cards with blended page background, stroke separation, no service chips, and pagination", async () => {
   const fs = await import("node:fs/promises");
   const blogSectionsTsx = await fs.readFile(
     new URL("../src/components/limex/blog-sections.tsx", import.meta.url),
@@ -1874,9 +1873,9 @@ test("blog listing has editorial cards, pagination engine, attached services bad
   assert.match(blogSectionsTsx, /aria-label="Blog pagination"/);
   assert.match(blogSectionsTsx, /getPageNumbers/);
 
-  // 2. Attached services rendered on cards
-  assert.match(blogSectionsTsx, /article\.relatedServices\?\.length/);
-  assert.match(blogSectionsTsx, /Services:/);
+  // 2. Cards blend with page background separated by stroke only, no service chip clutter
+  assert.match(blogSectionsTsx, /border-\[#d8d3c7\]\s+bg-page/);
+  assert.doesNotMatch(blogSectionsTsx, /Services:/);
 
   // 3. No wireframe "COVER SLOT" or "IMAGE PLACEHOLDER" text
   assert.doesNotMatch(blogSectionsTsx, /COVER SLOT/);

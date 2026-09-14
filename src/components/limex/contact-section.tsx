@@ -924,43 +924,6 @@ export function ContactModal({
           {buttonLabel}
         </ActionButton>
       ) : null}
-      {isOpen ? (
-        <div className="fixed inset-0 z-[100]" role="presentation">
-          <button
-            className="absolute inset-0 size-full cursor-default bg-[#071b3d]/45 backdrop-blur-[3px]"
-            type="button"
-            aria-label="Close contact form"
-            onClick={() => setIsOpen(false)}
-          />
-          <div className="relative flex min-h-dvh items-start justify-center overflow-y-auto px-3 py-3 sm:items-center sm:p-5">
-            <div
-              className="relative z-10 my-auto max-h-[calc(100dvh-1.5rem)] w-full max-w-[620px] overflow-y-auto rounded-[22px] bg-page shadow-[0_24px_80px_rgba(20,19,28,0.22)] sm:rounded-[26px]"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby={`${modalId}-title`}
-            >
-              <div className="sticky top-0 z-20 flex items-center justify-between border-b border-[#e5e0d7] bg-page/98 px-5 py-3.5 backdrop-blur sm:px-6">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-accent">
-                    Let’s Talk
-                  </p>
-                  <h2
-                    className="mt-0.5 font-brand text-[19px] font-bold leading-tight text-ink sm:text-[21px]"
-                    id={`${modalId}-title`}
-                  >
-                    Tell us what you need.
-                  </h2>
-                </div>
-                <button
-                  ref={closeButtonRef}
-                  className="grid size-9 shrink-0 place-items-center rounded-full border border-[#d8d3c9] bg-white text-[20px] leading-none text-ink/75 transition-colors hover:border-accent hover:text-accent focus-visible:outline focus-visible:outline-[2px] focus-visible:outline-accent"
-                  type="button"
-                  aria-label="Close contact form"
-                  onClick={() => setIsOpen(false)}
-                >
-                  ×
-                </button>
-              </div>
       {isOpen && mounted && typeof document !== "undefined"
         ? createPortal(
             <div className="fixed inset-0 z-[100]" role="presentation">
@@ -971,21 +934,9 @@ export function ContactModal({
                 onClick={() => setIsOpen(false)}
               />
               <div
-                className="flex flex-wrap items-center gap-x-3.5 gap-y-1 border-b border-[#eae6dd] bg-[#f9f7f2] px-5 py-2 text-[11px] text-[#4f4841] sm:px-6"
-                aria-label="Direct contact details"
                 className="relative flex min-h-dvh items-start justify-center overflow-y-auto px-3 py-3 sm:items-center sm:p-5"
                 data-lenis-prevent
               >
-                <div className="inline-flex items-center gap-1.5">
-                  <span className="font-bold uppercase tracking-[0.08em] text-[#9b6a76]">
-                    WhatsApp
-                  </span>
-                  {whatsappUrl ? (
-                    <a
-                      className="font-medium text-[#2d2823] underline decoration-[#e5a9b6] underline-offset-2 transition-colors hover:text-accent"
-                      href={whatsappUrl}
-                      target="_blank"
-                      rel="noreferrer"
                 <div
                   className="relative z-10 my-auto max-h-[calc(100dvh-1.5rem)] w-full max-w-[620px] overflow-y-auto rounded-[22px] bg-page shadow-[0_24px_80px_rgba(20,19,28,0.22)] sm:rounded-[26px]"
                   role="dialog"
@@ -1012,42 +963,9 @@ export function ContactModal({
                       aria-label="Close contact form"
                       onClick={() => setIsOpen(false)}
                     >
-                      {whatsappDisplay}
-                    </a>
-                  ) : (
-                    <span className="font-medium text-[#2d2823]">
-                      {whatsappDisplay}
-                    </span>
-                  )}
-                </div>
-                {phoneUrl ? (
-                  <div className="inline-flex items-center gap-1.5">
-                    <span className="text-[#cbc5ba]">·</span>
-                    <span className="font-bold uppercase tracking-[0.08em] text-[#9b6a76]">
-                      Phone
-                    </span>
-                    <a
-                      className="font-medium text-[#2d2823] underline decoration-[#e5a9b6] underline-offset-2 transition-colors hover:text-accent"
-                      href={phoneUrl}
-                    >
-                      {phone}
-                    </a>
                       ×
                     </button>
                   </div>
-                ) : null}
-                {emailUrl ? (
-                  <div className="inline-flex items-center gap-1.5">
-                    <span className="text-[#cbc5ba]">·</span>
-                    <span className="font-bold uppercase tracking-[0.08em] text-[#9b6a76]">
-                      Email
-                    </span>
-                    <a
-                      className="font-medium text-[#2d2823] underline decoration-[#e5a9b6] underline-offset-2 transition-colors hover:text-accent"
-                      href={emailUrl}
-                    >
-                      {email}
-                    </a>
                   <div
                     className="flex flex-wrap items-center gap-x-3.5 gap-y-1 border-b border-[#eae6dd] bg-[#f9f7f2] px-5 py-2 text-[11px] text-[#4f4841] sm:px-6"
                     aria-label="Direct contact details"
@@ -1114,21 +1032,6 @@ export function ContactModal({
                       </div>
                     ) : null}
                   </div>
-                ) : null}
-                {address ? (
-                  <div className="inline-flex items-center gap-1.5">
-                    <span className="text-[#cbc5ba]">·</span>
-                    <span className="font-bold uppercase tracking-[0.08em] text-[#9b6a76]">
-                      Office
-                    </span>
-                    <span
-                      className="max-w-[200px] truncate font-medium text-[#2d2823] sm:max-w-[240px]"
-                      title={address}
-                    >
-                      {address.replace(/\n/g, ", ")}
-                    </span>
-                  </div>
-                ) : null}
                   <ContactForm
                     content={content}
                     compact
@@ -1139,18 +1042,6 @@ export function ContactModal({
                   />
                 </div>
               </div>
-              <ContactForm
-                content={content}
-                compact
-                formId={`${modalId}-form`}
-                initialService={serviceKey}
-                initialMessage={initialMessage}
-                source={resolvedSource}
-              />
-            </div>
-          </div>
-        </div>
-      ) : null}
             </div>,
             document.body,
           )

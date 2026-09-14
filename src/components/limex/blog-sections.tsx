@@ -72,7 +72,7 @@ function BlogCover({
   const coverWidthClass = isThumb
     ? ""
     : isCard
-      ? "w-[96px] shrink-0 sm:w-full"
+      ? "w-full"
       : isRelated
         ? "w-[96px] shrink-0 sm:w-[120px] lg:w-full"
         : "w-full";
@@ -83,10 +83,10 @@ function BlogCover({
       : isThumb
         ? "size-20 rounded-[16px]"
         : isRelated
-          ? "aspect-square rounded-l-[22px] lg:aspect-[852/430] lg:rounded-l-none lg:rounded-t-[22px]"
+          ? "aspect-square rounded-l-[20px] lg:aspect-[852/430] lg:rounded-l-none lg:rounded-t-[20px] lg:border-b lg:border-[#d8d3c7]"
           : isCard
-            ? "aspect-square rounded-l-[22px] sm:aspect-[852/430] sm:rounded-l-none sm:rounded-t-[22px]"
-            : "aspect-[852/430] rounded-t-[22px]";
+            ? "aspect-[16/10] sm:aspect-[852/430] w-full border-b border-[#d8d3c7]"
+            : "aspect-[852/430] rounded-t-[20px] border-b border-[#d8d3c7]";
   const paperClass = isThumb
     ? "left-8 top-[31px] h-[42px] w-[34px] rounded-[8px]"
     : isHero
@@ -218,50 +218,33 @@ function BlogArticleCard({
 }) {
   return (
     <a
-      className="group flex h-full min-h-0 flex-col overflow-hidden rounded-[20px] border border-[#e2dcd1] bg-white shadow-[0_2px_10px_rgba(20,19,28,0.03)] transition-all duration-300 hover:-translate-y-1 hover:border-[#cfc8bc] hover:shadow-[0_16px_36px_rgba(20,19,28,0.08)] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3"
+      className="group flex h-full min-h-0 flex-col overflow-hidden rounded-[20px] border border-[#d8d3c7] bg-page transition-all duration-200 hover:-translate-y-0.5 hover:border-[#0055ff]/50 hover:bg-[#eae6de]/25 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3"
       href={blogHref(article.slug, locale)}
     >
       <BlogCover article={article} />
       <div className="flex min-w-0 min-h-0 flex-1 flex-col p-4 sm:p-5">
         <div className="flex items-center justify-between gap-2 text-[11px] font-semibold text-muted">
-          <span className="font-bold uppercase tracking-[0.08em] text-pink">
+          <span className="font-bold uppercase tracking-[0.14em] text-pink">
             {categoryLabel(article.category)}
           </span>
-          <span>{article.readTime}</span>
+          <span className="text-[11.5px] font-medium text-muted/75">
+            {article.readTime}
+          </span>
         </div>
 
-        <h3 className="mt-2.5 line-clamp-2 font-brand text-[17px] font-bold leading-[1.25] tracking-[-0.02em] text-ink transition-colors group-hover:text-pink sm:text-[18px]">
+        <h3 className="mt-2.5 line-clamp-2 font-brand text-[17px] font-bold leading-[1.25] tracking-[-0.025em] text-ink transition-colors duration-200 group-hover:text-pink sm:text-[18px]">
           {article.title}
         </h3>
 
-        <p className="mt-2 line-clamp-2 text-[13px] leading-[1.5] text-muted sm:text-[13.5px]">
+        <p className="mt-2 line-clamp-2 text-[13px] leading-[1.55] text-muted/90 sm:text-[13.5px]">
           {article.summary}
         </p>
 
-        {article.relatedServices?.length ? (
-          <div className="mt-3 flex flex-wrap items-center gap-1.5 pt-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-muted/75">
-              Services:
-            </span>
-            {article.relatedServices.slice(0, 2).map((service) => (
-              <span
-                key={service.serviceKey}
-                className="inline-flex items-center rounded-full border border-[#ded8ce] bg-[#f8f6f1] px-2 py-0.5 text-[10px] font-medium text-[#423c35]"
-              >
-                {service.label}
-              </span>
-            ))}
-            {article.relatedServices.length > 2 ? (
-              <span className="text-[10px] font-semibold text-muted">
-                +{article.relatedServices.length - 2}
-              </span>
-            ) : null}
-          </div>
-        ) : null}
-
-        <div className="mt-auto flex items-center justify-between gap-2 pt-4 border-t border-[#f0ece5] text-xs font-semibold">
-          <span className="text-muted/80">{article.date}</span>
-          <span className="inline-flex items-center gap-1 text-pink transition-transform duration-200 group-hover:translate-x-0.5">
+        <div className="mt-auto flex items-center justify-between gap-2 pt-4 border-t border-[#d8d3c7] text-xs font-semibold">
+          <span className="text-[11.5px] font-medium text-muted/75">
+            {article.date}
+          </span>
+          <span className="inline-flex items-center gap-1 text-pink transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
             <span>Read guide</span>
             <span aria-hidden="true">↗</span>
           </span>
@@ -280,22 +263,22 @@ export function BlogRelatedArticleCard({
 }) {
   return (
     <a
-      className="group flex h-full min-h-0 flex-row overflow-hidden rounded-[20px] border border-[#e5e0d6] bg-white shadow-[0_2px_12px_rgba(7,20,46,0.03)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(7,20,46,0.08)] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3 sm:rounded-[22px] lg:flex-col"
+      className="group flex h-full min-h-0 flex-row overflow-hidden rounded-[20px] border border-[#d8d3c7] bg-page transition-all duration-200 hover:-translate-y-0.5 hover:border-[#0055ff]/50 hover:bg-[#eae6de]/25 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3 sm:rounded-[22px] lg:flex-col"
       href={blogHref(article.slug, locale)}
     >
       <BlogCover article={article} variant="related" />
       <div className="flex min-w-0 min-h-0 flex-1 flex-col gap-1.5 overflow-hidden p-3.5 sm:gap-2 sm:p-5 lg:gap-cluster-xs lg:p-card-pad">
-        <p className="line-clamp-1 text-[10px] font-bold uppercase tracking-[0.1em] text-pink lg:text-overline">
+        <p className="line-clamp-1 text-[10px] font-bold uppercase tracking-[0.14em] text-pink lg:text-overline">
           {categoryLabel(article.category)} <span className="px-1">·</span>{" "}
           {article.date}
         </p>
-        <h3 className="line-clamp-2 font-brand text-[15px] font-bold leading-[1.25] tracking-[-0.02em] text-ink transition-colors group-hover:text-pink sm:text-[16px] sm:text-subheading">
+        <h3 className="line-clamp-2 font-brand text-[15px] font-bold leading-[1.25] tracking-[-0.02em] text-ink transition-colors duration-200 group-hover:text-pink sm:text-[16px] sm:text-subheading">
           {article.title}
         </h3>
-        <p className="line-clamp-2 text-[12px] leading-[1.5] text-muted sm:text-[13px] lg:line-clamp-3 lg:text-body-sm">
+        <p className="line-clamp-2 text-[12px] leading-[1.55] text-muted sm:text-[13px] lg:line-clamp-3 lg:text-body-sm">
           {article.summary}
         </p>
-        <span className="mt-auto pt-1.5 text-[12px] font-semibold text-pink transition-transform duration-200 group-hover:translate-x-0.5 sm:pt-2 sm:text-[13px] lg:text-body-xs">
+        <span className="mt-auto pt-1.5 text-[12px] font-semibold text-pink transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 sm:pt-2 sm:text-[13px] lg:text-body-xs">
           Read more <span aria-hidden="true">↗</span>
         </span>
       </div>
