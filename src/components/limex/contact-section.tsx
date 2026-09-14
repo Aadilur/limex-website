@@ -60,7 +60,6 @@ const fieldControlClassName =
 const compactFieldControlClassName =
   "w-full min-w-0 rounded-[12px] border border-[#cfcac0] bg-white px-3 text-[13px] text-[#172019] shadow-[0_1px_2px_rgba(54,54,49,0.04)] outline-none placeholder:text-[#88837a] transition-colors hover:border-[#a09a8f] focus:border-accent focus:ring-2 focus:ring-accent/15";
 
-
 function getServiceGroups(menuNavigation: NavItem[]): ServiceGroup[] {
   return menuNavigation
     .filter((item) => item.megaGroups?.length)
@@ -215,7 +214,11 @@ function ServiceMultiSelect({
           className={`${compact ? "size-4" : "size-5"} shrink-0 text-[#65665f] transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`.trim()}
         />
       </button>
-      <p className={`mt-1 text-muted ${compact ? "text-[10px] sm:text-[11px]" : "text-micro"}`}>{helperText}</p>
+      <p
+        className={`mt-1 text-muted ${compact ? "text-[10px] sm:text-[11px]" : "text-micro"}`}
+      >
+        {helperText}
+      </p>
 
       {isOpen ? (
         <div
@@ -590,7 +593,10 @@ export function ContactForm({
             />
           </label>
         </div>
-        <p className={`-mt-1 ${compact ? "text-[10px] sm:text-[11px]" : "text-micro"} text-muted`} id={contactMethodHelpId}>
+        <p
+          className={`-mt-1 ${compact ? "text-[10px] sm:text-[11px]" : "text-micro"} text-muted`}
+          id={contactMethodHelpId}
+        >
           {content.contactMethodHelper}
         </p>
         {formError ? (
@@ -607,7 +613,9 @@ export function ContactForm({
             <label className={labelClass}>
               <span className={labelTextClass}>
                 Preferred date{" "}
-                <span className="font-normal lowercase text-muted">(optional)</span>
+                <span className="font-normal lowercase text-muted">
+                  (optional)
+                </span>
               </span>
               <input
                 className={`${controlHeight} ${controlClass}`}
@@ -622,7 +630,9 @@ export function ContactForm({
             <label className={labelClass}>
               <span className={labelTextClass}>
                 Preferred time{" "}
-                <span className="font-normal lowercase text-muted">(optional)</span>
+                <span className="font-normal lowercase text-muted">
+                  (optional)
+                </span>
               </span>
               <select
                 className={`${controlHeight} ${controlClass} disabled:cursor-not-allowed disabled:opacity-60`}
@@ -644,7 +654,9 @@ export function ContactForm({
               </select>
             </label>
           </div>
-          <p className={`${compact ? "text-[10px] sm:text-[11px]" : "text-micro leading-relaxed"} text-muted`}>
+          <p
+            className={`${compact ? "text-[10px] sm:text-[11px]" : "text-micro leading-relaxed"} text-muted`}
+          >
             Dhaka time · 30-minute slots. {content.scheduleHelper}
           </p>
         </div>
@@ -691,7 +703,10 @@ export function ContactForm({
             {busy ? "…" : submitted ? "✓" : "↗"}
           </span>
         </button>
-        <p className={`mt-2 ${compact ? "text-[11px] text-muted" : "mt-cluster text-body-xs text-muted/70"}`} aria-live="polite">
+        <p
+          className={`mt-2 ${compact ? "text-[11px] text-muted" : "mt-cluster text-body-xs text-muted/70"}`}
+          aria-live="polite"
+        >
           {submitted
             ? `${content.submittedNote} Reference: ${reference}`
             : `🔒 ${content.privacyNote}`}

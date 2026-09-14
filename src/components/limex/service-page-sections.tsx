@@ -15,8 +15,6 @@ import { ToolWorkspace } from "./tool-workspace";
 import { ActionButton, Breadcrumbs, WaveLabel } from "./ui";
 import { blogRichTextClass } from "./blog-rich-text";
 import { SanitizedRichText } from "./sanitized-rich-text";
-import { ServiceIcon } from "./service-icons";
-import { serviceIconNames, type ServiceIconName } from "./data";
 
 function externalLinkProps(href: string) {
   return /^https?:\/\//i.test(href)
@@ -36,61 +34,6 @@ function serviceWhatsAppUrl(
   } catch {
     return contact.whatsappUrl;
   }
-}
-
-function resolveRelatedOptionIcon(
-  option: ServiceRelatedOption,
-  index: number,
-): ServiceIconName {
-  const explicit = option.icon?.trim();
-  if (
-    explicit &&
-    explicit !== "briefcase" &&
-    serviceIconNames.includes(explicit as ServiceIconName)
-  ) {
-    return explicit as ServiceIconName;
-  }
-
-  const text =
-    `${option.title} ${option.href} ${option.description || ""} ${option.badge || ""}`.toLowerCase();
-
-  if (/copyright|creative|software|code/i.test(text)) return "copyright";
-  if (/trademark|brand|logo|wordmark|tagline/i.test(text)) return "trademark";
-  if (/patent|design|invention|idea|dpdt/i.test(text)) return "lightbulb";
-  if (/trade\s*license|municipality|license|permit/i.test(text))
-    return "license";
-  if (/tax|vat|tin|bin|return|nbr|income|assessment/i.test(text)) return "tax";
-  if (/company|incorporation|formation|rjsc|limited|ltd|enterprise/i.test(text))
-    return "building";
-  if (/contract|agreement|deed|partnership|lease|mou/i.test(text))
-    return "contract";
-  if (/compliance|audit|clearance|security|protection/i.test(text))
-    return "shield-check";
-  if (/certificate|attestation|accreditation/i.test(text))
-    return "certificate-2";
-  if (/money|fund|financial|investment|capital|bank/i.test(text))
-    return "report-money";
-  if (/calculator|calculation|estimate/i.test(text)) return "calculator";
-  if (/checklist|requirement|guideline/i.test(text)) return "checklist";
-  if (/export|import|global|cross-border/i.test(text)) return "world";
-  if (/factory|industry|manufacturing/i.test(text)) return "factory";
-  if (/people|partner|shareholder|director|team/i.test(text))
-    return "users-group";
-
-  const distinctPool: ServiceIconName[] = [
-    "building",
-    "license",
-    "tax",
-    "shield-check",
-    "contract",
-    "lightbulb",
-    "certificate-2",
-    "report-money",
-    "checklist",
-    "package",
-    "world",
-  ];
-  return distinctPool[index % distinctPool.length] ?? "briefcase";
 }
 
 const serviceUi = {
@@ -615,7 +558,6 @@ export function ServiceOverviewSection({
 
           <div className="mt-6 grid gap-3.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
             {resolvedRelatedOptions.map((option, idx) => {
-              const iconName = resolveRelatedOptionIcon(option, idx);
               const actionText = option.actionLabel?.trim() || ui.exploreOption;
 
               return (
@@ -626,23 +568,22 @@ export function ServiceOverviewSection({
                   {...externalLinkProps(option.href)}
                 >
                   <div>
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="grid size-9.5 place-items-center rounded-[12px] border border-[#dcd7cc] bg-page text-[#0055ff] transition-colors group-hover:border-[#0055ff]/40 group-hover:bg-[#0055ff]/5 sm:size-10">
-                        <ServiceIcon
-                          name={iconName}
-                          className="size-4.5 sm:size-5"
-                        />
-                      </div>
+                    <div className="flex items-start justify-between gap-3">
+                      <h4 className="flex min-w-0 items-start gap-2.5 font-brand text-[15px] font-bold leading-snug text-ink transition-colors group-hover:text-[#0055ff] sm:text-[16px]">
+                        <span
+                          className="mt-0.5 inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-[#0055ff]/10 text-[11px] font-bold tabular-nums text-[#0055ff] transition-colors group-hover:bg-[#0055ff]/15"
+                          aria-hidden="true"
+                        >
+                          {idx + 1}
+                        </span>
+                        <span>{option.title}</span>
+                      </h4>
                       {option.badge ? (
                         <span className="rounded-full border border-[#dcd7cc] bg-page/90 px-2.5 py-0.5 text-[10px] font-semibold text-muted sm:text-[11px]">
                           {option.badge}
                         </span>
                       ) : null}
                     </div>
-
-                    <h4 className="mt-3 font-brand text-[15px] font-bold leading-snug text-ink transition-colors group-hover:text-[#0055ff] sm:text-[16px]">
-                      {option.title}
-                    </h4>
 
                     {option.description ? (
                       <p className="mt-1.5 line-clamp-2 text-[12px] leading-relaxed text-muted sm:text-[12.5px]">
@@ -651,8 +592,8 @@ export function ServiceOverviewSection({
                     ) : null}
                   </div>
 
-                  <div className="mt-4 border-t border-[#ded8ce]/70 pt-3">
-                    <span className="inline-flex h-[34px] w-full items-center justify-between rounded-full border border-[#d8d3c7] bg-white/90 px-3.5 text-[11px] font-semibold text-ink transition-all group-hover:border-[#0055ff] group-hover:bg-[#0055ff] group-hover:text-white sm:text-xs">
+                  <div className="mt-4 pt-1">
+                    <span className="inline-flex w-fit items-center gap-1.5 px-0 text-[11px] font-semibold text-ink transition-colors group-hover:text-[#0055ff] sm:text-xs">
                       <span>{actionText}</span>
                       <span
                         className="text-[13px] transition-transform duration-200 group-hover:translate-x-1"
