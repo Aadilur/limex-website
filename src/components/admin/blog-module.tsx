@@ -534,7 +534,11 @@ function BlogDeleteModal({
             htmlFor="delete-blog-confirmation"
             className="block text-[11px] font-bold text-[#423d38]"
           >
-            Type <code className="rounded bg-[#f4eee8] px-1.5 py-0.5 font-mono text-[11px] text-[#071b3d]">delete</code> to confirm
+            Type{" "}
+            <code className="rounded bg-[#f4eee8] px-1.5 py-0.5 font-mono text-[11px] text-[#071b3d]">
+              delete
+            </code>{" "}
+            to confirm
           </label>
           <input
             id="delete-blog-confirmation"
@@ -579,7 +583,9 @@ export function BlogListModule() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<DeleteBlogTarget | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<DeleteBlogTarget | null>(
+    null,
+  );
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const reorderEnabled = !query.trim() && !status;
@@ -708,7 +714,11 @@ export function BlogListModule() {
 
   function requestDelete(item: AdminBlogSummary) {
     if (deletingId) return;
-    setDeleteTarget({ title: item.title, slug: item.slug, revision: item.revision });
+    setDeleteTarget({
+      title: item.title,
+      slug: item.slug,
+      revision: item.revision,
+    });
     setDeleteConfirmation("");
     setNotice("");
     setError("");
@@ -722,7 +732,12 @@ export function BlogListModule() {
 
   async function deleteArticle() {
     const target = deleteTarget;
-    if (!target || deleteConfirmation.trim().toLowerCase() !== "delete" || deletingId) return;
+    if (
+      !target ||
+      deleteConfirmation.trim().toLowerCase() !== "delete" ||
+      deletingId
+    )
+      return;
     const item = items.find((candidate) => candidate.slug === target.slug);
     if (!item) {
       setDeleteTarget(null);
@@ -734,18 +749,27 @@ export function BlogListModule() {
     setError("");
     try {
       await deleteAdminBlogPost(item.id, target.revision);
-      setItems((current) => current.filter((candidate) => candidate.id !== item.id));
+      setItems((current) =>
+        current.filter((candidate) => candidate.id !== item.id),
+      );
       setDeleteTarget(null);
       setDeleteConfirmation("");
       setNotice("Article deleted permanently.");
     } catch (deleteError) {
-      if (isUnauthorizedBlogError(deleteError) || isUnauthorizedError(deleteError)) {
+      if (
+        isUnauthorizedBlogError(deleteError) ||
+        isUnauthorizedError(deleteError)
+      ) {
         window.location.assign("/admin/login");
         return;
       }
       setDeleteTarget(null);
       setDeleteConfirmation("");
-      setError(deleteError instanceof Error ? deleteError.message : "Unable to delete this article.");
+      setError(
+        deleteError instanceof Error
+          ? deleteError.message
+          : "Unable to delete this article.",
+      );
       if (isBlogConflictError(deleteError)) void load();
     } finally {
       setDeletingId(null);
@@ -1026,7 +1050,9 @@ function BlogServiceConnectionPanel({
   }
 
   function removeService(serviceKey: string) {
-    const remaining = draft.services.filter((item) => item.serviceKey !== serviceKey);
+    const remaining = draft.services.filter(
+      (item) => item.serviceKey !== serviceKey,
+    );
     const primaryKey =
       remaining.find((item) => item.isPrimary)?.serviceKey ??
       remaining[0]?.serviceKey;
@@ -1387,7 +1413,9 @@ export function BlogEditorModule({ id }: { id: string }) {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [revisions, setRevisions] = useState<BlogRevision[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<DeleteBlogTarget | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<DeleteBlogTarget | null>(
+    null,
+  );
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [deleting, setDeleting] = useState(false);
 
@@ -1569,20 +1597,33 @@ export function BlogEditorModule({ id }: { id: string }) {
 
   async function deleteArticle() {
     const target = deleteTarget;
-    if (!post || !target || deleteConfirmation.trim().toLowerCase() !== "delete" || deleting) return;
+    if (
+      !post ||
+      !target ||
+      deleteConfirmation.trim().toLowerCase() !== "delete" ||
+      deleting
+    )
+      return;
     setDeleting(true);
     setError("");
     try {
       await deleteAdminBlogPost(post.id, target.revision);
       window.location.assign("/admin/blog");
     } catch (deleteError) {
-      if (isUnauthorizedBlogError(deleteError) || isUnauthorizedError(deleteError)) {
+      if (
+        isUnauthorizedBlogError(deleteError) ||
+        isUnauthorizedError(deleteError)
+      ) {
         window.location.assign("/admin/login");
         return;
       }
       setDeleteTarget(null);
       setDeleteConfirmation("");
-      setError(deleteError instanceof Error ? deleteError.message : "Unable to delete this article.");
+      setError(
+        deleteError instanceof Error
+          ? deleteError.message
+          : "Unable to delete this article.",
+      );
     } finally {
       setDeleting(false);
     }

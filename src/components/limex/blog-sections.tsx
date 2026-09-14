@@ -566,8 +566,9 @@ export function BlogIndexContent({
         >
           {totalArticles > 0 ? (
             <>
-              Showing {startIndex + 1}–{Math.min(startIndex + pageSize, totalArticles)} of {totalArticles}{" "}
-              {totalArticles === 1 ? "guide" : "guides"}
+              Showing {startIndex + 1}–
+              {Math.min(startIndex + pageSize, totalArticles)} of{" "}
+              {totalArticles} {totalArticles === 1 ? "guide" : "guides"}
             </>
           ) : (
             "Showing 0 guides"

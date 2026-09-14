@@ -1574,7 +1574,7 @@ test("service page related options are dynamic with title, subtitle, icon, focus
   // 1. service-page-sections.tsx renders Section Title, Subtitle, ServiceIcon, and clean focused button
   assert.match(serviceSectionsTsx, /relatedOptionsTitle/);
   assert.match(serviceSectionsTsx, /relatedOptionsDescription/);
-  assert.match(serviceSectionsTsx, /<ServiceIcon name=\{iconName\}/);
+  assert.match(serviceSectionsTsx, /<ServiceIcon\s+name=\{iconName\}/);
   assert.match(serviceSectionsTsx, /group-hover:translate-x-1/);
 
   // 2. admin module contains dedicated Related options disclosure with full item fields
@@ -1829,7 +1829,11 @@ test("contact modal prevents page scroll-up on open and keeps all form fields in
   assert.match(contactSectionTsx, /const scrollY = window\.scrollY/);
   assert.match(contactSectionTsx, /window\.scrollTo\(\{\s*top:\s*scrollY/);
 
-  // 2. Compact modal container styling
+  // 2. Uses createPortal to document.body so modals are never trapped by parent containing blocks
+  assert.match(contactSectionTsx, /createPortal/);
+  assert.match(contactSectionTsx, /createPortal\([\s\S]*document\.body/);
+
+  // 3. Compact modal container styling
   assert.match(contactSectionTsx, /max-w-\[620px\]/);
   assert.match(contactSectionTsx, /rounded-\[22px\]/);
 
@@ -1881,11 +1885,17 @@ test("blog listing has editorial cards, pagination engine, attached services bad
 test("service page related options are compact and use intelligent contextual icon resolution", async () => {
   const fs = await import("node:fs/promises");
   const servicePageSectionsTsx = await fs.readFile(
-    new URL("../src/components/limex/service-page-sections.tsx", import.meta.url),
+    new URL(
+      "../src/components/limex/service-page-sections.tsx",
+      import.meta.url,
+    ),
     "utf8",
   );
   const servicePagesModuleTsx = await fs.readFile(
-    new URL("../src/components/admin/service-pages-module.tsx", import.meta.url),
+    new URL(
+      "../src/components/admin/service-pages-module.tsx",
+      import.meta.url,
+    ),
     "utf8",
   );
 
@@ -1921,4 +1931,3 @@ test("blog admin supports searchable service catalog, reordering, custom service
   // 2. Tab displays dynamic counter
   assert.match(blogModuleTsx, /Services \(\$\{draft\.services\.length\}\)/);
 });
-

@@ -51,23 +51,31 @@ function resolveRelatedOptionIcon(
     return explicit as ServiceIconName;
   }
 
-  const text = `${option.title} ${option.href} ${option.description || ""} ${option.badge || ""}`.toLowerCase();
+  const text =
+    `${option.title} ${option.href} ${option.description || ""} ${option.badge || ""}`.toLowerCase();
 
   if (/copyright|creative|software|code/i.test(text)) return "copyright";
   if (/trademark|brand|logo|wordmark|tagline/i.test(text)) return "trademark";
   if (/patent|design|invention|idea|dpdt/i.test(text)) return "lightbulb";
-  if (/trade\s*license|municipality|license|permit/i.test(text)) return "license";
+  if (/trade\s*license|municipality|license|permit/i.test(text))
+    return "license";
   if (/tax|vat|tin|bin|return|nbr|income|assessment/i.test(text)) return "tax";
-  if (/company|incorporation|formation|rjsc|limited|ltd|enterprise/i.test(text)) return "building";
-  if (/contract|agreement|deed|partnership|lease|mou/i.test(text)) return "contract";
-  if (/compliance|audit|clearance|security|protection/i.test(text)) return "shield-check";
-  if (/certificate|attestation|accreditation/i.test(text)) return "certificate-2";
-  if (/money|fund|financial|investment|capital|bank/i.test(text)) return "report-money";
+  if (/company|incorporation|formation|rjsc|limited|ltd|enterprise/i.test(text))
+    return "building";
+  if (/contract|agreement|deed|partnership|lease|mou/i.test(text))
+    return "contract";
+  if (/compliance|audit|clearance|security|protection/i.test(text))
+    return "shield-check";
+  if (/certificate|attestation|accreditation/i.test(text))
+    return "certificate-2";
+  if (/money|fund|financial|investment|capital|bank/i.test(text))
+    return "report-money";
   if (/calculator|calculation|estimate/i.test(text)) return "calculator";
   if (/checklist|requirement|guideline/i.test(text)) return "checklist";
   if (/export|import|global|cross-border/i.test(text)) return "world";
   if (/factory|industry|manufacturing/i.test(text)) return "factory";
-  if (/people|partner|shareholder|director|team/i.test(text)) return "users-group";
+  if (/people|partner|shareholder|director|team/i.test(text))
+    return "users-group";
 
   const distinctPool: ServiceIconName[] = [
     "building",
@@ -620,7 +628,10 @@ export function ServiceOverviewSection({
                   <div>
                     <div className="flex items-center justify-between gap-3">
                       <div className="grid size-9.5 place-items-center rounded-[12px] border border-[#dcd7cc] bg-page text-[#0055ff] transition-colors group-hover:border-[#0055ff]/40 group-hover:bg-[#0055ff]/5 sm:size-10">
-                        <ServiceIcon name={iconName} className="size-4.5 sm:size-5" />
+                        <ServiceIcon
+                          name={iconName}
+                          className="size-4.5 sm:size-5"
+                        />
                       </div>
                       {option.badge ? (
                         <span className="rounded-full border border-[#dcd7cc] bg-page/90 px-2.5 py-0.5 text-[10px] font-semibold text-muted sm:text-[11px]">
