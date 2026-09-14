@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from "react";
 
-import type { ServicePageContent, ServicePriceTier } from "./service-page-data";
+import type {
+  ServicePageContent,
+  ServicePriceTier,
+  ServiceRelatedOption,
+} from "./service-page-data";
 import type { PublicContactSettings } from "@/lib/contact-types";
 import { getPublicContactSettings } from "@/lib/contact-api";
 import { getTool, toolHref } from "@/lib/business-tools";
@@ -11,6 +15,8 @@ import { ToolWorkspace } from "./tool-workspace";
 import { ActionButton, Breadcrumbs, WaveLabel } from "./ui";
 import { blogRichTextClass } from "./blog-rich-text";
 import { SanitizedRichText } from "./sanitized-rich-text";
+import { ServiceIcon } from "./service-icons";
+import { serviceIconNames, type ServiceIconName } from "./data";
 
 function externalLinkProps(href: string) {
   return /^https?:\/\//i.test(href)
@@ -42,6 +48,10 @@ const serviceUi = {
     serviceMode: "Service mode",
     keyFacts: "Key facts",
     relatedOptions: "Related options",
+    relatedOptionsTitle: "Explore related services & options",
+    relatedOptionsDescription:
+      "Complementary filings, legal protections, and licenses commonly needed alongside this service.",
+    exploreOption: "Explore service",
     helpfulTools: "Helpful tools",
     pricingEyebrow: "Optional / pricing",
     pricingTitle: "Show the right price for this service",
@@ -91,6 +101,10 @@ const serviceUi = {
     serviceMode: "সেবার মাধ্যম",
     keyFacts: "গুরুত্বপূর্ণ তথ্য",
     relatedOptions: "সম্পর্কিত সেবা",
+    relatedOptionsTitle: "প্রাসঙ্গিক সেবা ও অপশনসমূহ",
+    relatedOptionsDescription:
+      "আপনার ব্যবসার জন্য প্রয়োজনীয় অন্যান্য সংশ্লিষ্ট লাইসেন্স ও আইনি সেবা।",
+    exploreOption: "সেবাটি দেখুন",
     helpfulTools: "সহায়ক টুল",
     pricingEyebrow: "ঐচ্ছিক / মূল্য",
     pricingTitle: "এই সেবার জন্য সঠিক মূল্য নির্ধারণ করুন",
@@ -344,8 +358,25 @@ export function ServiceOverviewSection({
   const ui = serviceUi[service.locale ?? "en"];
   const overviewHtml = service.overviewHtml?.trim();
   const keyFactsLabel = service.keyFactsLabel?.trim() || ui.keyFacts;
-  const relatedOptionsLabel =
+  const relatedOptionsEyebrow =
     service.relatedOptionsLabel?.trim() || ui.relatedOptions;
+  const relatedOptionsTitle =
+    service.relatedOptionsTitle?.trim() || ui.relatedOptionsTitle;
+  const relatedOptionsDescription =
+    service.relatedOptionsDescription?.trim() || ui.relatedOptionsDescription;
+  const resolvedRelatedOptions: ServiceRelatedOption[] =
+    service.relatedOptions && service.relatedOptions.length > 0
+      ? service.relatedOptions
+      : service.relatedLinks && service.relatedLinks.length > 0
+        ? service.relatedLinks.map((link) => ({
+            title: link.label,
+            description: link.description || "",
+            href: link.href,
+            icon: link.icon || "briefcase",
+            actionLabel: ui.exploreOption,
+            badge: undefined,
+          }))
+        : [];
   const toolsEyebrow = service.toolsEyebrow?.trim() || ui.helpfulTools;
   const toolsTitle =
     service.toolsTitle?.trim() || "Keep the next step close at hand.";
@@ -499,25 +530,88 @@ export function ServiceOverviewSection({
         ) : null}
       </div>
 
-      {service.relatedLinks?.length ? (
-        <div className="mt-12 border-t border-[#e5e0d6] pt-8 lg:mt-16 lg:pt-10">
-          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#0055ff]">
-            {relatedOptionsLabel}
-          </p>
-          <div className="mt-4 flex flex-wrap gap-2.5">
-            {service.relatedLinks.map((link) => (
-              <a
-                className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[#d8d3c7] bg-page px-4 py-2 text-xs font-semibold text-ink transition-all hover:-translate-y-0.5 hover:border-[#0055ff] hover:text-[#0055ff] hover:shadow-sm"
-                href={link.href}
-                {...externalLinkProps(link.href)}
-                key={link.id}
-              >
-                <span>{link.label}</span>
-                <span className="text-pink" aria-hidden="true">
-                  ↗
-                </span>
-              </a>
-            ))}
+      {resolvedRelatedOptions.length ? (
+        <div className="mt-12 border-t border-[#d8d3c7] pt-8 lg:mt-16 lg:pt-10">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#0055ff]">
+                {relatedOptionsEyebrow}
+              </p>
+              <h3 className="mt-2 font-brand text-[24px] font-bold text-ink sm:text-[28px] lg:text-section-title">
+                {relatedOptionsTitle}
+              </h3>
+            </div>
+            <span className="rounded-full border border-[#d8d3c7] bg-page px-3 py-1 text-xs font-bold text-muted">
+              {resolvedRelatedOptions.length}{" "}
+              {resolvedRelatedOptions.length === 1
+                ? service.locale === "bn"
+                  ? "টি অপশন"
+                  : "option"
+                : service.locale === "bn"
+                  ? "টি অপশন"
+                  : "options"}
+            </span>
+          </div>
+          {relatedOptionsDescription ? (
+            <p className="mt-2.5 max-w-[860px] text-body-sm text-muted">
+              {relatedOptionsDescription}
+            </p>
+          ) : null}
+
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {resolvedRelatedOptions.map((option, idx) => {
+              const iconName =
+                option.icon &&
+                serviceIconNames.includes(option.icon as ServiceIconName)
+                  ? (option.icon as ServiceIconName)
+                  : "briefcase";
+              const actionText =
+                option.actionLabel?.trim() || ui.exploreOption;
+
+              return (
+                <a
+                  className="group relative flex flex-col justify-between rounded-[22px] border border-[#d8d3c7] bg-page p-5 transition-all duration-200 hover:-translate-y-1 hover:border-[#0055ff] hover:shadow-[0_12px_28px_rgba(7,27,61,0.06)] sm:p-6"
+                  href={option.href}
+                  key={`related-opt-${idx}-${option.title}`}
+                  {...externalLinkProps(option.href)}
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="grid size-11 place-items-center rounded-[14px] border border-[#d8d3c7] bg-page text-[#0055ff] transition-colors group-hover:border-[#0055ff]/40 group-hover:bg-[#0055ff]/5">
+                        <ServiceIcon name={iconName} className="size-5" />
+                      </div>
+                      {option.badge ? (
+                        <span className="rounded-full border border-[#d8d3c7] bg-page/80 px-2.5 py-0.5 text-[11px] font-semibold text-muted">
+                          {option.badge}
+                        </span>
+                      ) : null}
+                    </div>
+
+                    <h4 className="mt-4 font-brand text-[17px] font-bold text-ink leading-snug transition-colors group-hover:text-[#0055ff] sm:text-[18px]">
+                      {option.title}
+                    </h4>
+
+                    {option.description ? (
+                      <p className="mt-1.5 text-xs text-muted leading-relaxed line-clamp-2 sm:text-[13px]">
+                        {option.description}
+                      </p>
+                    ) : null}
+                  </div>
+
+                  <div className="mt-5 border-t border-[#d8d3c7]/60 pt-4">
+                    <span className="inline-flex w-full items-center justify-between rounded-full border border-[#d8d3c7] bg-white/80 px-4 py-2 text-xs font-semibold text-ink transition-all group-hover:border-[#0055ff] group-hover:bg-[#0055ff] group-hover:text-white">
+                      <span>{actionText}</span>
+                      <span
+                        className="text-[14px] transition-transform duration-200 group-hover:translate-x-1"
+                        aria-hidden="true"
+                      >
+                        →
+                      </span>
+                    </span>
+                  </div>
+                </a>
+              );
+            })}
           </div>
         </div>
       ) : null}

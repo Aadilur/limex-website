@@ -8,6 +8,7 @@ import type {
   ServiceDestinationType,
   ServiceMenuTargetType,
   ServiceProfileInput,
+  ServiceRelatedOption,
 } from "../../../../src/lib/service-types.js";
 import { toolSlugs } from "../../../../src/lib/business-tools.js";
 import { sanitizeBlogHtml } from "../../../../src/lib/blog-content.js";
@@ -206,6 +207,8 @@ export function emptyServiceDetail(): ServiceDetailContent {
     contentLinkHref: "#service-contact",
     keyFactsLabel: "Key facts",
     relatedOptionsLabel: "Related options",
+    relatedOptionsTitle: "Explore related services & options",
+    relatedOptionsDescription: "Complementary filings, legal protections, and licenses commonly needed alongside this service.",
     toolsEyebrow: "Helpful tools",
     toolsTitle: "Keep the next step close at hand.",
     toolsDescription: "Link a calculator or document builder that helps customers move forward.",
@@ -228,6 +231,7 @@ export function emptyServiceDetail(): ServiceDetailContent {
     pricing: [],
     faqs: [],
     tools: [],
+    relatedOptions: [],
   };
 }
 
@@ -299,6 +303,24 @@ function cleanFaqs(value: unknown) {
   }).slice(0, 30);
 }
 
+function cleanRelatedOptions(value: unknown): ServiceRelatedOption[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    const record = asRecord(item);
+    const title = cleanString(record?.title);
+    const href = cleanString(record?.href);
+    if (!title || !href) return [];
+    return [{
+      title,
+      href,
+      description: cleanString(record?.description),
+      icon: cleanString(record?.icon, "briefcase"),
+      badge: cleanString(record?.badge),
+      actionLabel: cleanString(record?.actionLabel),
+    }];
+  }).slice(0, 12);
+}
+
 export function normalizeServiceDetail(value: unknown): ServiceDetailContent {
   const base = emptyServiceDetail();
   const record = asRecord(value);
@@ -325,6 +347,8 @@ export function normalizeServiceDetail(value: unknown): ServiceDetailContent {
     contentLinkHref: cleanString(record.contentLinkHref, base.contentLinkHref),
     keyFactsLabel: cleanString(record.keyFactsLabel, base.keyFactsLabel),
     relatedOptionsLabel: cleanString(record.relatedOptionsLabel, base.relatedOptionsLabel),
+    relatedOptionsTitle: cleanString(record.relatedOptionsTitle, base.relatedOptionsTitle),
+    relatedOptionsDescription: cleanString(record.relatedOptionsDescription, base.relatedOptionsDescription),
     toolsEyebrow: cleanString(record.toolsEyebrow, base.toolsEyebrow),
     toolsTitle: cleanString(record.toolsTitle, base.toolsTitle),
     toolsDescription: cleanString(record.toolsDescription, base.toolsDescription),
@@ -347,6 +371,7 @@ export function normalizeServiceDetail(value: unknown): ServiceDetailContent {
     pricing: cleanPricing(record.pricing),
     faqs: cleanFaqs(record.faqs),
     tools: cleanToolSlugs(record.tools),
+    relatedOptions: cleanRelatedOptions(record.relatedOptions),
   };
 
   // Keep this property absent for older records so the editor and public page

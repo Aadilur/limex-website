@@ -50,6 +50,7 @@ import {
   sanitizeBlogHtml,
 } from "../src/lib/blog-content.js";
 import { blogRichTextClass } from "../src/components/limex/blog-rich-text.js";
+import { normalizeServiceDetail } from "../server/modules/services/domain/service.js";
 
 const settings = defaultToolsSettings;
 function calculate(slug: ToolSlug, values: ToolValues) {
@@ -1541,3 +1542,92 @@ test("service page renders ContactModal CTA buttons in hero and bottom with pre-
   assert.match(contactSectionTsx, /className\?: string/);
   assert.match(contactSectionTsx, /resolvedSource/);
 });
+
+test("service page related options are dynamic with title, subtitle, icon, focused buttons, and admin support", async () => {
+  const fs = await import("node:fs/promises");
+  const serviceSectionsTsx = await fs.readFile(
+    new URL("../src/components/limex/service-page-sections.tsx", import.meta.url),
+    "utf8",
+  );
+  const serviceModuleTsx = await fs.readFile(
+    new URL("../src/components/admin/service-pages-module.tsx", import.meta.url),
+    "utf8",
+  );
+  const serviceDomainTs = await fs.readFile(
+    new URL("../server/modules/services/domain/service.ts", import.meta.url),
+    "utf8",
+  );
+  const serviceRoutesTs = await fs.readFile(
+    new URL("../server/modules/services/interface/http/service.routes.ts", import.meta.url),
+    "utf8",
+  );
+
+  // 1. service-page-sections.tsx renders Section Title, Subtitle, ServiceIcon, and clean focused button
+  assert.match(serviceSectionsTsx, /relatedOptionsTitle/);
+  assert.match(serviceSectionsTsx, /relatedOptionsDescription/);
+  assert.match(serviceSectionsTsx, /<ServiceIcon name=\{iconName\}/);
+  assert.match(serviceSectionsTsx, /group-hover:translate-x-1/);
+
+  // 2. admin module contains dedicated Related options disclosure with full item fields
+  assert.match(serviceModuleTsx, /<SectionDisclosure\s+title="Related options"/);
+  assert.match(serviceModuleTsx, /placeholder="Explore related services & options"/);
+  assert.match(serviceModuleTsx, /addRelatedOption/);
+  assert.match(serviceModuleTsx, /serviceIconOptions\.map/);
+
+  // 3. domain normalizes relatedOptionsTitle, relatedOptionsDescription, and cleanRelatedOptions
+  assert.match(serviceDomainTs, /cleanRelatedOptions/);
+  assert.match(serviceDomainTs, /relatedOptionsTitle:/);
+  assert.match(serviceDomainTs, /relatedOptionsDescription:/);
+
+  // 4. HTTP routes validate relatedOptions schema
+  assert.match(serviceRoutesTs, /relatedOptions:\s*z\s*\.array/);
+
+  // 5. Test normalizeServiceDetail handles dynamic related options cleanly
+  const normalized = normalizeServiceDetail({
+    relatedOptionsTitle: "Custom Title",
+    relatedOptionsDescription: "Custom Subtitle",
+    relatedOptions: [
+      {
+        title: "Test Option",
+        description: "Test Description",
+        href: "/services/test",
+        icon: "license",
+        badge: "Featured",
+        actionLabel: "View test",
+      },
+    ],
+  });
+  assert.equal(normalized.relatedOptionsTitle, "Custom Title");
+  assert.equal(normalized.relatedOptionsDescription, "Custom Subtitle");
+  assert.equal(normalized.relatedOptions?.length, 1);
+  assert.equal(normalized.relatedOptions?.[0]?.title, "Test Option");
+  assert.equal(normalized.relatedOptions?.[0]?.icon, "license");
+  assert.equal(normalized.relatedOptions?.[0]?.actionLabel, "View test");
+});
+
+test("about page has larger team portraits, executive typography, no odd eyebrows or em-dashes, and preserves bg-page", async () => {
+  const fs = await import("node:fs/promises");
+  const aboutSectionsContent = await fs.readFile(
+    new URL("../src/components/limex/about-sections.tsx", import.meta.url),
+    "utf8",
+  );
+
+  // 1. Team member portrait is larger than old 92px/100px
+  assert.match(aboutSectionsContent, /size-\[108px\]\s+shrink-0\s+overflow-hidden\s+rounded-\[18px\]/);
+  assert.doesNotMatch(aboutSectionsContent, /size-\[92px\]\s+shrink-0/);
+
+  // 2. No em-dash (—) or awkward double dashes (--) in copy
+  assert.doesNotMatch(aboutSectionsContent, /—/);
+  assert.doesNotMatch(aboutSectionsContent, /\s--\s/);
+
+  // 3. No odd uppercase pink eyebrows on member titles or trust metrics
+  assert.doesNotMatch(aboutSectionsContent, /text-overline\s+text-pink/);
+  assert.doesNotMatch(aboutSectionsContent, /text-overline\s+text-brand-cyan/);
+
+  // 4. No wireframe "Photo" label under initials
+  assert.doesNotMatch(aboutSectionsContent, />Photo<\/span>/);
+
+  // 5. Preserves bg-page background on team section
+  assert.match(aboutSectionsContent, /rounded-panel\s+border\s+border-warm\s+bg-page/);
+});
+

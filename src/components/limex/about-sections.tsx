@@ -20,7 +20,7 @@ export function AboutHero() {
           Business clarity, built around people.
         </h1>
         <p className="mt-cluster max-w-[650px] text-body-sm text-muted">
-          We make the work behind your business easier to understand—and easier to move forward.
+          We make the work behind your business easier to understand and simpler to navigate.
         </p>
         <div className="mt-cluster-lg">
           <ActionButton href="#team" variant="dark" arrow="text" className="min-h-control min-w-[148px] px-4 text-button">
@@ -31,12 +31,16 @@ export function AboutHero() {
 
       <aside className="rounded-card border border-warm bg-[#faf9f6] px-card-pad-sm py-card-pad-sm lg:min-h-[236px] lg:px-card-pad" id="approach" aria-labelledby="approach-title">
         <h2 className="font-brand text-subheading text-ink" id="approach-title">Clear from the first conversation.</h2>
-        <ul className="mt-cluster-lg space-y-2">
+        <ul className="mt-cluster-lg space-y-2.5">
           {approachPoints.map((point) => (
             <li className="flex items-start gap-cluster-sm" key={point.label}>
-              <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-[#fce0e3] text-[10px] font-bold text-pink" aria-hidden="true">✓</span>
+              <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-[#071b3d]/[0.07] text-[#071b3d]" aria-hidden="true">
+                <svg className="size-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M2.5 6.5l2.5 2.5 4.5-5" />
+                </svg>
+              </span>
               <span className="min-w-0">
-                <strong className="block text-footer text-ink">{point.label}</strong>
+                <strong className="block text-footer font-semibold text-ink">{point.label}</strong>
                 <span className="mt-0.5 block text-micro text-muted">{point.description}</span>
               </span>
             </li>
@@ -55,15 +59,18 @@ const trustMetrics = [
 
 export function AboutTrustStrip() {
   return (
-    <section className="mt-[clamp(28px,3vw,44px)] grid gap-cluster-lg rounded-nav border border-warm bg-[#f7f4ef] px-card-pad-sm py-card-pad-sm lg:grid-cols-[208px_repeat(3,minmax(0,1fr))] lg:gap-0 lg:px-5 lg:py-4" aria-label="About Limex trust metrics">
-      <div className="flex flex-col justify-center gap-cluster-xs">
-        <p className="text-footer font-text text-ink">A simple rhythm for important work.</p>
+    <section className="mt-[clamp(28px,3vw,44px)] grid gap-cluster-lg rounded-nav border border-warm bg-[#f7f4ef] px-card-pad-sm py-card-pad-sm lg:grid-cols-[220px_repeat(3,minmax(0,1fr))] lg:gap-0 lg:px-6 lg:py-5" aria-label="About Limex working principles">
+      <div className="flex flex-col justify-center gap-1 lg:pr-6">
+        <p className="font-brand text-footer font-semibold text-ink">A simple rhythm</p>
+        <p className="text-micro text-muted">Clear principles for every engagement.</p>
       </div>
       {trustMetrics.map((metric) => (
-        <div className="border-t border-warm pt-4 lg:border-l lg:border-t-0 lg:px-6 lg:pt-0" key={metric.label}>
-          <p className="text-section-title font-bold text-ink">{metric.value}</p>
-          <p className="mt-0.5 text-overline text-pink">{metric.label}</p>
-          <p className="mt-0.5 text-micro text-muted">{metric.description}</p>
+        <div className="border-t border-warm/80 pt-4 lg:border-l lg:border-t-0 lg:px-6 lg:pt-0" key={metric.label}>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[11px] font-semibold text-muted/60">{metric.value}</span>
+            <h3 className="font-semibold text-footer text-ink">{metric.label}</h3>
+          </div>
+          <p className="mt-1 text-micro text-muted leading-relaxed">{metric.description}</p>
         </div>
       ))}
     </section>
@@ -71,11 +78,11 @@ export function AboutTrustStrip() {
 }
 
 const teamPhotoTones = [
-  "bg-[#e5fbff] text-[#007ea6]",
-  "bg-[#e8f3ff] text-[#006dce]",
-  "bg-[#e9efff] text-brand-blue",
-  "bg-[#e5fbff] text-[#007ea6]",
-  "bg-[#e8efff] text-brand-blue",
+  "bg-[#e8f1f5] text-[#071b3d]",
+  "bg-[#eef2f6] text-[#006dce]",
+  "bg-[#ebf4f5] text-[#007ea6]",
+  "bg-[#f0edf7] text-[#4d4870]",
+  "bg-[#e8eff4] text-[#071b3d]",
 ];
 
 function teamInitials(name: string) {
@@ -106,24 +113,21 @@ function TeamMemberPhoto({ member, index, onError }: { member: AboutTeamMember; 
 
   return (
     <div className={`grid size-full place-items-center ${teamPhotoTones[index % teamPhotoTones.length]}`.trim()} aria-hidden="true">
-      <div className="flex flex-col items-center">
-        <span className="font-brand text-[34px] font-bold leading-none tracking-[-0.07em]">{teamInitials(member.name)}</span>
-        <span className="mt-1 text-[7px] font-bold uppercase tracking-[0.16em] opacity-75">Photo</span>
-      </div>
+      <span className="font-brand text-3xl font-bold leading-none tracking-tight sm:text-4xl">{teamInitials(member.name)}</span>
     </div>
   );
 }
 
 function TeamMemberCard({ member, index, onImageError }: { member: AboutTeamMember; index: number; onImageError: () => void }) {
   return (
-    <article className="group flex min-h-[124px] items-center gap-4 rounded-[20px] bg-[#f7f4ef] px-3 py-3 transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#f3efe8] sm:min-h-[132px] sm:px-3.5">
-      <div className="size-[92px] shrink-0 overflow-hidden rounded-[17px] sm:size-[100px] sm:rounded-[18px]">
+    <article className="group flex min-h-[144px] items-center gap-3.5 rounded-[22px] border border-[#e6e1d8] bg-[#f7f4ef] p-3.5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#d9d2c6] hover:bg-[#f3efe8] hover:shadow-[0_8px_24px_rgba(7,27,61,0.06)] sm:min-h-[156px] sm:gap-4 sm:p-4">
+      <div className="size-[108px] shrink-0 overflow-hidden rounded-[18px] border border-[#e2ddd5] bg-[#ece7df] shadow-sm sm:size-[120px] lg:size-[126px]">
         <TeamMemberPhoto member={member} index={index} onError={onImageError} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-overline text-pink">{member.title}</p>
-        <h3 className="mt-1 truncate font-brand text-card-title text-ink">{member.name}</h3>
-        <p className="mt-1.5 line-clamp-2 text-micro leading-[1.45] text-muted">{member.description}</p>
+        <h3 className="truncate font-brand text-[17px] font-bold text-ink sm:text-[18px]">{member.name}</h3>
+        <p className="mt-0.5 truncate text-[12px] font-medium text-[#007ea6] sm:text-[13px]">{member.title}</p>
+        <p className="mt-2 line-clamp-2 text-micro leading-relaxed text-muted">{member.description}</p>
       </div>
     </article>
   );
@@ -173,10 +177,36 @@ export function AboutTeamSection() {
         />
       </div>
       <div className="mt-section-gap-lg grid gap-3 sm:grid-cols-2 lg:grid-cols-3 lg:gap-4">
-        {loading ? [0, 1, 2].map((index) => <div className="flex min-h-[124px] animate-pulse items-center gap-4 rounded-[20px] bg-[#f7f4ef] px-3 py-3" key={index}><div className="size-[92px] shrink-0 rounded-[17px] bg-[#ebe7df] sm:size-[100px]" /><div className="min-w-0 flex-1 space-y-2"><div className="h-2.5 w-24 rounded-full bg-[#e8e1d8]" /><div className="h-5 w-36 rounded-full bg-[#e8e1d8]" /><div className="h-3 w-full rounded-full bg-[#eee9e2]" /></div></div>) : members.length ? members.map((member, index) => <TeamMemberCard key={member.id} member={member} index={index} onImageError={() => handleImageError(member.id)} />) : (
-          <div className="rounded-[18px] border border-dashed border-[#d8d1c7] bg-[#f7f4ef] px-5 py-10 text-center sm:col-span-2 lg:col-span-3">
+        {loading ? (
+          [0, 1, 2].map((index) => (
+            <div
+              className="flex min-h-[144px] animate-pulse items-center gap-3.5 rounded-[22px] border border-[#e6e1d8] bg-[#f7f4ef] p-3.5 sm:min-h-[156px] sm:gap-4 sm:p-4"
+              key={index}
+            >
+              <div className="size-[108px] shrink-0 rounded-[18px] bg-[#ebe7df] sm:size-[120px] lg:size-[126px]" />
+              <div className="min-w-0 flex-1 space-y-2">
+                <div className="h-5 w-32 rounded-full bg-[#e8e1d8]" />
+                <div className="h-3.5 w-24 rounded-full bg-[#e8e1d8]" />
+                <div className="h-3 w-full rounded-full bg-[#eee9e2]" />
+                <div className="h-3 w-4/5 rounded-full bg-[#eee9e2]" />
+              </div>
+            </div>
+          ))
+        ) : members.length ? (
+          members.map((member, index) => (
+            <TeamMemberCard
+              key={member.id}
+              member={member}
+              index={index}
+              onImageError={() => handleImageError(member.id)}
+            />
+          ))
+        ) : (
+          <div className="rounded-[22px] border border-dashed border-[#d8d1c7] bg-[#f7f4ef] px-5 py-10 text-center sm:col-span-2 lg:col-span-3">
             <p className="font-brand text-subheading font-bold text-ink">The people behind Limex are on their way.</p>
-            <p className="mt-1.5 text-micro text-muted">{loadError ? "Please check back soon." : "Our team profiles are being updated."}</p>
+            <p className="mt-1.5 text-micro text-muted">
+              {loadError ? "Please check back soon." : "Our team profiles are being updated."}
+            </p>
           </div>
         )}
       </div>
@@ -228,8 +258,8 @@ function AboutReelCard({ reel, index, playing, onPlay, onStop }: { reel: AboutRe
 
   return (
     <article className={[
-      "group relative h-[420px] min-w-[min(306px,calc(100vw-72px))] basis-[min(306px,calc(100vw-72px))] snap-start overflow-hidden rounded-[20px] border bg-[#293a40] shadow-[0_14px_34px_rgba(27,34,30,0.08)] transition-transform duration-300 hover:-translate-y-1 lg:h-[520px] lg:min-w-[306px] lg:basis-[306px]",
-      playing ? "border-[#071b3d]" : "border-[#d7d5d0]",
+      "group relative h-[420px] min-w-[min(306px,calc(100vw-72px))] basis-[min(306px,calc(100vw-72px))] snap-start overflow-hidden rounded-[20px] border bg-[#1c282e] shadow-[0_14px_34px_rgba(27,34,30,0.08)] transition-all duration-300 hover:-translate-y-1 lg:h-[520px] lg:min-w-[306px] lg:basis-[306px]",
+      playing ? "border-[#071b3d]" : "border-[#d7d5d0] hover:border-[#b8b3a8]",
     ].join(" ")}>
       {playing ? (
         <div className="absolute inset-0 bg-[#11141a]">
@@ -246,11 +276,14 @@ function AboutReelCard({ reel, index, playing, onPlay, onStop }: { reel: AboutRe
       ) : (
         <>
           <ReelThumbnail reel={reel} index={index} />
-          <div className="absolute inset-x-0 bottom-0 flex min-h-[142px] flex-col justify-end gap-1.5 bg-gradient-to-b from-transparent via-[rgba(18,20,33,0.38)] to-[rgba(18,20,33,0.94)] px-5 pb-5 pt-16 text-[#ffebd7] drop-shadow-[0_1px_12px_rgba(18,20,33,0.32)]">
-            <p className="text-overline text-brand-cyan">{reel.title ? "LIMEX STORY" : "YOUTUBE STORY"}</p>
-            <h3 className="max-w-[250px] line-clamp-2 text-card-title">{title}</h3>
+          <div className="absolute inset-x-0 bottom-0 flex min-h-[142px] flex-col justify-end gap-1.5 bg-gradient-to-b from-transparent via-[rgba(18,20,33,0.45)] to-[rgba(18,20,33,0.95)] px-5 pb-5 pt-16 text-white drop-shadow-[0_1px_12px_rgba(18,20,33,0.32)]">
+            <div className="flex items-center gap-1.5">
+              <span className="size-1.5 rounded-full bg-emerald-400" />
+              <span className="text-[11px] font-medium tracking-wide text-white/80">{reel.title ? "Limex Story" : "Video"}</span>
+            </div>
+            <h3 className="max-w-[250px] line-clamp-2 font-brand text-card-title text-white">{title}</h3>
           </div>
-          <button className="absolute left-1/2 top-1/2 z-10 grid size-[72px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-white/75 bg-white/95 text-[#071b3d] shadow-[0_10px_26px_rgba(18,20,33,0.22)] ring-8 ring-white/20 transition-transform duration-200 hover:scale-105 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/50 focus-visible:outline-offset-3" type="button" aria-label={`Play ${title}`} onClick={onPlay}><PlayIcon /></button>
+          <button className="absolute left-1/2 top-1/2 z-10 grid size-[68px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-white/80 bg-white/95 text-[#071b3d] shadow-[0_10px_26px_rgba(18,20,33,0.22)] ring-4 ring-white/20 transition-transform duration-200 group-hover:scale-105 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/50 focus-visible:outline-offset-3" type="button" aria-label={`Play ${title}`} onClick={onPlay}><PlayIcon /></button>
         </>
       )}
     </article>
@@ -357,8 +390,9 @@ export function AboutContactCta() {
     <section className="mt-[clamp(28px,3vw,44px)] flex flex-col gap-cluster-lg rounded-card bg-[#071b3d] px-page-gutter py-card-pad-sm text-white sm:flex-row sm:items-center sm:justify-between lg:px-section-y lg:py-card-pad-sm" id="contact" aria-labelledby="about-contact-title">
       <div>
         <h2 className="font-brand text-subheading" id="about-contact-title">Let’s make the next step simple.</h2>
+        <p className="mt-1 text-micro text-white/70">Connect with an advisor for clear guidance on your business goals.</p>
       </div>
-      <ContactModal variant="white" buttonClassName="min-h-control w-[176px] shrink-0 text-button" buttonLabel="Talk to an expert" />
+      <ContactModal variant="white" buttonClassName="min-h-control w-[176px] shrink-0 text-button" buttonLabel="Talk to an advisor" />
     </section>
   );
 }

@@ -54,6 +54,8 @@ export type ServiceDetailContent = {
   contentLinkHref: string;
   keyFactsLabel?: string;
   relatedOptionsLabel?: string;
+  relatedOptionsTitle?: string;
+  relatedOptionsDescription?: string;
   toolsEyebrow?: string;
   toolsTitle?: string;
   toolsDescription?: string;
@@ -77,6 +79,17 @@ export type ServiceDetailContent = {
   faqs: ServiceFaq[];
   /** Ordered slugs from the managed business-tools catalogue. */
   tools?: string[];
+  /** Dynamic related options/services displayed with icon and focused action. */
+  relatedOptions?: ServiceRelatedOption[];
+};
+
+export type ServiceRelatedOption = {
+  title: string;
+  description?: string;
+  href: string;
+  icon?: string;
+  badge?: string;
+  actionLabel?: string;
 };
 
 export type ServiceDestination = {
@@ -92,6 +105,8 @@ export type ServiceChildLink = {
   href: string;
   isVisible: boolean;
   sortOrder: number;
+  description?: string;
+  icon?: string;
 };
 
 export type PublicService = {

@@ -95,10 +95,15 @@ function toPublicService(context: ServiceMenuContext, profile: ServiceProfileRow
       const childTitle = locale === "bn"
         ? childProfile?.titleBn?.trim() || childProfile?.titleEn?.trim() || link.label
         : childProfile?.titleEn?.trim() || link.label;
+      const childDesc = locale === "bn"
+        ? childProfile?.descriptionBn?.trim() || childProfile?.descriptionEn?.trim() || ""
+        : childProfile?.descriptionEn?.trim() || "";
       const childHasDetailPage = Boolean(childProfile?.publishedDetail);
       return {
         id: link.id,
         label: childTitle,
+        description: childDesc,
+        icon: context.item.icon || "briefcase",
         href: publicDestination(link.href, childHasDetailPage).href,
         isVisible: link.isVisible,
         sortOrder: link.sortOrder,
@@ -131,7 +136,27 @@ function toPublicServiceTarget(target: ServiceMenuTarget, profile: ServiceProfil
     icon: profile?.icon || target.icon,
     href: destination.href,
     destination,
-    children: [],
+    children: target.targetType === "LINK"
+      ? target.item.links.filter((link) => link.isVisible && link.id !== target.menuLinkId).map((link) => {
+          const childProfile = link.serviceProfile;
+          const childTitle = locale === "bn"
+            ? childProfile?.titleBn?.trim() || childProfile?.titleEn?.trim() || link.label
+            : childProfile?.titleEn?.trim() || link.label;
+          const childDesc = locale === "bn"
+            ? childProfile?.descriptionBn?.trim() || childProfile?.descriptionEn?.trim() || ""
+            : childProfile?.descriptionEn?.trim() || "";
+          const childHasDetailPage = Boolean(childProfile?.publishedDetail);
+          return {
+            id: link.id,
+            label: childTitle,
+            description: childDesc,
+            icon: target.icon || "briefcase",
+            href: publicDestination(link.href, childHasDetailPage).href,
+            isVisible: link.isVisible,
+            sortOrder: link.sortOrder,
+          };
+        })
+      : [],
     sortOrder: target.sortOrder,
     isVisible: target.isVisible,
     updatedAt: profile?.updatedAt.toISOString() ?? target.item.updatedAt.toISOString(),

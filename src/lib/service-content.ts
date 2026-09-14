@@ -379,6 +379,10 @@ function detailFor(
         { label: "মাধ্যম", value: "অনলাইন বা সরাসরি" },
         { label: "পরবর্তী ধাপ", value: "সংক্ষিপ্ত পরামর্শ" },
       ],
+      relatedOptionsLabel: "সম্পর্কিত সেবা",
+      relatedOptionsTitle: "প্রাসঙ্গিক সেবা ও অপশনসমূহ",
+      relatedOptionsDescription: "আপনার ব্যবসায়ের জন্য প্রয়োজনীয় অন্যান্য সংশ্লিষ্ট লাইসেন্স ও আইনি সেবা।",
+      relatedOptions: [],
       pricing: [],
       faqs: [
         {
@@ -442,6 +446,10 @@ function detailFor(
       { label: "Service mode", value: "Online or offline" },
       { label: "Next step", value: "Short discovery call" },
     ],
+    relatedOptionsLabel: "RELATED OPTIONS",
+    relatedOptionsTitle: "Explore related services & options",
+    relatedOptionsDescription: "Complementary filings, legal protections, and licenses commonly needed alongside this service.",
+    relatedOptions: [],
     pricing: [],
     faqs: [
       {

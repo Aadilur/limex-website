@@ -59,6 +59,8 @@ const detailSchema = z
     contentLinkHref: optionalHrefSchema,
     keyFactsLabel: text(120),
     relatedOptionsLabel: text(120),
+    relatedOptionsTitle: text(240),
+    relatedOptionsDescription: text(1000),
     toolsEyebrow: text(120),
     toolsTitle: text(240),
     toolsDescription: text(1000),
@@ -105,6 +107,19 @@ const detailSchema = z
       .max(30)
       .default([]),
     tools: z.array(z.enum(toolSlugs)).max(8).default([]),
+    relatedOptions: z
+      .array(
+        z.object({
+          title: requiredText(180),
+          description: text(500),
+          href: requiredText(500),
+          icon: text(60),
+          badge: text(60),
+          actionLabel: text(100),
+        }),
+      )
+      .max(12)
+      .default([]),
   })
   .strict();
 

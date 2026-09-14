@@ -4,6 +4,7 @@ import type {
   ServiceFaq,
   ServiceLocale,
   ServicePriceTier,
+  ServiceRelatedOption,
 } from "@/lib/service-types";
 
 export type {
@@ -11,6 +12,7 @@ export type {
   ServiceDestination,
   ServiceFaq,
   ServicePriceTier,
+  ServiceRelatedOption,
 } from "@/lib/service-types";
 
 export type ServicePageContent = {
@@ -41,6 +43,9 @@ export type ServicePageContent = {
   contentLinkHref?: string;
   keyFactsLabel?: string;
   relatedOptionsLabel?: string;
+  relatedOptionsTitle?: string;
+  relatedOptionsDescription?: string;
+  relatedOptions?: ServiceRelatedOption[];
   toolsEyebrow?: string;
   toolsTitle?: string;
   toolsDescription?: string;
@@ -64,6 +69,8 @@ export type ServicePageContent = {
     href: string;
     isVisible: boolean;
     sortOrder: number;
+    description?: string;
+    icon?: string;
   }>;
   mediaUrl?: string;
   mediaAlt?: string;
@@ -102,6 +109,40 @@ export const trademarkRegistrationService: ServicePageContent = {
     "We help you understand the relevant class, prepare the core information and move through the registration process with practical next steps at every stage.",
   contentLinkLabel: "View full requirements",
   contentLinkHref: "#pricing",
+  keyFactsLabel: "Key facts",
+  relatedOptionsLabel: "RELATED OPTIONS",
+  relatedOptionsTitle: "Complementary IP & Business Protections",
+  relatedOptionsDescription:
+    "Secure your broader intellectual property portfolio and commercial compliance alongside your trademark.",
+  relatedOptions: [
+    {
+      title: "Copyright Registration",
+      description:
+        "Statutory copyright protection for software code, creative designs, artwork, and literary content.",
+      href: "/services/copyright-registration",
+      icon: "copyright",
+      badge: "IP Protection",
+      actionLabel: "Explore copyright",
+    },
+    {
+      title: "Patent & Design Filing",
+      description:
+        "Statutory industrial patent and design filing for novel inventions and commercial aesthetics.",
+      href: "/services/patent-and-design-registration",
+      icon: "lightbulb",
+      badge: "DPDT Filing",
+      actionLabel: "Explore patent",
+    },
+    {
+      title: "Trade License Registration",
+      description:
+        "Official municipality trade license issuance and annual business operation clearance.",
+      href: "/services/trade-license",
+      icon: "license",
+      badge: "Required",
+      actionLabel: "Explore license",
+    },
+  ],
   overviewHtml: `<h2>Trademark Registration in Bangladesh</h2>
 <p>Protecting your brand name, wordmark, logo, or tagline through statutory trademark registration grants exclusive nationwide proprietary rights under the Trademarks Act 2009. Registration establishes a definitive legal presumption of ownership, prevents competitor counterfeiting, and enables robust enforcement against unauthorized commercial exploitation.</p>
 

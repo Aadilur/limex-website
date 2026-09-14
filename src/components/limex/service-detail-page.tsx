@@ -25,6 +25,10 @@ function toPageContent(service: ServicePageContent | PublicServiceDetail, locale
     description: service.description,
     destination: service.destination,
     relatedLinks: service.children,
+    relatedOptions: service.detail.relatedOptions,
+    relatedOptionsLabel: service.detail.relatedOptionsLabel,
+    relatedOptionsTitle: service.detail.relatedOptionsTitle,
+    relatedOptionsDescription: service.detail.relatedOptionsDescription,
   };
 }
 

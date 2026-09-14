@@ -27,6 +27,7 @@ import type {
   ServiceDetailContent,
   ServiceMenuTargetType,
   ServiceProfileInput,
+  ServiceRelatedOption,
 } from "@/lib/service-types";
 import { businessTools } from "@/lib/business-tools";
 import { compressImageToWebp } from "@/lib/image-compression";
@@ -38,7 +39,10 @@ import {
   type MediaAsset,
 } from "@/lib/media-api";
 import { RichTextEditor } from "./rich-text-editor";
-import { ServiceIcon } from "@/components/limex/service-icons";
+import {
+  ServiceIcon,
+  serviceIconOptions,
+} from "@/components/limex/service-icons";
 import type { ServiceIconName } from "@/components/limex/data";
 import { getToneClasses } from "@/components/limex/styles";
 import { IconPicker, normalizeServiceIcon } from "./icon-picker";
@@ -74,6 +78,9 @@ function emptyDetail(): ServiceDetailContent {
     contentLinkHref: "#service-contact",
     keyFactsLabel: "Key facts",
     relatedOptionsLabel: "Related options",
+    relatedOptionsTitle: "Explore related services & options",
+    relatedOptionsDescription:
+      "Complementary filings, legal protections, and licenses commonly needed alongside this service.",
     toolsEyebrow: "Helpful tools",
     toolsTitle: "Keep the next step close at hand.",
     toolsDescription:
@@ -100,6 +107,7 @@ function emptyDetail(): ServiceDetailContent {
     pricing: [],
     faqs: [],
     tools: [],
+    relatedOptions: [],
   };
 }
 
@@ -116,6 +124,9 @@ function cloneDetail(detail: ServiceDetailContent | null) {
     })),
     faqs: detail.faqs.map((faq) => ({ ...faq })),
     tools: [...(detail.tools ?? [])],
+    relatedOptions: detail.relatedOptions
+      ? detail.relatedOptions.map((opt) => ({ ...opt }))
+      : [],
   };
 }
 
@@ -687,6 +698,18 @@ function DetailEditor({
     ]);
   const addFaq = () =>
     update("faqs", [...detail.faqs, { question: "", answer: "" }]);
+  const addRelatedOption = () =>
+    update("relatedOptions", [
+      ...(detail.relatedOptions ?? []),
+      {
+        title: "",
+        description: "",
+        href: "",
+        icon: "briefcase",
+        badge: "",
+        actionLabel: "Explore service",
+      },
+    ]);
   const selectedTools = detail.tools ?? [];
   const addTool = (slug: string) => {
     if (!slug || selectedTools.includes(slug)) return;
@@ -1025,6 +1048,225 @@ function DetailEditor({
           ) : (
             <p className="mt-3 text-[11px] text-[#948d84]">
               No key facts added. The facts column will not render publicly.
+            </p>
+          )}
+        </div>
+      </SectionDisclosure>
+
+      <SectionDisclosure
+        title="Related options"
+        description="Dynamic complementary services, filings and options displayed on this page."
+        count={detail.relatedOptions?.length ?? 0}
+      >
+        <div className="grid gap-x-4 gap-y-5 sm:grid-cols-2">
+          <Field
+            label="Section eyebrow"
+            value={detail.relatedOptionsLabel ?? ""}
+            onChange={(event) => update("relatedOptionsLabel", event.target.value)}
+            placeholder="Related options"
+          />
+          <Field
+            label="Section title"
+            value={detail.relatedOptionsTitle ?? ""}
+            onChange={(event) => update("relatedOptionsTitle", event.target.value)}
+            placeholder="Explore related services & options"
+          />
+          <TextAreaField
+            className="sm:col-span-2"
+            label="Section subtitle / description"
+            value={detail.relatedOptionsDescription ?? ""}
+            onChange={(event) =>
+              update("relatedOptionsDescription", event.target.value)
+            }
+            placeholder="Complementary filings, legal protections, and licenses commonly needed alongside this service."
+          />
+        </div>
+
+        <div className="mt-5 border-t border-[#e9e3da] pt-5">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className={fieldLabelClass}>Custom related options</p>
+              <p className="mt-1 text-[11px] text-[#948d84]">
+                Add custom options with icons and buttons. When left empty, the public page automatically falls back to assigned child or sibling services.
+              </p>
+            </div>
+            <AddButton onClick={addRelatedOption}>+ Add related option</AddButton>
+          </div>
+
+          {(detail.relatedOptions ?? []).length ? (
+            <div className="mt-3 divide-y divide-[#e9e3da] border-y border-[#e9e3da]">
+              {(detail.relatedOptions ?? []).map((option, index) => (
+                <div className="relative py-4" key={`related-opt-${index}`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className={fieldLabelClass}>
+                      Option {String(index + 1).padStart(2, "0")}
+                    </p>
+                    <div className="flex items-center gap-1">
+                      {index > 0 ? (
+                        <button
+                          type="button"
+                          className="px-1.5 py-0.5 text-xs text-[#6e685f] hover:text-[#071b3d]"
+                          title="Move up"
+                          onClick={() => {
+                            const list = [...(detail.relatedOptions ?? [])];
+                            const temp = list[index - 1]!;
+                            list[index - 1] = list[index]!;
+                            list[index] = temp;
+                            update("relatedOptions", list);
+                          }}
+                        >
+                          ↑
+                        </button>
+                      ) : null}
+                      {index < (detail.relatedOptions ?? []).length - 1 ? (
+                        <button
+                          type="button"
+                          className="px-1.5 py-0.5 text-xs text-[#6e685f] hover:text-[#071b3d]"
+                          title="Move down"
+                          onClick={() => {
+                            const list = [...(detail.relatedOptions ?? [])];
+                            const temp = list[index + 1]!;
+                            list[index + 1] = list[index]!;
+                            list[index] = temp;
+                            update("relatedOptions", list);
+                          }}
+                        >
+                          ↓
+                        </button>
+                      ) : null}
+                      <RemoveButton
+                        label={`Remove option ${index + 1}`}
+                        onClick={() =>
+                          update(
+                            "relatedOptions",
+                            (detail.relatedOptions ?? []).filter(
+                              (_, itemIndex) => itemIndex !== index,
+                            ),
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-3 grid gap-x-4 gap-y-4 sm:grid-cols-2">
+                    <Field
+                      label="Title"
+                      value={option.title}
+                      placeholder="e.g. Trade License Renewal"
+                      onChange={(event) =>
+                        update(
+                          "relatedOptions",
+                          (detail.relatedOptions ?? []).map((item, itemIndex) =>
+                            itemIndex === index
+                              ? { ...item, title: event.target.value }
+                              : item,
+                          ),
+                        )
+                      }
+                    />
+
+                    <div>
+                      <label
+                        className="block min-w-0"
+                        htmlFor={`service-option-icon-${index}`}
+                      >
+                        <span className={fieldLabelClass}>Icon</span>
+                        <select
+                          className={`${fieldClass} mt-1.5`}
+                          id={`service-option-icon-${index}`}
+                          value={option.icon || "briefcase"}
+                          onChange={(event) =>
+                            update(
+                              "relatedOptions",
+                              (detail.relatedOptions ?? []).map(
+                                (item, itemIndex) =>
+                                  itemIndex === index
+                                    ? { ...item, icon: event.target.value }
+                                    : item,
+                              ),
+                            )
+                          }
+                        >
+                          {serviceIconOptions.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label} ({opt.value})
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+
+                    <Field
+                      label="Destination link (URL or path)"
+                      value={option.href}
+                      placeholder="e.g. /services/trade-license"
+                      onChange={(event) =>
+                        update(
+                          "relatedOptions",
+                          (detail.relatedOptions ?? []).map((item, itemIndex) =>
+                            itemIndex === index
+                              ? { ...item, href: event.target.value }
+                              : item,
+                          ),
+                        )
+                      }
+                    />
+
+                    <Field
+                      label="Badge / Tag (optional)"
+                      value={option.badge ?? ""}
+                      placeholder="e.g. Recommended, License, Tax"
+                      onChange={(event) =>
+                        update(
+                          "relatedOptions",
+                          (detail.relatedOptions ?? []).map((item, itemIndex) =>
+                            itemIndex === index
+                              ? { ...item, badge: event.target.value }
+                              : item,
+                          ),
+                        )
+                      }
+                    />
+
+                    <Field
+                      label="Button label"
+                      value={option.actionLabel ?? ""}
+                      placeholder="Explore service"
+                      onChange={(event) =>
+                        update(
+                          "relatedOptions",
+                          (detail.relatedOptions ?? []).map((item, itemIndex) =>
+                            itemIndex === index
+                              ? { ...item, actionLabel: event.target.value }
+                              : item,
+                          ),
+                        )
+                      }
+                    />
+
+                    <Field
+                      className="sm:col-span-2"
+                      label="Subtitle / Description"
+                      value={option.description ?? ""}
+                      placeholder="Short description of this related service or filing"
+                      onChange={(event) =>
+                        update(
+                          "relatedOptions",
+                          (detail.relatedOptions ?? []).map((item, itemIndex) =>
+                            itemIndex === index
+                              ? { ...item, description: event.target.value }
+                              : item,
+                          ),
+                        )
+                      }
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-3 text-[11px] text-[#948d84]">
+              No custom options added. Sibling or child services from the service catalogue will be automatically displayed on the public page.
             </p>
           )}
         </div>
