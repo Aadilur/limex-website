@@ -16,8 +16,15 @@ import {
   type ImageUpload,
 } from "../../../../shared/storage/object-storage.js";
 import { getYouTubeVideoId } from "../../../about/domain/youtube.js";
-import { LandingConflictError, LandingSafetyError, LandingService } from "../../application/landing.service.js";
-import { landingSectionKeys, type LandingSectionKey } from "../../domain/landing.js";
+import {
+  LandingConflictError,
+  LandingSafetyError,
+  LandingService,
+} from "../../application/landing.service.js";
+import {
+  landingSectionKeys,
+  type LandingSectionKey,
+} from "../../domain/landing.js";
 
 const iconSchema = z.enum([
   "building",
@@ -46,12 +53,20 @@ const iconSchema = z.enum([
   "briefcase",
 ]);
 
-const filterSchema = z.enum(["Startup", "Tax & compliance", "Trademark", "Business tools"]);
+const filterSchema = z.enum([
+  "Startup",
+  "Tax & compliance",
+  "Trademark",
+  "Business tools",
+]);
 const nonEmptyText = (max: number) => z.string().trim().min(1).max(max);
 const optionalText = (max: number) => z.string().max(max).default("");
 const hrefSchema = z.string().trim().min(1).max(1000);
 const visibleSchema = z.boolean().default(true);
-const youtubeUrlSchema = optionalText(1000).refine((value) => !value || Boolean(getYouTubeVideoId(value)), "Use a valid YouTube link or leave it blank.");
+const youtubeUrlSchema = optionalText(1000).refine(
+  (value) => !value || Boolean(getYouTubeVideoId(value)),
+  "Use a valid YouTube link or leave it blank.",
+);
 
 const serviceItemSchema = z.object({
   id: nonEmptyText(120),
@@ -80,23 +95,31 @@ const heroSchema = z.object({
 
 const clientsSchema = z.object({
   title: nonEmptyText(100),
-  logos: z.array(z.object({
-    id: nonEmptyText(120),
-    isVisible: visibleSchema,
-    name: nonEmptyText(120),
-    logoUrl: optionalText(1000),
-    textColor: nonEmptyText(40),
-  })).max(30),
+  logos: z
+    .array(
+      z.object({
+        id: nonEmptyText(120),
+        isVisible: visibleSchema,
+        name: nonEmptyText(120),
+        logoUrl: optionalText(1000),
+        textColor: nonEmptyText(40),
+      }),
+    )
+    .max(30),
 });
 
 const metricsSchema = z.object({
   title: nonEmptyText(120),
-  items: z.array(z.object({
-    id: nonEmptyText(120),
-    isVisible: visibleSchema,
-    value: nonEmptyText(80),
-    label: nonEmptyText(120),
-  })).max(12),
+  items: z
+    .array(
+      z.object({
+        id: nonEmptyText(120),
+        isVisible: visibleSchema,
+        value: nonEmptyText(80),
+        label: nonEmptyText(120),
+      }),
+    )
+    .max(12),
 });
 
 const servicesSchema = z.object({
@@ -129,14 +152,18 @@ const processSchema = z.object({
 const testimonialsSchema = z.object({
   title: nonEmptyText(160),
   description: nonEmptyText(500),
-  items: z.array(z.object({
-    id: nonEmptyText(120),
-    isVisible: visibleSchema,
-    imageUrl: optionalText(1000),
-    title: nonEmptyText(240),
-    subtitle: nonEmptyText(240),
-    youtubeUrl: youtubeUrlSchema,
-  })).max(20),
+  items: z
+    .array(
+      z.object({
+        id: nonEmptyText(120),
+        isVisible: visibleSchema,
+        imageUrl: optionalText(1000),
+        title: nonEmptyText(240),
+        subtitle: nonEmptyText(240),
+        youtubeUrl: youtubeUrlSchema,
+      }),
+    )
+    .max(20),
 });
 
 const packagesSchema = z.object({
@@ -145,20 +172,24 @@ const packagesSchema = z.object({
   customPlanLabel: nonEmptyText(160),
   customPlanCtaLabel: nonEmptyText(100),
   customPlanCtaHref: hrefSchema,
-  items: z.array(z.object({
-    id: nonEmptyText(120),
-    isVisible: visibleSchema,
-    tag: nonEmptyText(100),
-    title: nonEmptyText(160),
-    description: nonEmptyText(300),
-    price: nonEmptyText(120),
-    features: z.array(nonEmptyText(180)).max(12),
-    color: nonEmptyText(40),
-    surface: nonEmptyText(40),
-    href: hrefSchema,
-    action: nonEmptyText(100),
-    isFeatured: z.boolean().default(false),
-  })).max(12),
+  items: z
+    .array(
+      z.object({
+        id: nonEmptyText(120),
+        isVisible: visibleSchema,
+        tag: nonEmptyText(100),
+        title: nonEmptyText(160),
+        description: nonEmptyText(300),
+        price: nonEmptyText(120),
+        features: z.array(nonEmptyText(180)).max(12),
+        color: nonEmptyText(40),
+        surface: nonEmptyText(40),
+        href: hrefSchema,
+        action: nonEmptyText(100),
+        isFeatured: z.boolean().default(false),
+      }),
+    )
+    .max(12),
 });
 
 const toolsSchema = z.object({
@@ -166,19 +197,31 @@ const toolsSchema = z.object({
   description: nonEmptyText(500),
   ctaLabel: nonEmptyText(100),
   ctaHref: hrefSchema,
-  items: z.array(z.object({
-    id: nonEmptyText(120),
-    isVisible: visibleSchema,
-    mark: nonEmptyText(40),
-    tag: nonEmptyText(100),
-    title: nonEmptyText(160),
-    description: nonEmptyText(500),
-    rows: z.array(z.object({ id: nonEmptyText(120), label: nonEmptyText(120), value: nonEmptyText(160) })).max(8),
-    action: nonEmptyText(100),
-    href: hrefSchema,
-    color: nonEmptyText(40),
-    surface: nonEmptyText(40),
-  })).max(24),
+  items: z
+    .array(
+      z.object({
+        id: nonEmptyText(120),
+        isVisible: visibleSchema,
+        mark: nonEmptyText(40),
+        tag: nonEmptyText(100),
+        title: nonEmptyText(160),
+        description: nonEmptyText(500),
+        rows: z
+          .array(
+            z.object({
+              id: nonEmptyText(120),
+              label: nonEmptyText(120),
+              value: nonEmptyText(160),
+            }),
+          )
+          .max(8),
+        action: nonEmptyText(100),
+        href: hrefSchema,
+        color: nonEmptyText(40),
+        surface: nonEmptyText(40),
+      }),
+    )
+    .max(24),
 });
 
 const articlesSchema = z.object({
@@ -186,20 +229,24 @@ const articlesSchema = z.object({
   description: nonEmptyText(500),
   ctaLabel: nonEmptyText(100),
   ctaHref: hrefSchema,
-  items: z.array(z.object({
-    id: nonEmptyText(160),
-    isVisible: visibleSchema,
-    slug: nonEmptyText(180),
-    category: nonEmptyText(100),
-    date: nonEmptyText(80),
-    readTime: nonEmptyText(80),
-    title: nonEmptyText(240),
-    subtitle: nonEmptyText(500),
-    coverTone: z.enum(["mint", "violet", "peach"]),
-    coverNumber: nonEmptyText(20),
-    media: z.enum(["image", "video"]),
-    href: hrefSchema,
-  })).max(20),
+  items: z
+    .array(
+      z.object({
+        id: nonEmptyText(160),
+        isVisible: visibleSchema,
+        slug: nonEmptyText(180),
+        category: nonEmptyText(100),
+        date: nonEmptyText(80),
+        readTime: nonEmptyText(80),
+        title: nonEmptyText(240),
+        subtitle: nonEmptyText(500),
+        coverTone: z.enum(["mint", "violet", "peach"]),
+        coverNumber: nonEmptyText(20),
+        media: z.enum(["image", "video"]),
+        href: hrefSchema,
+      }),
+    )
+    .max(20),
 });
 
 const faqSchema = z.object({
@@ -207,12 +254,16 @@ const faqSchema = z.object({
   description: nonEmptyText(500),
   ctaLabel: nonEmptyText(100),
   ctaHref: hrefSchema,
-  items: z.array(z.object({
-    id: nonEmptyText(120),
-    isVisible: visibleSchema,
-    question: nonEmptyText(300),
-    answer: nonEmptyText(1200),
-  })).max(30),
+  items: z
+    .array(
+      z.object({
+        id: nonEmptyText(120),
+        isVisible: visibleSchema,
+        question: nonEmptyText(300),
+        answer: nonEmptyText(1200),
+      }),
+    )
+    .max(30),
 });
 
 const contactSchema = z.object({
@@ -247,12 +298,16 @@ const footerSchema = z.object({
   ctaLabel: nonEmptyText(100),
   ctaHref: hrefSchema,
   title: nonEmptyText(240),
-  columns: z.array(z.object({
-    id: nonEmptyText(120),
-    isVisible: visibleSchema,
-    title: nonEmptyText(120),
-    links: z.array(footerLinkSchema).max(20),
-  })).max(12),
+  columns: z
+    .array(
+      z.object({
+        id: nonEmptyText(120),
+        isVisible: visibleSchema,
+        title: nonEmptyText(120),
+        links: z.array(footerLinkSchema).max(20),
+      }),
+    )
+    .max(12),
   contactTitle: nonEmptyText(120),
   contactEmail: nonEmptyText(200),
   contactPhone: nonEmptyText(100),
@@ -277,8 +332,13 @@ const sectionSchemas = {
 } satisfies Record<LandingSectionKey, z.ZodTypeAny>;
 
 const sectionParamsSchema = z.object({ section: z.enum(landingSectionKeys) });
-const contentBodySchema = z.object({ content: z.unknown(), expectedUpdatedAt: z.string().datetime() });
-const landingLogoAssetSchema = z.string().regex(/^[a-f0-9]{64}\.(?:jpg|png|webp)$/i);
+const contentBodySchema = z.object({
+  content: z.unknown(),
+  expectedUpdatedAt: z.string().datetime(),
+});
+const landingLogoAssetSchema = z
+  .string()
+  .regex(/^[a-f0-9]{64}\.(?:jpg|png|webp)$/i);
 
 class InvalidLandingLogoError extends Error {
   public readonly statusCode = 400;
@@ -290,7 +350,8 @@ class InvalidLandingLogoError extends Error {
 }
 
 async function readLandingLogo(request: FastifyRequest): Promise<ImageUpload> {
-  if (!request.isMultipart()) throw new InvalidLandingLogoError("Choose a logo image to upload.");
+  if (!request.isMultipart())
+    throw new InvalidLandingLogoError("Choose a logo image to upload.");
 
   let image: ImageUpload | undefined;
   for await (const part of request.parts()) {
@@ -300,14 +361,16 @@ async function readLandingLogo(request: FastifyRequest): Promise<ImageUpload> {
     if (!isSupportedLandingLogoType(part.mimetype)) {
       throw new InvalidLandingLogoError("Use a JPG, PNG or WebP image.");
     }
-    if (!body.byteLength) throw new InvalidLandingLogoError("The selected image is empty.");
+    if (!body.byteLength)
+      throw new InvalidLandingLogoError("The selected image is empty.");
     if (body.byteLength > MAX_LANDING_LOGO_BYTES) {
       throw new InvalidLandingLogoError("The logo must be 5 MB or smaller.");
     }
     image = { body, contentType: part.mimetype };
   }
 
-  if (!image) throw new InvalidLandingLogoError("Choose a logo image to upload.");
+  if (!image)
+    throw new InvalidLandingLogoError("Choose a logo image to upload.");
   return image;
 }
 
@@ -315,12 +378,20 @@ async function ensureAdmin(request: FastifyRequest, reply: FastifyReply) {
   return requireAdminSession(request, reply);
 }
 
-export async function landingRoutes(app: FastifyInstance, options: { service: LandingService }) {
-  app.get("/api/landing", async () => ({ data: await options.service.getContent() }));
+export async function landingRoutes(
+  app: FastifyInstance,
+  options: { service: LandingService },
+) {
+  app.get("/api/landing", async () => ({
+    data: await options.service.getContent(),
+  }));
 
   app.get("/api/landing/logos/:asset", async (request, reply) => {
-    const parsed = landingLogoAssetSchema.safeParse((request.params as { asset?: unknown }).asset);
-    if (!parsed.success) return reply.code(404).send({ error: "Logo not found." });
+    const parsed = landingLogoAssetSchema.safeParse(
+      (request.params as { asset?: unknown }).asset,
+    );
+    if (!parsed.success)
+      return reply.code(404).send({ error: "Logo not found." });
 
     const asset = parsed.data;
     const signedUrl = await signStoredObject(createLandingLogoKey(asset));
@@ -336,8 +407,12 @@ export async function landingRoutes(app: FastifyInstance, options: { service: La
     reply.header("Cache-Control", LANDING_LOGO_CACHE_CONTROL);
     reply.header("Content-Type", stored.contentType);
     reply.header("ETag", etag);
-    if (stored.contentLength !== undefined) reply.header("Content-Length", String(stored.contentLength));
-    const requestEtags = request.headers["if-none-match"]?.split(",").map((value) => value.trim()) ?? [];
+    if (stored.contentLength !== undefined)
+      reply.header("Content-Length", String(stored.contentLength));
+    const requestEtags =
+      request.headers["if-none-match"]
+        ?.split(",")
+        .map((value) => value.trim()) ?? [];
     if (requestEtags.includes(etag)) return reply.code(304).send();
     return reply.send(stored.body);
   });
@@ -345,7 +420,12 @@ export async function landingRoutes(app: FastifyInstance, options: { service: La
   app.get("/api/admin/landing", async (request, reply) => {
     if (!(await ensureAdmin(request, reply))) return;
     const snapshot = await options.service.getSnapshot();
-    return { data: { content: snapshot.content, updatedAt: snapshot.updatedAt?.toISOString() ?? null } };
+    return {
+      data: {
+        content: snapshot.content,
+        updatedAt: snapshot.updatedAt?.toISOString() ?? null,
+      },
+    };
   });
 
   app.post("/api/admin/landing/logos", async (request, reply) => {
@@ -354,7 +434,9 @@ export async function landingRoutes(app: FastifyInstance, options: { service: La
     const image = await readLandingLogo(request);
     const hash = createHash("sha256").update(image.body).digest("hex");
     const asset = createLandingLogoAsset(hash, image.contentType);
-    await uploadStoredObject(createLandingLogoKey(asset), image, { cacheControl: LANDING_LOGO_CACHE_CONTROL });
+    await uploadStoredObject(createLandingLogoKey(asset), image, {
+      cacheControl: LANDING_LOGO_CACHE_CONTROL,
+    });
 
     reply.header("Cache-Control", "no-store");
     return reply.code(201).send({
@@ -371,13 +453,27 @@ export async function landingRoutes(app: FastifyInstance, options: { service: La
     if (!(await ensureAdmin(request, reply))) return;
 
     const { section } = sectionParamsSchema.parse(request.params);
-    const { content, expectedUpdatedAt } = contentBodySchema.parse(request.body);
+    const { content, expectedUpdatedAt } = contentBodySchema.parse(
+      request.body,
+    );
     const validated = sectionSchemas[section].parse(content);
     try {
-      const snapshot = await options.service.updateSection(section, validated, new Date(expectedUpdatedAt));
-      return { data: { content: snapshot.content, updatedAt: snapshot.updatedAt.toISOString() } };
+      const snapshot = await options.service.updateSection(
+        section,
+        validated,
+        new Date(expectedUpdatedAt),
+      );
+      return {
+        data: {
+          content: snapshot.content,
+          updatedAt: snapshot.updatedAt.toISOString(),
+        },
+      };
     } catch (error) {
-      if (error instanceof LandingConflictError || error instanceof LandingSafetyError) {
+      if (
+        error instanceof LandingConflictError ||
+        error instanceof LandingSafetyError
+      ) {
         return reply.code(error.statusCode).send({ error: error.message });
       }
       throw error;

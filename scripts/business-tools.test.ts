@@ -1737,9 +1737,8 @@ test("hero section has calm GSAP blob animations, reduced opacity, dynamic typew
   assert.match(heroSectionTsx, /opacity-35/);
   assert.match(heroSectionTsx, /opacity-30/);
 
-  // 5. Typewriter animation with non-jittering container and action badge
+  // 5. Typewriter animation with non-jittering container and speed sheen, no verified chip
   assert.match(heroSectionTsx, /min-h-\[1\.25em\]/);
   assert.match(heroSectionTsx, /animate-hero-sheen/);
-  assert.match(heroSectionTsx, /isGuaranteedActive/);
+  assert.doesNotMatch(heroSectionTsx, />Verified<\/span>/);
 });
-

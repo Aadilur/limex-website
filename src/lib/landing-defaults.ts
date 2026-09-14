@@ -1,4 +1,7 @@
-import { getBlogCoverFallbackUrl, homeArticles } from "../components/limex/blog-data";
+import {
+  getBlogCoverFallbackUrl,
+  homeArticles,
+} from "../components/limex/blog-data";
 import {
   createServicesFromNavigation,
   faqs,
@@ -10,14 +13,25 @@ import {
   services,
   type Service,
 } from "../components/limex/data";
-import type { LandingContent, LandingServiceFilter, LandingServiceItem } from "./landing-types";
+import type {
+  LandingContent,
+  LandingServiceFilter,
+  LandingServiceItem,
+} from "./landing-types";
 import { businessTools, toolHref } from "./business-tools";
 
 function serviceFilter(service: Service): LandingServiceFilter {
-  return service.filters.find((item): item is LandingServiceFilter => item !== "All services") ?? "Startup";
+  return (
+    service.filters.find(
+      (item): item is LandingServiceFilter => item !== "All services",
+    ) ?? "Startup"
+  );
 }
 
-function landingService(service: Service, title = service.title): LandingServiceItem {
+function landingService(
+  service: Service,
+  title = service.title,
+): LandingServiceItem {
   return {
     id: `landing-${service.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
     isVisible: true,
@@ -31,7 +45,9 @@ function landingService(service: Service, title = service.title): LandingService
 }
 
 const availableServices = createServicesFromNavigation(navigation);
-const serviceByTitle = new Map(availableServices.map((service) => [service.title, service]));
+const serviceByTitle = new Map(
+  availableServices.map((service) => [service.title, service]),
+);
 
 function requiredService(title: string, displayTitle = title) {
   const service = serviceByTitle.get(title);
@@ -40,7 +56,8 @@ function requiredService(title: string, displayTitle = title) {
 
 // Public sample playback URL for validating the testimonial player before real Limex stories are added.
 // Admins can replace this from Landing > Testimonials.
-export const landingTestVideoUrl = "https://www.youtube.com/watch?v=aqz-KE-bpKQ";
+export const landingTestVideoUrl =
+  "https://www.youtube.com/watch?v=aqz-KE-bpKQ";
 
 const heroServices = [
   requiredService("Company Formation", "Company registration"),
@@ -80,7 +97,8 @@ const footerLinkHref: Record<string, string> = {
 
 export const defaultLandingContent: LandingContent = {
   hero: {
-    eyebrow: "BUSINESS REGISTRATION  ·  TRADEMARK  ·  LICENSE  ·  VAT  ·  STARTUP  ·  TAX",
+    eyebrow:
+      "BUSINESS REGISTRATION  ·  TRADEMARK  ·  LICENSE  ·  VAT  ·  STARTUP  ·  TAX",
     mobileEyebrow: "ONE PLACE FOR THE IMPORTANT WORK",
     titlePrimary: "Fastest Processing",
     titleSecondary: "Guaranteed",
@@ -90,7 +108,8 @@ export const defaultLandingContent: LandingContent = {
       "100% Compliant",
       "End-to-End Support",
     ],
-    description: "Company registration, VAT, tax, trademark and compliance support for ambitious businesses.",
+    description:
+      "Company registration, VAT, tax, trademark and compliance support for ambitious businesses.",
     primaryCtaLabel: "Explore services",
     primaryCtaHref: "#services",
     secondaryCtaLabel: "Talk to an expert",
@@ -100,39 +119,102 @@ export const defaultLandingContent: LandingContent = {
   clients: {
     title: "OUR CLIENTS",
     logos: [
-      { id: "northstar", isVisible: true, name: "Northstar", logoUrl: "/figma/client-northstar-a.svg", textColor: "#121f2e" },
-      { id: "sage", isVisible: true, name: "Sage & Co.", logoUrl: "/figma/client-sage-a.svg", textColor: "#2b5e8c" },
-      { id: "aster", isVisible: true, name: "Aster Labs", logoUrl: "/figma/client-aster.svg", textColor: "#a64a5c" },
-      { id: "biznest", isVisible: true, name: "BIZNEST", logoUrl: "", textColor: "#c79938" },
-      { id: "civic", isVisible: true, name: "Civic", logoUrl: "/figma/client-civic-a.svg", textColor: "#4a7563" },
-      { id: "morrow", isVisible: true, name: "Morrow", logoUrl: "", textColor: "#5e578c" },
+      {
+        id: "northstar",
+        isVisible: true,
+        name: "Northstar",
+        logoUrl: "/figma/client-northstar-a.svg",
+        textColor: "#121f2e",
+      },
+      {
+        id: "sage",
+        isVisible: true,
+        name: "Sage & Co.",
+        logoUrl: "/figma/client-sage-a.svg",
+        textColor: "#2b5e8c",
+      },
+      {
+        id: "aster",
+        isVisible: true,
+        name: "Aster Labs",
+        logoUrl: "/figma/client-aster.svg",
+        textColor: "#a64a5c",
+      },
+      {
+        id: "biznest",
+        isVisible: true,
+        name: "BIZNEST",
+        logoUrl: "",
+        textColor: "#c79938",
+      },
+      {
+        id: "civic",
+        isVisible: true,
+        name: "Civic",
+        logoUrl: "/figma/client-civic-a.svg",
+        textColor: "#4a7563",
+      },
+      {
+        id: "morrow",
+        isVisible: true,
+        name: "Morrow",
+        logoUrl: "",
+        textColor: "#5e578c",
+      },
     ],
   },
   metrics: {
     title: "The Limex standard",
     items: [
-      { id: "brands", isVisible: true, value: "1,200+", label: "brands assisted" },
-      { id: "satisfaction", isVisible: true, value: "4.9/5", label: "client satisfaction" },
-      { id: "experience", isVisible: true, value: "7+ years", label: "practical guidance" },
-      { id: "response", isVisible: true, value: "24 hrs", label: "typical response" },
+      {
+        id: "brands",
+        isVisible: true,
+        value: "1,200+",
+        label: "brands assisted",
+      },
+      {
+        id: "satisfaction",
+        isVisible: true,
+        value: "4.9/5",
+        label: "client satisfaction",
+      },
+      {
+        id: "experience",
+        isVisible: true,
+        value: "7+ years",
+        label: "practical guidance",
+      },
+      {
+        id: "response",
+        isVisible: true,
+        value: "24 hrs",
+        label: "typical response",
+      },
     ],
   },
   services: {
     title: "Start, protect and grow with clarity.",
-    description: "A focused set of services for the moments that matter most in your business journey.",
+    description:
+      "A focused set of services for the moments that matter most in your business journey.",
     ctaLabel: "View all services",
     ctaHref: "/services",
     items: featuredServices,
   },
   process: {
     title: "From question to completion.",
-    description: "A simple, transparent process that keeps your business moving.",
+    description:
+      "A simple, transparent process that keeps your business moving.",
     helperEyebrow: "NEED HELP CHOOSING?",
     helperTitle: "Talk to an expert.",
-    helperDescription: "Tell us what you are trying to solve and we will point you in the right direction.",
+    helperDescription:
+      "Tell us what you are trying to solve and we will point you in the right direction.",
     helperCtaLabel: "Start a conversation",
     helperCtaHref: "#contact",
-    items: processSteps.map((step) => ({ id: `step-${step.number}`, isVisible: true, ...step })),
+    items: processSteps.map((step) => ({
+      id: `step-${step.number}`,
+      isVisible: true,
+      ...step,
+    })),
   },
   testimonials: {
     title: "Stories from the businesses we support.",
@@ -148,7 +230,8 @@ export const defaultLandingContent: LandingContent = {
   },
   packages: {
     title: "Choose a clear starting point.",
-    description: "Simple packages for common needs. Custom support when needed.",
+    description:
+      "Simple packages for common needs. Custom support when needed.",
     customPlanLabel: "Need a tailored plan?",
     customPlanCtaLabel: "Request custom quote",
     customPlanCtaHref: "#contact",
@@ -172,19 +255,21 @@ export const defaultLandingContent: LandingContent = {
     description: "Practical tools for quick business decisions.",
     ctaLabel: "Explore tools",
     ctaHref: "/business-tools",
-    items: businessTools.filter((tool) => tool.group === "calculator").map((tool) => ({
-      id: `tool-${tool.slug}`,
-      isVisible: true,
-      mark: tool.icon,
-      tag: tool.group,
-      title: tool.title,
-      description: tool.description,
-      rows: [],
-      action: "Open tool",
-      href: toolHref(tool.slug),
-      color: "#008cff",
-      surface: "#eaf3ff",
-    })),
+    items: businessTools
+      .filter((tool) => tool.group === "calculator")
+      .map((tool) => ({
+        id: `tool-${tool.slug}`,
+        isVisible: true,
+        mark: tool.icon,
+        tag: tool.group,
+        title: tool.title,
+        description: tool.description,
+        rows: [],
+        action: "Open tool",
+        href: toolHref(tool.slug),
+        color: "#008cff",
+        surface: "#eaf3ff",
+      })),
   },
   articles: {
     title: "Small insights for big decisions.",
@@ -212,7 +297,11 @@ export const defaultLandingContent: LandingContent = {
     description: "The essentials, in plain language.",
     ctaLabel: "Talk to an advisor",
     ctaHref: "#contact",
-    items: faqs.map((faq, index) => ({ id: `faq-${index + 1}`, isVisible: true, ...faq })),
+    items: faqs.map((faq, index) => ({
+      id: `faq-${index + 1}`,
+      isVisible: true,
+      ...faq,
+    })),
   },
   contact: {
     title: "Bring us the question. Leave with a plan.",
@@ -228,7 +317,8 @@ export const defaultLandingContent: LandingContent = {
     formDescription: "Share a little context and we'll guide you from there.",
     serviceHelper: "Top-level services only. You can choose more than one.",
     contactMethodHelper: "Phone or email is required — one is enough.",
-    scheduleHelper: "Choose a date and a convenient time. We'll confirm availability with you.",
+    scheduleHelper:
+      "Choose a date and a convenient time. We'll confirm availability with you.",
     privacyNote: "Your details stay private.",
     submitLabel: "Send message",
     submittedNote: "Thanks — we’ll reply within one business day.",
@@ -242,7 +332,12 @@ export const defaultLandingContent: LandingContent = {
       id: `footer-column-${columnIndex + 1}`,
       isVisible: true,
       title: column.title,
-      links: column.links.map((label, linkIndex) => ({ id: `footer-link-${columnIndex + 1}-${linkIndex + 1}`, isVisible: true, label, href: footerLinkHref[label] ?? "#top" })),
+      links: column.links.map((label, linkIndex) => ({
+        id: `footer-link-${columnIndex + 1}-${linkIndex + 1}`,
+        isVisible: true,
+        label,
+        href: footerLinkHref[label] ?? "#top",
+      })),
     })),
     contactTitle: "CONTACT",
     contactEmail: "hello@yourbrand.com",

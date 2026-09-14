@@ -81,9 +81,7 @@ export function HeroSection({
             "100% Compliant",
             "End-to-End Support",
           ];
-    return list
-      .map((item) => item.trim())
-      .filter((item) => item.length > 0);
+    return list.map((item) => item.trim()).filter((item) => item.length > 0);
   }, [content.animatedWords, content.titleSecondary]);
 
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
@@ -135,10 +133,6 @@ export function HeroSection({
     }, typeSpeed);
     return () => clearTimeout(typeTimer);
   }, [currentText, currentWordIndex, isDeleting, isPaused, words]);
-
-  const isGuaranteedActive =
-    (words[currentWordIndex] || "").toLowerCase().includes("guarantee") &&
-    currentText.toLowerCase().includes("guarantee");
 
   return (
     <section
@@ -194,28 +188,6 @@ export function HeroSection({
               aria-hidden="true"
               className="inline-block h-[0.78em] w-[2.5px] ml-1.5 translate-y-[1px] rounded-full bg-accent animate-pulse align-middle"
             />
-            {isGuaranteedActive && isPaused ? (
-              <span
-                className="hidden sm:inline-flex items-center gap-1 ml-2.5 rounded-full border border-emerald-300/60 bg-emerald-50/90 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 shadow-sm transition-all duration-300 animate-in fade-in zoom-in-95 align-middle"
-                aria-label="Verified guarantee SLA"
-              >
-                <svg
-                  className="size-3 text-emerald-600"
-                  viewBox="0 0 12 12"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <polyline points="2.5 6 4.8 8.5 9.5 3.5" />
-                </svg>
-                <span className="text-[10px] font-bold uppercase tracking-wider">
-                  Verified
-                </span>
-              </span>
-            ) : null}
           </span>
         </h1>
         <p className="mx-auto max-w-[520px] text-body-sm text-[#52545c] lg:max-w-[620px] lg:text-body">
