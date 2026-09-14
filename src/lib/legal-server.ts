@@ -8,7 +8,9 @@ function backendUrl(path: string) {
   return `${base.replace(/\/$/, "")}${path}`;
 }
 
-export async function getPublicLegalPageServer(slug: LegalSlug): Promise<LegalPageData> {
+export async function getPublicLegalPageServer(
+  slug: LegalSlug,
+): Promise<LegalPageData> {
   try {
     const response = await fetch(backendUrl(`/api/legal/${slug}`), {
       cache: "no-store",

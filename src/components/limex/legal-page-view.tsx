@@ -40,7 +40,8 @@ export function LegalPageView({ page }: { page: LegalPageData }) {
               {page.title}
             </h1>
             <p className="mt-3 text-[14px] leading-[1.6] text-muted sm:text-[15px]">
-              Last updated: {formatLegalDate(page.updatedAt)} · Official statutory documentation of Limex Consultancy Firm.
+              Last updated: {formatLegalDate(page.updatedAt)} · Official
+              statutory documentation of Limex Consultancy Firm.
             </p>
           </div>
 

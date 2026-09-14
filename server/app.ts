@@ -52,7 +52,11 @@ export async function buildApp() {
     // behind the gateway as one client.
     trustProxy: true,
   });
-  const apiWriteLimiter = createRateLimiter({ limit: 180, windowMs: 60_000, maxEntries: 20_000 });
+  const apiWriteLimiter = createRateLimiter({
+    limit: 180,
+    windowMs: 60_000,
+    maxEntries: 20_000,
+  });
 
   const corsOrigin =
     env.CORS_ORIGIN === "*"
@@ -73,7 +77,13 @@ export async function buildApp() {
   // A modest process-wide guard covers every API mutation, including admin
   // mutations. Public write routes also use tighter endpoint-specific limits.
   app.addHook("onRequest", async (request, reply) => {
-    if (!request.url.startsWith("/api/") || request.method === "GET" || request.method === "HEAD" || request.method === "OPTIONS") return;
+    if (
+      !request.url.startsWith("/api/") ||
+      request.method === "GET" ||
+      request.method === "HEAD" ||
+      request.method === "OPTIONS"
+    )
+      return;
     if (!apiWriteLimiter(request, reply, request.url.split("?")[0])) return;
   });
 
@@ -81,12 +91,21 @@ export async function buildApp() {
   const userService = new UserService(new PrismaUserRepository(prisma));
   const adminAuthService = new AdminAuthService();
   const menuService = new MenuService(new PrismaMenuRepository(prisma));
-  const aboutService = new AboutService(new PrismaAboutRepository(prisma), new PrismaAboutReelRepository(prisma));
-  const landingService = new LandingService(new PrismaLandingRepository(prisma));
+  const aboutService = new AboutService(
+    new PrismaAboutRepository(prisma),
+    new PrismaAboutReelRepository(prisma),
+  );
+  const landingService = new LandingService(
+    new PrismaLandingRepository(prisma),
+  );
   const blogService = new BlogService(new PrismaBlogRepository(prisma));
-  const serviceService = new ServiceService(new PrismaServiceRepository(prisma));
+  const serviceService = new ServiceService(
+    new PrismaServiceRepository(prisma),
+  );
   const mediaService = new MediaService(new PrismaMediaRepository(prisma));
-  const contactService = new ContactService(new PrismaContactRepository(prisma));
+  const contactService = new ContactService(
+    new PrismaContactRepository(prisma),
+  );
   const legalService = new LegalService(new PrismaLegalRepository(prisma));
 
   await app.register(healthRoutes, { service: healthService });
@@ -112,14 +131,43 @@ export async function buildApp() {
       });
     }
 
-    if (error && typeof error === "object" && "statusCode" in error && typeof error.statusCode === "number") {
+    if (
+      error &&
+      typeof error === "object" &&
+      "statusCode" in error &&
+      typeof error.statusCode === "number"
+    ) {
       const statusCode = error.statusCode;
-      if (statusCode === 400) return reply.code(400).send({ error: error instanceof Error ? error.message : "The request is invalid." });
+      if (statusCode === 400)
+        return reply
+          .code(400)
+          .send({
+            error:
+              error instanceof Error
+                ? error.message
+                : "The request is invalid.",
+          });
       if (statusCode === 413) {
-        const isMultipart = String(request.headers["content-type"] ?? "").startsWith("multipart/");
-        return reply.code(413).send({ error: isMultipart ? "The image must be 5 MB or smaller." : "Request payload is too large." });
+        const isMultipart = String(
+          request.headers["content-type"] ?? "",
+        ).startsWith("multipart/");
+        return reply
+          .code(413)
+          .send({
+            error: isMultipart
+              ? "The image must be 5 MB or smaller."
+              : "Request payload is too large.",
+          });
       }
-      if (statusCode === 503) return reply.code(503).send({ error: error instanceof Error ? error.message : "Image storage is unavailable." });
+      if (statusCode === 503)
+        return reply
+          .code(503)
+          .send({
+            error:
+              error instanceof Error
+                ? error.message
+                : "Image storage is unavailable.",
+          });
     }
 
     request.log.error(error);

@@ -23,12 +23,16 @@ export class PrismaLegalRepository {
         slug,
         title: input.title,
         contentHtml: input.contentHtml,
-        contentJson: input.contentJson ? JSON.parse(JSON.stringify(input.contentJson)) : undefined,
+        contentJson: input.contentJson
+          ? JSON.parse(JSON.stringify(input.contentJson))
+          : undefined,
       },
       update: {
         title: input.title,
         contentHtml: input.contentHtml,
-        contentJson: input.contentJson ? JSON.parse(JSON.stringify(input.contentJson)) : undefined,
+        contentJson: input.contentJson
+          ? JSON.parse(JSON.stringify(input.contentJson))
+          : undefined,
       },
     });
   }

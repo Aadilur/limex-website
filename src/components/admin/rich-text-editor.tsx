@@ -615,6 +615,7 @@ export function RichTextEditor({
 
   useEffect(() => {
     const nextHtml = value || "";
+    const lastPropValue = previousValue.current;
     const wasInternalUpdate = internalValueUpdate.current;
     internalValueUpdate.current = false;
 
@@ -629,6 +630,10 @@ export function RichTextEditor({
 
     const nextContent = sanitizeBlogContent(nextHtml);
     preservedCss.current = nextContent.css;
+    if (!wasInternalUpdate) {
+      setCustomCss(nextContent.css);
+      setHtmlSource(nextContent.html);
+    }
     setCustomCss(nextContent.css);
     setHtmlSource(nextContent.html);
 
@@ -647,8 +652,10 @@ export function RichTextEditor({
       currentHtml === nextHtml ||
       currentHtml === nextContent.html ||
       (nextHtml === "" && currentHtml === "<p></p>")
+    )
     ) {
       return;
+    if (editor.isFocused && nextHtml === lastPropValue) return;
     }
 
     editor.commands.setContent(nextContent.html, false);
@@ -686,6 +693,7 @@ export function RichTextEditor({
 
   function updateCustomCss(nextValue: string) {
     const sanitizedCss = sanitizeBlogContent(`<style>${nextValue}</style>`).css;
+    const html = htmlSource || sanitizeBlogContent(value).html;
     const html = htmlSource || sanitizeBlogContent(valueRef.current).html;
     const nextHtml = sanitizedCss
       ? `<style>${sanitizedCss}</style>${html}`
@@ -732,6 +740,7 @@ export function RichTextEditor({
 
   function changeEditorMode(nextMode: EditorMode) {
     if (nextMode === "visual") {
+      const nextContent = sanitizeBlogContent(value);
       const nextContent = sanitizeBlogContent(valueRef.current);
       if (hasCustomRichTextStructure(nextContent.html, nextContent.css)) {
         setPanelError(

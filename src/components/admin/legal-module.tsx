@@ -35,7 +35,10 @@ export function LegalModule() {
     privacy: defaultLegalPages.privacy,
   });
   const [drafts, setDrafts] = useState<
-    Record<LegalSlug, { title: string; contentHtml: string; contentJson?: unknown }>
+    Record<
+      LegalSlug,
+      { title: string; contentHtml: string; contentJson?: unknown }
+    >
   >({
     terms: {
       title: defaultLegalPages.terms.title,
@@ -185,8 +188,8 @@ export function LegalModule() {
             Legal Pages
           </h1>
           <p className="mt-3 max-w-[660px] text-[14px] leading-[1.6] text-[#77736e]">
-            Manage your Terms and Conditions and Privacy Policy. Use the rich text
-            editor to format clauses, add tables, or customize CSS styles.
+            Manage your Terms and Conditions and Privacy Policy. Use the rich
+            text editor to format clauses, add tables, or customize CSS styles.
           </p>
         </div>
 
@@ -306,7 +309,8 @@ export function LegalModule() {
               Document Body Content
             </span>
             <span className="text-[11px] text-[#9b958c]">
-              Supports Visual typing, HTML markup, scoped CSS rules &amp; Preview
+              Supports Visual typing, HTML markup, scoped CSS rules &amp;
+              Preview
             </span>
           </div>
 

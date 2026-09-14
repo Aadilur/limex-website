@@ -14,11 +14,13 @@ export type LegalPageRecord = {
 
 export const legalSlugSchema = z.enum(["terms", "privacy"]);
 
-export const legalPageInputSchema = z.object({
-  title: z.string().trim().min(2).max(180),
-  contentHtml: z.string().trim().min(10),
-  contentJson: z.unknown().optional().nullable(),
-}).strict();
+export const legalPageInputSchema = z
+  .object({
+    title: z.string().trim().min(2).max(180),
+    contentHtml: z.string().trim().min(10),
+    contentJson: z.unknown().optional().nullable(),
+  })
+  .strict();
 
 export type LegalPageInput = z.infer<typeof legalPageInputSchema>;
 
@@ -129,7 +131,10 @@ export const DEFAULT_PRIVACY_HTML = `
 <p>If you have any questions, concerns, or requests regarding this Privacy Policy or how your data is handled, please contact our data compliance desk at <strong>hello@yourbrand.com</strong>.</p>
 `.trim();
 
-export const DEFAULT_LEGAL_PAGES: Record<LegalSlug, { title: string; contentHtml: string }> = {
+export const DEFAULT_LEGAL_PAGES: Record<
+  LegalSlug,
+  { title: string; contentHtml: string }
+> = {
   terms: {
     title: "Terms and Conditions",
     contentHtml: DEFAULT_TERMS_HTML,
