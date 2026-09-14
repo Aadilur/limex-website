@@ -191,6 +191,10 @@ const config: Config = {
           from: { opacity: "0", transform: "translate(-50%, -8px)" },
           to: { opacity: "1", transform: "translate(-50%, 0)" },
         },
+        "hero-sheen": {
+          "0%, 72%": { backgroundPosition: "0% 50%" },
+          "100%": { backgroundPosition: "200% 50%" },
+        },
       },
       animation: {
         "client-marquee": "client-marquee 24s linear infinite",
@@ -200,6 +204,7 @@ const config: Config = {
         "card-in": "card-in 360ms ease both",
         "menu-in": "menu-in 220ms ease both",
         "menu-panel-in": "menu-panel-in 220ms ease both",
+        "hero-sheen": "hero-sheen 7.5s ease-in-out infinite",
       },
     },
   },

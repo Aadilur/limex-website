@@ -84,6 +84,12 @@ export const defaultLandingContent: LandingContent = {
     mobileEyebrow: "ONE PLACE FOR THE IMPORTANT WORK",
     titlePrimary: "Fastest Processing",
     titleSecondary: "Guaranteed",
+    animatedWords: [
+      "Guaranteed",
+      "Zero Delays",
+      "100% Compliant",
+      "End-to-End Support",
+    ],
     description: "Company registration, VAT, tax, trademark and compliance support for ambitious businesses.",
     primaryCtaLabel: "Explore services",
     primaryCtaHref: "#services",

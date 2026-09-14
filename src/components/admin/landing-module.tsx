@@ -1219,6 +1219,19 @@ function HeroEditor({
               placeholder="E.g. to launch and stay compliant."
             />
           </div>
+          <Field
+            label="Animated rotating phrases"
+            hint="Comma-separated list (e.g. Guaranteed, Zero Delays, 100% Compliant)"
+            value={(content.animatedWords ?? []).join(", ")}
+            onChange={(value) => {
+              const words = value
+                .split(",")
+                .map((w) => w.trim())
+                .filter(Boolean);
+              onChange({ animatedWords: words });
+            }}
+            placeholder="Guaranteed, Zero Delays, 100% Compliant, End-to-End Support"
+          />
           <TextAreaField
             label="Main description"
             value={content.description}

@@ -35,6 +35,7 @@ export type HeroContent = {
   mobileEyebrow: string;
   titlePrimary: string;
   titleSecondary: string;
+  animatedWords?: string[];
   description: string;
   primaryCtaLabel: string;
   primaryCtaHref: string;

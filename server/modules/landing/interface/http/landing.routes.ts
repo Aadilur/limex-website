@@ -69,6 +69,7 @@ const heroSchema = z.object({
   mobileEyebrow: nonEmptyText(150),
   titlePrimary: nonEmptyText(160),
   titleSecondary: nonEmptyText(160),
+  animatedWords: z.array(nonEmptyText(80)).max(10).optional().default([]),
   description: nonEmptyText(500),
   primaryCtaLabel: nonEmptyText(100),
   primaryCtaHref: hrefSchema,

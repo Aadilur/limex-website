@@ -1670,10 +1670,7 @@ test("bangla language toggle is supported on service and blog pages", async () =
   assert.match(serviceSectionsTsx, /ui\.switchLabel/);
 
   // 2. Blog supports language toggle
-  assert.match(
-    blogSectionsTsx,
-    /locale === "bn" \? "English" : "বাংলা"/,
-  );
+  assert.match(blogSectionsTsx, /locale === "bn" \? "English" : "বাংলা"/);
 });
 
 test("blog article body contact links, related services, and hash navigation open ContactModal with pre-selected service", async () => {
@@ -1698,9 +1695,51 @@ test("blog article body contact links, related services, and hash navigation ope
   assert.match(blogSectionsTsx, /openContactWithService/);
 
   // 3. BlogDetailContent listens to URL hash and opens modal
-  assert.match(blogSectionsTsx, /window\.addEventListener\("hashchange", handleHash\)/);
+  assert.match(
+    blogSectionsTsx,
+    /window\.addEventListener\("hashchange", handleHash\)/,
+  );
 
   // 4. Controlled ContactModal is mounted in BlogDetailContent
   assert.match(blogSectionsTsx, /hideTrigger\s+isOpen=\{isContactModalOpen\}/);
+});
+
+test("hero section has calm GSAP blob animations, reduced opacity, dynamic typewriter title, and backend animatedWords support", async () => {
+  const fs = await import("node:fs/promises");
+  const heroSectionTsx = await fs.readFile(
+    new URL("../src/components/limex/hero-section.tsx", import.meta.url),
+    "utf8",
+  );
+  const landingRoutesTs = await fs.readFile(
+    new URL(
+      "../server/modules/landing/interface/http/landing.routes.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const landingModuleTsx = await fs.readFile(
+    new URL("../src/components/admin/landing-module.tsx", import.meta.url),
+    "utf8",
+  );
+
+  // 1. Backend schema supports animatedWords
+  assert.match(landingRoutesTs, /animatedWords:\s*z\.array/);
+
+  // 2. Admin landing module provides animated rotating phrases field
+  assert.match(landingModuleTsx, /Animated rotating phrases/);
+
+  // 3. Hero section uses GSAP with ambient floating trajectories
+  assert.match(heroSectionTsx, /import gsap from "gsap"/);
+  assert.match(heroSectionTsx, /gsap\.to\(blobWarmRef\.current/);
+  assert.match(heroSectionTsx, /gsap\.to\(blobCoolRef\.current/);
+
+  // 4. Background glow SVG blobs have reduced opacity (opacity-30 / opacity-35 / opacity-40)
+  assert.match(heroSectionTsx, /opacity-35/);
+  assert.match(heroSectionTsx, /opacity-30/);
+
+  // 5. Typewriter animation with non-jittering container and action badge
+  assert.match(heroSectionTsx, /min-h-\[1\.25em\]/);
+  assert.match(heroSectionTsx, /animate-hero-sheen/);
+  assert.match(heroSectionTsx, /isGuaranteedActive/);
 });
 
