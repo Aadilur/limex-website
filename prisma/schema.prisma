@@ -417,3 +417,15 @@ model ToolServiceRequest {
   @@index([requestType, createdAt])
   @@index([toolSlug, createdAt])
 }
+
+model LegalPage {
+  id          String   @id @default(cuid())
+  slug        String   @unique @db.VarChar(60)
+  title       String   @db.VarChar(180)
+  contentHtml String   @db.LongText
+  contentJson Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([slug])
+}

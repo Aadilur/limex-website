@@ -1742,3 +1742,57 @@ test("hero section has calm GSAP blob animations, reduced opacity, dynamic typew
   assert.match(heroSectionTsx, /animate-hero-sheen/);
   assert.doesNotMatch(heroSectionTsx, />Verified<\/span>/);
 });
+
+test("rich text editor permanently preserves cursor focus and legal pages have full CMS & footer support", async () => {
+  const fs = await import("node:fs/promises");
+  const richTextEditorTsx = await fs.readFile(
+    new URL("../src/components/admin/rich-text-editor.tsx", import.meta.url),
+    "utf8",
+  );
+  const landingDefaultsTs = await fs.readFile(
+    new URL("../src/lib/landing-defaults.ts", import.meta.url),
+    "utf8",
+  );
+  const landingApiTs = await fs.readFile(
+    new URL("../src/lib/landing-api.ts", import.meta.url),
+    "utf8",
+  );
+  const adminShellTsx = await fs.readFile(
+    new URL("../src/components/admin/admin-shell.tsx", import.meta.url),
+    "utf8",
+  );
+  const serverAppTs = await fs.readFile(
+    new URL("../server/app.ts", import.meta.url),
+    "utf8",
+  );
+  const { defaultLegalPages } = await import("../src/lib/legal-defaults.js");
+
+  // 1. Rich text editor cursor focus protection
+  assert.match(richTextEditorTsx, /const lastEmittedHtml = useRef/);
+  assert.match(
+    richTextEditorTsx,
+    /if \(wasInternalUpdate \|\| nextHtml === lastEmittedHtml\.current\) \{\s*previousValue\.current = nextHtml;\s*return;\s*\}/,
+  );
+  assert.match(richTextEditorTsx, /if \(editor\?\.isFocused\) return;/);
+
+  // 2. Default legal pages are comprehensive and structured
+  assert.ok(defaultLegalPages.terms.contentHtml.includes("<h2>1. Introduction and Scope of Services</h2>"));
+  assert.ok(defaultLegalPages.terms.contentHtml.includes("Limex Consultancy Firm"));
+  assert.ok(defaultLegalPages.privacy.contentHtml.includes("<h2>1. Commitment to Privacy</h2>"));
+  assert.ok(defaultLegalPages.privacy.contentHtml.includes("Information We Collect"));
+
+  // 3. Admin navigation includes Legal pages
+  assert.match(adminShellTsx, /\{ label: "Legal pages", href: "\/admin\/legal" \}/);
+
+  // 4. Backend registers legal routes
+  assert.match(serverAppTs, /import \{ legalRoutes \} from "\.\/modules\/legal\/interface\/http\/legal\.routes\.js"/);
+  assert.match(serverAppTs, /await app\.register\(legalRoutes/);
+
+  // 5. Footer legalLinks point to /terms and /privacy
+  assert.match(landingDefaultsTs, /href:\s*"\/privacy"/);
+  assert.match(landingDefaultsTs, /href:\s*"\/terms"/);
+  assert.match(landingApiTs, /link\.href === "\/#top"/);
+  assert.match(landingApiTs, /return \{ \.\.\.link, href: "\/privacy" \}/);
+  assert.match(landingApiTs, /return \{ \.\.\.link, href: "\/terms" \}/);
+});
+

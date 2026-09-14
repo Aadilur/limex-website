@@ -345,8 +345,8 @@ export const defaultLandingContent: LandingContent = {
     location: "Dhaka, Bangladesh",
     copyright: "© 2026 Limex",
     legalLinks: [
-      { id: "privacy", isVisible: true, label: "Privacy", href: "/#top" },
-      { id: "terms", isVisible: true, label: "Terms", href: "/#top" },
+      { id: "privacy", isVisible: true, label: "Privacy policy", href: "/privacy" },
+      { id: "terms", isVisible: true, label: "Terms and conditions", href: "/terms" },
     ],
   },
 };

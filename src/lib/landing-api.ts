@@ -93,6 +93,18 @@ export function withLandingFallback(content: Partial<LandingContent> | null | un
     articles: { ...defaultLandingContent.articles, ...(content?.articles ?? {}), ...(savedArticles.length ? { items: savedArticles } : {}) },
     faq: { ...defaultLandingContent.faq, ...(content?.faq ?? {}) },
     contact: { ...defaultLandingContent.contact, ...(content?.contact ?? {}) },
-    footer: { ...defaultLandingContent.footer, ...(content?.footer ?? {}) },
+    footer: {
+      ...defaultLandingContent.footer,
+      ...(content?.footer ?? {}),
+      legalLinks: (content?.footer?.legalLinks ?? defaultLandingContent.footer.legalLinks).map((link) => {
+        if (link.id === "privacy" && (link.href === "/#top" || link.href === "#top" || !link.href)) {
+          return { ...link, href: "/privacy" };
+        }
+        if (link.id === "terms" && (link.href === "/#top" || link.href === "#top" || !link.href)) {
+          return { ...link, href: "/terms" };
+        }
+        return link;
+      }),
+    },
   };
 }

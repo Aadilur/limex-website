@@ -492,6 +492,7 @@ export function RichTextEditor({
   const previousValue = useRef(value || "");
   const preservedCss = useRef(sanitizeBlogContent(value).css);
   const internalValueUpdate = useRef(false);
+  const lastEmittedHtml = useRef(value || "");
   const valueRef = useRef(value || "");
   valueRef.current = value || "";
   const onChangeRef = useRef(onChange);
@@ -578,6 +579,7 @@ export function RichTextEditor({
           preservedCss.current = combinedCss;
           setCustomCss(combinedCss);
           setHtmlSource(combinedHtml);
+          lastEmittedHtml.current = nextHtml;
           internalValueUpdate.current = true;
           onChangeRef.current(nextHtml, { version: 1, html: nextHtml });
           setEditorMode("preview");
@@ -613,29 +615,42 @@ export function RichTextEditor({
 
   useEffect(() => {
     const nextHtml = value || "";
-    const lastPropValue = previousValue.current;
     const wasInternalUpdate = internalValueUpdate.current;
     internalValueUpdate.current = false;
+
+    // Echo protection: never clobber active typing when value matches what we just emitted
+    if (wasInternalUpdate || nextHtml === lastEmittedHtml.current) {
+      previousValue.current = nextHtml;
+      return;
+    }
+
     previousValue.current = nextHtml;
+    lastEmittedHtml.current = nextHtml;
+
     const nextContent = sanitizeBlogContent(nextHtml);
     preservedCss.current = nextContent.css;
-    if (!wasInternalUpdate) {
-      setCustomCss(nextContent.css);
-      setHtmlSource(nextContent.html);
-    }
+    setCustomCss(nextContent.css);
+    setHtmlSource(nextContent.html);
+
+    // If editor has active focus, do not replace the document and kill cursor
+    if (editor?.isFocused) return;
+
+    // External change has custom markup: present preview cleanly
     if (hasCustomRichTextStructure(nextContent.html, nextContent.css)) {
       if (editorMode === "visual") setEditorMode("preview");
       return;
     }
+
     if (!editor || editorMode !== "visual") return;
     const currentHtml = editor.getHTML();
     if (
       currentHtml === nextHtml ||
       currentHtml === nextContent.html ||
       (nextHtml === "" && currentHtml === "<p></p>")
-    )
+    ) {
       return;
-    if (editor.isFocused && nextHtml === lastPropValue) return;
+    }
+
     editor.commands.setContent(nextContent.html, false);
   }, [editor, editorMode, value]);
 
@@ -664,13 +679,14 @@ export function RichTextEditor({
           : "Visual editor";
 
   function emitChange(html: string, document: RichTextDocument) {
+    lastEmittedHtml.current = html;
     internalValueUpdate.current = true;
     onChange(html, document);
   }
 
   function updateCustomCss(nextValue: string) {
     const sanitizedCss = sanitizeBlogContent(`<style>${nextValue}</style>`).css;
-    const html = htmlSource || sanitizeBlogContent(value).html;
+    const html = htmlSource || sanitizeBlogContent(valueRef.current).html;
     const nextHtml = sanitizedCss
       ? `<style>${sanitizedCss}</style>${html}`
       : html;
@@ -716,7 +732,7 @@ export function RichTextEditor({
 
   function changeEditorMode(nextMode: EditorMode) {
     if (nextMode === "visual") {
-      const nextContent = sanitizeBlogContent(value);
+      const nextContent = sanitizeBlogContent(valueRef.current);
       if (hasCustomRichTextStructure(nextContent.html, nextContent.css)) {
         setPanelError(
           "This content uses custom HTML/CSS. Use HTML or CSS to edit it and Preview to inspect the exact result.",
@@ -727,6 +743,10 @@ export function RichTextEditor({
       preservedCss.current = nextContent.css;
       editor?.commands.setContent(nextContent.html, false);
       setSelectionVersion((current) => current + 1);
+    } else if (nextMode === "html") {
+      if (editorMode === "visual" && editor) {
+        setHtmlSource(editor.getHTML());
+      }
     }
     setPanelError("");
     setLinkPanelOpen(false);
