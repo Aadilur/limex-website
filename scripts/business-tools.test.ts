@@ -1546,11 +1546,17 @@ test("service page renders ContactModal CTA buttons in hero and bottom with pre-
 test("service page related options are dynamic with title, subtitle, icon, focused buttons, and admin support", async () => {
   const fs = await import("node:fs/promises");
   const serviceSectionsTsx = await fs.readFile(
-    new URL("../src/components/limex/service-page-sections.tsx", import.meta.url),
+    new URL(
+      "../src/components/limex/service-page-sections.tsx",
+      import.meta.url,
+    ),
     "utf8",
   );
   const serviceModuleTsx = await fs.readFile(
-    new URL("../src/components/admin/service-pages-module.tsx", import.meta.url),
+    new URL(
+      "../src/components/admin/service-pages-module.tsx",
+      import.meta.url,
+    ),
     "utf8",
   );
   const serviceDomainTs = await fs.readFile(
@@ -1558,7 +1564,10 @@ test("service page related options are dynamic with title, subtitle, icon, focus
     "utf8",
   );
   const serviceRoutesTs = await fs.readFile(
-    new URL("../server/modules/services/interface/http/service.routes.ts", import.meta.url),
+    new URL(
+      "../server/modules/services/interface/http/service.routes.ts",
+      import.meta.url,
+    ),
     "utf8",
   );
 
@@ -1569,8 +1578,14 @@ test("service page related options are dynamic with title, subtitle, icon, focus
   assert.match(serviceSectionsTsx, /group-hover:translate-x-1/);
 
   // 2. admin module contains dedicated Related options disclosure with full item fields
-  assert.match(serviceModuleTsx, /<SectionDisclosure\s+title="Related options"/);
-  assert.match(serviceModuleTsx, /placeholder="Explore related services & options"/);
+  assert.match(
+    serviceModuleTsx,
+    /<SectionDisclosure\s+title="Related options"/,
+  );
+  assert.match(
+    serviceModuleTsx,
+    /placeholder="Explore related services & options"/,
+  );
   assert.match(serviceModuleTsx, /addRelatedOption/);
   assert.match(serviceModuleTsx, /serviceIconOptions\.map/);
 
@@ -1613,7 +1628,10 @@ test("about page has larger team portraits, executive typography, no odd eyebrow
   );
 
   // 1. Team member portrait is larger than old 92px/100px
-  assert.match(aboutSectionsContent, /size-\[108px\]\s+shrink-0\s+overflow-hidden\s+rounded-\[18px\]/);
+  assert.match(
+    aboutSectionsContent,
+    /size-\[108px\]\s+shrink-0\s+overflow-hidden\s+rounded-\[18px\]/,
+  );
   assert.doesNotMatch(aboutSectionsContent, /size-\[92px\]\s+shrink-0/);
 
   // 2. No em-dash (—) or awkward double dashes (--) in copy
@@ -1628,13 +1646,19 @@ test("about page has larger team portraits, executive typography, no odd eyebrow
   assert.doesNotMatch(aboutSectionsContent, />Photo<\/span>/);
 
   // 5. Preserves bg-page background on team section
-  assert.match(aboutSectionsContent, /rounded-panel\s+border\s+border-warm\s+bg-page/);
+  assert.match(
+    aboutSectionsContent,
+    /rounded-panel\s+border\s+border-warm\s+bg-page/,
+  );
 });
 
 test("bangla language toggle is hidden from service and blog pages", async () => {
   const fs = await import("node:fs/promises");
   const serviceSectionsTsx = await fs.readFile(
-    new URL("../src/components/limex/service-page-sections.tsx", import.meta.url),
+    new URL(
+      "../src/components/limex/service-page-sections.tsx",
+      import.meta.url,
+    ),
     "utf8",
   );
   const blogSectionsTsx = await fs.readFile(
@@ -1648,7 +1672,12 @@ test("bangla language toggle is hidden from service and blog pages", async () =>
   assert.doesNotMatch(serviceSectionsTsx, /switchLabel:\s*"English"/);
 
   // 2. Blog hero search card does not contain language toggle
-  assert.doesNotMatch(blogSectionsTsx, /locale === "bn" \? "\/blog" : "\/bn\/blog"/);
-  assert.doesNotMatch(blogSectionsTsx, /locale === "bn" \? "English" : "বাংলা"/);
+  assert.doesNotMatch(
+    blogSectionsTsx,
+    /locale === "bn" \? "\/blog" : "\/bn\/blog"/,
+  );
+  assert.doesNotMatch(
+    blogSectionsTsx,
+    /locale === "bn" \? "English" : "বাংলা"/,
+  );
 });
-
