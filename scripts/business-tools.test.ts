@@ -1652,7 +1652,7 @@ test("about page has larger team portraits, executive typography, no odd eyebrow
   );
 });
 
-test("bangla language toggle is hidden from service and blog pages", async () => {
+test("bangla language toggle is supported on service and blog pages", async () => {
   const fs = await import("node:fs/promises");
   const serviceSectionsTsx = await fs.readFile(
     new URL(
@@ -1666,18 +1666,41 @@ test("bangla language toggle is hidden from service and blog pages", async () =>
     "utf8",
   );
 
-  // 1. Service page header does not contain language toggle button or switchLabel
-  assert.doesNotMatch(serviceSectionsTsx, /ui\.switchLabel/);
-  assert.doesNotMatch(serviceSectionsTsx, /switchLabel:\s*"বাংলা"/);
-  assert.doesNotMatch(serviceSectionsTsx, /switchLabel:\s*"English"/);
+  // 1. Service page header supports language toggle switchLabel
+  assert.match(serviceSectionsTsx, /ui\.switchLabel/);
 
-  // 2. Blog hero search card does not contain language toggle
-  assert.doesNotMatch(
-    blogSectionsTsx,
-    /locale === "bn" \? "\/blog" : "\/bn\/blog"/,
-  );
-  assert.doesNotMatch(
+  // 2. Blog supports language toggle
+  assert.match(
     blogSectionsTsx,
     /locale === "bn" \? "English" : "বাংলা"/,
   );
 });
+
+test("blog article body contact links, related services, and hash navigation open ContactModal with pre-selected service", async () => {
+  const fs = await import("node:fs/promises");
+  const blogSectionsTsx = await fs.readFile(
+    new URL("../src/components/limex/blog-sections.tsx", import.meta.url),
+    "utf8",
+  );
+  const contactSectionTsx = await fs.readFile(
+    new URL("../src/components/limex/contact-section.tsx", import.meta.url),
+    "utf8",
+  );
+
+  // 1. ContactModal supports controlled open state
+  assert.match(contactSectionTsx, /isOpen:\s*controlledIsOpen/);
+  assert.match(contactSectionTsx, /hideTrigger/);
+
+  // 2. Blog sections detects contact modal links and extracts service
+  assert.match(blogSectionsTsx, /function isContactModalHref/);
+  assert.match(blogSectionsTsx, /function extractTargetService/);
+  assert.match(blogSectionsTsx, /handleArticleBodyClick/);
+  assert.match(blogSectionsTsx, /openContactWithService/);
+
+  // 3. BlogDetailContent listens to URL hash and opens modal
+  assert.match(blogSectionsTsx, /window\.addEventListener\("hashchange", handleHash\)/);
+
+  // 4. Controlled ContactModal is mounted in BlogDetailContent
+  assert.match(blogSectionsTsx, /hideTrigger\s+isOpen=\{isContactModalOpen\}/);
+});
+

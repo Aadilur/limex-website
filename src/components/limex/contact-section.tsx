@@ -795,6 +795,9 @@ type ContactModalProps = {
     | "soft"
     | "ghost"
     | "ghost-muted";
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
 };
 
 export function ContactModal({
@@ -808,8 +811,22 @@ export function ContactModal({
   serviceSlug,
   source,
   variant = "white",
+  isOpen: controlledIsOpen,
+  onOpenChange,
+  hideTrigger = false,
 }: ContactModalProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+  const isControlled = controlledIsOpen !== undefined;
+  const isOpen = isControlled ? controlledIsOpen : internalIsOpen;
+
+  const setIsOpen = (next: boolean | ((prev: boolean) => boolean)) => {
+    const value = typeof next === "function" ? next(isOpen) : next;
+    if (!isControlled) {
+      setInternalIsOpen(value);
+    }
+    onOpenChange?.(value);
+  };
+
   const [contactDetails, setContactDetails] =
     useState<PublicContactSettings | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -871,14 +888,16 @@ export function ContactModal({
 
   return (
     <>
-      <ActionButton
-        arrow={arrow}
-        variant={variant}
-        className={buttonClassName}
-        onClick={() => setIsOpen(true)}
-      >
-        {buttonLabel}
-      </ActionButton>
+      {!hideTrigger && buttonLabel ? (
+        <ActionButton
+          arrow={arrow}
+          variant={variant}
+          className={buttonClassName}
+          onClick={() => setIsOpen(true)}
+        >
+          {buttonLabel}
+        </ActionButton>
+      ) : null}
       {isOpen ? (
         <div className="fixed inset-0 z-[100]" role="presentation">
           <button

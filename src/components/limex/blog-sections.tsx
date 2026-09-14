@@ -591,6 +591,81 @@ function BlogBody({ article }: { article: BlogArticle }) {
   );
 }
 
+function isContactModalHref(href: string): boolean {
+  if (!href) return false;
+  const trimmed = href.trim();
+  const lower = trimmed.toLowerCase();
+  if (
+    lower === "#contact" ||
+    lower === "#contact-modal" ||
+    lower === "#contact-form" ||
+    lower.startsWith("#contact?") ||
+    lower.startsWith("#contact-modal?") ||
+    lower.startsWith("#contact-form?") ||
+    lower.startsWith("#contact:") ||
+    lower === "/#contact" ||
+    lower === "/#contact-form" ||
+    lower === "/#contact-modal"
+  ) {
+    return true;
+  }
+  if (lower.includes("#contact")) {
+    const [pathPart, hashPart] = lower.split("#");
+    if (
+      hashPart === "contact" ||
+      hashPart === "contact-modal" ||
+      hashPart === "contact-form" ||
+      hashPart.startsWith("contact?") ||
+      hashPart.startsWith("contact-modal?") ||
+      hashPart.startsWith("contact-form?")
+    ) {
+      if (
+        !pathPart ||
+        pathPart === "/" ||
+        (typeof window !== "undefined" &&
+          pathPart === window.location.pathname.toLowerCase())
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function extractTargetService(
+  anchor: HTMLAnchorElement,
+  article: BlogArticle,
+): string | undefined {
+  const dataService =
+    anchor.getAttribute("data-service") ||
+    anchor.getAttribute("data-service-key");
+  if (dataService?.trim()) return dataService.trim();
+
+  const href = anchor.getAttribute("href") || "";
+  if (href.includes("?")) {
+    const queryPart = href.split("?")[1]?.split("#")[0];
+    if (queryPart) {
+      const params = new URLSearchParams(queryPart);
+      const svc = params.get("service");
+      if (svc?.trim()) return decodeURIComponent(svc.trim());
+    }
+  }
+
+  const text = (anchor.textContent || "").trim().toLowerCase();
+  if (text && article.relatedServices?.length) {
+    const matched = article.relatedServices.find((s) => {
+      const label = s.label.toLowerCase();
+      return text.includes(label) || label.includes(text);
+    });
+    if (matched) return matched.label || matched.serviceKey;
+  }
+
+  const primaryService =
+    article.relatedServices?.find((s) => s.isPrimary) ??
+    article.relatedServices?.[0];
+  return primaryService?.label || primaryService?.serviceKey;
+}
+
 function blogServiceHref(
   article: BlogArticle,
   service: NonNullable<BlogArticle["relatedServices"]>[number],
@@ -604,7 +679,13 @@ function blogServiceHref(
   return `/?${params.toString()}#contact-form`;
 }
 
-function BlogRelatedServices({ article }: { article: BlogArticle }) {
+function BlogRelatedServices({
+  article,
+  onOpenContact,
+}: {
+  article: BlogArticle;
+  onOpenContact?: (serviceKey?: string) => void;
+}) {
   if (!article.relatedServices?.length) return null;
 
   return (
@@ -616,18 +697,39 @@ function BlogRelatedServices({ article }: { article: BlogArticle }) {
         RELATED SERVICES
       </p>
       <div className="flex flex-wrap gap-2.5">
-        {article.relatedServices.slice(0, 4).map((service) => (
-          <a
-            className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[#dfd8cf] bg-white px-3.5 py-1.5 text-[13px] font-semibold text-ink shadow-[0_1px_3px_rgba(7,20,46,0.02)] transition-all duration-200 hover:-translate-y-0.5 hover:border-pink/50 hover:text-pink hover:shadow-sm"
-            href={blogServiceHref(article, service)}
-            key={`${service.serviceKey}-${service.sortOrder}`}
-          >
-            <span>{service.label}</span>
-            <span className="text-pink" aria-hidden="true">
-              ↗
-            </span>
-          </a>
-        ))}
+        {article.relatedServices.slice(0, 4).map((service) => {
+          const isContact = service.href === "#contact";
+          if (isContact && onOpenContact) {
+            return (
+              <button
+                type="button"
+                className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[#dfd8cf] bg-white px-3.5 py-1.5 text-[13px] font-semibold text-ink shadow-[0_1px_3px_rgba(7,20,46,0.02)] transition-all duration-200 hover:-translate-y-0.5 hover:border-pink/50 hover:text-pink hover:shadow-sm"
+                onClick={() =>
+                  onOpenContact(service.label || service.serviceKey)
+                }
+                key={`${service.serviceKey}-${service.sortOrder}`}
+              >
+                <span>{service.label}</span>
+                <span className="text-pink" aria-hidden="true">
+                  ↗
+                </span>
+              </button>
+            );
+          }
+
+          return (
+            <a
+              className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[#dfd8cf] bg-white px-3.5 py-1.5 text-[13px] font-semibold text-ink shadow-[0_1px_3px_rgba(7,20,46,0.02)] transition-all duration-200 hover:-translate-y-0.5 hover:border-pink/50 hover:text-pink hover:shadow-sm"
+              href={blogServiceHref(article, service)}
+              key={`${service.serviceKey}-${service.sortOrder}`}
+            >
+              <span>{service.label}</span>
+              <span className="text-pink" aria-hidden="true">
+                ↗
+              </span>
+            </a>
+          );
+        })}
       </div>
     </div>
   );
@@ -643,6 +745,10 @@ export function BlogDetailContent({
   locale?: BlogLocale;
 }) {
   const [shareState, setShareState] = useState<"idle" | "copied">("idle");
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [modalServiceKey, setModalServiceKey] = useState<string | undefined>(
+    undefined,
+  );
   const visibleRelatedArticles =
     relatedArticles ??
     getRelatedBlogArticles(article.slug, 3).map((item) => ({
@@ -652,6 +758,47 @@ export function BlogDetailContent({
   const primaryService =
     article.relatedServices?.find((service) => service.isPrimary) ??
     article.relatedServices?.[0];
+
+  const openContactWithService = (service?: string) => {
+    setModalServiceKey(
+      service ?? primaryService?.label ?? primaryService?.serviceKey,
+    );
+    setIsContactModalOpen(true);
+  };
+
+  const handleArticleBodyClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement | null;
+    const anchor = target?.closest("a");
+    if (!anchor) return;
+
+    const href = anchor.getAttribute("href") || "";
+    if (isContactModalHref(href)) {
+      event.preventDefault();
+      const targetService = extractTargetService(anchor, article);
+      openContactWithService(targetService);
+    }
+  };
+
+  useEffect(() => {
+    const handleHash = () => {
+      const hash = window.location.hash;
+      if (isContactModalHref(hash)) {
+        if (hash.includes("?")) {
+          const queryPart = hash.split("?")[1];
+          const params = new URLSearchParams(queryPart);
+          const svc = params.get("service");
+          if (svc) {
+            setModalServiceKey(decodeURIComponent(svc));
+          }
+        }
+        setIsContactModalOpen(true);
+      }
+    };
+
+    handleHash();
+    window.addEventListener("hashchange", handleHash);
+    return () => window.removeEventListener("hashchange", handleHash);
+  }, []);
 
   const handleShare = async () => {
     try {
@@ -791,10 +938,24 @@ export function BlogDetailContent({
                 {article.coverCaption}
               </p>
             ) : null}
-            <div className="mt-8">
+            <div className="mt-8" onClick={handleArticleBodyClick}>
               <BlogBody article={article} />
             </div>
-            <BlogRelatedServices article={article} />
+            <BlogRelatedServices
+              article={article}
+              onOpenContact={openContactWithService}
+            />
+            <ContactModal
+              articleSlug={article.slug}
+              hideTrigger
+              isOpen={isContactModalOpen}
+              onOpenChange={setIsContactModalOpen}
+              serviceKey={
+                modalServiceKey ??
+                primaryService?.label ??
+                primaryService?.serviceKey
+              }
+            />
             <div className="relative mt-10 overflow-hidden rounded-[22px] bg-gradient-to-br from-[#071b3d] via-[#09224d] to-[#041026] p-6 text-white shadow-[0_12px_36px_rgba(7,20,46,0.1)] sm:rounded-[24px] lg:mt-12 lg:p-8">
               <div className="pointer-events-none absolute -bottom-10 -right-10 size-48 rounded-full bg-[#0055ff]/20 blur-2xl" />
               <div className="relative z-10">
@@ -815,7 +976,9 @@ export function BlogDetailContent({
                     articleSlug={article.slug}
                     buttonClassName="min-h-[46px] w-full justify-center !rounded-full shadow-md sm:w-auto sm:min-w-[170px]"
                     buttonLabel="Book this service"
-                    serviceKey={primaryService?.serviceKey}
+                    serviceKey={
+                      primaryService?.label ?? primaryService?.serviceKey
+                    }
                   />
                   {primaryService && primaryService.href !== "#contact" ? (
                     <a
@@ -897,7 +1060,9 @@ export function BlogDetailContent({
                   articleSlug={article.slug}
                   buttonClassName="mt-5 min-h-[46px] w-full justify-center !rounded-full shadow-md"
                   buttonLabel="Ask a question"
-                  serviceKey={primaryService?.serviceKey}
+                  serviceKey={
+                    primaryService?.label ?? primaryService?.serviceKey
+                  }
                 />
               </div>
             </div>
