@@ -956,7 +956,7 @@ type ServiceCatalogItem = {
   sortOrder: number;
 };
 
-function ServiceConnections({
+function BlogServiceConnectionPanel({
   draft,
   catalog,
   updateDraft,
@@ -965,6 +965,21 @@ function ServiceConnections({
   catalog: ServiceCatalogItem[];
   updateDraft: (patch: Partial<BlogEditorDraft>) => void;
 }) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [customLabel, setCustomLabel] = useState("");
+  const [customHref, setCustomHref] = useState("");
+
+  const filteredCatalog = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return catalog;
+    return catalog.filter(
+      (item) =>
+        item.label.toLowerCase().includes(q) ||
+        item.href.toLowerCase().includes(q) ||
+        item.serviceKey.toLowerCase().includes(q),
+    );
+  }, [catalog, searchQuery]);
+
   function toggleService(service: ServiceCatalogItem, checked: boolean) {
     if (checked) {
       const primaryKey =
@@ -998,87 +1013,229 @@ function ServiceConnections({
     });
   }
 
+  function moveService(index: number, direction: -1 | 1) {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= draft.services.length) return;
+    const list = [...draft.services];
+    const temp = list[index]!;
+    list[index] = list[targetIndex]!;
+    list[targetIndex] = temp;
+    updateDraft({
+      services: list.map((item, idx) => ({ ...item, sortOrder: idx })),
+    });
+  }
+
+  function removeService(serviceKey: string) {
+    const remaining = draft.services.filter((item) => item.serviceKey !== serviceKey);
+    const primaryKey =
+      remaining.find((item) => item.isPrimary)?.serviceKey ??
+      remaining[0]?.serviceKey;
+    updateDraft({
+      services: remaining.map((item, index) => ({
+        ...item,
+        sortOrder: index,
+        isPrimary: item.serviceKey === primaryKey,
+      })),
+    });
+  }
+
+  function addCustomService() {
+    const label = customLabel.trim();
+    const href = customHref.trim() || "#contact";
+    if (!label) return;
+    const serviceKey = `custom-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`;
+    const primaryKey =
+      draft.services.find((item) => item.isPrimary)?.serviceKey ?? serviceKey;
+    updateDraft({
+      services: [
+        ...draft.services,
+        {
+          serviceKey,
+          label,
+          href,
+          isPrimary: draft.services.length === 0,
+          sortOrder: draft.services.length,
+        },
+      ],
+    });
+    setCustomLabel("");
+    setCustomHref("");
+  }
+
   return (
     <EditorPanel
       title="Service connection"
-      description="Connect the article to the services readers may need. These links also preselect the blog booking form."
+      description="Connect the article to relevant services. Attached services appear as badges on the blog card and power the booking trigger."
     >
-      <div className="grid gap-2">
-        {catalog.map((service, index) => {
-          const selected = draft.services.some(
-            (item) => item.serviceKey === service.serviceKey,
-          );
-          const current = draft.services.find(
-            (item) => item.serviceKey === service.serviceKey,
-          );
-          const inputId = `blog-service-${index}`;
-          return (
-            <div
-              className={`flex items-center gap-3 rounded-[12px] px-3 py-2.5 transition-colors ${selected ? "bg-[#fcecef]" : "bg-[#faf9f6] hover:bg-[#f7f4ef]"}`}
-              key={service.serviceKey}
-            >
-              <input
-                className="size-4 shrink-0 accent-[#0055ff]"
-                id={inputId}
-                type="checkbox"
-                checked={selected}
-                onChange={(event) =>
-                  toggleService(service, event.target.checked)
-                }
-              />
-              <label
-                className="min-w-0 flex-1 cursor-pointer"
-                htmlFor={inputId}
-              >
-                <span className="block text-[13px] font-semibold text-[#2d2925]">
-                  {service.label}
-                </span>
-                <span className="mt-0.5 block truncate text-[10px] text-[#9b958c]">
-                  {service.href}
-                </span>
-              </label>
-              {selected ? (
-                <button
-                  className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold transition-colors ${current?.isPrimary ? "bg-[#0055ff] text-white" : "bg-white text-[#77736e] hover:bg-[#f3eee7]"}`}
-                  type="button"
-                  onClick={() =>
-                    updateDraft({
-                      services: draft.services.map((item) => ({
-                        ...item,
-                        isPrimary: item.serviceKey === service.serviceKey,
-                      })),
-                    })
-                  }
-                >
-                  {current?.isPrimary ? "Primary" : "Make primary"}
-                </button>
-              ) : null}
-            </div>
-          );
-        })}
-      </div>
       {draft.services.length ? (
-        <div className="mt-5 rounded-[13px] bg-[#f7f4ef] px-3.5 py-3">
-          <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-[#77736e]">
-            Connected services
-          </p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {draft.services.map((service) => (
-              <span
-                className="rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-[#4f4b47]"
+        <div className="mb-6 rounded-[14px] border border-[#e2ddd4] bg-[#faf9f6] p-4">
+          <div className="flex items-center justify-between">
+            <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-[#77736e]">
+              Attached services ({draft.services.length})
+            </p>
+            <span className="text-[11px] text-[#9b958c]">
+              Drag or use arrows to change display order
+            </span>
+          </div>
+          <div className="mt-3 divide-y divide-[#ece7de] rounded-[10px] border border-[#e8e3da] bg-white">
+            {draft.services.map((service, idx) => (
+              <div
                 key={service.serviceKey}
+                className="flex items-center justify-between gap-3 px-3.5 py-2.5"
               >
-                {service.label}
-                {service.isPrimary ? " · primary" : ""}
-              </span>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="grid size-5 shrink-0 place-items-center rounded bg-[#f3eee7] text-[10px] font-bold text-[#77736e]">
+                    {idx + 1}
+                  </span>
+                  <div className="min-w-0">
+                    <span className="block truncate text-[13px] font-semibold text-[#2d2925]">
+                      {service.label}
+                    </span>
+                    <span className="block truncate text-[10px] text-[#9b958c]">
+                      {service.href}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {idx > 0 ? (
+                    <button
+                      type="button"
+                      className="px-1.5 py-0.5 text-xs text-[#6e685f] hover:text-[#071b3d]"
+                      title="Move up"
+                      onClick={() => moveService(idx, -1)}
+                    >
+                      ↑
+                    </button>
+                  ) : null}
+                  {idx < draft.services.length - 1 ? (
+                    <button
+                      type="button"
+                      className="px-1.5 py-0.5 text-xs text-[#6e685f] hover:text-[#071b3d]"
+                      title="Move down"
+                      onClick={() => moveService(idx, 1)}
+                    >
+                      ↓
+                    </button>
+                  ) : null}
+
+                  <button
+                    className={`rounded-full px-2.5 py-1 text-[10px] font-bold transition-colors ${
+                      service.isPrimary
+                        ? "bg-[#0055ff] text-white"
+                        : "bg-[#f3eee7] text-[#77736e] hover:bg-[#e8e2d7]"
+                    }`}
+                    type="button"
+                    onClick={() =>
+                      updateDraft({
+                        services: draft.services.map((item) => ({
+                          ...item,
+                          isPrimary: item.serviceKey === service.serviceKey,
+                        })),
+                      })
+                    }
+                  >
+                    {service.isPrimary ? "Primary" : "Make primary"}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="grid size-6 place-items-center rounded text-xs text-[#9b958c] hover:bg-[#f3eee7] hover:text-[#de4d73]"
+                    title="Remove service"
+                    onClick={() => removeService(service.serviceKey)}
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
         </div>
-      ) : (
-        <p className="mt-5 rounded-[13px] bg-[#f7f4ef] px-3.5 py-3 text-[12px] text-[#817a72]">
-          No service connected. The general contact action will be used.
+      ) : null}
+
+      <div className="mb-6 rounded-[14px] border border-[#e2ddd4] bg-[#faf9f6] p-4">
+        <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-[#77736e]">
+          Add custom service link
         </p>
-      )}
+        <p className="mt-0.5 text-[11px] text-[#9b958c]">
+          Link to any specific service, consultation, or registration path.
+        </p>
+        <div className="mt-2.5 grid gap-2.5 sm:grid-cols-[1fr_1fr_auto]">
+          <input
+            className="h-9 rounded-[10px] border border-[#d8d2c6] bg-white px-3 text-[13px] placeholder:text-[#9b958c]"
+            placeholder="Service label (e.g. RJSC Fast-track)"
+            value={customLabel}
+            onChange={(e) => setCustomLabel(e.target.value)}
+          />
+          <input
+            className="h-9 rounded-[10px] border border-[#d8d2c6] bg-white px-3 text-[13px] placeholder:text-[#9b958c]"
+            placeholder="Destination link (e.g. /services/limited-company)"
+            value={customHref}
+            onChange={(e) => setCustomHref(e.target.value)}
+          />
+          <button
+            type="button"
+            className="inline-flex h-9 items-center justify-center rounded-[10px] bg-[#071b3d] px-4 text-xs font-semibold text-white hover:bg-[#0055ff] transition-colors disabled:opacity-40"
+            disabled={!customLabel.trim()}
+            onClick={addCustomService}
+          >
+            Attach
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-[#77736e]">
+            Service catalog ({filteredCatalog.length})
+          </p>
+          <input
+            className="h-8 w-48 rounded-[8px] border border-[#d8d2c6] bg-white px-2.5 text-xs placeholder:text-[#9b958c]"
+            placeholder="Search catalog…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <div className="grid max-h-[380px] gap-2 overflow-y-auto pr-1">
+          {filteredCatalog.map((service, index) => {
+            const selected = draft.services.some(
+              (item) => item.serviceKey === service.serviceKey,
+            );
+            const inputId = `blog-service-${index}`;
+            return (
+              <div
+                className={`flex items-center gap-3 rounded-[12px] px-3 py-2.5 transition-colors ${
+                  selected
+                    ? "border border-[#c6dcff] bg-[#eef4ff]"
+                    : "bg-[#faf9f6] hover:bg-[#f7f4ef]"
+                }`}
+                key={service.serviceKey}
+              >
+                <input
+                  className="size-4 shrink-0 accent-[#0055ff]"
+                  id={inputId}
+                  type="checkbox"
+                  checked={selected}
+                  onChange={(event) =>
+                    toggleService(service, event.target.checked)
+                  }
+                />
+                <label
+                  className="min-w-0 flex-1 cursor-pointer"
+                  htmlFor={inputId}
+                >
+                  <span className="block text-[13px] font-semibold text-[#2d2925]">
+                    {service.label}
+                  </span>
+                  <span className="mt-0.5 block truncate text-[10px] text-[#9b958c]">
+                    {service.href}
+                  </span>
+                </label>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </EditorPanel>
   );
 }
@@ -1544,7 +1701,12 @@ export function BlogEditorModule({ id }: { id: string }) {
     { value: "content", label: "Content" },
     { value: "media", label: "Media" },
     { value: "seo", label: "SEO" },
-    { value: "services", label: "Services" },
+    {
+      value: "services",
+      label: draft.services.length
+        ? `Services (${draft.services.length})`
+        : "Services",
+    },
     { value: "preview", label: "Preview" },
   ];
   const selectedMedia = media.find((item) => item.id === draft.coverMediaId);
@@ -2058,7 +2220,7 @@ export function BlogEditorModule({ id }: { id: string }) {
       ) : null}
 
       {tab === "services" ? (
-        <ServiceConnections
+        <BlogServiceConnectionPanel
           draft={draft}
           catalog={catalog}
           updateDraft={updateDraft}

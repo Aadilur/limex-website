@@ -698,18 +698,32 @@ function DetailEditor({
     ]);
   const addFaq = () =>
     update("faqs", [...detail.faqs, { question: "", answer: "" }]);
-  const addRelatedOption = () =>
+  const addRelatedOption = () => {
+    const existingCount = (detail.relatedOptions ?? []).length;
+    const initialIcons: ServiceIconName[] = [
+      "license",
+      "copyright",
+      "lightbulb",
+      "tax",
+      "building",
+      "contract",
+      "shield-check",
+      "report-money",
+    ];
+    const icon =
+      initialIcons[existingCount % initialIcons.length] ?? "briefcase";
     update("relatedOptions", [
       ...(detail.relatedOptions ?? []),
       {
         title: "",
         description: "",
         href: "",
-        icon: "briefcase",
+        icon,
         badge: "",
         actionLabel: "Explore service",
       },
     ]);
+  };
   const selectedTools = detail.tools ?? [];
   const addTool = (slug: string) => {
     if (!slug || selectedTools.includes(slug)) return;
@@ -1175,34 +1189,23 @@ function DetailEditor({
                     />
 
                     <div>
-                      <label
-                        className="block min-w-0"
-                        htmlFor={`service-option-icon-${index}`}
-                      >
-                        <span className={fieldLabelClass}>Icon</span>
-                        <select
-                          className={`${fieldClass} mt-1.5`}
-                          id={`service-option-icon-${index}`}
+                      <span className={fieldLabelClass}>Icon</span>
+                      <div className="mt-1.5">
+                        <IconPicker
                           value={option.icon || "briefcase"}
-                          onChange={(event) =>
+                          onChange={(nextIcon) =>
                             update(
                               "relatedOptions",
                               (detail.relatedOptions ?? []).map(
                                 (item, itemIndex) =>
                                   itemIndex === index
-                                    ? { ...item, icon: event.target.value }
+                                    ? { ...item, icon: nextIcon }
                                     : item,
                               ),
                             )
                           }
-                        >
-                          {serviceIconOptions.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                              {opt.label} ({opt.value})
-                            </option>
-                          ))}
-                        </select>
-                      </label>
+                        />
+                      </div>
                     </div>
 
                     <Field

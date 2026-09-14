@@ -324,6 +324,18 @@ export function BlogSection({
                 <p className="mt-cluster-sm line-clamp-2 text-body-xs text-muted">
                   {article.subtitle}
                 </p>
+                {article.relatedServices?.length ? (
+                  <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                    {article.relatedServices.slice(0, 2).map((service) => (
+                      <span
+                        key={service.serviceKey}
+                        className="rounded-full border border-[#ded8ce] bg-white px-2 py-0.5 text-[10px] font-medium text-[#423c35]"
+                      >
+                        {service.label}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
                 <a
                   className="mt-auto inline-flex w-max items-center gap-cluster-sm border-b border-[#9d948a] pb-1 pt-section-gap-lg text-meta font-semibold text-ink transition-colors hover:border-ink hover:text-[#5e554d] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3"
                   href={article.href}

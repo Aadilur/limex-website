@@ -1587,7 +1587,7 @@ test("service page related options are dynamic with title, subtitle, icon, focus
     /placeholder="Explore related services & options"/,
   );
   assert.match(serviceModuleTsx, /addRelatedOption/);
-  assert.match(serviceModuleTsx, /serviceIconOptions\.map/);
+  assert.match(serviceModuleTsx, /<IconPicker/);
 
   // 3. domain normalizes relatedOptionsTitle, relatedOptionsDescription, and cleanRelatedOptions
   assert.match(serviceDomainTs, /cleanRelatedOptions/);
@@ -1847,7 +1847,78 @@ test("contact modal prevents page scroll-up on open and keeps all form fields in
   assert.match(contactSectionTsx, /placeholder="you@example\.com"/);
   assert.match(contactSectionTsx, /aria-label="Preferred date"/);
   assert.match(contactSectionTsx, /aria-label="Preferred time"/);
-  assert.match(contactSectionTsx, /placeholder="Tell us what you need help with\."/);
+  assert.match(
+    contactSectionTsx,
+    /placeholder="Tell us what you need help with\."/,
+  );
   assert.match(contactSectionTsx, /name="website"/); // honeypot
   assert.match(contactSectionTsx, /content\.privacyNote/);
 });
+
+test("blog listing has editorial cards, pagination engine, attached services badges, and no wireframe labels", async () => {
+  const fs = await import("node:fs/promises");
+  const blogSectionsTsx = await fs.readFile(
+    new URL("../src/components/limex/blog-sections.tsx", import.meta.url),
+    "utf8",
+  );
+
+  // 1. Pagination engine is present
+  assert.match(blogSectionsTsx, /pageSize = 9/);
+  assert.match(blogSectionsTsx, /paginatedArticles/);
+  assert.match(blogSectionsTsx, /aria-label="Blog pagination"/);
+  assert.match(blogSectionsTsx, /getPageNumbers/);
+
+  // 2. Attached services rendered on cards
+  assert.match(blogSectionsTsx, /article\.relatedServices\?\.length/);
+  assert.match(blogSectionsTsx, /Services:/);
+
+  // 3. No wireframe "COVER SLOT" or "IMAGE PLACEHOLDER" text
+  assert.doesNotMatch(blogSectionsTsx, /COVER SLOT/);
+  assert.doesNotMatch(blogSectionsTsx, /IMAGE PLACEHOLDER/);
+  assert.doesNotMatch(blogSectionsTsx, /ARTICLE COVER/);
+});
+
+test("service page related options are compact and use intelligent contextual icon resolution", async () => {
+  const fs = await import("node:fs/promises");
+  const servicePageSectionsTsx = await fs.readFile(
+    new URL("../src/components/limex/service-page-sections.tsx", import.meta.url),
+    "utf8",
+  );
+  const servicePagesModuleTsx = await fs.readFile(
+    new URL("../src/components/admin/service-pages-module.tsx", import.meta.url),
+    "utf8",
+  );
+
+  // 1. Contextual icon resolver is present and handles diverse keywords
+  assert.match(servicePageSectionsTsx, /function resolveRelatedOptionIcon/);
+  assert.match(servicePageSectionsTsx, /copyright/);
+  assert.match(servicePageSectionsTsx, /trademark/);
+  assert.match(servicePageSectionsTsx, /lightbulb/);
+  assert.match(servicePageSectionsTsx, /license/);
+
+  // 2. Compact card proportions
+  assert.match(servicePageSectionsTsx, /rounded-\[20px\]/);
+  assert.match(servicePageSectionsTsx, /size-9\.5/);
+
+  // 3. Admin uses IconPicker for related options
+  assert.match(servicePagesModuleTsx, /<IconPicker/);
+});
+
+test("blog admin supports searchable service catalog, reordering, custom services, and counter badge", async () => {
+  const fs = await import("node:fs/promises");
+  const blogModuleTsx = await fs.readFile(
+    new URL("../src/components/admin/blog-module.tsx", import.meta.url),
+    "utf8",
+  );
+
+  // 1. BlogServiceConnectionPanel has catalog search and custom service
+  assert.match(blogModuleTsx, /function BlogServiceConnectionPanel/);
+  assert.match(blogModuleTsx, /placeholder="Search catalog…"/);
+  assert.match(blogModuleTsx, /Add custom service link/);
+  assert.match(blogModuleTsx, /function moveService/);
+  assert.match(blogModuleTsx, /function removeService/);
+
+  // 2. Tab displays dynamic counter
+  assert.match(blogModuleTsx, /Services \(\$\{draft\.services\.length\}\)/);
+});
+

@@ -177,6 +177,7 @@ export type ArticleItem = {
   media: "image" | "video";
   coverUrl?: string;
   href: string;
+  relatedServices?: Array<{ serviceKey: string; label: string; href?: string }>;
 };
 
 export type ArticlesContent = {

@@ -143,12 +143,12 @@ function BlogCover({
           decoding="async"
         />
       ) : isFeatured ? (
-        <div className="absolute inset-0 flex flex-col items-center justify-center px-5 text-center">
-          <strong className={`text-overline ${tone.text}`.trim()}>
-            IMAGE PLACEHOLDER
-          </strong>
-          <span className="mt-cluster-sm text-body-sm text-muted">
-            {article.coverNote}
+        <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center bg-gradient-to-br from-[#f9f7f3] to-[#eae4d8]">
+          <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-pink">
+            Limex Journal
+          </span>
+          <span className="mt-2 max-w-[340px] font-brand text-[20px] font-bold leading-snug text-ink">
+            {article.title}
           </span>
         </div>
       ) : (
@@ -171,9 +171,9 @@ function BlogCover({
           </span>
           {!isThumb && !isHero ? (
             <span
-              className={`absolute bottom-6 left-6 ${coverSlotClass} text-overline ${tone.text}`.trim()}
+              className={`absolute bottom-5 left-6 ${coverSlotClass} text-[10px] font-bold uppercase tracking-[0.12em] ${tone.text}`.trim()}
             >
-              COVER SLOT
+              {categoryLabel(article.category)}
             </span>
           ) : null}
           {!isThumb ? (
@@ -187,13 +187,26 @@ function BlogCover({
       )}
       {isHero && !coverUrl ? (
         <span
-          className={`absolute bottom-7 left-7 text-meta ${tone.text}`.trim()}
+          className={`absolute bottom-7 left-7 text-[11px] font-bold uppercase tracking-[0.12em] ${tone.text}`.trim()}
         >
-          ARTICLE COVER
+          {categoryLabel(article.category)}
         </span>
       ) : null}
     </div>
   );
+}
+
+function getPageNumbers(current: number, total: number): (number | "...")[] {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+  if (current <= 3) {
+    return [1, 2, 3, 4, "...", total];
+  }
+  if (current >= total - 2) {
+    return [1, "...", total - 3, total - 2, total - 1, total];
+  }
+  return [1, "...", current - 1, current, current + 1, "...", total];
 }
 
 function BlogArticleCard({
@@ -205,33 +218,54 @@ function BlogArticleCard({
 }) {
   return (
     <a
-      className="group flex h-full min-h-0 flex-row overflow-hidden rounded-card border border-[#e5e0d6] bg-white transition-transform duration-200 hover:-translate-y-1 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3 sm:flex-col"
+      className="group flex h-full min-h-0 flex-col overflow-hidden rounded-[20px] border border-[#e2dcd1] bg-white shadow-[0_2px_10px_rgba(20,19,28,0.03)] transition-all duration-300 hover:-translate-y-1 hover:border-[#cfc8bc] hover:shadow-[0_16px_36px_rgba(20,19,28,0.08)] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3"
       href={blogHref(article.slug, locale)}
     >
       <BlogCover article={article} />
-      <div className="flex min-w-0 min-h-0 flex-1 flex-col items-start gap-1.5 overflow-hidden px-3.5 py-3.5 sm:gap-cluster-sm sm:px-card-pad sm:pb-5 sm:pt-cluster-lg">
-        <p className="line-clamp-1 text-[10px] font-bold uppercase tracking-[0.1em] text-pink sm:text-overline">
-          {categoryLabel(article.category)} <span className="px-1">·</span>{" "}
-          {article.date}
-        </p>
-        <h3 className="line-clamp-2 font-brand text-[16px] font-bold leading-[1.22] tracking-[-0.02em] text-ink sm:text-subheading">
+      <div className="flex min-w-0 min-h-0 flex-1 flex-col p-4 sm:p-5">
+        <div className="flex items-center justify-between gap-2 text-[11px] font-semibold text-muted">
+          <span className="font-bold uppercase tracking-[0.08em] text-pink">
+            {categoryLabel(article.category)}
+          </span>
+          <span>{article.readTime}</span>
+        </div>
+
+        <h3 className="mt-2.5 line-clamp-2 font-brand text-[17px] font-bold leading-[1.25] tracking-[-0.02em] text-ink transition-colors group-hover:text-pink sm:text-[18px]">
           {article.title}
         </h3>
-        <p className="line-clamp-2 text-[13px] leading-[1.45] text-muted sm:line-clamp-3 sm:text-body-sm">
+
+        <p className="mt-2 line-clamp-2 text-[13px] leading-[1.5] text-muted sm:text-[13.5px]">
           {article.summary}
         </p>
+
         {article.relatedServices?.length ? (
-          <p className="hidden line-clamp-1 text-micro font-semibold text-[#6d806e] sm:block">
-            Related:{" "}
-            {article.relatedServices
-              .slice(0, 2)
-              .map((service) => service.label)
-              .join(" · ")}
-          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-1.5 pt-1">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted/75">
+              Services:
+            </span>
+            {article.relatedServices.slice(0, 2).map((service) => (
+              <span
+                key={service.serviceKey}
+                className="inline-flex items-center rounded-full border border-[#ded8ce] bg-[#f8f6f1] px-2 py-0.5 text-[10px] font-medium text-[#423c35]"
+              >
+                {service.label}
+              </span>
+            ))}
+            {article.relatedServices.length > 2 ? (
+              <span className="text-[10px] font-semibold text-muted">
+                +{article.relatedServices.length - 2}
+              </span>
+            ) : null}
+          </div>
         ) : null}
-        <span className="mt-auto pt-1.5 text-[13px] font-semibold text-pink transition-transform duration-200 group-hover:translate-x-0.5 sm:pt-3 sm:text-body-sm">
-          Read more <span aria-hidden="true">↗</span>
-        </span>
+
+        <div className="mt-auto flex items-center justify-between gap-2 pt-4 border-t border-[#f0ece5] text-xs font-semibold">
+          <span className="text-muted/80">{article.date}</span>
+          <span className="inline-flex items-center gap-1 text-pink transition-transform duration-200 group-hover:translate-x-0.5">
+            <span>Read guide</span>
+            <span aria-hidden="true">↗</span>
+          </span>
+        </div>
       </div>
     </a>
   );
@@ -341,6 +375,13 @@ export function BlogIndexContent({
     };
   }, [initialFeatured, locale]);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 9;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeFilter, query]);
+
   const normalizedQuery = query.trim().toLowerCase();
   const visibleArticles = useMemo(
     () =>
@@ -362,6 +403,26 @@ export function BlogIndexContent({
       }),
     [activeFilter, articles, normalizedQuery],
   );
+
+  const totalArticles = visibleArticles.length;
+  const totalPages = Math.max(1, Math.ceil(totalArticles / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * pageSize;
+  const paginatedArticles = useMemo(
+    () => visibleArticles.slice(startIndex, startIndex + pageSize),
+    [visibleArticles, startIndex, pageSize],
+  );
+
+  const goToPage = (page: number) => {
+    const target = Math.max(1, Math.min(page, totalPages));
+    setCurrentPage(target);
+    if (typeof window !== "undefined") {
+      const section = document.getElementById("latest");
+      if (section) {
+        section.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+  };
 
   return (
     <>
@@ -503,19 +564,88 @@ export function BlogIndexContent({
           className="mt-4 text-footer font-text text-muted lg:mt-section-gap-lg"
           aria-live="polite"
         >
-          Showing {visibleArticles.length}{" "}
-          {visibleArticles.length === 1 ? "guide" : "guides"}
+          {totalArticles > 0 ? (
+            <>
+              Showing {startIndex + 1}–{Math.min(startIndex + pageSize, totalArticles)} of {totalArticles}{" "}
+              {totalArticles === 1 ? "guide" : "guides"}
+            </>
+          ) : (
+            "Showing 0 guides"
+          )}
         </p>
-        {visibleArticles.length ? (
-          <div className="mt-3 grid grid-cols-1 gap-3.5 sm:gap-4 lg:mt-4 lg:grid-cols-3 lg:gap-8">
-            {visibleArticles.map((article) => (
-              <BlogArticleCard
-                article={article}
-                locale={locale}
-                key={article.slug}
-              />
-            ))}
-          </div>
+        {paginatedArticles.length ? (
+          <>
+            <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:mt-4 lg:grid-cols-3 lg:gap-7">
+              {paginatedArticles.map((article) => (
+                <BlogArticleCard
+                  article={article}
+                  locale={locale}
+                  key={article.slug}
+                />
+              ))}
+            </div>
+
+            {totalPages > 1 ? (
+              <nav
+                className="mt-8 flex flex-wrap items-center justify-center gap-2 border-t border-[#e2dcd1] pt-6 sm:gap-2.5 lg:mt-12 lg:pt-8"
+                aria-label="Blog pagination"
+              >
+                <button
+                  type="button"
+                  className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[#d8d2c6] bg-white px-3.5 text-xs font-semibold text-ink transition-colors hover:border-ink hover:text-ink disabled:pointer-events-none disabled:opacity-35"
+                  disabled={safePage <= 1}
+                  onClick={() => goToPage(safePage - 1)}
+                  aria-label="Previous page"
+                >
+                  <span aria-hidden="true">←</span>
+                  <span>Previous</span>
+                </button>
+
+                <div className="flex items-center gap-1 sm:gap-1.5">
+                  {getPageNumbers(safePage, totalPages).map((p, idx) => {
+                    if (p === "...") {
+                      return (
+                        <span
+                          key={`ellipsis-${idx}`}
+                          className="px-1.5 text-xs font-semibold text-muted"
+                        >
+                          …
+                        </span>
+                      );
+                    }
+                    const pageNum = Number(p);
+                    const isActive = pageNum === safePage;
+                    return (
+                      <button
+                        key={`page-${pageNum}`}
+                        type="button"
+                        className={`grid size-9 place-items-center rounded-full text-xs font-semibold transition-colors ${
+                          isActive
+                            ? "bg-ink font-bold text-white shadow-sm"
+                            : "border border-[#d8d2c6] bg-white text-[#4a433d] hover:border-ink hover:text-ink"
+                        }`}
+                        aria-current={isActive ? "page" : undefined}
+                        onClick={() => goToPage(pageNum)}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  type="button"
+                  className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[#d8d2c6] bg-white px-3.5 text-xs font-semibold text-ink transition-colors hover:border-ink hover:text-ink disabled:pointer-events-none disabled:opacity-35"
+                  disabled={safePage >= totalPages}
+                  onClick={() => goToPage(safePage + 1)}
+                  aria-label="Next page"
+                >
+                  <span>Next</span>
+                  <span aria-hidden="true">→</span>
+                </button>
+              </nav>
+            ) : null}
+          </>
         ) : (
           <div className="mt-6 rounded-card border border-[#e5e0d6] bg-white px-4 py-8 text-center lg:mt-section-gap-lg lg:px-card-pad lg:py-10">
             <p className="text-body-lg font-semibold text-ink">
