@@ -367,7 +367,6 @@ function ClientLogoUpload({
           />
         ) : (
           <span className="text-[20px] font-bold text-[#b0a89d]">
-            {item.name.slice(0, 1).toUpperCase()}
             {(item.name?.trim() || "?").slice(0, 1).toUpperCase()}
           </span>
         )}
@@ -1394,7 +1393,6 @@ function ClientsEditor({
                 logos: content.logos.filter((item) => item.id !== id),
               })
             }
-            itemTitle={(item) => item.name || "Client logo"}
             itemTitle={(item) => item.name?.trim() || "Client logo"}
             render={(item) => (
               <div className="space-y-4">
@@ -1409,13 +1407,10 @@ function ClientsEditor({
                       }
                     />
                     <Field
-                      label="Client or brand name"
-                      value={item.name}
                       label="Client or brand name (optional)"
                       value={item.name ?? ""}
                       onChange={(name) =>
                         onChange({
-                          logos: updateById(content.logos, item.id, { name }),
                           logos: updateById(content.logos, item.id, {
                             name: name.trim() ? name : null,
                           }),
@@ -1476,7 +1471,6 @@ function ClientsEditor({
                   {
                     id: uid("client"),
                     isVisible: true,
-                    name: "New client",
                     name: null,
                     logoUrl: "",
                     textColor: "#071b3d",

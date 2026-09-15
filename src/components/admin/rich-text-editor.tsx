@@ -489,7 +489,12 @@ export function RichTextEditor({
   const [imageUrl, setImageUrl] = useState("");
   const [imageAlt, setImageAlt] = useState("");
   const [panelError, setPanelError] = useState("");
-  const previousValue = useRef(value || "");
+  // Source editors stay uncontrolled while an admin is typing. Their value is
+  // still mirrored into React state and the parent draft, but React must not
+  // write the prop echo back into the live textarea on every keystroke. That
+  // feedback loop is what makes the caret/focus jump in HTML and CSS mode.
+  const htmlSourceInputRef = useRef<HTMLTextAreaElement | null>(null);
+  const cssSourceInputRef = useRef<HTMLTextAreaElement | null>(null);
   const preservedCss = useRef(sanitizeBlogContent(value).css);
   const internalValueUpdate = useRef(false);
   const lastEmittedHtml = useRef(value || "");
@@ -615,23 +620,36 @@ export function RichTextEditor({
 
   useEffect(() => {
     const nextHtml = value || "";
-    const lastPropValue = previousValue.current;
     const wasInternalUpdate = internalValueUpdate.current;
     internalValueUpdate.current = false;
 
     // Echo protection: never clobber active typing when value matches what we just emitted
     if (wasInternalUpdate || nextHtml === lastEmittedHtml.current) {
-      previousValue.current = nextHtml;
       return;
     }
 
-    previousValue.current = nextHtml;
     lastEmittedHtml.current = nextHtml;
 
     const nextContent = sanitizeBlogContent(nextHtml);
     preservedCss.current = nextContent.css;
     setCustomCss(nextContent.css);
     setHtmlSource(nextContent.html);
+
+    // Source textareas use defaultValue so parent draft updates cannot reset
+    // their selection. Synchronize an external change only when the control
+    // is not the active element; an active source editor always owns its text.
+    if (
+      htmlSourceInputRef.current &&
+      document.activeElement !== htmlSourceInputRef.current
+    ) {
+      htmlSourceInputRef.current.value = nextContent.html;
+    }
+    if (
+      cssSourceInputRef.current &&
+      document.activeElement !== cssSourceInputRef.current
+    ) {
+      cssSourceInputRef.current.value = nextContent.css;
+    }
 
     // If editor has active focus, do not replace the document and kill cursor
     if (editor?.isFocused) return;
@@ -1024,11 +1042,12 @@ export function RichTextEditor({
             </span>
           </div>
           <textarea
+            ref={htmlSourceInputRef}
             className={cn(
               compact ? "min-h-[220px]" : "min-h-[360px]",
               "w-full resize-y rounded-[10px] border border-[#ddd7ce] bg-white p-4 font-mono text-[12px] leading-[1.7] text-[#3f3b37] outline-none transition-colors placeholder:text-[#9b958c] focus:border-[#0055ff] focus:ring-4 focus:ring-[#008cff]/10",
             )}
-            value={htmlSource}
+            defaultValue={htmlSource}
             onChange={(event) => updateHtmlSource(event.target.value)}
             spellCheck={false}
             aria-label={`${ariaLabel} HTML source`}
@@ -1046,11 +1065,12 @@ export function RichTextEditor({
             </span>
           </div>
           <textarea
+            ref={cssSourceInputRef}
             className={cn(
               compact ? "min-h-[220px]" : "min-h-[360px]",
               "w-full resize-y rounded-[10px] border border-[#cfe0f4] bg-white p-4 font-mono text-[12px] leading-[1.7] text-[#071b3d] outline-none transition-colors placeholder:text-[#9b958c] focus:border-[#0055ff] focus:ring-4 focus:ring-[#008cff]/10",
             )}
-            value={customCss}
+            defaultValue={customCss}
             onChange={(event) => updateCustomCss(event.target.value)}
             spellCheck={false}
             aria-label={`${ariaLabel} custom CSS`}

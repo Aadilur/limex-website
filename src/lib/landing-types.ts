@@ -47,7 +47,6 @@ export type HeroContent = {
 export type ClientLogo = {
   id: string;
   isVisible: boolean;
-  name: string;
   name: string | null;
   logoUrl: string;
   textColor: string;

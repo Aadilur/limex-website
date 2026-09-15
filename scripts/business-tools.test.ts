@@ -1776,9 +1776,13 @@ test("rich text editor permanently preserves cursor focus and legal pages have f
 
   // 1. Rich text editor cursor focus protection
   assert.match(richTextEditorTsx, /const lastEmittedHtml = useRef/);
+  assert.match(richTextEditorTsx, /const htmlSourceInputRef = useRef/);
+  assert.match(richTextEditorTsx, /const cssSourceInputRef = useRef/);
+  assert.match(richTextEditorTsx, /defaultValue=\{htmlSource\}/);
+  assert.match(richTextEditorTsx, /defaultValue=\{customCss\}/);
   assert.match(
     richTextEditorTsx,
-    /if \(wasInternalUpdate \|\| nextHtml === lastEmittedHtml\.current\) \{\s*previousValue\.current = nextHtml;\s*return;\s*\}/,
+    /if \(wasInternalUpdate \|\| nextHtml === lastEmittedHtml\.current\) \{\s*return;\s*\}/,
   );
   assert.match(richTextEditorTsx, /if \(editor\?\.isFocused\) return;/);
 
