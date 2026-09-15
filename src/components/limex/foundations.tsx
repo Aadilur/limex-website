@@ -6,20 +6,56 @@ import { ActionButton, SectionTitle } from "./ui";
 import { defaultLandingContent } from "@/lib/landing-defaults";
 import type { ClientsContent, MetricsContent, ProcessContent } from "@/lib/landing-types";
 
-function ClientLogoSet({ logos, duplicate = false }: { logos: ClientsContent["logos"]; duplicate?: boolean }) {
+function ClientLogoSet({
+  logos,
+  duplicate = false,
+}: {
+  logos: ClientsContent["logos"];
+  duplicate?: boolean;
+}) {
   return (
     <div
-      className={`flex shrink-0 gap-cluster-lg pr-cluster-lg motion-reduce:w-full motion-reduce:flex-wrap motion-reduce:justify-center motion-reduce:pr-0 ${duplicate ? "motion-reduce:hidden" : ""}`.trim()}
+      className={`flex shrink-0 items-center gap-6 pr-6 sm:gap-8 sm:pr-8 motion-reduce:w-full motion-reduce:flex-wrap motion-reduce:justify-center motion-reduce:pr-0 ${duplicate ? "motion-reduce:hidden" : ""}`.trim()}
       aria-hidden={duplicate ? "true" : undefined}
     >
-      {logos.filter((logo) => logo.isVisible).map((client) => (
-        <div className="flex h-9 w-[128px] shrink-0 items-center gap-cluster-xs overflow-hidden whitespace-nowrap text-body-xs font-display wide:text-body-sm" style={{ color: client.textColor || clientTextClasses[client.name] }} key={`${duplicate ? "copy" : "original"}-${client.id}`}>
-          <span className="flex h-8 shrink-0 items-center overflow-hidden">
-            {client.logoUrl ? <img className="h-7 w-auto object-contain" src={client.logoUrl} alt="" aria-hidden="true" /> : <span className="text-[10px] font-bold tracking-[0.04em]">{client.name.slice(0, 2).toUpperCase()}</span>}
-          </span>
-          <span>{client.name}</span>
-        </div>
-      ))}
+      {logos
+        .filter((logo) => logo.isVisible)
+        .map((client) => {
+          const textColor =
+            client.textColor ||
+            (client.name ? clientTextClasses[client.name] : undefined) ||
+            "#071b3d";
+
+          return (
+            <div
+              className="flex h-9 w-auto shrink-0 items-center gap-2 whitespace-nowrap text-body-xs font-display wide:text-body-sm"
+              style={{ color: textColor }}
+              key={`${duplicate ? "copy" : "original"}-${client.id}`}
+            >
+              {client.logoUrl ? (
+                <span className="flex h-8 shrink-0 items-center">
+                  <img
+                    className="h-7 w-auto max-h-7 max-w-[160px] object-contain"
+                    src={client.logoUrl}
+                    alt={client.name || "Client logo"}
+                    aria-hidden={!client.name}
+                  />
+                </span>
+              ) : client.name ? (
+                <span className="flex h-8 shrink-0 items-center">
+                  <span className="grid size-7 place-items-center rounded-md bg-[#071b3d]/5 text-[10px] font-bold tracking-[0.04em]">
+                    {(client.name || "?").slice(0, 2).toUpperCase()}
+                  </span>
+                </span>
+              ) : null}
+              {client.name ? (
+                <span className="font-medium tracking-tight">
+                  {client.name}
+                </span>
+              ) : null}
+            </div>
+          );
+        })}
     </div>
   );
 }

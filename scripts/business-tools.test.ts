@@ -1952,3 +1952,39 @@ test("inquiries module and tools module render as a responsive table with unifie
   assert.match(toolsModuleTsx, /Search requests…/);
   assert.match(toolsModuleTsx, /itemName="request"/);
 });
+
+test("client cards have dynamic width without clipping, fixed height, and support nullable client name", async () => {
+  const fs = await import("node:fs/promises");
+  const landingTypesTs = await fs.readFile(
+    new URL("../src/lib/landing-types.ts", import.meta.url),
+    "utf8",
+  );
+  const landingRoutesTs = await fs.readFile(
+    new URL(
+      "../server/modules/landing/interface/http/landing.routes.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const foundationsTsx = await fs.readFile(
+    new URL("../src/components/limex/foundations.tsx", import.meta.url),
+    "utf8",
+  );
+  const landingModuleTsx = await fs.readFile(
+    new URL("../src/components/admin/landing-module.tsx", import.meta.url),
+    "utf8",
+  );
+
+  // 1. ClientLogo type allows null name
+  assert.match(landingTypesTs, /name:\s*string\s*\|\s*null/);
+
+  // 2. HTTP schema accepts nullable name
+  assert.match(landingRoutesTs, /name:\s*z\.preprocess/);
+
+  // 3. Client card in foundations uses dynamic width without fixed w-[128px], fixed height h-9, and no clipping
+  assert.match(foundationsTsx, /className="flex h-9 w-auto shrink-0/);
+  assert.doesNotMatch(foundationsTsx, /w-\[128px\]/);
+
+  // 4. Admin editor provides optional label and placeholder for client name
+  assert.match(landingModuleTsx, /Client or brand name \(optional\)/);
+});

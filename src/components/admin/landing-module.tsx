@@ -367,7 +367,7 @@ function ClientLogoUpload({
           />
         ) : (
           <span className="text-[20px] font-bold text-[#b0a89d]">
-            {item.name.slice(0, 1).toUpperCase()}
+            {(item.name?.trim() || "?").slice(0, 1).toUpperCase()}
           </span>
         )}
       </div>
@@ -1393,7 +1393,7 @@ function ClientsEditor({
                 logos: content.logos.filter((item) => item.id !== id),
               })
             }
-            itemTitle={(item) => item.name || "Client logo"}
+            itemTitle={(item) => item.name?.trim() || "Client logo"}
             render={(item) => (
               <div className="space-y-4">
                 <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(240px,0.8fr)]">
@@ -1407,13 +1407,16 @@ function ClientsEditor({
                       }
                     />
                     <Field
-                      label="Client or brand name"
-                      value={item.name}
+                      label="Client or brand name (optional)"
+                      value={item.name ?? ""}
                       onChange={(name) =>
                         onChange({
-                          logos: updateById(content.logos, item.id, { name }),
+                          logos: updateById(content.logos, item.id, {
+                            name: name.trim() ? name : null,
+                          }),
                         })
                       }
+                      placeholder="e.g. Acme Corp (or leave blank if logo only)"
                     />
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
@@ -1468,7 +1471,7 @@ function ClientsEditor({
                   {
                     id: uid("client"),
                     isVisible: true,
-                    name: "New client",
+                    name: null,
                     logoUrl: "",
                     textColor: "#071b3d",
                   },
