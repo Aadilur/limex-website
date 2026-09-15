@@ -26,6 +26,65 @@ function resolveLocalHref(href: string, pathname: string) {
   return `/${href}`;
 }
 
+function normalizedPath(value: string) {
+  const path = value.trim().split(/[?#]/, 1)[0] ?? "";
+  if (!path.startsWith("/")) return null;
+  const withoutTrailingSlash = path.replace(/\/+$/, "");
+  return withoutTrailingSlash || "/";
+}
+
+function pathMatchesHref(href: string, pathname: string) {
+  const targetPath = normalizedPath(href);
+  const currentPath = normalizedPath(pathname);
+  if (!targetPath || !currentPath) return false;
+  return (
+    targetPath === currentPath ||
+    (targetPath !== "/" && currentPath.startsWith(`${targetPath}/`))
+  );
+}
+
+function findSectionForPath(items: NavItem[], pathname: string) {
+  for (const section of items) {
+    if (!hasMegaMenu(section)) continue;
+
+    if (pathMatchesHref(section.href, pathname)) return section.label;
+
+    for (const group of section.megaGroups ?? []) {
+      for (const item of group.items) {
+        if (pathMatchesHref(item.href, pathname)) return section.label;
+        if (
+          item.children?.some((child) =>
+            pathMatchesHref(child.href, pathname),
+          )
+        ) {
+          return section.label;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+function findSectionForServiceSlug(
+  items: NavItem[],
+  serviceSlug: string | undefined,
+) {
+  const normalizedSlug = serviceSlug?.toLowerCase();
+  if (!normalizedSlug) return null;
+
+  return (
+    items.find((section) => {
+      if (!hasMegaMenu(section)) return false;
+      const sectionKey = (section.key ?? slugify(section.label)).toLowerCase();
+      return (
+        normalizedSlug === sectionKey ||
+        normalizedSlug.startsWith(`${sectionKey}-`)
+      );
+    })?.label ?? null
+  );
+}
+
 function hasMegaMenu(item: NavItem) {
   return Boolean(item.megaGroups?.some((group) => group.items?.length));
 }
@@ -189,17 +248,30 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
         const managedByKey = new Map(
           managedItems.map((item) => [item.key ?? slugify(item.label), item]),
         );
+        const managedByLabel = new Map(
+          managedItems.map((item) => [slugify(item.label), item]),
+        );
         const staticManagedKeys = new Set(
-          navigation.filter(hasMegaMenu).map((item) => slugify(item.label)),
+          navigation
+            .filter(hasMegaMenu)
+            .map((item) => item.key ?? slugify(item.label)),
         );
         const mergedNavigation = navigation.flatMap((item) => {
           if (!hasMegaMenu(item)) return [item];
 
-          const managedItem = managedByKey.get(slugify(item.label));
+          const managedItem =
+            managedByKey.get(item.key ?? slugify(item.label)) ??
+            managedByLabel.get(slugify(item.label));
           return managedItem ? [managedItem] : [];
         });
         const newManagedItems = managedItems.filter(
-          (item) => !staticManagedKeys.has(item.key ?? slugify(item.label)),
+          (item) =>
+            !staticManagedKeys.has(item.key ?? slugify(item.label)) &&
+            !navigation.some(
+              (staticItem) =>
+                hasMegaMenu(staticItem) &&
+                slugify(staticItem.label) === slugify(item.label),
+            ),
         );
         const nextNavigation = [
           ...mergedNavigation.filter((item) => item.label === "Home"),
@@ -284,13 +356,19 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
   }, []);
 
   const closeMobileMenu = () => setMobileOpen(false);
+  const menuIdentity = (item: NavItem) => item.key ?? slugify(item.label);
   const openMenuItem = menuNavigation.find(
-    (item) => item.label === openMenu && hasMegaMenu(item),
+    (item) => menuIdentity(item) === openMenu && hasMegaMenu(item),
   );
   const serviceSlug = pathname.match(/^\/(?:bn\/)?services\/([^/]+)/)?.[1];
   const generatedService = serviceSlug
     ? getGeneratedService(serviceSlug)
     : null;
+  const menuSectionForPath = findSectionForPath(menuNavigation, pathname);
+  const menuSectionForServiceSlug = findSectionForServiceSlug(
+    menuNavigation,
+    serviceSlug,
+  );
   const activeNavLabel =
     pathname === "/"
       ? "Home"
@@ -300,7 +378,9 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
           ? "Blog"
           : pathname.startsWith("/trademark-classes")
             ? "IP & Trademark"
-            : (generatedService?.sectionLabel ??
+            : (menuSectionForPath ??
+              menuSectionForServiceSlug ??
+              generatedService?.sectionLabel ??
               (pathname.startsWith("/services/trademark") ||
               pathname.startsWith("/bn/services/trademark")
                 ? "IP & Trademark"
@@ -338,13 +418,13 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
           {menuNavigation.map((item) =>
             hasMegaMenu(item) ? (
               <DesktopNavTrigger
-                key={item.label}
+                key={menuIdentity(item)}
                 item={item}
                 isActive={item.label === activeNavLabel}
-                isOpen={openMenu === item.label}
+                isOpen={openMenu === menuIdentity(item)}
                 onToggle={() =>
                   setOpenMenu((current) =>
-                    current === item.label ? null : item.label,
+                    current === menuIdentity(item) ? null : menuIdentity(item),
                   )
                 }
               />
@@ -397,7 +477,7 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
         {openMenuItem ? (
           <>
             <MegaMenuPanel
-              key={openMenuItem.label}
+              key={menuIdentity(openMenuItem)}
               item={openMenuItem}
               onNavigate={() => {
                 setOpenMenu(null);
