@@ -1571,10 +1571,10 @@ test("service page related options are dynamic with title, subtitle, icon, focus
     "utf8",
   );
 
-  // 1. service-page-sections.tsx renders Section Title, Subtitle, ServiceIcon, and clean focused button
+  // 1. service-page-sections.tsx renders Section Title, Subtitle, sequential badge, and clean focused button
   assert.match(serviceSectionsTsx, /relatedOptionsTitle/);
   assert.match(serviceSectionsTsx, /relatedOptionsDescription/);
-  assert.match(serviceSectionsTsx, /<ServiceIcon\s+name=\{iconName\}/);
+  assert.match(serviceSectionsTsx, /idx \+ 1/);
   assert.match(serviceSectionsTsx, /group-hover:translate-x-1/);
 
   // 2. admin module contains dedicated Related options disclosure with full item fields
@@ -1652,7 +1652,7 @@ test("about page has larger team portraits, executive typography, no odd eyebrow
   );
 });
 
-test("bangla language toggle is supported on service and blog pages", async () => {
+test("bangla language toggle is hidden on service and blog pages per user request", async () => {
   const fs = await import("node:fs/promises");
   const serviceSectionsTsx = await fs.readFile(
     new URL(
@@ -1666,11 +1666,11 @@ test("bangla language toggle is supported on service and blog pages", async () =
     "utf8",
   );
 
-  // 1. Service page header supports language toggle switchLabel
-  assert.match(serviceSectionsTsx, /ui\.switchLabel/);
+  // 1. Service page header does not render language switch link
+  assert.doesNotMatch(serviceSectionsTsx, /ui\.switchLabel/);
 
-  // 2. Blog supports language toggle
-  assert.match(blogSectionsTsx, /locale === "bn" \? "English" : "বাংলা"/);
+  // 2. Blog does not render language switch link
+  assert.doesNotMatch(blogSectionsTsx, /locale === "bn" \? "English" : "বাংলা"/);
 });
 
 test("blog article body contact links, related services, and hash navigation open ContactModal with pre-selected service", async () => {
@@ -1883,7 +1883,7 @@ test("blog listing has editorial cards with blended page background, stroke sepa
   assert.doesNotMatch(blogSectionsTsx, /ARTICLE COVER/);
 });
 
-test("service page related options are compact and use intelligent contextual icon resolution", async () => {
+test("service page related options are compact and sequential with admin support", async () => {
   const fs = await import("node:fs/promises");
   const servicePageSectionsTsx = await fs.readFile(
     new URL(
@@ -1900,16 +1900,12 @@ test("service page related options are compact and use intelligent contextual ic
     "utf8",
   );
 
-  // 1. Contextual icon resolver is present and handles diverse keywords
-  assert.match(servicePageSectionsTsx, /function resolveRelatedOptionIcon/);
-  assert.match(servicePageSectionsTsx, /copyright/);
-  assert.match(servicePageSectionsTsx, /trademark/);
-  assert.match(servicePageSectionsTsx, /lightbulb/);
-  assert.match(servicePageSectionsTsx, /license/);
+  // 1. Sequential numbering badge
+  assert.match(servicePageSectionsTsx, /rounded-full bg-\[#0055ff\]\/10/);
+  assert.match(servicePageSectionsTsx, /idx \+ 1/);
 
   // 2. Compact card proportions
   assert.match(servicePageSectionsTsx, /rounded-\[20px\]/);
-  assert.match(servicePageSectionsTsx, /size-9\.5/);
 
   // 3. Admin uses IconPicker for related options
   assert.match(servicePagesModuleTsx, /<IconPicker/);
@@ -1931,4 +1927,28 @@ test("blog admin supports searchable service catalog, reordering, custom service
 
   // 2. Tab displays dynamic counter
   assert.match(blogModuleTsx, /Services \(\$\{draft\.services\.length\}\)/);
+});
+
+test("inquiries module and tools module render as a responsive table with unified pagination and search", async () => {
+  const fs = await import("node:fs/promises");
+  const inquiriesModuleTsx = await fs.readFile(
+    new URL("../src/components/admin/inquiries-module.tsx", import.meta.url),
+    "utf8",
+  );
+  const toolsModuleTsx = await fs.readFile(
+    new URL("../src/components/admin/tools-module.tsx", import.meta.url),
+    "utf8",
+  );
+
+  // Inquiries module uses shared table and pagination
+  assert.match(inquiriesModuleTsx, /ServiceRequestsTable/);
+  assert.match(inquiriesModuleTsx, /TablePagination/);
+  assert.match(inquiriesModuleTsx, /Search people or messages/);
+  assert.match(inquiriesModuleTsx, /itemName="enquiry"/);
+
+  // Tools module exports and uses TablePagination
+  assert.match(toolsModuleTsx, /export function TablePagination/);
+  assert.match(toolsModuleTsx, /export function ServiceRequestsTable/);
+  assert.match(toolsModuleTsx, /Search requests…/);
+  assert.match(toolsModuleTsx, /itemName="request"/);
 });

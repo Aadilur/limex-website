@@ -14,7 +14,7 @@ import { FeeSettingsEditor, type FeeSlug } from "./fee-settings-editor";
 import { TemplateBuilderModule } from "./template-builder-module";
 import styles from "../limex/tools.module.css";
 
-type ServiceRequest = {
+export type ServiceRequest = {
   id: string;
   toolSlug: string;
   name: string;
@@ -33,16 +33,16 @@ type ServiceRequest = {
     result?: {
       title: string;
       total: number;
-      rows: { label: string; amount: number | null }[];
+      rows?: { label: string; amount: number | null }[];
     };
     draft?: { title: string; sections: { heading: string; body: string }[] };
     configVersion?: number;
   };
 };
 
-const statuses = ["NEW", "CONTACTED", "IN_PROGRESS", "COMPLETED"] as const;
-const labelStatus = (value: string) => value.toLowerCase().replaceAll("_", " ");
-const displayStatus = (value: string) =>
+export const statuses = ["NEW", "CONTACTED", "IN_PROGRESS", "COMPLETED"] as const;
+export const labelStatus = (value: string) => value.toLowerCase().replaceAll("_", " ");
+export const displayStatus = (value: string) =>
   labelStatus(value).replace(/^./, (character) => character.toUpperCase());
 
 function requestSourceLabel(toolSlug: string) {
@@ -159,7 +159,7 @@ function WhatsAppIcon({ className = "size-3.5" }: { className?: string }) {
   );
 }
 
-function RequestDetailDrawer({
+export function RequestDetailDrawer({
   item,
   copiedId,
   onCopy,
@@ -351,7 +351,7 @@ function RequestDetailDrawer({
   );
 }
 
-function ServiceRequestsTable({
+export function ServiceRequestsTable({
   items,
   busy,
   expanded,
@@ -716,6 +716,144 @@ function ServiceRequestsTable({
   );
 }
 
+export function TablePagination({
+  page,
+  pageSize = 20,
+  total,
+  onPageChange,
+  itemName = "item",
+}: {
+  page: number;
+  pageSize?: number;
+  total: number;
+  onPageChange: (newPage: number) => void;
+  itemName?: string;
+}) {
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const startItem = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endItem = Math.min(page * pageSize, total);
+
+  const getPageNumbers = () => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    if (page <= 4) {
+      return [1, 2, 3, 4, 5, "...", totalPages];
+    }
+    if (page >= totalPages - 3) {
+      return [
+        1,
+        "...",
+        totalPages - 4,
+        totalPages - 3,
+        totalPages - 2,
+        totalPages - 1,
+        totalPages,
+      ];
+    }
+    return [1, "...", page - 1, page, page + 1, "...", totalPages];
+  };
+
+  const pages = getPageNumbers();
+
+  return (
+    <nav
+      className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[#e8ede3] pt-4"
+      aria-label="Table pagination"
+    >
+      <div className="text-[12px] font-medium text-[#736d64]">
+        {total === 0 ? (
+          <span>No {itemName}s</span>
+        ) : (
+          <span>
+            Showing{" "}
+            <strong className="font-semibold text-[#071b3d]">{startItem}</strong>
+            –
+            <strong className="font-semibold text-[#071b3d]">{endItem}</strong> of{" "}
+            <strong className="font-semibold text-[#071b3d]">{total}</strong>{" "}
+            {total === 1 ? itemName : `${itemName}s`}
+          </span>
+        )}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+        <button
+          className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-[#d6dbcf] bg-white px-3 sm:px-4 text-[12px] font-semibold text-[#4f4b47] shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition-all hover:border-[#aaa197] hover:bg-[#faf8f5] disabled:cursor-not-allowed disabled:opacity-40"
+          type="button"
+          disabled={page <= 1}
+          onClick={() => onPageChange(page - 1)}
+          aria-label="Previous page"
+        >
+          <svg
+            className="size-3.5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2.2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+          <span className="hidden sm:inline">Previous</span>
+        </button>
+
+        <div className="flex items-center gap-1">
+          {pages.map((p, idx) =>
+            typeof p === "number" ? (
+              <button
+                key={p}
+                type="button"
+                className={`grid size-8 sm:size-9 place-items-center rounded-full text-[12px] font-semibold transition-all ${
+                  p === page
+                    ? "border border-[#071b3d] bg-[#071b3d] text-white shadow-sm"
+                    : "border border-[#d6dbcf] bg-white text-[#4f4b47] hover:border-[#aaa197] hover:bg-[#faf8f5]"
+                }`}
+                aria-current={p === page ? "page" : undefined}
+                onClick={() => onPageChange(p)}
+              >
+                {p}
+              </button>
+            ) : (
+              <span
+                key={`dots-${idx}`}
+                className="grid size-7 sm:size-8 place-items-center text-[12px] text-[#9b958c]"
+              >
+                …
+              </span>
+            ),
+          )}
+        </div>
+
+        <button
+          className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-[#d6dbcf] bg-white px-3 sm:px-4 text-[12px] font-semibold text-[#4f4b47] shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition-all hover:border-[#aaa197] hover:bg-[#faf8f5] disabled:cursor-not-allowed disabled:opacity-40"
+          type="button"
+          disabled={page >= totalPages}
+          onClick={() => onPageChange(page + 1)}
+          aria-label="Next page"
+        >
+          <span className="hidden sm:inline">Next</span>
+          <svg
+            className="size-3.5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2.2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+        </button>
+      </div>
+    </nav>
+  );
+}
+
 const taxNumbers = [
   ["salaryExemptionCap", "Employment exemption cap (৳)"],
   ["rebateInvestmentRate", "Eligible-investment rebate rate (%)"],
@@ -737,6 +875,8 @@ export function ToolsAdminModule() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [status, setStatus] = useState("");
+  const [requestSearchInput, setRequestSearchInput] = useState("");
+  const [requestSearch, setRequestSearch] = useState("");
   const [expanded, setExpanded] = useState("");
   const [reload, setReload] = useState(0);
   const [yearIndex, setYearIndex] = useState(0);
@@ -766,8 +906,11 @@ export function ToolsAdminModule() {
     setError("");
     setItems([]);
     setRequestsLoading(true);
+    const params = new URLSearchParams({ page: String(page) });
+    if (status) params.set("status", status);
+    if (requestSearch) params.set("search", requestSearch);
     void request<{ items: ServiceRequest[]; total: number }>(
-      `/api/admin/tools/requests?page=${page}${status ? `&status=${status}` : ""}`,
+      `/api/admin/tools/requests?${params.toString()}`,
       { cache: "no-store" },
     )
       .then((data) => {
@@ -785,7 +928,7 @@ export function ToolsAdminModule() {
     return () => {
       active = false;
     };
-  }, [tab, page, status, reload]);
+  }, [tab, page, status, requestSearch, reload]);
 
   useEffect(() => {
     if (!dirty) return;
@@ -973,6 +1116,46 @@ export function ToolsAdminModule() {
           {/* Controls toolbar */}
           <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-wrap items-center gap-3">
+              <form
+                className="flex items-center gap-2"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setPage(1);
+                  setRequestSearch(requestSearchInput.trim());
+                }}
+              >
+                <div className="relative">
+                  <input
+                    type="text"
+                    className="min-h-10 w-[200px] sm:w-[240px] rounded-[12px] border border-[#dcd5cb] bg-[#fffefa] pl-9 pr-3.5 text-[12.5px] font-medium text-[#1c191d] placeholder:text-[#9b958c] outline-none transition-all hover:border-[#c5bdb2] focus:border-[#0055ff] focus:ring-4 focus:ring-[#008cff]/10"
+                    placeholder="Search requests…"
+                    value={requestSearchInput}
+                    onChange={(e) => setRequestSearchInput(e.target.value)}
+                  />
+                  <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#8c857b]">
+                    <svg
+                      className="size-3.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2.2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  className="min-h-10 rounded-[12px] border border-[#d8d2c8] bg-white px-3.5 text-[12px] font-semibold text-[#4f4b47] transition-all hover:border-[#aaa197] hover:bg-[#faf8f5]"
+                >
+                  Search
+                </button>
+              </form>
+
               <label className="flex items-center gap-2 text-[12.5px] font-semibold text-[#37332d]">
                 <span>Status</span>
                 <div className="relative">
@@ -1052,7 +1235,7 @@ export function ToolsAdminModule() {
                     cy="12"
                     r="10"
                     stroke="currentColor"
-                    strokeWidth="4"
+                    strokeWidth={4}
                   />
                   <path
                     className="opacity-75"
@@ -1080,59 +1263,13 @@ export function ToolsAdminModule() {
           ) : null}
 
           {/* Pagination controls */}
-          <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-            <button
-              className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-[#d6dbcf] bg-white px-4 text-[12px] font-semibold text-[#4f4b47] shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition-all hover:border-[#aaa197] hover:bg-[#faf8f5] disabled:cursor-not-allowed disabled:opacity-40"
-              type="button"
-              disabled={page === 1}
-              onClick={() => setPage((value) => value - 1)}
-            >
-              <svg
-                className="size-3.5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2.2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-              <span>Previous</span>
-            </button>
-            <p className="text-[12px] font-medium text-[#736d64]">
-              Page{" "}
-              <strong className="font-semibold text-[#071b3d]">{page}</strong>{" "}
-              of{" "}
-              <strong className="font-semibold text-[#071b3d]">
-                {Math.max(1, Math.ceil(total / 20))}
-              </strong>{" "}
-              · {total} total requests
-            </p>
-            <button
-              className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-[#d6dbcf] bg-white px-4 text-[12px] font-semibold text-[#4f4b47] shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition-all hover:border-[#aaa197] hover:bg-[#faf8f5] disabled:cursor-not-allowed disabled:opacity-40"
-              type="button"
-              disabled={page * 20 >= total}
-              onClick={() => setPage((value) => value + 1)}
-            >
-              <span>Next</span>
-              <svg
-                className="size-3.5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2.2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
-          </div>
+          <TablePagination
+            page={page}
+            pageSize={20}
+            total={total}
+            onPageChange={(newPage) => setPage(newPage)}
+            itemName="request"
+          />
         </>
       ) : !config ? (
         <p className={styles.muted}>Loading settings…</p>
