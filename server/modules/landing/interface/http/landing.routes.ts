@@ -100,6 +100,7 @@ const clientsSchema = z.object({
       z.object({
         id: nonEmptyText(120),
         isVisible: visibleSchema,
+        name: nonEmptyText(120),
         name: z.preprocess((val) => {
           if (val === "" || val === undefined) return null;
           return val;

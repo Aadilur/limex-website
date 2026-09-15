@@ -40,8 +40,14 @@ export type ServiceRequest = {
   };
 };
 
-export const statuses = ["NEW", "CONTACTED", "IN_PROGRESS", "COMPLETED"] as const;
-export const labelStatus = (value: string) => value.toLowerCase().replaceAll("_", " ");
+export const statuses = [
+  "NEW",
+  "CONTACTED",
+  "IN_PROGRESS",
+  "COMPLETED",
+] as const;
+export const labelStatus = (value: string) =>
+  value.toLowerCase().replaceAll("_", " ");
 export const displayStatus = (value: string) =>
   labelStatus(value).replace(/^./, (character) => character.toUpperCase());
 
@@ -767,10 +773,11 @@ export function TablePagination({
         ) : (
           <span>
             Showing{" "}
-            <strong className="font-semibold text-[#071b3d]">{startItem}</strong>
-            –
-            <strong className="font-semibold text-[#071b3d]">{endItem}</strong> of{" "}
-            <strong className="font-semibold text-[#071b3d]">{total}</strong>{" "}
+            <strong className="font-semibold text-[#071b3d]">
+              {startItem}
+            </strong>
+            –<strong className="font-semibold text-[#071b3d]">{endItem}</strong>{" "}
+            of <strong className="font-semibold text-[#071b3d]">{total}</strong>{" "}
             {total === 1 ? itemName : `${itemName}s`}
           </span>
         )}

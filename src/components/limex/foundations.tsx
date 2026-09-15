@@ -6,6 +6,7 @@ import { ActionButton, SectionTitle } from "./ui";
 import { defaultLandingContent } from "@/lib/landing-defaults";
 import type { ClientsContent, MetricsContent, ProcessContent } from "@/lib/landing-types";
 
+function ClientLogoSet({ logos, duplicate = false }: { logos: ClientsContent["logos"]; duplicate?: boolean }) {
 function ClientLogoSet({
   logos,
   duplicate = false,
@@ -15,9 +16,18 @@ function ClientLogoSet({
 }) {
   return (
     <div
+      className={`flex shrink-0 gap-cluster-lg pr-cluster-lg motion-reduce:w-full motion-reduce:flex-wrap motion-reduce:justify-center motion-reduce:pr-0 ${duplicate ? "motion-reduce:hidden" : ""}`.trim()}
       className={`flex shrink-0 items-center gap-6 pr-6 sm:gap-8 sm:pr-8 motion-reduce:w-full motion-reduce:flex-wrap motion-reduce:justify-center motion-reduce:pr-0 ${duplicate ? "motion-reduce:hidden" : ""}`.trim()}
       aria-hidden={duplicate ? "true" : undefined}
     >
+      {logos.filter((logo) => logo.isVisible).map((client) => (
+        <div className="flex h-9 w-[128px] shrink-0 items-center gap-cluster-xs overflow-hidden whitespace-nowrap text-body-xs font-display wide:text-body-sm" style={{ color: client.textColor || clientTextClasses[client.name] }} key={`${duplicate ? "copy" : "original"}-${client.id}`}>
+          <span className="flex h-8 shrink-0 items-center overflow-hidden">
+            {client.logoUrl ? <img className="h-7 w-auto object-contain" src={client.logoUrl} alt="" aria-hidden="true" /> : <span className="text-[10px] font-bold tracking-[0.04em]">{client.name.slice(0, 2).toUpperCase()}</span>}
+          </span>
+          <span>{client.name}</span>
+        </div>
+      ))}
       {logos
         .filter((logo) => logo.isVisible)
         .map((client) => {

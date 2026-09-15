@@ -75,7 +75,9 @@ export function InquiriesAdminModule() {
         ),
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to update enquiry.");
+      setError(
+        err instanceof Error ? err.message : "Unable to update enquiry.",
+      );
     } finally {
       setBusy(false);
     }
@@ -93,8 +95,8 @@ export function InquiriesAdminModule() {
             Enquiries & bookings
           </h1>
           <p className="mt-2 max-w-[620px] text-[13px] leading-6 text-[#687063]">
-            Every contact form, calculator request and appointment enquiry in one
-            private workspace.
+            Every contact form, calculator request and appointment enquiry in
+            one private workspace.
           </p>
         </div>
         <a
