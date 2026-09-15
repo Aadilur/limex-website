@@ -431,14 +431,8 @@ export function BlogIndexContent({
             </p>
           </div>
           <div className="w-full rounded-nav bg-white p-3.5 lg:max-w-[440px] lg:p-card-pad">
-            <div className="mb-cluster flex items-center justify-between gap-3">
+            <div className="mb-cluster">
               <p className="text-label text-pink">SEARCH THE JOURNAL</p>
-              <a
-                className="shrink-0 text-[13px] font-semibold text-pink hover:text-ink sm:text-body-xs"
-                href={locale === "bn" ? "/blog" : "/bn/blog"}
-              >
-                {locale === "bn" ? "English" : "বাংলা"}
-              </a>
             </div>
             <BlogSearchField
               id="blog-hero-search"
@@ -953,12 +947,6 @@ export function BlogDetailContent({
             >
               <span>←</span>
               <span>Back to all posts</span>
-            </a>
-            <a
-              className="inline-flex items-center rounded-full border border-[#dcd5cb] bg-white/80 px-3 py-1 text-xs font-semibold text-pink shadow-[0_1px_3px_rgba(7,20,46,0.02)] transition-colors hover:border-pink/40 hover:text-ink"
-              href={locale === "bn" ? "/blog" : "/bn/blog"}
-            >
-              {locale === "bn" ? "English" : "বাংলা"}
             </a>
           </div>
         </div>
