@@ -3,7 +3,25 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { isTemplateFieldManagedByRepeater, isTemplateFieldVisible, missingTemplateFields, templatePaperSizeLabels, templateRepeaterFieldValueKey, templateRepeaterItemContext, templateRepeaterItemIndexes, type PublicDocumentTemplate, type TemplateField, type TemplateRepeater, type TemplateRepeaterField, type TemplateValues } from "@/lib/document-templates";
+import {
+  isTemplateFieldManagedByRepeater,
+  isTemplateFieldVisible,
+  missingTemplateFields,
+  scaledTemplateFontSizeMetrics,
+  templateFontScaleDefault,
+  templateFontScaleMax,
+  templateFontScaleMin,
+  templateFontSizeMetrics,
+  templatePaperSizeLabels,
+  templateRepeaterFieldValueKey,
+  templateRepeaterItemContext,
+  templateRepeaterItemIndexes,
+  type PublicDocumentTemplate,
+  type TemplateField,
+  type TemplateRepeater,
+  type TemplateRepeaterField,
+  type TemplateValues,
+} from "@/lib/document-templates";
 import { getAdminTemplatePreview, getPublishedTemplate } from "@/lib/template-api";
 import { renderTemplateDocx } from "@/lib/document-template-docx";
 import { renderTemplatePrintHtml } from "@/lib/document-template-print";
@@ -28,6 +46,7 @@ function RepeaterInputGroup({ repeater, values, onChange }: { repeater: Template
 
 export function TemplateWorkspace({ slug, preview = false }: { slug: string; preview?: boolean }) {
   const [template, setTemplate] = useState<PublicDocumentTemplate | null>(null);
+  const [userFontScale, setUserFontScale] = useState<number | null>(null);
   const [values, setValues] = useState<TemplateValues>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -51,16 +70,31 @@ export function TemplateWorkspace({ slug, preview = false }: { slug: string; pre
     return () => { active = false; };
   }, [preview, slug]);
 
-  const missing = useMemo(() => template ? missingTemplateFields(template.fields, values, template.settings.repeaters) : [], [template, values]);
-  const visibleFields = useMemo(() => template ? template.fields.filter((field) => !isTemplateFieldManagedByRepeater(field, template.settings.repeaters) && isTemplateFieldVisible(field, values)) : [], [template, values]);
-  const serviceCta = template?.settings.serviceCta;
+  const defaultFontScale = template?.settings.fontScale ?? templateFontScaleDefault;
+  const currentFontScale = userFontScale ?? defaultFontScale;
+
+  const effectiveTemplate = useMemo(() => {
+    if (!template) return null;
+    if (userFontScale === null || userFontScale === template.settings.fontScale) return template;
+    return {
+      ...template,
+      settings: {
+        ...template.settings,
+        fontScale: userFontScale,
+      },
+    };
+  }, [template, userFontScale]);
+
+  const missing = useMemo(() => effectiveTemplate ? missingTemplateFields(effectiveTemplate.fields, values, effectiveTemplate.settings.repeaters) : [], [effectiveTemplate, values]);
+  const visibleFields = useMemo(() => effectiveTemplate ? effectiveTemplate.fields.filter((field) => !isTemplateFieldManagedByRepeater(field, effectiveTemplate.settings.repeaters) && isTemplateFieldVisible(field, values)) : [], [effectiveTemplate, values]);
+  const serviceCta = effectiveTemplate?.settings.serviceCta;
 
   function update(key: string, value: string) { setValues((current) => ({ ...current, [key]: value })); setError(""); }
 
   function print() {
-    if (!template || printing || exportingDocx) return;
+    if (!effectiveTemplate || printing || exportingDocx) return;
     if (missing.length) { setError(`Complete: ${missing.map((field) => field.label).join(", ")}.`); formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
-    const html = renderTemplatePrintHtml(template, values);
+    const html = renderTemplatePrintHtml(effectiveTemplate, values);
     setPrinting(true);
     setError("");
 
@@ -119,17 +153,17 @@ export function TemplateWorkspace({ slug, preview = false }: { slug: string; pre
   }
 
   async function downloadDocx() {
-    if (!template || printing || exportingDocx) return;
+    if (!effectiveTemplate || printing || exportingDocx) return;
     if (missing.length) { setError(`Complete: ${missing.map((field) => field.label).join(", ")}.`); formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
 
     setExportingDocx(true);
     setError("");
     try {
-      const blob = await renderTemplateDocx(template, values);
+      const blob = await renderTemplateDocx(effectiveTemplate, values);
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `${template.slug}.docx`;
+      link.download = `${effectiveTemplate.slug}.docx`;
       link.rel = "noopener";
       document.body.appendChild(link);
       link.click();
@@ -144,15 +178,64 @@ export function TemplateWorkspace({ slug, preview = false }: { slug: string; pre
   }
 
   if (loading) return <div className="grid min-h-[420px] place-items-center rounded-[24px] border border-[#e1dcd4] bg-white text-[13px] font-semibold text-[#777168]">Loading template…</div>;
-  if (!template) return <div className="rounded-[24px] border border-[#f0c7ce] bg-[#fff8f8] p-6 text-[13px] font-semibold text-[#c53e59]">{error || "This template is not available."}</div>;
+  if (!effectiveTemplate) return <div className="rounded-[24px] border border-[#f0c7ce] bg-[#fff8f8] p-6 text-[13px] font-semibold text-[#c53e59]">{error || "This template is not available."}</div>;
 
   return <div className="min-w-0 space-y-6">
-    <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Business tools", href: "/business-tools" }, { label: template.title }]} />
-    <header className="max-w-[760px]"><p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#0055ff]">{preview ? "Draft preview" : "Business document template"}</p><h1 className="mt-2 font-brand text-[32px] font-bold leading-[1.05] tracking-[-0.045em] text-[#071b3d] sm:text-[46px]">{template.title}</h1><p className="mt-3 text-[14px] leading-[1.7] text-[#756e66]">{template.description} Fill in the fields, review the document, then print, save as PDF, or download an editable Word file.</p></header>
+    <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Business tools", href: "/business-tools" }, { label: effectiveTemplate.title }]} />
+    <header className="max-w-[760px]"><p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#0055ff]">{preview ? "Draft preview" : "Business document template"}</p><h1 className="mt-2 font-brand text-[32px] font-bold leading-[1.05] tracking-[-0.045em] text-[#071b3d] sm:text-[46px]">{effectiveTemplate.title}</h1><p className="mt-3 text-[14px] leading-[1.7] text-[#756e66]">{effectiveTemplate.description} Fill in the fields, review the document, then print, save as PDF, or download an editable Word file.</p></header>
     {serviceCta?.enabled && serviceCta.href ? <section className="flex flex-col gap-4 rounded-[18px] bg-[#eaf3ff] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5" aria-label="Related service"><div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#006dce]">Related service</p><h2 className="mt-1 font-brand text-[18px] font-bold tracking-[-0.02em] text-[#071b3d]">{serviceCta.title}</h2><p className="mt-1 max-w-[680px] text-[12px] leading-[1.5] text-[#536b84]">{serviceCta.description}</p></div><Link href={serviceCta.href} className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-full bg-[#0055ff] px-4 text-[12px] font-bold text-white transition-colors hover:bg-[#0039b8]">{serviceCta.linkLabel}<span className="ml-2" aria-hidden="true">↗</span></Link></section> : null}
     <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,0.84fr)_minmax(420px,1.16fr)]">
-      <form className="min-w-0 rounded-[22px] border border-[#e1dcd4] bg-white p-4 sm:p-6" ref={formRef} onSubmit={(event) => { event.preventDefault(); print(); }}><div className="flex items-center justify-between gap-3 border-b border-[#ebe5dd] pb-4"><div><h2 className="font-brand text-[22px] font-bold tracking-[-0.03em] text-[#071b3d]">Your details</h2><p className="mt-1 text-[12px] text-[#817970]">Fields marked with * are required.</p></div><span className="rounded-full bg-[#f4eee8] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-[#796d61]">{templatePaperSizeLabels[template.settings.paperSize]}</span></div><div className="mt-5 grid gap-4">{visibleFields.map((field) => <FieldInput field={field} value={values[field.key] ?? ""} onChange={(value) => update(field.key, value)} key={field.id} />)}{template.settings.repeaters.map((repeater) => <RepeaterInputGroup repeater={repeater} values={values} onChange={update} key={repeater.id} />)}</div>{visibleFields.length === 0 && template.settings.repeaters.length === 0 ? <p className="mt-5 rounded-[12px] bg-[#f7f4ef] px-3.5 py-3 text-[12px] font-semibold text-[#756e66]">Choose the document options above to continue.</p> : null}{error ? <p className="mt-5 rounded-[12px] border border-[#f0c7ce] bg-[#fff8f8] px-3.5 py-3 text-[12px] font-semibold text-[#c53e59]" role="alert">{error}</p> : null}<div className="mt-6 border-t border-[#ebe5dd] pt-5"><div className="grid gap-2 sm:grid-cols-2"><button className="inline-flex min-h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-full bg-[#071b3d] px-5 text-[13px] font-bold text-white transition-colors hover:bg-[#0055ff] disabled:cursor-wait disabled:opacity-70" type="submit" disabled={printing || exportingDocx}>{printing ? "Opening print preview…" : "Print / Save as PDF"} <span aria-hidden="true">{printing ? "…" : "↗"}</span></button><button className="inline-flex min-h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-full border border-[#d9d3c9] bg-[#fcfbf8] px-5 text-[13px] font-bold text-[#242129] transition-colors hover:border-[#0055ff] hover:bg-[#fff5f6] disabled:cursor-wait disabled:opacity-70" type="button" onClick={() => void downloadDocx()} disabled={printing || exportingDocx}>{exportingDocx ? "Preparing Word file…" : "Download editable DOCX"} <span aria-hidden="true">{exportingDocx ? "…" : "↓"}</span></button></div><p className="mt-3 text-[11px] leading-[1.45] text-[#938a80]">This is a draft for review. Check applicable legal, stamp and signing requirements before use.</p></div></form>
-      <section className="flex h-[min(680px,calc(100vh-96px))] min-h-[420px] min-w-0 flex-col overflow-hidden rounded-[22px] border border-[#e1dcd4] bg-[#f7f4ef] p-3 sm:p-5 xl:sticky xl:top-[104px] xl:h-[calc(100vh-128px)]" aria-label="Document preview"><div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-1"><div><p className="text-[11px] font-bold uppercase tracking-[0.13em] text-[#0055ff]">Live preview</p><p className="mt-1 text-[12px] text-[#817970]">{templatePaperSizeLabels[template.settings.paperSize]} ratio · {template.pages.length} {template.pages.length === 1 ? "page" : "pages"}</p></div><span className="text-[12px] font-semibold text-[#817970]">Empty fields show labels</span></div><div className="min-h-0 min-w-0 flex-1 overflow-x-auto overflow-y-auto overscroll-contain rounded-[15px] bg-[#eee9e2] p-2 sm:p-3" tabIndex={0} role="region" aria-label="Scrollable live document pages"><div className="mx-auto w-full max-w-[820px] min-w-0"><DocumentTemplatePaper template={template} values={values} showLabels compact /></div></div></section>
+      <form className="min-w-0 rounded-[22px] border border-[#e1dcd4] bg-white p-4 sm:p-6" ref={formRef} onSubmit={(event) => { event.preventDefault(); print(); }}><div className="flex items-center justify-between gap-3 border-b border-[#ebe5dd] pb-4"><div><h2 className="font-brand text-[22px] font-bold tracking-[-0.03em] text-[#071b3d]">Your details</h2><p className="mt-1 text-[12px] text-[#817970]">Fields marked with * are required.</p></div><span className="rounded-full bg-[#f4eee8] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-[#796d61]">{templatePaperSizeLabels[effectiveTemplate.settings.paperSize]}</span></div><div className="mt-5 grid gap-4">{visibleFields.map((field) => <FieldInput field={field} value={values[field.key] ?? ""} onChange={(value) => update(field.key, value)} key={field.id} />)}{effectiveTemplate.settings.repeaters.map((repeater) => <RepeaterInputGroup repeater={repeater} values={values} onChange={update} key={repeater.id} />)}</div>{visibleFields.length === 0 && effectiveTemplate.settings.repeaters.length === 0 ? <p className="mt-5 rounded-[12px] bg-[#f7f4ef] px-3.5 py-3 text-[12px] font-semibold text-[#756e66]">Choose the document options above to continue.</p> : null}{error ? <p className="mt-5 rounded-[12px] border border-[#f0c7ce] bg-[#fff8f8] px-3.5 py-3 text-[12px] font-semibold text-[#c53e59]" role="alert">{error}</p> : null}<div className="mt-6 border-t border-[#ebe5dd] pt-5"><div className="grid gap-2 sm:grid-cols-2"><button className="inline-flex min-h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-full bg-[#071b3d] px-5 text-[13px] font-bold text-white transition-colors hover:bg-[#0055ff] disabled:cursor-wait disabled:opacity-70" type="submit" disabled={printing || exportingDocx}>{printing ? "Opening print preview…" : "Print / Save as PDF"} <span aria-hidden="true">{printing ? "…" : "↗"}</span></button><button className="inline-flex min-h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-full border border-[#d9d3c9] bg-[#fcfbf8] px-5 text-[13px] font-bold text-[#242129] transition-colors hover:border-[#0055ff] hover:bg-[#fff5f6] disabled:cursor-wait disabled:opacity-70" type="button" onClick={() => void downloadDocx()} disabled={printing || exportingDocx}>{exportingDocx ? "Preparing Word file…" : "Download editable DOCX"} <span aria-hidden="true">{exportingDocx ? "…" : "↓"}</span></button></div><p className="mt-3 text-[11px] leading-[1.45] text-[#938a80]">This is a draft for review. Check applicable legal, stamp and signing requirements before use.</p></div></form>
+      <section className="flex h-[min(680px,calc(100vh-96px))] min-h-[420px] min-w-0 flex-col overflow-hidden rounded-[22px] border border-[#e1dcd4] bg-[#f7f4ef] p-3 sm:p-5 xl:sticky xl:top-[104px] xl:h-[calc(100vh-128px)]" aria-label="Document preview">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-1">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.13em] text-[#0055ff]">Live preview</p>
+            <p className="mt-1 text-[12px] text-[#817970]">{templatePaperSizeLabels[effectiveTemplate.settings.paperSize]} ratio · {effectiveTemplate.pages.length} {effectiveTemplate.pages.length === 1 ? "page" : "pages"}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1.5 rounded-full border border-[#d8d2c8] bg-white px-2.5 py-1 shadow-sm">
+              <span className="text-[11px] font-bold text-[#6f6961]">Font scale:</span>
+              <button
+                type="button"
+                onClick={() => setUserFontScale(Math.max(templateFontScaleMin, currentFontScale - 10))}
+                disabled={currentFontScale <= templateFontScaleMin}
+                aria-label="Decrease font size"
+                className="grid size-6 place-items-center rounded-full bg-[#f4eee8] text-[13px] font-bold text-[#514c47] transition-colors hover:bg-[#e9e1d8] disabled:opacity-40"
+              >
+                −
+              </button>
+              <span className="min-w-[42px] text-center text-[11px] font-bold text-[#071b3d]" title={`Effective body: ${scaledTemplateFontSizeMetrics(effectiveTemplate.settings.defaultFontSize, currentFontScale).sizePx}px / ${(scaledTemplateFontSizeMetrics(effectiveTemplate.settings.defaultFontSize, currentFontScale).sizePx * 0.75).toFixed(1)}pt`}>
+                {currentFontScale}%
+              </span>
+              <button
+                type="button"
+                onClick={() => setUserFontScale(Math.min(templateFontScaleMax, currentFontScale + 10))}
+                disabled={currentFontScale >= templateFontScaleMax}
+                aria-label="Increase font size"
+                className="grid size-6 place-items-center rounded-full bg-[#f4eee8] text-[13px] font-bold text-[#514c47] transition-colors hover:bg-[#e9e1d8] disabled:opacity-40"
+              >
+                +
+              </button>
+              {currentFontScale !== defaultFontScale ? (
+                <button
+                  type="button"
+                  onClick={() => setUserFontScale(null)}
+                  className="ml-1 rounded-full bg-[#eef3fe] px-2 py-0.5 text-[10px] font-bold text-[#0055ff] transition-colors hover:bg-[#dfeafc]"
+                  title={`Reset to template default (${defaultFontScale}%)`}
+                >
+                  Reset ({defaultFontScale}%)
+                </button>
+              ) : (
+                <span className="text-[10px] text-[#958c82]">
+                  (Default: {templateFontSizeMetrics[effectiveTemplate.settings.defaultFontSize]?.sizePx ?? 14}px)
+                </span>
+              )}
+            </div>
+            <span className="hidden text-[12px] font-semibold text-[#817970] sm:inline">Empty fields show labels</span>
+          </div>
+        </div>
+        <div className="min-h-0 min-w-0 flex-1 overflow-x-auto overflow-y-auto overscroll-contain rounded-[15px] bg-[#eee9e2] p-2 sm:p-3" tabIndex={0} role="region" aria-label="Scrollable live document pages"><div className="mx-auto w-full max-w-[820px] min-w-0"><DocumentTemplatePaper template={effectiveTemplate} values={values} showLabels compact /></div></div>
+      </section>
     </div>
   </div>;
 }

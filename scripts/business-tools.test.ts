@@ -698,7 +698,7 @@ test("private-company MoA/AoA is an editable source-based template with dynamic 
   );
   assert.equal(template.slug, "private-company-moa-aoa");
   assert.equal(template.settings.paperSize, "A4");
-  assert.equal(template.settings.defaultFontSize, "legal");
+  assert.equal(template.settings.defaultFontSize, "body");
   assert.equal(template.pages.length, 18);
   assert.equal(
     template.pages.some((page) =>

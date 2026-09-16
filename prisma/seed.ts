@@ -219,6 +219,46 @@ async function main() {
       continue;
     }
 
+    if (template.slug === "private-company-moa-aoa") {
+      const current = normalizeDocumentTemplateDraft({
+        title: existing.title,
+        slug: existing.slug,
+        description: existing.description,
+        settings: existing.settings,
+        fields: existing.fields,
+        pages: existing.pages ?? undefined,
+        blocks: existing.blocks,
+      });
+      if (
+        current.settings.defaultFontSize === "legal" ||
+        JSON.stringify(current.pages).includes('"fontSize":"legal"')
+      ) {
+        await prisma.documentTemplate.update({
+          where: { id: existing.id },
+          data: {
+            settings: template.settings as unknown as Prisma.InputJsonValue,
+            fields: template.fields as unknown as Prisma.InputJsonValue,
+            blocks: flattenTemplatePages(
+              template.pages,
+            ) as unknown as Prisma.InputJsonValue,
+            pages: template.pages as unknown as Prisma.InputJsonValue,
+            publishedSettings:
+              template.settings as unknown as Prisma.InputJsonValue,
+            publishedFields: template.fields as unknown as Prisma.InputJsonValue,
+            publishedBlocks: flattenTemplatePages(
+              template.pages,
+            ) as unknown as Prisma.InputJsonValue,
+            publishedPages:
+              template.pages as unknown as Prisma.InputJsonValue,
+            revision: { increment: 1 },
+            publishedRevision:
+              existing.publishedRevision === null ? null : { increment: 1 },
+          },
+        });
+      }
+      continue;
+    }
+
     if (!isPartnershipDeedTemplate(template)) continue;
     const current = normalizeDocumentTemplateDraft({
       title: existing.title,

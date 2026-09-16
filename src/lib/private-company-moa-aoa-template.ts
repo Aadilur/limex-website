@@ -58,7 +58,7 @@ function text(
     align: type === "title" ? "center" : "left",
     bold: type !== "paragraph",
     italic: false,
-    fontSize: type === "title" ? "title" : "legal",
+    fontSize: type === "title" ? "title" : "body",
     ...options,
   };
 }
@@ -67,7 +67,7 @@ function clauseHeading(id: string, content: string): TemplateBlock {
   return text(id, "paragraph", content, {
     align: "center",
     bold: true,
-    fontSize: "legal",
+    fontSize: "body",
   });
 }
 
@@ -143,7 +143,7 @@ function privateCompanySettings(): TemplateSettings {
     stampGap: 0,
     showPageNumbers: false,
     fontFamily: "serif",
-    defaultFontSize: "legal",
+    defaultFontSize: "body",
     fontScale: 100,
     serviceCta: { ...defaultTemplateSettings.serviceCta },
     repeaters: [directorRepeater(), subscriberRepeater()],
@@ -173,21 +173,21 @@ const memorandumPages: TemplatePage[] = [
   page(1, "Cover", [
     spacer("cover-top-space", 110),
     text("cover-act", "title", "THE COMPANIES ACT, 1994", { fontSize: "subtitle" }),
-    text("cover-act-number", "paragraph", "(ACT XVIII OF 1994)", { align: "center", bold: true, fontSize: "small" }),
+    text("cover-act-number", "paragraph", "(ACT XVIII OF 1994)", { align: "center", bold: true, fontSize: "body" }),
     spacer("cover-company-space", 78),
     text("cover-company-type", "title", "A PRIVATE COMPANY LIMITED BY SHARES", { fontSize: "subtitle" }),
     spacer("cover-moa-space", 78),
     text("cover-moa", "title", "MEMORANDUM OF ASSOCIATION", { fontSize: "subtitle" }),
-    text("cover-and", "paragraph", "AND", { align: "center", bold: true, fontSize: "legal" }),
+    text("cover-and", "paragraph", "AND", { align: "center", bold: true, fontSize: "body" }),
     text("cover-aoa", "title", "ARTICLES OF ASSOCIATION", { fontSize: "subtitle" }),
-    text("cover-of", "paragraph", "OF", { align: "center", bold: true, fontSize: "legal" }),
+    text("cover-of", "paragraph", "OF", { align: "center", bold: true, fontSize: "body" }),
     spacer("cover-name-space", 44),
     text("cover-company-name", "title", "{{company_name}}", { fontSize: "subtitle" }),
   ]),
   page(2, "Memorandum of Association", [
-    text("moa-act", "paragraph", "THE COMPANIES ACT, 1994\n(ACT XVIII OF 1994)\n(A PRIVATE COMPANY LIMITED BY SHARES)", { align: "center", bold: true, fontSize: "legal" }),
+    text("moa-act", "paragraph", "THE COMPANIES ACT, 1994\n(ACT XVIII OF 1994)\n(A PRIVATE COMPANY LIMITED BY SHARES)", { align: "center", bold: true, fontSize: "body" }),
     text("moa-title", "title", "MEMORANDUM OF ASSOCIATION", { fontSize: "subtitle" }),
-    text("moa-of", "paragraph", "OF {{company_name}}", { align: "center", bold: true, fontSize: "legal" }),
+    text("moa-of", "paragraph", "OF {{company_name}}", { align: "center", bold: true, fontSize: "body" }),
     text("moa-name", "paragraph", "The name of the company is {{company_name}}.", { bold: false }),
     text("moa-office", "paragraph", "I. The registered office of the company shall be situated at {{registered_office}}, Bangladesh.", { bold: false }),
     text("moa-objects-intro", "paragraph", "II. The objects for which the Company is established are all the objects that will be implemented after obtaining the necessary permission from the Government, concerned authority or competent authority before commencement of business:", { bold: false }),
@@ -219,10 +219,10 @@ const articlesPages: TemplatePage[] = [
   page(6, "Articles Cover", [
     spacer("aoa-cover-top-space", 158),
     text("aoa-cover-act", "title", "THE COMPANIES ACT, 1994", { fontSize: "subtitle" }),
-    text("aoa-cover-act-number", "paragraph", "(ACT XVIII OF 1994)\n(A PRIVATE COMPANY LIMITED BY SHARES)", { align: "center", bold: true, fontSize: "legal" }),
+    text("aoa-cover-act-number", "paragraph", "(ACT XVIII OF 1994)\n(A PRIVATE COMPANY LIMITED BY SHARES)", { align: "center", bold: true, fontSize: "body" }),
     spacer("aoa-cover-title-space", 94),
     text("aoa-cover-title", "title", "ARTICLES OF ASSOCIATION", { fontSize: "subtitle" }),
-    text("aoa-cover-of", "paragraph", "OF", { align: "center", bold: true, fontSize: "legal" }),
+    text("aoa-cover-of", "paragraph", "OF", { align: "center", bold: true, fontSize: "body" }),
     spacer("aoa-cover-name-space", 42),
     text("aoa-cover-company", "title", "{{company_name}}", { fontSize: "subtitle" }),
   ]),
@@ -331,9 +331,9 @@ const articlesPages: TemplatePage[] = [
     text("aoa-article-forty-four", "paragraph", "44. If the Company is wound up and assets available for distribution among members are insufficient to repay the whole paid-up capital, those assets shall be distributed so that, as nearly as may be, losses are borne by members in proportion to capital paid or which ought to have been paid at commencement of winding up. If assets available for distribution among members are sufficient, they shall be distributed in proportion to capital paid or which ought to have been paid on shares held respectively, without prejudice to rights of holders of shares issued upon special terms and conditions.", { bold: false }),
   ]),
   page(18, "Subscribers and Execution", [
-    text("execution-act", "paragraph", "THE COMPANIES ACT, 1994\n(ACT XVIII OF 1994)", { align: "center", bold: true, fontSize: "legal" }),
+    text("execution-act", "paragraph", "THE COMPANIES ACT, 1994\n(ACT XVIII OF 1994)", { align: "center", bold: true, fontSize: "body" }),
     text("execution-title", "title", "SUBSCRIBERS AND EXECUTION", { fontSize: "subtitle" }),
-    text("execution-company", "paragraph", "For {{company_name}}\nExecuted on {{execution_date}}.", { align: "center", bold: true, fontSize: "legal" }),
+    text("execution-company", "paragraph", "For {{company_name}}\nExecuted on {{execution_date}}.", { align: "center", bold: true, fontSize: "body" }),
     text("execution-intro", "paragraph", "We, the several persons whose names and particulars are subscribed below, wish to be formed into a Company pursuant to this Memorandum of Association and agree to take the number of shares set opposite our respective names.", { bold: false }),
     text("execution-subscriber-details", "paragraph", "Subscriber {{item_number}} — {{name}}\n{{address}} {{occupation}}\nShares: {{shares}}", { bold: false, repeat: { repeaterKey: "subscribers" } }),
     clauseHeading("execution-signatures", "SIGNATURES"),

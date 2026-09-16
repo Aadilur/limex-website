@@ -36,19 +36,26 @@ export const templateFontSizes = ["legal", "small", "body", "subtitle", "title",
 export type TemplateFontSize = (typeof templateFontSizes)[number];
 
 export const templateFontSizeMetrics = {
-  // Source legal instruments often need denser, still readable body copy than
-  // normal correspondence. Keeping this as an explicit scale lets an admin
-  // choose it deliberately without changing existing templates.
-  legal: { sizePx: 10, lineHeight: 1.2 },
-  small: { sizePx: 10, lineHeight: 1.65 },
-  body: { sizePx: 12, lineHeight: 1.75 },
-  subtitle: { sizePx: 16, lineHeight: 1.45 },
-  title: { sizePx: 22, lineHeight: 1.25 },
-  large: { sizePx: 22, lineHeight: 1.25 },
+  // Balanced, legible typography scale for legal instruments, deeds and commercial agreements.
+  legal: { sizePx: 13, lineHeight: 1.45 },
+  small: { sizePx: 12, lineHeight: 1.5 },
+  body: { sizePx: 14, lineHeight: 1.65 },
+  subtitle: { sizePx: 18, lineHeight: 1.4 },
+  title: { sizePx: 24, lineHeight: 1.25 },
+  large: { sizePx: 26, lineHeight: 1.25 },
 } as const satisfies Record<TemplateFontSize, { sizePx: number; lineHeight: number }>;
 
-export const templateFontScaleMin = 100;
-export const templateFontScaleMax = 120;
+export const templateFontSizeLabels: Record<TemplateFontSize, string> = {
+  body: "Body · 14px (Standard default)",
+  legal: "Legal compact · 13px",
+  small: "Small · 12px",
+  subtitle: "Subtitle · 18px",
+  title: "Title · 24px",
+  large: "Large Title · 26px",
+};
+
+export const templateFontScaleMin = 75;
+export const templateFontScaleMax = 200;
 export const templateFontScaleDefault = 100;
 
 export function scaledTemplateFontSizeMetrics(fontSize: TemplateFontSize, fontScale = templateFontScaleDefault) {
