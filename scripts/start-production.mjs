@@ -25,7 +25,11 @@ const processes = [
       "--port",
       frontendPort,
     ],
-    { PORT: frontendPort },
+    {
+      PORT: frontendPort,
+      BACKEND_PORT: backendPort,
+      GATEWAY_PORT: gatewayPort,
+    },
   ),
   startProcess(process.execPath, ["dist/server/index.js"], {
     BACKEND_PORT: backendPort,

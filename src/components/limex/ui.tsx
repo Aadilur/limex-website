@@ -1,7 +1,6 @@
 "use client";
 
 import type { MouseEventHandler, ReactNode } from "react";
-import Image from "next/image";
 import Link from "next/link";
 
 import { useBranding } from "./branding-context";
@@ -308,13 +307,10 @@ export function LogoLockup({
 
   const isInternal = href.startsWith("/") && !href.startsWith("//");
   const content = (
-    <Image
+    <img
       className="h-auto w-full object-contain object-left"
       src={imageSrc}
       alt="Limex Consultancy Firm"
-      width={1600}
-      height={474}
-      unoptimized={Boolean(imageSrc?.endsWith(".svg"))}
     />
   );
 

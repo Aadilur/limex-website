@@ -41,11 +41,12 @@ export function hexToRgb(hex: string, fallback = "0, 0, 0"): string {
   return fallback;
 }
 
-export function generateThemeCss(branding: SiteBranding): string {
-  const bg = branding.backgroundColor || defaultBranding.backgroundColor;
-  const primary = branding.primaryColor || defaultBranding.primaryColor;
-  const accent = branding.accentColor || defaultBranding.accentColor;
-  const ink = branding.inkColor || defaultBranding.inkColor;
+export function generateThemeCss(branding?: SiteBranding | null): string {
+  const b = branding || defaultBranding;
+  const bg = b.backgroundColor || defaultBranding.backgroundColor;
+  const primary = b.primaryColor || defaultBranding.primaryColor;
+  const accent = b.accentColor || defaultBranding.accentColor;
+  const ink = b.inkColor || defaultBranding.inkColor;
 
   return `:root {
   --color-page: ${bg};
@@ -61,30 +62,30 @@ export function generateThemeCss(branding: SiteBranding): string {
 
 export async function getPublicBranding(): Promise<SiteBranding> {
   try {
-    const res = await request<{ data: SiteBranding }>("/api/branding", {
+    const res = await request<SiteBranding>("/api/branding", {
       cache: "no-store",
     });
-    return res.data;
+    return res || defaultBranding;
   } catch {
     return defaultBranding;
   }
 }
 
 export async function getAdminBranding(): Promise<SiteBranding> {
-  const res = await request<{ data: SiteBranding }>("/api/admin/branding", {
+  const res = await request<SiteBranding>("/api/admin/branding", {
     cache: "no-store",
   });
-  return res.data;
+  return res || defaultBranding;
 }
 
 export async function updateAdminBranding(
   input: Partial<Omit<SiteBranding, "id" | "updatedAt">>,
 ): Promise<SiteBranding> {
-  const res = await request<{ data: SiteBranding }>("/api/admin/branding", {
+  const res = await request<SiteBranding>("/api/admin/branding", {
     method: "PUT",
     body: JSON.stringify(input),
   });
-  return res.data;
+  return res || defaultBranding;
 }
 
 export async function uploadBrandLogo(file: File): Promise<{
@@ -95,16 +96,13 @@ export async function uploadBrandLogo(file: File): Promise<{
 }> {
   const formData = new FormData();
   formData.append("image", file);
-  const res = await request<{
-    data: {
-      asset: string;
-      url: string;
-      bytes: number;
-      contentType: string;
-    };
+  return request<{
+    asset: string;
+    url: string;
+    bytes: number;
+    contentType: string;
   }>("/api/admin/branding/logo", {
     method: "POST",
     body: formData,
   });
-  return res.data;
 }

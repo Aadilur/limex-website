@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -28,13 +27,10 @@ function LimexMark() {
   const logoSrc = logoLightUrl || "/brand/limex-logo-light.png";
 
   return (
-    <Image
+    <img
       className="h-auto w-[142px] object-contain object-left"
       src={logoSrc}
       alt="Limex Consultancy Firm"
-      width={1600}
-      height={474}
-      unoptimized={Boolean(logoSrc.endsWith(".svg"))}
     />
   );
 }

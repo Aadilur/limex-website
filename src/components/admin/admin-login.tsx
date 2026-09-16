@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 import { getAdminSession, loginAdmin } from "@/lib/menu-api";
@@ -90,13 +89,10 @@ export function AdminLogin() {
           <div className="rounded-[28px] border border-white/10 bg-[#fcfbf9] p-5 text-[#071b3d] shadow-[0_24px_80px_rgba(0,0,0,0.22)] sm:p-8">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <Image
+                <img
                   className="h-auto w-[142px] object-contain object-left"
                   src={logoSrc}
                   alt="Limex Consultancy Firm"
-                  width={1600}
-                  height={474}
-                  unoptimized={Boolean(logoSrc.endsWith(".svg"))}
                 />
                 <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#0055ff]">
                   Admin sign in

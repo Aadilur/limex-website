@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useRef, useState, type ChangeEvent } from "react";
-import Image from "next/image";
 
 import {
   defaultBranding,
@@ -177,14 +176,11 @@ function LogoCard({
             : "border-[#dfd8cd] bg-[#eeece7] text-[#07142e]"
         }`}
       >
-        <div className="relative max-h-14 max-w-[220px]">
-          <Image
+        <div className="relative flex max-h-14 max-w-[220px] items-center justify-center">
+          <img
             src={effectiveUrl}
             alt={title}
-            width={300}
-            height={90}
-            className="h-11 w-auto object-contain"
-            unoptimized={Boolean(effectiveUrl?.endsWith(".svg"))}
+            className="h-11 w-auto max-w-full object-contain"
           />
         </div>
       </div>
@@ -254,8 +250,9 @@ export function BrandingModule() {
     void getAdminBranding()
       .then((data) => {
         if (!active) return;
-        setDraft(data);
-        setInitial(data);
+        const safeData = data || defaultBranding;
+        setDraft(safeData);
+        setInitial(safeData);
         setLoading(false);
       })
       .catch((err) => {
@@ -263,6 +260,8 @@ export function BrandingModule() {
         setError(
           err instanceof Error ? err.message : "Failed to load branding.",
         );
+        setDraft(defaultBranding);
+        setInitial(defaultBranding);
         setLoading(false);
       });
 
@@ -524,14 +523,11 @@ export function BrandingModule() {
           style={{ backgroundColor: draft.backgroundColor }}
         >
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between border-b border-black/10 pb-5">
-            <div className="h-9">
-              <Image
+            <div className="flex h-9 items-center">
+              <img
                 src={draft.logoUrl || "/brand/limex-logo.png"}
                 alt="Brand logo preview"
-                width={160}
-                height={48}
-                className="h-8 w-auto object-contain"
-                unoptimized={Boolean((draft.logoUrl || "").endsWith(".svg"))}
+                className="h-8 w-auto max-w-full object-contain"
               />
             </div>
             <div className="flex items-center gap-2">
@@ -579,16 +575,11 @@ export function BrandingModule() {
               <span className="text-[11px] font-bold uppercase tracking-wider text-white/50">
                 Dark Footer Mockup
               </span>
-              <div className="mt-3 h-7">
-                <Image
+              <div className="mt-3 flex h-7 items-center">
+                <img
                   src={draft.logoLightUrl || "/brand/limex-logo-light.png"}
                   alt="Footer logo preview"
-                  width={140}
-                  height={42}
-                  className="h-6 w-auto object-contain"
-                  unoptimized={Boolean(
-                    (draft.logoLightUrl || "").endsWith(".svg"),
-                  )}
+                  className="h-6 w-auto max-w-full object-contain"
                 />
               </div>
               <p className="mt-2 text-[12px] text-white/70">

@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 
 async function getServerBranding(): Promise<SiteBranding> {
   try {
-    const port = process.env.GATEWAY_PORT || process.env.BACKEND_PORT || 8080;
+    const port = process.env.BACKEND_PORT || process.env.GATEWAY_PORT || 4000;
     const res = await fetch(`http://127.0.0.1:${port}/api/branding`, {
       next: { revalidate: 60 },
       signal: AbortSignal.timeout(1500),
@@ -41,13 +41,11 @@ export default async function RootLayout({
 
   return (
     <html className="bg-page" lang="en">
-      <head>
+      <body className="bg-page font-body text-body text-ink antialiased">
         <style
           id="limex-theme-vars"
           dangerouslySetInnerHTML={{ __html: themeCss }}
         />
-      </head>
-      <body className="bg-page font-body text-body text-ink antialiased">
         <BrandingProvider initialBranding={branding}>
           <Suspense fallback={null}>
             <NavigationProgress />
