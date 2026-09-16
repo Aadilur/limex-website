@@ -43,6 +43,9 @@ import { contactRoutes } from "./modules/contact/interface/http/contact.routes.j
 import { LegalService } from "./modules/legal/application/legal.service.js";
 import { PrismaLegalRepository } from "./modules/legal/infrastructure/prisma-legal.repository.js";
 import { legalRoutes } from "./modules/legal/interface/http/legal.routes.js";
+import { BrandingService } from "./modules/branding/application/branding.service.js";
+import { PrismaBrandingRepository } from "./modules/branding/infrastructure/prisma-branding.repository.js";
+import { brandingRoutes } from "./modules/branding/interface/http/branding.routes.js";
 
 export async function buildApp() {
   const app = Fastify({
@@ -107,6 +110,9 @@ export async function buildApp() {
     new PrismaContactRepository(prisma),
   );
   const legalService = new LegalService(new PrismaLegalRepository(prisma));
+  const brandingService = new BrandingService(
+    new PrismaBrandingRepository(prisma),
+  );
 
   await app.register(healthRoutes, { service: healthService });
   await app.register(userRoutes, { service: userService });
@@ -122,6 +128,7 @@ export async function buildApp() {
   await app.register(serviceRoutes, { service: serviceService });
   await app.register(contactRoutes, { service: contactService });
   await app.register(legalRoutes, { service: legalService });
+  await app.register(brandingRoutes, { service: brandingService });
 
   app.setErrorHandler((error, request, reply) => {
     if (error instanceof ZodError) {
@@ -139,35 +146,27 @@ export async function buildApp() {
     ) {
       const statusCode = error.statusCode;
       if (statusCode === 400)
-        return reply
-          .code(400)
-          .send({
-            error:
-              error instanceof Error
-                ? error.message
-                : "The request is invalid.",
-          });
+        return reply.code(400).send({
+          error:
+            error instanceof Error ? error.message : "The request is invalid.",
+        });
       if (statusCode === 413) {
         const isMultipart = String(
           request.headers["content-type"] ?? "",
         ).startsWith("multipart/");
-        return reply
-          .code(413)
-          .send({
-            error: isMultipart
-              ? "The image must be 5 MB or smaller."
-              : "Request payload is too large.",
-          });
+        return reply.code(413).send({
+          error: isMultipart
+            ? "The image must be 5 MB or smaller."
+            : "Request payload is too large.",
+        });
       }
       if (statusCode === 503)
-        return reply
-          .code(503)
-          .send({
-            error:
-              error instanceof Error
-                ? error.message
-                : "Image storage is unavailable.",
-          });
+        return reply.code(503).send({
+          error:
+            error instanceof Error
+              ? error.message
+              : "Image storage is unavailable.",
+        });
     }
 
     request.log.error(error);

@@ -6,10 +6,12 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 import { getAdminSession, logoutAdmin } from "@/lib/menu-api";
+import { useBranding } from "@/components/limex/branding-context";
 
 const adminNavigation = [
   { label: "Overview", href: "/admin" },
   { label: "Landing", href: "/admin/landing" },
+  { label: "Branding & theme", href: "/admin/branding" },
   { label: "Menu structure", href: "/admin/services" },
   { label: "Service pages", href: "/admin/services/pages" },
   { label: "About us", href: "/admin/about" },
@@ -22,13 +24,17 @@ const adminNavigation = [
 ];
 
 function LimexMark() {
+  const { logoLightUrl } = useBranding();
+  const logoSrc = logoLightUrl || "/brand/limex-logo-light.png";
+
   return (
     <Image
       className="h-auto w-[142px] object-contain object-left"
-      src="/brand/limex-logo-light.png"
+      src={logoSrc}
       alt="Limex Consultancy Firm"
       width={1600}
       height={474}
+      unoptimized={Boolean(logoSrc.endsWith(".svg"))}
     />
   );
 }

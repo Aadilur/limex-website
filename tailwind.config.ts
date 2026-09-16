@@ -1,5 +1,14 @@
 import type { Config } from "tailwindcss";
 
+function withOpacity(variableName: string, fallbackRgb: string) {
+  return ({ opacityValue }: { opacityValue?: string }) => {
+    if (opacityValue !== undefined) {
+      return `rgba(var(${variableName}-rgb, ${fallbackRgb}), ${opacityValue})`;
+    }
+    return `var(${variableName}, rgb(${fallbackRgb}))`;
+  };
+}
+
 const config: Config = {
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
   theme: {
@@ -14,23 +23,23 @@ const config: Config = {
     extend: {
       colors: {
         "brand-cyan": "#14dcff",
-        "brand-sky": "#008cff",
-        "brand-blue": "#0055ff",
+        "brand-sky": withOpacity("--color-accent", "0, 140, 255"),
+        "brand-blue": withOpacity("--color-brand-blue", "0, 85, 255"),
         "brand-deep": "#0039b8",
-        "brand-ink": "#07142e",
+        "brand-ink": withOpacity("--color-ink", "7, 20, 46"),
         "brand-ice": "#e9fbff",
         "brand-cloud": "#eaf3ff",
         "brand-line": "#d3e2f0",
         "brand-wash": "#f4f9fd",
-        page: "#eeece7",
+        page: withOpacity("--color-page", "238, 236, 231"),
         paper: "#ffffff",
         cream: "#f9fbfe",
-        accent: "#008cff",
-        ink: "#07142e",
+        accent: withOpacity("--color-accent", "0, 140, 255"),
+        ink: withOpacity("--color-ink", "7, 20, 46"),
         navy: "#071b3d",
         muted: "#53657b",
         "soft-muted": "#9aa9ba",
-        pink: "#0055ff",
+        pink: withOpacity("--color-brand-blue", "0, 85, 255"),
         border: "#dce7f1",
         warm: "#d7e3ee",
         soft: "#edf5ff",

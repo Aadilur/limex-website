@@ -429,3 +429,15 @@ model LegalPage {
 
   @@index([slug])
 }
+
+model SiteBranding {
+  id              String   @id @default("default")
+  backgroundColor String   @default("#eeece7") @db.VarChar(32)
+  primaryColor    String   @default("#0055ff") @db.VarChar(32)
+  accentColor     String   @default("#008cff") @db.VarChar(32)
+  inkColor        String   @default("#07142e") @db.VarChar(32)
+  logoUrl         String?  @db.VarChar(500)
+  logoLightUrl    String?  @db.VarChar(500)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}

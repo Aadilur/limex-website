@@ -1,4 +1,9 @@
-import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  DeleteObjectCommand,
+  GetObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "node:crypto";
 
@@ -26,9 +31,28 @@ export type LandingLogoContentType = keyof typeof landingLogoTypes;
 export const blogImageTypes = teamImageTypes;
 export type BlogImageContentType = keyof typeof blogImageTypes;
 
+export const brandLogoTypes = {
+  "image/jpeg": ".jpg",
+  "image/png": ".png",
+  "image/webp": ".webp",
+  "image/svg+xml": ".svg",
+} as const;
+export type BrandLogoContentType = keyof typeof brandLogoTypes;
+
+export function isSupportedBrandLogoType(
+  contentType: string,
+): contentType is BrandLogoContentType {
+  return contentType in brandLogoTypes;
+}
+
 export type ImageUpload = {
   body: Buffer;
   contentType: TeamImageContentType;
+};
+
+export type BrandLogoUpload = {
+  body: Buffer;
+  contentType: BrandLogoContentType;
 };
 
 export class StorageConfigurationError extends Error {
@@ -40,15 +64,16 @@ export class StorageConfigurationError extends Error {
   }
 }
 
-const storageConfig = env.BUCKET && env.ENDPOINT && env.ACCESS_KEY_ID && env.SECRET_ACCESS_KEY
-  ? {
-      bucket: env.BUCKET,
-      endpoint: env.ENDPOINT,
-      region: env.REGION,
-      accessKeyId: env.ACCESS_KEY_ID,
-      secretAccessKey: env.SECRET_ACCESS_KEY,
-    }
-  : null;
+const storageConfig =
+  env.BUCKET && env.ENDPOINT && env.ACCESS_KEY_ID && env.SECRET_ACCESS_KEY
+    ? {
+        bucket: env.BUCKET,
+        endpoint: env.ENDPOINT,
+        region: env.REGION,
+        accessKeyId: env.ACCESS_KEY_ID,
+        secretAccessKey: env.SECRET_ACCESS_KEY,
+      }
+    : null;
 
 const storageClient = storageConfig
   ? new S3Client({
@@ -67,15 +92,21 @@ function requireStorage() {
   return { config: storageConfig, client: storageClient };
 }
 
-export function isSupportedTeamImageType(value: string): value is TeamImageContentType {
+export function isSupportedTeamImageType(
+  value: string,
+): value is TeamImageContentType {
   return Object.prototype.hasOwnProperty.call(teamImageTypes, value);
 }
 
-export function isSupportedLandingLogoType(value: string): value is LandingLogoContentType {
+export function isSupportedLandingLogoType(
+  value: string,
+): value is LandingLogoContentType {
   return Object.prototype.hasOwnProperty.call(landingLogoTypes, value);
 }
 
-export function isSupportedBlogImageType(value: string): value is BlogImageContentType {
+export function isSupportedBlogImageType(
+  value: string,
+): value is BlogImageContentType {
   return Object.prototype.hasOwnProperty.call(blogImageTypes, value);
 }
 
@@ -87,36 +118,65 @@ export function createLandingLogoKey(asset: string) {
   return `landing/logos/${asset}`;
 }
 
-export function createLandingLogoAsset(hash: string, contentType: LandingLogoContentType) {
+export function createLandingLogoAsset(
+  hash: string,
+  contentType: LandingLogoContentType,
+) {
   return `${hash}${landingLogoTypes[contentType]}`;
 }
 
-export function createBlogMediaKey(postId: string, hash: string, contentType: BlogImageContentType) {
+export function createBrandLogoKey(asset: string) {
+  return `branding/logos/${asset}`;
+}
+
+export function createBrandLogoAsset(
+  hash: string,
+  contentType: BrandLogoContentType,
+) {
+  return `${hash}${brandLogoTypes[contentType]}`;
+}
+
+export function createBlogMediaKey(
+  postId: string,
+  hash: string,
+  contentType: BlogImageContentType,
+) {
   return `blog/${postId}/${hash}${blogImageTypes[contentType]}`;
 }
 
-export function createMediaObjectKey(folderId: string, contentType: TeamImageContentType) {
+export function createMediaObjectKey(
+  folderId: string,
+  contentType: TeamImageContentType,
+) {
   return "media/" + folderId + "/" + randomUUID() + teamImageTypes[contentType];
 }
 
-export async function uploadStoredObject(key: string, image: ImageUpload, options?: { cacheControl?: string }) {
+export async function uploadStoredObject(
+  key: string,
+  image: ImageUpload | BrandLogoUpload,
+  options?: { cacheControl?: string },
+) {
   const { config, client } = requireStorage();
 
-  await client.send(new PutObjectCommand({
-    Bucket: config.bucket,
-    Key: key,
-    Body: image.body,
-    ContentType: image.contentType,
-    ContentLength: image.body.byteLength,
-    CacheControl: options?.cacheControl ?? "private, no-store",
-  }));
+  await client.send(
+    new PutObjectCommand({
+      Bucket: config.bucket,
+      Key: key,
+      Body: image.body,
+      ContentType: image.contentType,
+      ContentLength: image.body.byteLength,
+      CacheControl: options?.cacheControl ?? "private, no-store",
+    }),
+  );
 }
 
 export async function getStoredObject(key: string) {
   const { config, client } = requireStorage();
 
   try {
-    const response = await client.send(new GetObjectCommand({ Bucket: config.bucket, Key: key }));
+    const response = await client.send(
+      new GetObjectCommand({ Bucket: config.bucket, Key: key }),
+    );
     if (!response.Body) return null;
 
     return {
@@ -125,10 +185,16 @@ export async function getStoredObject(key: string) {
       contentLength: response.ContentLength,
     };
   } catch (error) {
-    const details = error && typeof error === "object"
-      ? error as { name?: string; $metadata?: { httpStatusCode?: number } }
-      : {};
-    if (details.name === "NoSuchKey" || details.name === "NotFound" || details.$metadata?.httpStatusCode === 404) return null;
+    const details =
+      error && typeof error === "object"
+        ? (error as { name?: string; $metadata?: { httpStatusCode?: number } })
+        : {};
+    if (
+      details.name === "NoSuchKey" ||
+      details.name === "NotFound" ||
+      details.$metadata?.httpStatusCode === 404
+    )
+      return null;
     throw error;
   }
 }
@@ -152,5 +218,7 @@ export async function deleteStoredObject(key: string | null) {
   if (!key) return;
 
   const { config, client } = requireStorage();
-  await client.send(new DeleteObjectCommand({ Bucket: config.bucket, Key: key }));
+  await client.send(
+    new DeleteObjectCommand({ Bucket: config.bucket, Key: key }),
+  );
 }
