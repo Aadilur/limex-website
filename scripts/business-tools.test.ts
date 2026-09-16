@@ -713,7 +713,8 @@ test("private-company MoA/AoA is an editable source-based template with dynamic 
   assert.equal(
     template.pages.some((page) =>
       page.blocks.some(
-        (block) => block.type === "paragraph" && block.text.includes("WINDING UP"),
+        (block) =>
+          block.type === "paragraph" && block.text.includes("WINDING UP"),
       ),
     ),
     true,
