@@ -7,6 +7,7 @@ import {
   flattenTemplatePages,
   normalizeDocumentTemplateDraft,
 } from "../src/lib/document-templates.js";
+import { defaultPrivateCompanyMoaAoaTemplate } from "../src/lib/private-company-moa-aoa-template.js";
 import {
   defaultPartnershipDeed40Templates,
   isPartnershipDeedTemplate,
@@ -184,6 +185,7 @@ async function main() {
     defaultMouTemplate,
     ...defaultRentalDeedTemplates,
     ...defaultPartnershipDeed40Templates,
+    defaultPrivateCompanyMoaAoaTemplate,
   ].entries()) {
     const existing = await prisma.documentTemplate.findUnique({
       where: { slug: template.slug },

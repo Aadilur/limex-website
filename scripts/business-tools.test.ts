@@ -45,6 +45,7 @@ import {
   defaultRentalDeedBanglaTemplate,
   defaultRentalDeedEnglishTemplate,
 } from "../src/lib/rental-deed-templates.js";
+import { defaultPrivateCompanyMoaAoaTemplate } from "../src/lib/private-company-moa-aoa-template.js";
 import {
   sanitizeBlogContent,
   sanitizeBlogHtml,
@@ -690,6 +691,92 @@ test("40-page partnership deed templates preserve the source structure and separ
     defaultPartnershipDeed40BanglaTemplate.slug,
     "partnership-deed-40-bn",
   );
+});
+test("private-company MoA/AoA is an editable source-based template with dynamic people", async () => {
+  const template = documentTemplateDraftSchema.parse(
+    defaultPrivateCompanyMoaAoaTemplate,
+  );
+  assert.equal(template.slug, "private-company-moa-aoa");
+  assert.equal(template.settings.paperSize, "A4");
+  assert.equal(template.settings.defaultFontSize, "legal");
+  assert.equal(template.pages.length, 18);
+  assert.equal(
+    template.pages.some((page) =>
+      page.blocks.some(
+        (block) =>
+          block.type === "paragraph" &&
+          block.text.includes("THE COMPANIES ACT, 1994"),
+      ),
+    ),
+    true,
+  );
+  assert.equal(
+    template.pages.some((page) =>
+      page.blocks.some(
+        (block) => block.type === "paragraph" && block.text.includes("WINDING UP"),
+      ),
+    ),
+    true,
+  );
+
+  for (const key of ["directors", "subscribers"]) {
+    const repeater = template.settings.repeaters.find(
+      (item) => item.key === key,
+    );
+    assert.ok(repeater);
+    assert.equal(repeater.minItems, 2);
+    assert.equal(repeater.maxItems, 8);
+  }
+
+  const directorBlock = template.pages[12]?.blocks.find(
+    (block) =>
+      block.type === "paragraph" &&
+      block.repeat?.repeaterKey === "directors" &&
+      block.text.includes("{{name}}"),
+  );
+  assert.ok(directorBlock);
+  assert.equal(
+    expandTemplateBlockInstances(template, directorBlock, {
+      director_count: "3",
+      "directors.1.name": "Ayesha Rahman",
+      "directors.2.name": "Rafiq Hasan",
+      "directors.3.name": "Tasnim Islam",
+    }).length,
+    3,
+  );
+
+  const values = Object.fromEntries(
+    template.fields.map((field) => [field.key, field.defaultValue ?? "Sample"]),
+  );
+  Object.assign(values, {
+    director_count: "2",
+    subscriber_count: "2",
+    "directors.1.name": "Ayesha Rahman",
+    "directors.1.details": "Director one details",
+    "directors.1.role": "Chairman",
+    "directors.2.name": "Rafiq Hasan",
+    "directors.2.details": "Director two details",
+    "directors.2.role": "Managing Director",
+    "subscribers.1.name": "Ayesha Rahman",
+    "subscribers.1.address": "Subscriber one address",
+    "subscribers.1.occupation": "Subscriber one occupation",
+    "subscribers.1.shares": "20000",
+    "subscribers.2.name": "Rafiq Hasan",
+    "subscribers.2.address": "Subscriber two address",
+    "subscribers.2.occupation": "Subscriber two occupation",
+    "subscribers.2.shares": "20000",
+  });
+  const html = renderTemplatePrintHtml(template, values);
+  assert.equal(html.split('class="template-page"').length - 1, 18);
+  assert.match(html, /Ayesha Rahman/);
+  assert.match(html, /Ayesha Rahman\nDirector one details Chairman/);
+  assert.match(
+    html,
+    /Subscriber 1 — Ayesha Rahman\nSubscriber one address Subscriber one occupation\nShares: 20000/,
+  );
+  assert.doesNotMatch(html, /\[Address\]|\[Occupation\]/);
+  const blob = await renderTemplateDocx(template, values);
+  assert.ok(blob.size > 5000);
 });
 test("partnership deed partner slots are conditional, extendable to eight and keep capital optional", () => {
   const template = defaultPartnershipDeed40EnglishTemplate;

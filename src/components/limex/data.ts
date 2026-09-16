@@ -297,6 +297,12 @@ const businessTools: MegaMenuGroup[] = [
         description: "Build practical agreements in the right format.",
         href: agreementBuilderUrl,
         marker: "02",
+        children: [
+          {
+            label: "Private Company MoA & AoA Builder",
+            href: "/business-tools/templates/private-company-moa-aoa",
+          },
+        ],
       },
     ],
   },

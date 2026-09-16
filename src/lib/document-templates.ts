@@ -32,10 +32,14 @@ const templateIconNames = [
 export const templatePaperSizes = ["A4", "LEGAL", "DEED"] as const;
 export type TemplatePaperSize = (typeof templatePaperSizes)[number];
 
-export const templateFontSizes = ["small", "body", "subtitle", "title", "large"] as const;
+export const templateFontSizes = ["legal", "small", "body", "subtitle", "title", "large"] as const;
 export type TemplateFontSize = (typeof templateFontSizes)[number];
 
 export const templateFontSizeMetrics = {
+  // Source legal instruments often need denser, still readable body copy than
+  // normal correspondence. Keeping this as an explicit scale lets an admin
+  // choose it deliberately without changing existing templates.
+  legal: { sizePx: 10, lineHeight: 1.2 },
   small: { sizePx: 10, lineHeight: 1.65 },
   body: { sizePx: 12, lineHeight: 1.75 },
   subtitle: { sizePx: 16, lineHeight: 1.45 },

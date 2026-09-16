@@ -40,7 +40,7 @@ import { DocumentTemplatePaper } from "@/components/limex/document-template-pape
 const inputClass = "h-10 w-full rounded-[9px] border border-[#d8d2c8] bg-white px-3 text-[12.5px] font-medium text-[#242129] outline-none transition-[border-color,box-shadow] placeholder:text-[#a29b92] hover:border-[#bdb4aa] focus:border-[#0055ff] focus:ring-4 focus:ring-[#f8d9de]";
 const areaClass = "min-h-20 w-full resize-y rounded-[9px] border border-[#d8d2c8] bg-white px-3 py-2.5 text-[12.5px] font-medium leading-[1.5] text-[#242129] outline-none transition-[border-color,box-shadow] placeholder:text-[#a29b92] hover:border-[#bdb4aa] focus:border-[#0055ff] focus:ring-4 focus:ring-[#f8d9de]";
 const labelClass = "block text-[10px] font-bold uppercase tracking-[0.12em] text-[#756e66]";
-const fontSizeOptions: Array<[TemplateFontSize, string]> = [["small", "Small"], ["body", "Body"], ["subtitle", "Subtitle"], ["title", "Title"], ["large", "Title (legacy)"]];
+const fontSizeOptions: Array<[TemplateFontSize, string]> = [["legal", "Legal compact"], ["small", "Small"], ["body", "Body"], ["subtitle", "Subtitle"], ["title", "Title"], ["large", "Title (legacy)"]];
 
 type ServiceOption = { href: string; label: string; category: string };
 
