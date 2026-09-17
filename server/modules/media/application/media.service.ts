@@ -22,18 +22,37 @@ import {
   type MediaRepository,
 } from "../domain/media.js";
 
-const systemFolderNames = ["Blog", "Landing", "About", "Services", "General"] as const;
+const systemFolderNames = [
+  "Blog",
+  "Landing",
+  "About",
+  "Services",
+  "General",
+] as const;
 
 function isUniqueError(error: unknown) {
-  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === "P2002"
+  );
 }
 
 function cleanFolderName(value: string) {
-  return value.replace(/[\\/]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 120);
+  return value
+    .replace(/[\\/]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 120);
 }
 
 function cleanFileName(value: string, fallback = "Untitled media") {
-  return value.replace(/[\\/]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 255) || fallback;
+  return (
+    value
+      .replace(/[\\/]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 255) || fallback
+  );
 }
 
 function cleanOptionalText(value: string | undefined, max: number) {
@@ -42,13 +61,19 @@ function cleanOptionalText(value: string | undefined, max: number) {
 }
 
 function legacyChecksum(objectKey: string) {
-  return createHash("sha256").update("legacy:" + objectKey).digest("hex");
+  return createHash("sha256")
+    .update("legacy:" + objectKey)
+    .digest("hex");
 }
 
 export class MediaService {
   public constructor(private readonly media: MediaRepository) {}
 
-  private async ensureFolder(parentId: string | null, name: string, isSystem = false) {
+  private async ensureFolder(
+    parentId: string | null,
+    name: string,
+    isSystem = false,
+  ) {
     const existing = await this.media.findFolderByName(parentId, name);
     if (existing) return existing;
 
@@ -68,8 +93,16 @@ export class MediaService {
 
     for (const name of names) {
       const cleanedName = cleanFolderName(name);
-      if (!cleanedName) throw new MediaInputError("Choose a destination folder.");
-      folder = await this.ensureFolder(parentId, cleanedName, parentId === null && systemFolderNames.includes(cleanedName as (typeof systemFolderNames)[number]));
+      if (!cleanedName)
+        throw new MediaInputError("Choose a destination folder.");
+      folder = await this.ensureFolder(
+        parentId,
+        cleanedName,
+        parentId === null &&
+          systemFolderNames.includes(
+            cleanedName as (typeof systemFolderNames)[number],
+          ),
+      );
       parentId = folder.id;
     }
 
@@ -93,7 +126,9 @@ export class MediaService {
     return trail;
   }
 
-  private async toResponse(asset: MediaAssetRecord): Promise<MediaAssetResponse> {
+  private async toResponse(
+    asset: MediaAssetRecord,
+  ): Promise<MediaAssetResponse> {
     const publicUrl = "/api/media/" + asset.id;
     const signedUrl = await signStoredObject(asset.objectKey);
     const urlExpiresAt = signedUrl
@@ -126,16 +161,22 @@ export class MediaService {
         : asset.servicePublishedProfiles?.[0]
           ? {
               type: "service",
-              label: asset.servicePublishedProfiles[0].titleEn || asset.servicePublishedProfiles[0].slug,
-              href: "/admin/services/pages/" + asset.servicePublishedProfiles[0].id,
+              label:
+                asset.servicePublishedProfiles[0].titleEn ||
+                asset.servicePublishedProfiles[0].slug,
+              href:
+                "/admin/services/pages/" + asset.servicePublishedProfiles[0].id,
             }
           : asset.serviceDraftProfiles?.[0]
             ? {
                 type: "service",
-                label: asset.serviceDraftProfiles[0].titleEn || asset.serviceDraftProfiles[0].slug,
-                href: "/admin/services/pages/" + asset.serviceDraftProfiles[0].id,
+                label:
+                  asset.serviceDraftProfiles[0].titleEn ||
+                  asset.serviceDraftProfiles[0].slug,
+                href:
+                  "/admin/services/pages/" + asset.serviceDraftProfiles[0].id,
               }
-        : null,
+            : null,
     };
   }
 
@@ -154,7 +195,9 @@ export class MediaService {
     const objectKey = createMediaObjectKey(folderId, image.contentType);
     const displayName = cleanFileName(input.displayName || input.originalName);
 
-    await uploadStoredObject(objectKey, image, { cacheControl: MEDIA_ASSET_CACHE_CONTROL });
+    await uploadStoredObject(objectKey, image, {
+      cacheControl: MEDIA_ASSET_CACHE_CONTROL,
+    });
 
     try {
       return await this.media.createAsset({
@@ -174,7 +217,10 @@ export class MediaService {
       try {
         await deleteStoredObject(objectKey);
       } catch (cleanupError) {
-        console.error("Unable to clean up media object " + objectKey + ".", cleanupError);
+        console.error(
+          "Unable to clean up media object " + objectKey + ".",
+          cleanupError,
+        );
       }
       throw error;
     }
@@ -186,22 +232,29 @@ export class MediaService {
       try {
         const folder = await this.ensureFolderPath(["Blog", item.post.slug]);
         const existing = await this.media.findAssetByObjectKey(item.objectKey);
-        const asset = existing ?? await this.media.createAsset({
-          folderId: folder.id,
-          objectKey: item.objectKey,
-          originalName: cleanFileName(item.objectKey.split("/").pop() ?? "legacy-image"),
-          displayName: cleanFileName(item.post.title || item.post.slug),
-          contentType: item.contentType,
-          byteSize: item.byteSize,
-          width: item.width,
-          height: item.height,
-          checksum: legacyChecksum(item.objectKey),
-          altText: item.altText,
-          caption: item.caption,
-        });
+        const asset =
+          existing ??
+          (await this.media.createAsset({
+            folderId: folder.id,
+            objectKey: item.objectKey,
+            originalName: cleanFileName(
+              item.objectKey.split("/").pop() ?? "legacy-image",
+            ),
+            displayName: cleanFileName(item.post.title || item.post.slug),
+            contentType: item.contentType,
+            byteSize: item.byteSize,
+            width: item.width,
+            height: item.height,
+            checksum: legacyChecksum(item.objectKey),
+            altText: item.altText,
+            caption: item.caption,
+          }));
         await this.media.attachBlogMedia(item.id, asset.id);
       } catch (error) {
-        console.warn("Unable to index legacy blog media " + item.id + ".", error);
+        console.warn(
+          "Unable to index legacy blog media " + item.id + ".",
+          error,
+        );
       }
     }
   }
@@ -212,15 +265,22 @@ export class MediaService {
     folders: MediaFolderRecord[];
     assets: MediaAssetResponse[];
   }> {
-    await Promise.all(systemFolderNames.map((name) => this.ensureFolder(null, name, true)));
+    await Promise.all(
+      systemFolderNames.map((name) => this.ensureFolder(null, name, true)),
+    );
     await this.syncLegacyBlogMedia();
 
-    const currentFolder = folderId ? await this.media.findFolder(folderId) : null;
-    if (folderId && !currentFolder) throw new MediaNotFoundError("That folder no longer exists.");
+    const currentFolder = folderId
+      ? await this.media.findFolder(folderId)
+      : null;
+    if (folderId && !currentFolder)
+      throw new MediaNotFoundError("That folder no longer exists.");
 
     const [folders, assets] = await Promise.all([
       this.media.listChildFolders(currentFolder?.id ?? null),
-      currentFolder ? this.media.listAssets(currentFolder.id) : Promise.resolve([]),
+      currentFolder
+        ? this.media.listAssets(currentFolder.id)
+        : Promise.resolve([]),
     ]);
 
     return {
@@ -233,19 +293,31 @@ export class MediaService {
 
   public async createFolder(name: string, parentId: string | null) {
     const cleanedName = cleanFolderName(name);
-    if (cleanedName.length < 1) throw new MediaInputError("Give the folder a name.");
-    if (!parentId && systemFolderNames.includes(cleanedName as (typeof systemFolderNames)[number])) {
-      throw new MediaConflictError("That name is reserved for a system folder.");
+    if (cleanedName.length < 1)
+      throw new MediaInputError("Give the folder a name.");
+    if (
+      !parentId &&
+      systemFolderNames.includes(
+        cleanedName as (typeof systemFolderNames)[number],
+      )
+    ) {
+      throw new MediaConflictError(
+        "That name is reserved for a system folder.",
+      );
     }
     if (parentId) {
       const parent = await this.media.findFolder(parentId);
-      if (!parent) throw new MediaNotFoundError("The parent folder no longer exists.");
+      if (!parent)
+        throw new MediaNotFoundError("The parent folder no longer exists.");
     }
 
     try {
       return await this.media.createFolder({ parentId, name: cleanedName });
     } catch (error) {
-      if (isUniqueError(error)) throw new MediaConflictError("A folder with this name already exists here.");
+      if (isUniqueError(error))
+        throw new MediaConflictError(
+          "A folder with this name already exists here.",
+        );
       throw error;
     }
   }
@@ -261,8 +333,11 @@ export class MediaService {
     caption?: string;
   }) {
     const folder = await this.media.findFolder(input.folderId);
-    if (!folder) throw new MediaNotFoundError("Choose a folder that still exists.");
-    return this.toResponse(await this.uploadRecord(folder.id, input.image, input));
+    if (!folder)
+      throw new MediaNotFoundError("Choose a folder that still exists.");
+    return this.toResponse(
+      await this.uploadRecord(folder.id, input.image, input),
+    );
   }
 
   public async uploadBlogImage(input: {
@@ -296,7 +371,10 @@ export class MediaService {
         await deleteStoredObject(asset.objectKey);
         await this.media.deleteAsset(asset.id);
       } catch (cleanupError) {
-        console.error("Unable to clean up failed blog media " + asset.id + ".", cleanupError);
+        console.error(
+          "Unable to clean up failed blog media " + asset.id + ".",
+          cleanupError,
+        );
       }
       throw error;
     }
@@ -317,38 +395,68 @@ export class MediaService {
     return signStoredObject(asset.objectKey);
   }
 
-  public async updateAsset(id: string, input: { displayName?: string; altText?: string; caption?: string; folderId?: string }) {
+  public async updateAsset(
+    id: string,
+    input: {
+      displayName?: string;
+      altText?: string;
+      caption?: string;
+      folderId?: string;
+    },
+  ) {
     const current = await this.getAsset(id);
     const nextFolderId = input.folderId ?? current.folderId;
     if (input.folderId && !(await this.media.findFolder(input.folderId))) {
       throw new MediaNotFoundError("That destination folder no longer exists.");
     }
-    const displayName = input.displayName === undefined ? undefined : cleanFileName(input.displayName);
-    return this.toResponse(await this.media.updateAsset(id, {
-      ...(displayName ? { displayName } : {}),
-      ...(input.altText === undefined ? {} : { altText: cleanOptionalText(input.altText, 240) }),
-      ...(input.caption === undefined ? {} : { caption: cleanOptionalText(input.caption, 300) }),
-      ...(nextFolderId !== current.folderId ? { folderId: nextFolderId } : {}),
-    }));
+    const displayName =
+      input.displayName === undefined
+        ? undefined
+        : cleanFileName(input.displayName);
+    return this.toResponse(
+      await this.media.updateAsset(id, {
+        ...(displayName ? { displayName } : {}),
+        ...(input.altText === undefined
+          ? {}
+          : { altText: cleanOptionalText(input.altText, 240) }),
+        ...(input.caption === undefined
+          ? {}
+          : { caption: cleanOptionalText(input.caption, 300) }),
+        ...(nextFolderId !== current.folderId
+          ? { folderId: nextFolderId }
+          : {}),
+      }),
+    );
   }
 
   public async deleteAsset(id: string) {
     const current = await this.getAsset(id);
     if (current.blogMedia) {
-      throw new MediaInUseError("Remove this image from the blog article " + current.blogMedia.post.slug + " before deleting it.");
+      throw new MediaInUseError(
+        "Remove this image from the blog article " +
+          current.blogMedia.post.slug +
+          " before deleting it.",
+      );
     }
     if (current.servicePublishedProfiles?.length) {
-      throw new MediaInUseError("Unpublish the service page using this image before deleting it.");
+      throw new MediaInUseError(
+        "Unpublish the service page using this image before deleting it.",
+      );
     }
     if (current.serviceDraftProfiles?.length) {
-      throw new MediaInUseError("Remove this image from the service draft before deleting it.");
+      throw new MediaInUseError(
+        "Remove this image from the service draft before deleting it.",
+      );
     }
 
     await deleteStoredObject(current.objectKey);
     try {
       await this.media.deleteAsset(id);
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
         throw new MediaNotFoundError();
       }
       throw error;

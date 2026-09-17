@@ -24,9 +24,23 @@ export type MediaAssetRecord = {
   createdAt: Date;
   updatedAt: Date;
   folder?: MediaFolderRecord;
-  blogMedia?: { id: string; postId: string; post: { slug: string; status: string } } | null;
-  serviceDraftProfiles?: Array<{ id: string; slug: string; titleEn: string; status: string }>;
-  servicePublishedProfiles?: Array<{ id: string; slug: string; titleEn: string; status: string }>;
+  blogMedia?: {
+    id: string;
+    postId: string;
+    post: { slug: string; status: string };
+  } | null;
+  serviceDraftProfiles?: Array<{
+    id: string;
+    slug: string;
+    titleEn: string;
+    status: string;
+  }>;
+  servicePublishedProfiles?: Array<{
+    id: string;
+    slug: string;
+    titleEn: string;
+    status: string;
+  }>;
 };
 
 export type MediaBreadcrumb = {
@@ -91,7 +105,9 @@ export class MediaConflictError extends Error {
 export class MediaInUseError extends Error {
   public readonly statusCode = 422;
 
-  public constructor(message = "This media is still used by published content.") {
+  public constructor(
+    message = "This media is still used by published content.",
+  ) {
     super(message);
     this.name = "MediaInUseError";
   }
@@ -99,8 +115,15 @@ export class MediaInUseError extends Error {
 
 export interface MediaRepository {
   findFolder(id: string): Promise<MediaFolderRecord | null>;
-  findFolderByName(parentId: string | null, name: string): Promise<MediaFolderRecord | null>;
-  createFolder(input: { parentId: string | null; name: string; isSystem?: boolean }): Promise<MediaFolderRecord>;
+  findFolderByName(
+    parentId: string | null,
+    name: string,
+  ): Promise<MediaFolderRecord | null>;
+  createFolder(input: {
+    parentId: string | null;
+    name: string;
+    isSystem?: boolean;
+  }): Promise<MediaFolderRecord>;
   listChildFolders(parentId: string | null): Promise<MediaFolderRecord[]>;
   listAssets(folderId: string): Promise<MediaAssetRecord[]>;
   findAsset(id: string): Promise<MediaAssetRecord | null>;
@@ -118,20 +141,30 @@ export interface MediaRepository {
     altText?: string | null;
     caption?: string | null;
   }): Promise<MediaAssetRecord>;
-  updateAsset(id: string, input: { displayName?: string; altText?: string | null; caption?: string | null; folderId?: string }): Promise<MediaAssetRecord>;
+  updateAsset(
+    id: string,
+    input: {
+      displayName?: string;
+      altText?: string | null;
+      caption?: string | null;
+      folderId?: string;
+    },
+  ): Promise<MediaAssetRecord>;
   deleteAsset(id: string): Promise<void>;
-  findLegacyBlogMedia(): Promise<Array<{
-    id: string;
-    postId: string;
-    objectKey: string;
-    contentType: string;
-    byteSize: number;
-    width: number | null;
-    height: number | null;
-    altText: string | null;
-    caption: string | null;
-    post: { slug: string; title: string };
-  }>>;
+  findLegacyBlogMedia(): Promise<
+    Array<{
+      id: string;
+      postId: string;
+      objectKey: string;
+      contentType: string;
+      byteSize: number;
+      width: number | null;
+      height: number | null;
+      altText: string | null;
+      caption: string | null;
+      post: { slug: string; title: string };
+    }>
+  >;
   attachBlogMedia(mediaId: string, assetId: string): Promise<void>;
   createBlogMedia(input: {
     postId: string;
@@ -144,5 +177,7 @@ export interface MediaRepository {
     altText?: string | null;
     caption?: string | null;
   }): Promise<{ id: string }>;
-  deleteBlogMedia(id: string): Promise<{ mediaAssetId: string | null; objectKey: string } | null>;
+  deleteBlogMedia(
+    id: string,
+  ): Promise<{ mediaAssetId: string | null; objectKey: string } | null>;
 }

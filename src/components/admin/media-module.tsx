@@ -1,6 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type DragEvent,
+  type FormEvent,
+} from "react";
 
 import {
   createMediaFolder,
@@ -24,12 +32,23 @@ function formatBytes(bytes: number) {
 }
 
 function formatDimensions(asset: MediaAsset) {
-  return asset.width && asset.height ? `${asset.width} × ${asset.height}` : "Dimensions unavailable";
+  return asset.width && asset.height
+    ? `${asset.width} × ${asset.height}`
+    : "Dimensions unavailable";
 }
 
 function FolderIcon({ open = false }: { open?: boolean }) {
   return (
-    <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      className="size-4"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <path d="M3.5 7.5A2.5 2.5 0 0 1 6 5h3l2 2h7.5A2.5 2.5 0 0 1 21 9.5v7A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5v-9Z" />
       {open ? <path d="M3.5 10h17" /> : null}
     </svg>
@@ -38,7 +57,16 @@ function FolderIcon({ open = false }: { open?: boolean }) {
 
 function UploadIcon() {
   return (
-    <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      className="size-3.5"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <path d="M12 16V4" />
       <path d="m7 9 5-5 5 5" />
       <path d="M5 20h14" />
@@ -48,7 +76,16 @@ function UploadIcon() {
 
 function CopyIcon() {
   return (
-    <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      className="size-3.5"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <rect width="13" height="13" x="8" y="8" rx="2" />
       <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
     </svg>
@@ -57,7 +94,16 @@ function CopyIcon() {
 
 function CheckIcon() {
   return (
-    <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      className="size-3.5"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <polyline points="20 6 9 17 4 12" />
     </svg>
   );
@@ -65,7 +111,16 @@ function CheckIcon() {
 
 function TrashIcon() {
   return (
-    <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      className="size-3.5"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <path d="M4 7h16" />
       <path d="M10 11v6M14 11v6" />
       <path d="M6 7l1 13h10l1-13M9 7V4h6v3" />
@@ -75,7 +130,16 @@ function TrashIcon() {
 
 function ExternalIcon() {
   return (
-    <svg className="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      className="size-3"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
       <polyline points="15 3 21 3 21 9" />
       <line x1="10" y1="14" x2="21" y2="3" />
@@ -85,7 +149,16 @@ function ExternalIcon() {
 
 function CloseIcon() {
   return (
-    <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      className="size-4"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <line x1="18" y1="6" x2="6" y2="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
@@ -94,7 +167,16 @@ function CloseIcon() {
 
 function SearchIcon() {
   return (
-    <svg className="size-3.5 text-[#9a948b]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      className="size-3.5 text-[#9a948b]"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <circle cx="11" cy="11" r="8" />
       <line x1="21" y1="21" x2="16.65" y2="16.65" />
     </svg>
@@ -104,7 +186,16 @@ function SearchIcon() {
 function ImageFallback() {
   return (
     <div className="grid size-full place-items-center bg-[#f3f0ea] text-[#b0a99e]">
-      <svg className="size-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <svg
+        className="size-7"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
         <rect width="18" height="16" x="3" y="4" rx="2" />
         <circle cx="8.5" cy="9" r="1.5" />
         <path d="m21 15-4-4L5 20" />
@@ -113,7 +204,13 @@ function ImageFallback() {
   );
 }
 
-function MediaThumbnail({ asset, className = "" }: { asset: MediaAsset; className?: string }) {
+function MediaThumbnail({
+  asset,
+  className = "",
+}: {
+  asset: MediaAsset;
+  className?: string;
+}) {
   const preferredUrl = asset.publicUrl || asset.url;
   const [source, setSource] = useState(preferredUrl);
   const [failed, setFailed] = useState(false);
@@ -143,7 +240,13 @@ function MediaThumbnail({ asset, className = "" }: { asset: MediaAsset; classNam
   );
 }
 
-function FolderCard({ folder, onOpen }: { folder: MediaFolder; onOpen: () => void }) {
+function FolderCard({
+  folder,
+  onOpen,
+}: {
+  folder: MediaFolder;
+  onOpen: () => void;
+}) {
   return (
     <button
       className="group flex min-h-[48px] items-center gap-2.5 rounded-[12px] border border-[#e4ded6] bg-white px-3 py-2 text-left transition-all hover:border-[#0055ff] hover:bg-[#faf7f2] hover:shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0055ff]"
@@ -151,16 +254,29 @@ function FolderCard({ folder, onOpen }: { folder: MediaFolder; onOpen: () => voi
       onClick={onOpen}
       title={`${folder.name} (${folder.assetCount} items)`}
     >
-      <span className={`grid size-7 shrink-0 place-items-center rounded-[8px] transition-colors ${
-        folder.isSystem ? "bg-[#eaf1ff] text-[#0055ff] group-hover:bg-[#0055ff] group-hover:text-white" : "bg-[#f5ece1] text-[#9b6628] group-hover:bg-[#9b6628] group-hover:text-white"
-      }`}>
+      <span
+        className={`grid size-7 shrink-0 place-items-center rounded-[8px] transition-colors ${
+          folder.isSystem
+            ? "bg-[#eaf1ff] text-[#0055ff] group-hover:bg-[#0055ff] group-hover:text-white"
+            : "bg-[#f5ece1] text-[#9b6628] group-hover:bg-[#9b6628] group-hover:text-white"
+        }`}
+      >
         <FolderIcon />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[12.5px] font-bold text-[#1e1b20] group-hover:text-[#0055ff]">{folder.name}</span>
-        <span className="block text-[10.5px] font-medium text-[#938b81]">{folder.assetCount} {folder.assetCount === 1 ? "item" : "items"}</span>
+        <span className="block truncate text-[12.5px] font-bold text-[#1e1b20] group-hover:text-[#0055ff]">
+          {folder.name}
+        </span>
+        <span className="block text-[10.5px] font-medium text-[#938b81]">
+          {folder.assetCount} {folder.assetCount === 1 ? "item" : "items"}
+        </span>
       </span>
-      <span className="text-[13px] text-[#c0b8ad] transition-transform group-hover:translate-x-0.5 group-hover:text-[#0055ff]" aria-hidden="true">→</span>
+      <span
+        className="text-[13px] text-[#c0b8ad] transition-transform group-hover:translate-x-0.5 group-hover:text-[#0055ff]"
+        aria-hidden="true"
+      >
+        →
+      </span>
     </button>
   );
 }
@@ -188,8 +304,11 @@ function AssetCard({
       aria-pressed={selected}
     >
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#f3f0ea]">
-        <MediaThumbnail asset={asset} className="transition-transform duration-200 group-hover:scale-[1.03]" />
-        
+        <MediaThumbnail
+          asset={asset}
+          className="transition-transform duration-200 group-hover:scale-[1.03]"
+        />
+
         {/* Format Badge */}
         <span className="absolute left-1.5 top-1.5 rounded-[5px] bg-black/65 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white backdrop-blur-[2px]">
           {extension}
@@ -215,12 +334,19 @@ function AssetCard({
       </div>
 
       <div className="min-w-0 px-2.5 py-2">
-        <p className="truncate text-[11.5px] font-bold text-[#1f1b22] group-hover:text-[#0055ff]" title={asset.displayName}>
+        <p
+          className="truncate text-[11.5px] font-bold text-[#1f1b22] group-hover:text-[#0055ff]"
+          title={asset.displayName}
+        >
           {asset.displayName}
         </p>
         <p className="mt-0.5 flex items-center justify-between text-[10px] text-[#958c82]">
           <span>{formatBytes(asset.byteSize)}</span>
-          {asset.width && asset.height ? <span>{asset.width}×{asset.height}</span> : null}
+          {asset.width && asset.height ? (
+            <span>
+              {asset.width}×{asset.height}
+            </span>
+          ) : null}
         </p>
       </div>
     </button>
@@ -242,7 +368,9 @@ function DetailField({
 }) {
   return (
     <label className="block">
-      <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#7c756c]">{label}</span>
+      <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#7c756c]">
+        {label}
+      </span>
       {multiline ? (
         <textarea
           className="mt-1 min-h-[64px] w-full resize-y rounded-[9px] border border-[#dcd5cb] bg-[#fffdfa] px-2.5 py-1.5 text-[11.5px] leading-[1.45] text-[#071b3d] outline-none transition-colors placeholder:text-[#b4ada4] focus:border-[#0055ff] focus:ring-2 focus:ring-[#0055ff]/10"
@@ -271,7 +399,11 @@ function AssetDetails({
 }: {
   asset: MediaAsset;
   saving: boolean;
-  onSave: (input: { displayName: string; altText: string; caption: string }) => void;
+  onSave: (input: {
+    displayName: string;
+    altText: string;
+    caption: string;
+  }) => void;
   onDelete: () => void;
   onClose: () => void;
 }) {
@@ -288,9 +420,10 @@ function AssetDetails({
     setCopied(false);
   }, [asset]);
 
-  const absolutePublicUrl = typeof window !== "undefined"
-    ? new URL(asset.publicUrl, window.location.origin).toString()
-    : asset.publicUrl;
+  const absolutePublicUrl =
+    typeof window !== "undefined"
+      ? new URL(asset.publicUrl, window.location.origin).toString()
+      : asset.publicUrl;
 
   async function handleCopy() {
     try {
@@ -311,7 +444,10 @@ function AssetDetails({
             <MediaThumbnail asset={asset} />
           </div>
           <div className="min-w-0">
-            <p className="truncate text-[12.5px] font-bold text-[#1d222a]" title={asset.displayName}>
+            <p
+              className="truncate text-[12.5px] font-bold text-[#1d222a]"
+              title={asset.displayName}
+            >
               {asset.displayName}
             </p>
             <p className="text-[10px] font-medium text-[#938a80]">
@@ -336,7 +472,8 @@ function AssetDetails({
             Permanent Public Link
           </span>
           <span className="flex items-center gap-1 text-[10px] font-bold text-[#18794e]">
-            <span className="size-1.5 rounded-full bg-[#18794e] animate-pulse" /> Never expires
+            <span className="size-1.5 rounded-full bg-[#18794e] animate-pulse" />{" "}
+            Never expires
           </span>
         </div>
 
@@ -353,7 +490,9 @@ function AssetDetails({
             type="button"
             onClick={handleCopy}
             className={`inline-flex h-7 shrink-0 items-center gap-1 rounded-[7px] px-2.5 text-[10.5px] font-bold transition-colors ${
-              copied ? "bg-[#18794e] text-white" : "bg-[#0055ff] text-white hover:bg-[#0043c7]"
+              copied
+                ? "bg-[#18794e] text-white"
+                : "bg-[#0055ff] text-white hover:bg-[#0043c7]"
             }`}
           >
             {copied ? <CheckIcon /> : <CopyIcon />}
@@ -371,7 +510,8 @@ function AssetDetails({
         </div>
 
         <p className="mt-1.5 text-[9.5px] leading-[1.35] text-[#5578a4]">
-          Streams directly from Limex secure storage. Safe for websites, blogs, emails, and external documents.
+          Streams directly from Limex secure storage. Safe for websites, blogs,
+          emails, and external documents.
         </p>
 
         {asset.directUrl ? (
@@ -381,7 +521,9 @@ function AssetDetails({
               onClick={() => setShowDirect(!showDirect)}
               className="text-[9.5px] font-semibold text-[#6688b5] hover:text-[#0055ff]"
             >
-              {showDirect ? "Hide direct storage URL" : "Show direct storage URL"}
+              {showDirect
+                ? "Hide direct storage URL"
+                : "Show direct storage URL"}
             </button>
             {showDirect ? (
               <div className="mt-1">
@@ -393,7 +535,8 @@ function AssetDetails({
                   className="h-6 w-full rounded-[6px] border border-[#d8e2ee] bg-white px-2 font-mono text-[9px] text-[#717d8e] select-all"
                 />
                 <p className="mt-0.5 text-[9px] text-[#ad4242]">
-                  ⚠️ Note: Direct S3 links expire after 1 hour. Always use the permanent link above.
+                  ⚠️ Note: Direct S3 links expire after 1 hour. Always use the
+                  permanent link above.
                 </p>
               </div>
             ) : null}
@@ -403,22 +546,44 @@ function AssetDetails({
 
       {/* Metadata Form */}
       <div className="mt-3 space-y-2">
-        <DetailField label="File Name" value={displayName} onChange={setDisplayName} />
-        <DetailField label="Alt text" value={altText} onChange={setAltText} placeholder="Describe image for accessibility" />
-        <DetailField label="Caption" value={caption} onChange={setCaption} multiline placeholder="Optional caption" />
+        <DetailField
+          label="File Name"
+          value={displayName}
+          onChange={setDisplayName}
+        />
+        <DetailField
+          label="Alt text"
+          value={altText}
+          onChange={setAltText}
+          placeholder="Describe image for accessibility"
+        />
+        <DetailField
+          label="Caption"
+          value={caption}
+          onChange={setCaption}
+          multiline
+          placeholder="Optional caption"
+        />
       </div>
 
       {/* Usage Info */}
       <div className="mt-3 rounded-[10px] bg-[#f8f6f2] p-2 text-[10.5px] text-[#797268] space-y-1">
         <div className="flex justify-between items-center">
           <span>Format:</span>
-          <strong className="font-semibold text-[#29252a] uppercase">{asset.contentType.replace("image/", "")}</strong>
+          <strong className="font-semibold text-[#29252a] uppercase">
+            {asset.contentType.replace("image/", "")}
+          </strong>
         </div>
         <div className="flex justify-between items-center">
           <span>Usage:</span>
           {asset.usage ? (
-            <a href={asset.usage.href} className="truncate max-w-[170px] font-semibold text-[#0055ff] hover:underline" title={asset.usage.label}>
-              {asset.usage.type === "blog" ? "Blog: " : "Service: "}{asset.usage.label}
+            <a
+              href={asset.usage.href}
+              className="truncate max-w-[170px] font-semibold text-[#0055ff] hover:underline"
+              title={asset.usage.label}
+            >
+              {asset.usage.type === "blog" ? "Blog: " : "Service: "}
+              {asset.usage.label}
             </a>
           ) : (
             <strong className="font-semibold text-[#277450]">Not in use</strong>
@@ -474,7 +639,11 @@ export function MediaModule() {
         window.location.assign("/admin/login");
         return;
       }
-      setError(loadError instanceof Error ? loadError.message : "Unable to load the media library.");
+      setError(
+        loadError instanceof Error
+          ? loadError.message
+          : "Unable to load the media library.",
+      );
     } finally {
       setLoading(false);
     }
@@ -491,7 +660,7 @@ export function MediaModule() {
 
   const selectedAsset = useMemo(
     () => library?.assets.find((asset) => asset.id === selectedId) ?? null,
-    [library?.assets, selectedId]
+    [library?.assets, selectedId],
   );
 
   function openFolder(nextFolderId: string | null) {
@@ -516,7 +685,11 @@ export function MediaModule() {
         window.location.assign("/admin/login");
         return;
       }
-      setError(createError instanceof Error ? createError.message : "Unable to create this folder.");
+      setError(
+        createError instanceof Error
+          ? createError.message
+          : "Unable to create this folder.",
+      );
     } finally {
       setSaving(false);
     }
@@ -525,7 +698,9 @@ export function MediaModule() {
   async function processFiles(files: File[]) {
     if (!files.length) return;
     if (!folderId) {
-      setError("Please open a destination folder first before uploading images.");
+      setError(
+        "Please open a destination folder first before uploading images.",
+      );
       return;
     }
 
@@ -541,14 +716,22 @@ export function MediaModule() {
           height: compressed.height,
         });
       }
-      setNotice(files.length === 1 ? "Image uploaded and compressed." : `${files.length} images uploaded and compressed.`);
+      setNotice(
+        files.length === 1
+          ? "Image uploaded and compressed."
+          : `${files.length} images uploaded and compressed.`,
+      );
       await load(folderId);
     } catch (uploadError) {
       if (isUnauthorizedMediaError(uploadError)) {
         window.location.assign("/admin/login");
         return;
       }
-      setError(uploadError instanceof Error ? uploadError.message : "Unable to upload image.");
+      setError(
+        uploadError instanceof Error
+          ? uploadError.message
+          : "Unable to upload image.",
+      );
       await load(folderId);
     } finally {
       setUploading(false);
@@ -574,11 +757,17 @@ export function MediaModule() {
   function handleDrop(event: DragEvent<HTMLDivElement>) {
     event.preventDefault();
     setIsDragging(false);
-    const files = Array.from(event.dataTransfer.files).filter((file) => file.type.startsWith("image/"));
+    const files = Array.from(event.dataTransfer.files).filter((file) =>
+      file.type.startsWith("image/"),
+    );
     if (files.length) void processFiles(files);
   }
 
-  async function saveAsset(input: { displayName: string; altText: string; caption: string }) {
+  async function saveAsset(input: {
+    displayName: string;
+    altText: string;
+    caption: string;
+  }) {
     if (!selectedAsset) return;
     setSaving(true);
     setError("");
@@ -586,7 +775,14 @@ export function MediaModule() {
     try {
       const updated = await updateMediaAsset(selectedAsset.id, input);
       setLibrary((current) =>
-        current ? { ...current, assets: current.assets.map((asset) => (asset.id === updated.id ? updated : asset)) } : current
+        current
+          ? {
+              ...current,
+              assets: current.assets.map((asset) =>
+                asset.id === updated.id ? updated : asset,
+              ),
+            }
+          : current,
       );
       setNotice("Media details saved.");
     } catch (saveError) {
@@ -594,14 +790,22 @@ export function MediaModule() {
         window.location.assign("/admin/login");
         return;
       }
-      setError(saveError instanceof Error ? saveError.message : "Unable to save media details.");
+      setError(
+        saveError instanceof Error
+          ? saveError.message
+          : "Unable to save media details.",
+      );
     } finally {
       setSaving(false);
     }
   }
 
   async function deleteAsset() {
-    if (!selectedAsset || !window.confirm("Delete this media permanently? This cannot be undone.")) return;
+    if (
+      !selectedAsset ||
+      !window.confirm("Delete this media permanently? This cannot be undone.")
+    )
+      return;
     setSaving(true);
     setError("");
     setNotice("");
@@ -615,7 +819,11 @@ export function MediaModule() {
         window.location.assign("/admin/login");
         return;
       }
-      setError(deleteError instanceof Error ? deleteError.message : "Unable to delete this media.");
+      setError(
+        deleteError instanceof Error
+          ? deleteError.message
+          : "Unable to delete this media.",
+      );
     } finally {
       setSaving(false);
     }
@@ -624,18 +832,23 @@ export function MediaModule() {
   function handleQuickCopy(asset: MediaAsset, event: React.MouseEvent) {
     event.stopPropagation();
     const url = new URL(asset.publicUrl, window.location.origin).toString();
-    navigator.clipboard.writeText(url).then(() => {
-      setNotice(`Copied permanent link for "${asset.displayName}".`);
-      window.setTimeout(() => setNotice(""), 3000);
-    }).catch(() => {
-      setError("Clipboard access denied.");
-    });
+    navigator.clipboard
+      .writeText(url)
+      .then(() => {
+        setNotice(`Copied permanent link for "${asset.displayName}".`);
+        window.setTimeout(() => setNotice(""), 3000);
+      })
+      .catch(() => {
+        setError("Clipboard access denied.");
+      });
   }
 
   if (loading && !library) {
     return (
       <div className="grid min-h-[380px] place-items-center rounded-[20px] bg-white border border-[#e1dcd4]">
-        <p className="text-[13px] font-semibold text-[#8a837c]">Loading media library…</p>
+        <p className="text-[13px] font-semibold text-[#8a837c]">
+          Loading media library…
+        </p>
       </div>
     );
   }
@@ -644,9 +857,10 @@ export function MediaModule() {
   const folders = library?.folders ?? [];
   const rawAssets = library?.assets ?? [];
   const filteredAssets = searchQuery.trim()
-    ? rawAssets.filter((item) =>
-        item.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.originalName.toLowerCase().includes(searchQuery.toLowerCase())
+    ? rawAssets.filter(
+        (item) =>
+          item.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.originalName.toLowerCase().includes(searchQuery.toLowerCase()),
       )
     : rawAssets;
 
@@ -666,9 +880,19 @@ export function MediaModule() {
             </h1>
             <p className="mt-1 text-[11.5px] text-[#867e74]">
               {currentFolder ? (
-                <>Folder: <strong className="font-semibold text-[#071b3d]">{currentFolder.name}</strong> · {rawAssets.length} {rawAssets.length === 1 ? "image" : "images"}</>
+                <>
+                  Folder:{" "}
+                  <strong className="font-semibold text-[#071b3d]">
+                    {currentFolder.name}
+                  </strong>{" "}
+                  · {rawAssets.length}{" "}
+                  {rawAssets.length === 1 ? "image" : "images"}
+                </>
               ) : (
-                <>{folders.length} {folders.length === 1 ? "folder" : "folders"} available</>
+                <>
+                  {folders.length} {folders.length === 1 ? "folder" : "folders"}{" "}
+                  available
+                </>
               )}
             </p>
           </div>
@@ -743,7 +967,9 @@ export function MediaModule() {
             <input
               type="text"
               className="h-8 w-full rounded-[8px] border border-[#d4cdc2] bg-white px-2.5 text-[12px] text-[#071b3d] outline-none focus:border-[#0055ff] focus:ring-2 focus:ring-[#0055ff]/10"
-              placeholder={currentFolder ? "Subfolder name…" : "New folder name…"}
+              placeholder={
+                currentFolder ? "Subfolder name…" : "New folder name…"
+              }
               value={folderName}
               onChange={(e) => setFolderName(e.target.value)}
               autoFocus
@@ -770,13 +996,25 @@ export function MediaModule() {
       {notice ? (
         <div className="flex items-center justify-between rounded-[10px] bg-[#eef8f2] px-3.5 py-2 text-[12px] font-semibold text-[#18794e]">
           <span>{notice}</span>
-          <button type="button" onClick={() => setNotice("")} className="text-[#18794e]/70 hover:text-[#18794e]">✕</button>
+          <button
+            type="button"
+            onClick={() => setNotice("")}
+            className="text-[#18794e]/70 hover:text-[#18794e]"
+          >
+            ✕
+          </button>
         </div>
       ) : null}
       {error ? (
         <div className="flex items-center justify-between rounded-[10px] bg-[#fff0f2] px-3.5 py-2 text-[12px] font-semibold text-[#ad3148]">
           <span>{error}</span>
-          <button type="button" onClick={() => setError("")} className="text-[#ad3148]/70 hover:text-[#ad3148]">✕</button>
+          <button
+            type="button"
+            onClick={() => setError("")}
+            className="text-[#ad3148]/70 hover:text-[#ad3148]"
+          >
+            ✕
+          </button>
         </div>
       ) : null}
 
@@ -820,7 +1058,13 @@ export function MediaModule() {
       </div>
 
       {/* Main Content Explorer */}
-      <div className={selectedAsset ? "grid grid-cols-1 lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_360px] gap-4 items-start" : "space-y-4"}>
+      <div
+        className={
+          selectedAsset
+            ? "grid grid-cols-1 lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_360px] gap-4 items-start"
+            : "space-y-4"
+        }
+      >
         {/* Left Column: Folders and/or Images Grid */}
         <div className="space-y-4 min-w-0">
           {/* Folders List */}
@@ -849,9 +1093,15 @@ export function MediaModule() {
               <span className="mx-auto grid size-10 place-items-center rounded-full bg-[#f3ede3] text-[#8e8578]">
                 <FolderIcon />
               </span>
-              <p className="mt-2.5 text-[13px] font-bold text-[#2d2930]">No folders created yet</p>
+              <p className="mt-2.5 text-[13px] font-bold text-[#2d2930]">
+                No folders created yet
+              </p>
               <p className="mt-1 text-[11.5px] text-[#8c8479]">
-                Click <strong className="text-[#071b3d]">&quot;+ New folder&quot;</strong> above to organize your media.
+                Click{" "}
+                <strong className="text-[#071b3d]">
+                  &quot;+ New folder&quot;
+                </strong>{" "}
+                above to organize your media.
               </p>
             </div>
           ) : null}
@@ -859,13 +1109,17 @@ export function MediaModule() {
           {/* Images Section in Current Folder */}
           {currentFolder ? (
             <div>
-              {folders.length > 0 && <div className="my-3 border-t border-[#eee7dc]" />}
+              {folders.length > 0 && (
+                <div className="my-3 border-t border-[#eee7dc]" />
+              )}
 
               {rawAssets.length === 0 ? (
                 /* Empty Folder Upload Zone */
                 <div
                   className={`rounded-[16px] border-2 border-dashed py-12 text-center transition-all ${
-                    isDragging ? "border-[#0055ff] bg-[#f0f6ff]" : "border-[#ded7ce] bg-[#faf8f4]"
+                    isDragging
+                      ? "border-[#0055ff] bg-[#f0f6ff]"
+                      : "border-[#ded7ce] bg-[#faf8f4]"
                   }`}
                 >
                   <span className="mx-auto grid size-10 place-items-center rounded-full bg-white text-[#0055ff] shadow-sm">
@@ -893,7 +1147,9 @@ export function MediaModule() {
               ) : filteredAssets.length === 0 ? (
                 /* Search Filter Empty */
                 <div className="rounded-[14px] bg-[#faf8f4] py-8 text-center border border-[#ece6dd]">
-                  <p className="text-[12px] font-bold text-[#5c554c]">No images matching &quot;{searchQuery}&quot;</p>
+                  <p className="text-[12px] font-bold text-[#5c554c]">
+                    No images matching &quot;{searchQuery}&quot;
+                  </p>
                   <button
                     type="button"
                     onClick={() => setSearchQuery("")}
@@ -916,7 +1172,9 @@ export function MediaModule() {
                       key={asset.id}
                       asset={asset}
                       selected={asset.id === selectedId}
-                      onSelect={() => setSelectedId(asset.id === selectedId ? null : asset.id)}
+                      onSelect={() =>
+                        setSelectedId(asset.id === selectedId ? null : asset.id)
+                      }
                       onQuickCopy={(e) => handleQuickCopy(asset, e)}
                     />
                   ))}

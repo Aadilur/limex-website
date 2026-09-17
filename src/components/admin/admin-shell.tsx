@@ -30,7 +30,7 @@ function LimexMark() {
     <img
       className="h-auto w-[142px] object-contain object-left"
       src={logoSrc}
-      alt="Limex Consultancy Firm"
+      alt="Limex"
     />
   );
 }

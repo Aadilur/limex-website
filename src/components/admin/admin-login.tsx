@@ -92,7 +92,7 @@ export function AdminLogin() {
                 <img
                   className="h-auto w-[142px] object-contain object-left"
                   src={logoSrc}
-                  alt="Limex Consultancy Firm"
+                  alt="Limex"
                 />
                 <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#0055ff]">
                   Admin sign in

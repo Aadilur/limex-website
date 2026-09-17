@@ -310,7 +310,7 @@ export function LogoLockup({
     <img
       className="h-auto w-full object-contain object-left"
       src={imageSrc}
-      alt="Limex Consultancy Firm"
+      alt="Limex"
     />
   );
 

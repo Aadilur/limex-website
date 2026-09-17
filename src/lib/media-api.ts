@@ -43,11 +43,16 @@ export type MediaLibrary = {
 
 export function getAdminMedia(folderId?: string | null) {
   const search = folderId ? "?folderId=" + encodeURIComponent(folderId) : "";
-  return request<MediaLibrary>("/api/admin/media" + search, { cache: "no-store" });
+  return request<MediaLibrary>("/api/admin/media" + search, {
+    cache: "no-store",
+  });
 }
 
 export function getAdminMediaAsset(id: string) {
-  return request<MediaAsset>("/api/admin/media/assets/" + encodeURIComponent(id), { cache: "no-store" });
+  return request<MediaAsset>(
+    "/api/admin/media/assets/" + encodeURIComponent(id),
+    { cache: "no-store" },
+  );
 }
 
 export function createMediaFolder(name: string, parentId?: string | null) {
@@ -57,19 +62,41 @@ export function createMediaFolder(name: string, parentId?: string | null) {
   });
 }
 
-export function uploadMediaAsset(folderId: string, file: File, metadata?: { width?: number; height?: number; displayName?: string; altText?: string; caption?: string }) {
+export function uploadMediaAsset(
+  folderId: string,
+  file: File,
+  metadata?: {
+    width?: number;
+    height?: number;
+    displayName?: string;
+    altText?: string;
+    caption?: string;
+  },
+) {
   const formData = new FormData();
   formData.append("folderId", folderId);
   formData.append("image", file);
   if (metadata?.width) formData.append("width", String(metadata.width));
   if (metadata?.height) formData.append("height", String(metadata.height));
-  if (metadata?.displayName) formData.append("displayName", metadata.displayName);
+  if (metadata?.displayName)
+    formData.append("displayName", metadata.displayName);
   if (metadata?.altText) formData.append("altText", metadata.altText);
   if (metadata?.caption) formData.append("caption", metadata.caption);
-  return request<MediaAsset>("/api/admin/media/assets", { method: "POST", body: formData });
+  return request<MediaAsset>("/api/admin/media/assets", {
+    method: "POST",
+    body: formData,
+  });
 }
 
-export function updateMediaAsset(id: string, input: { displayName?: string; altText?: string | null; caption?: string | null; folderId?: string | null }) {
+export function updateMediaAsset(
+  id: string,
+  input: {
+    displayName?: string;
+    altText?: string | null;
+    caption?: string | null;
+    folderId?: string | null;
+  },
+) {
   return request<MediaAsset>("/api/admin/media/assets/" + id, {
     method: "PATCH",
     body: JSON.stringify(input),
@@ -77,7 +104,9 @@ export function updateMediaAsset(id: string, input: { displayName?: string; altT
 }
 
 export function deleteMediaAsset(id: string) {
-  return request<{ deleted: boolean }>("/api/admin/media/assets/" + id, { method: "DELETE" });
+  return request<{ deleted: boolean }>("/api/admin/media/assets/" + id, {
+    method: "DELETE",
+  });
 }
 
 export function isUnauthorizedMediaError(error: unknown) {
