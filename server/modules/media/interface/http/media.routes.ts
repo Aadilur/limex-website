@@ -90,22 +90,32 @@ export function mediaRoutes(app: FastifyInstance, options: { service: MediaServi
   app.get("/api/media/:id", async (request, reply) => {
     try {
       const { id } = idSchema.parse(request.params);
+      const asset = await options.service.getAsset(id);
+
+      try {
+        const stored = await getStoredObject(asset.objectKey);
+        if (stored) {
+          const etag = "\"" + createHash("sha1").update(asset.objectKey).digest("hex").slice(0, 24) + "\"";
+          reply.header("Cache-Control", MEDIA_ASSET_CACHE_CONTROL);
+          reply.header("Content-Type", stored.contentType);
+          reply.header("ETag", etag);
+          if (stored.contentLength !== undefined) reply.header("Content-Length", String(stored.contentLength));
+          if ((request.headers["if-none-match"]?.split(",").map((value) => value.trim()) ?? []).includes(etag)) {
+            return reply.code(304).send();
+          }
+          return reply.send(stored.body);
+        }
+      } catch (streamError) {
+        console.warn(`Direct streaming for media asset ${id} failed, falling back to signed URL:`, streamError);
+      }
+
       const signedUrl = await options.service.getSignedAssetUrl(id);
       if (signedUrl) {
         reply.header("Cache-Control", MEDIA_REDIRECT_CACHE_CONTROL);
         return reply.code(302).redirect(signedUrl);
       }
 
-      const asset = await options.service.getAsset(id);
-      const stored = await getStoredObject(asset.objectKey);
-      if (!stored) return reply.code(404).send({ error: "Media was not found." });
-      const etag = "\"" + createHash("sha1").update(asset.objectKey).digest("hex").slice(0, 24) + "\"";
-      reply.header("Cache-Control", MEDIA_ASSET_CACHE_CONTROL);
-      reply.header("Content-Type", stored.contentType);
-      reply.header("ETag", etag);
-      if (stored.contentLength !== undefined) reply.header("Content-Length", String(stored.contentLength));
-      if ((request.headers["if-none-match"]?.split(",").map((value) => value.trim()) ?? []).includes(etag)) return reply.code(304).send();
-      return reply.send(stored.body);
+      return reply.code(404).send({ error: "Media was not found." });
     } catch (error) {
       return sendKnownError(error, reply);
     }

@@ -54,6 +54,7 @@ export type MediaAssetResponse = {
   caption: string;
   url: string;
   publicUrl: string;
+  directUrl?: string | null;
   urlExpiresAt: string | null;
   createdAt: string;
   updatedAt: string;

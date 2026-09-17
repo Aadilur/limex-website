@@ -199,20 +199,28 @@ export function createBlogRoutes(blogService: BlogService, mediaService: MediaSe
       const media = await prisma.blogPostMedia.findUnique({ where: { id }, include: { post: { select: { status: true } } } });
       if (!media || media.kind !== "IMAGE") return reply.code(404).send({ error: "Image not found." });
       if (media.post.status !== "PUBLISHED" && !getAdminSession(request)) return reply.code(404).send({ error: "Image not found." });
+
+      try {
+        const stored = await getStoredObject(media.objectKey);
+        if (stored) {
+          const etag = `"${createHash("sha1").update(media.objectKey).digest("hex").slice(0, 24)}"`;
+          reply.header("Cache-Control", BLOG_MEDIA_CACHE_CONTROL);
+          reply.header("Content-Type", stored.contentType);
+          reply.header("ETag", etag);
+          if (stored.contentLength !== undefined) reply.header("Content-Length", String(stored.contentLength));
+          if ((request.headers["if-none-match"]?.split(",").map((value) => value.trim()) ?? []).includes(etag)) return reply.code(304).send();
+          return reply.send(stored.body);
+        }
+      } catch (streamError) {
+        console.warn(`Direct streaming for blog media ${id} failed, falling back to signed URL:`, streamError);
+      }
+
       const signedUrl = await signStoredObject(media.objectKey);
       if (signedUrl) {
         reply.header("Cache-Control", MEDIA_REDIRECT_CACHE_CONTROL);
         return reply.code(302).redirect(signedUrl);
       }
-      const stored = await getStoredObject(media.objectKey);
-      if (!stored) return reply.code(404).send({ error: "Image not found." });
-      const etag = `"${createHash("sha1").update(media.objectKey).digest("hex").slice(0, 24)}"`;
-      reply.header("Cache-Control", BLOG_MEDIA_CACHE_CONTROL);
-      reply.header("Content-Type", stored.contentType);
-      reply.header("ETag", etag);
-      if (stored.contentLength !== undefined) reply.header("Content-Length", String(stored.contentLength));
-      if ((request.headers["if-none-match"]?.split(",").map((value) => value.trim()) ?? []).includes(etag)) return reply.code(304).send();
-      return reply.send(stored.body);
+      return reply.code(404).send({ error: "Image not found." });
     });
 
     app.get("/api/admin/blog/posts", async (request, reply) => {
