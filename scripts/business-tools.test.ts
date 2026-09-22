@@ -1844,6 +1844,10 @@ test("rich text editor permanently preserves cursor focus and legal pages have f
     new URL("../src/components/admin/rich-text-editor.tsx", import.meta.url),
     "utf8",
   );
+  const blogModuleTsx = await fs.readFile(
+    new URL("../src/components/admin/blog-module.tsx", import.meta.url),
+    "utf8",
+  );
   const landingDefaultsTs = await fs.readFile(
     new URL("../src/lib/landing-defaults.ts", import.meta.url),
     "utf8",
@@ -1873,6 +1877,25 @@ test("rich text editor permanently preserves cursor focus and legal pages have f
     /if \(wasInternalUpdate \|\| nextHtml === lastEmittedHtml\.current\) \{\s*return;\s*\}/,
   );
   assert.match(richTextEditorTsx, /if \(editor\?\.isFocused\) return;/);
+
+  // The article editor contains multiple interactive controls and must not be
+  // nested inside a label, which makes browsers re-activate the label and
+  // steal focus from the contenteditable after typing.
+  const articleBodyEditorStart = blogModuleTsx.indexOf(
+    '<span className={labelClass}>Article body</span>',
+  );
+  const articleBodyEditorEnd = blogModuleTsx.indexOf(
+    '</div>\n          </EditorPanel>',
+    articleBodyEditorStart,
+  );
+  assert.ok(articleBodyEditorStart >= 0);
+  assert.ok(articleBodyEditorEnd > articleBodyEditorStart);
+  const articleBodyEditorRegion = blogModuleTsx.slice(
+    articleBodyEditorStart,
+    articleBodyEditorEnd,
+  );
+  assert.match(articleBodyEditorRegion, /<RichTextEditor/);
+  assert.doesNotMatch(articleBodyEditorRegion, /<label[\s>]/);
 
   // 2. Default legal pages are comprehensive and structured
   assert.ok(

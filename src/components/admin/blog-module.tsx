@@ -1888,7 +1888,7 @@ export function BlogEditorModule({ id }: { id: string }) {
                   updateTranslation({ subtitle: event.target.value })
                 }
               />
-              <label className="block">
+              <div className="block">
                 <span className={labelClass}>Article body</span>
                 <span className="mt-1 block text-[11px] leading-[1.45] text-[#9b958c]">
                   Use Visual for standard writing, HTML &amp; CSS for custom
@@ -1903,7 +1903,7 @@ export function BlogEditorModule({ id }: { id: string }) {
                     }
                   />
                 </div>
-              </label>
+              </div>
             </div>
           </EditorPanel>
           <EditorPanel
