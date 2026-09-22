@@ -1715,12 +1715,15 @@ test("about page has larger team portraits, executive typography, no odd eyebrow
     "utf8",
   );
 
-  // 1. Team member portrait is larger than old 92px/100px
+  // 1. Team member portraits use the new vertical editorial card layout.
   assert.match(
     aboutSectionsContent,
-    /size-\[108px\]\s+shrink-0\s+overflow-hidden\s+rounded-\[18px\]/,
+    /aspect-\[0\.92\]\s+overflow-hidden\s+border-b\s+border-\[#eee9e2\]/,
   );
   assert.doesNotMatch(aboutSectionsContent, /size-\[92px\]\s+shrink-0/);
+  assert.match(aboutSectionsContent, /title="The people behind every clear next step\."/);
+  assert.match(aboutSectionsContent, /title="Real stories\. Clearer futures\."/);
+  assert.match(aboutSectionsContent, /aspect-\[9\/16\]/);
 
   // 2. No em-dash (—) or awkward double dashes (--) in copy
   assert.doesNotMatch(aboutSectionsContent, /—/);
@@ -1733,11 +1736,8 @@ test("about page has larger team portraits, executive typography, no odd eyebrow
   // 4. No wireframe "Photo" label under initials
   assert.doesNotMatch(aboutSectionsContent, />Photo<\/span>/);
 
-  // 5. Preserves bg-page background on team section
-  assert.match(
-    aboutSectionsContent,
-    /rounded-panel\s+border\s+border-warm\s+bg-page/,
-  );
+  // 5. Both sections blend into the page background.
+  assert.match(aboutSectionsContent, /bg-page\s+px-0\s+py-1/);
 });
 
 test("bangla language toggle is hidden on service and blog pages per user request", async () => {

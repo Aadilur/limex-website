@@ -209,18 +209,18 @@ function TeamMemberCard({
   onImageError: () => void;
 }) {
   return (
-    <article className="group flex min-h-[144px] items-center gap-3.5 rounded-[22px] border border-[#e6e1d8] bg-[#f7f4ef] p-3.5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#d9d2c6] hover:bg-[#f3efe8] hover:shadow-[0_8px_24px_rgba(7,27,61,0.06)] sm:min-h-[156px] sm:gap-4 sm:p-4">
-      <div className="size-[108px] shrink-0 overflow-hidden rounded-[18px] border border-[#e2ddd5] bg-[#ece7df] shadow-sm sm:size-[120px] lg:size-[126px]">
+    <article className="group min-w-0 overflow-hidden rounded-[18px] border border-[#e6e1d8] bg-[#fffdfa] transition-all duration-300 hover:-translate-y-1 hover:border-[#d9d2c6] hover:shadow-[0_14px_30px_rgba(7,27,61,0.08)]">
+      <div className="aspect-[0.92] overflow-hidden border-b border-[#eee9e2] bg-[#ece7df]">
         <TeamMemberPhoto member={member} index={index} onError={onImageError} />
       </div>
-      <div className="min-w-0 flex-1">
-        <h3 className="truncate font-brand text-[17px] font-bold text-ink sm:text-[18px]">
+      <div className="min-w-0 px-3 py-3.5 sm:px-4 sm:py-4">
+        <h3 className="line-clamp-2 font-brand text-[13px] font-bold leading-[1.15] tracking-[-0.02em] text-ink sm:text-[16px]">
           {member.name}
         </h3>
-        <p className="mt-0.5 truncate text-[12px] font-medium text-[#007ea6] sm:text-[13px]">
+        <p className="mt-1 line-clamp-2 text-[10px] font-semibold leading-[1.25] text-[#008a9a] sm:text-[11px]">
           {member.title}
         </p>
-        <p className="mt-2 line-clamp-2 text-micro leading-relaxed text-muted">
+        <p className="mt-2 line-clamp-3 text-[10px] leading-[1.5] text-muted sm:text-[11px]">
           {member.description}
         </p>
       </div>
@@ -266,56 +266,57 @@ export function AboutTeamSection() {
 
   return (
     <section
-      className="mt-[clamp(28px,3vw,44px)] rounded-panel border border-warm bg-page p-card-pad-sm lg:px-8 lg:py-7"
+      className="mt-[clamp(36px,5vw,76px)] bg-page px-0 py-1"
       id="team"
       aria-labelledby="team-title"
     >
-      <div className="flex flex-col gap-cluster-sm sm:flex-row sm:items-start sm:justify-between">
+      <div className="mx-auto max-w-[1120px]">
         <SectionTitle
+          eyebrow="OUR TEAM"
           id="team-title"
-          title="A team that stays close to the work."
-          description="Meet the people you’ll work with."
-          className="max-w-[680px]"
-          size="compact"
+          title="The people behind every clear next step."
+          description="A thoughtful team for the important work behind your business."
+          className="mx-auto max-w-[680px] text-center"
+          size="large"
         />
-      </div>
-      <div className="mt-section-gap-lg grid gap-3 sm:grid-cols-2 lg:grid-cols-3 lg:gap-4">
-        {loading ? (
-          [0, 1, 2].map((index) => (
-            <div
-              className="flex min-h-[144px] animate-pulse items-center gap-3.5 rounded-[22px] border border-[#e6e1d8] bg-[#f7f4ef] p-3.5 sm:min-h-[156px] sm:gap-4 sm:p-4"
-              key={index}
-            >
-              <div className="size-[108px] shrink-0 rounded-[18px] bg-[#ebe7df] sm:size-[120px] lg:size-[126px]" />
-              <div className="min-w-0 flex-1 space-y-2">
-                <div className="h-5 w-32 rounded-full bg-[#e8e1d8]" />
-                <div className="h-3.5 w-24 rounded-full bg-[#e8e1d8]" />
-                <div className="h-3 w-full rounded-full bg-[#eee9e2]" />
-                <div className="h-3 w-4/5 rounded-full bg-[#eee9e2]" />
+        <div className="mt-section-gap-lg grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4 lg:gap-5">
+          {loading ? (
+            [0, 1, 2, 3].map((index) => (
+              <div
+                className="animate-pulse overflow-hidden rounded-[18px] border border-[#e6e1d8] bg-[#fffdfa]"
+                key={index}
+              >
+                <div className="aspect-[0.92] bg-[#ebe7df]" />
+                <div className="space-y-2 px-3 py-3.5 sm:px-4 sm:py-4">
+                  <div className="h-4 w-4/5 rounded-full bg-[#e8e1d8]" />
+                  <div className="h-3 w-3/5 rounded-full bg-[#e8e1d8]" />
+                  <div className="h-3 w-full rounded-full bg-[#eee9e2]" />
+                  <div className="h-3 w-4/5 rounded-full bg-[#eee9e2]" />
+                </div>
               </div>
+            ))
+          ) : members.length ? (
+            members.map((member, index) => (
+              <TeamMemberCard
+                key={member.id}
+                member={member}
+                index={index}
+                onImageError={() => handleImageError(member.id)}
+              />
+            ))
+          ) : (
+            <div className="col-span-2 rounded-[18px] border border-dashed border-[#d8d1c7] bg-[#fffdfa] px-5 py-10 text-center lg:col-span-4">
+              <p className="font-brand text-subheading font-bold text-ink">
+                The people behind Limex are on their way.
+              </p>
+              <p className="mt-1.5 text-micro text-muted">
+                {loadError
+                  ? "Please check back soon."
+                  : "Our team profiles are being updated."}
+              </p>
             </div>
-          ))
-        ) : members.length ? (
-          members.map((member, index) => (
-            <TeamMemberCard
-              key={member.id}
-              member={member}
-              index={index}
-              onImageError={() => handleImageError(member.id)}
-            />
-          ))
-        ) : (
-          <div className="rounded-[22px] border border-dashed border-[#d8d1c7] bg-[#f7f4ef] px-5 py-10 text-center sm:col-span-2 lg:col-span-3">
-            <p className="font-brand text-subheading font-bold text-ink">
-              The people behind Limex are on their way.
-            </p>
-            <p className="mt-1.5 text-micro text-muted">
-              {loadError
-                ? "Please check back soon."
-                : "Our team profiles are being updated."}
-            </p>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </section>
   );
@@ -424,7 +425,7 @@ function AboutReelCard({
   return (
     <article
       className={[
-        "group relative h-[420px] min-w-[min(306px,calc(100vw-72px))] basis-[min(306px,calc(100vw-72px))] snap-start overflow-hidden rounded-[20px] border bg-[#1c282e] shadow-[0_14px_34px_rgba(27,34,30,0.08)] transition-all duration-300 hover:-translate-y-1 lg:h-[520px] lg:min-w-[306px] lg:basis-[306px]",
+        "group relative aspect-[9/16] min-w-[min(224px,calc(100vw-64px))] basis-[min(224px,calc(100vw-64px))] snap-start overflow-hidden rounded-[20px] border bg-[#1c282e] shadow-[0_14px_34px_rgba(27,34,30,0.08)] transition-all duration-300 hover:-translate-y-1 lg:min-w-[232px] lg:basis-[232px]",
         playing
           ? "border-[#071b3d]"
           : "border-[#d7d5d0] hover:border-[#b8b3a8]",
@@ -452,19 +453,26 @@ function AboutReelCard({
       ) : (
         <>
           <ReelThumbnail reel={reel} index={index} />
-          <div className="absolute inset-x-0 bottom-0 flex min-h-[142px] flex-col justify-end gap-1.5 bg-gradient-to-b from-transparent via-[rgba(18,20,33,0.45)] to-[rgba(18,20,33,0.95)] px-5 pb-5 pt-16 text-white drop-shadow-[0_1px_12px_rgba(18,20,33,0.32)]">
-            <div className="flex items-center gap-1.5">
-              <span className="size-1.5 rounded-full bg-emerald-400" />
-              <span className="text-[11px] font-medium tracking-wide text-white/80">
-                {reel.title ? "Limex Story" : "Video"}
-              </span>
-            </div>
-            <h3 className="max-w-[250px] line-clamp-2 font-brand text-card-title text-white">
+          <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-2 px-3.5 pt-3.5">
+            <span className="rounded-full bg-[#071b3d]/75 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.1em] text-white backdrop-blur-[8px]">
+              Video story
+            </span>
+            <span className="max-w-[112px] truncate rounded-full bg-white/90 px-2.5 py-1 text-[9px] font-bold text-[#071b3d] backdrop-blur-[8px]">
+              {reel.title ? "Featured" : "YouTube"}
+            </span>
+          </div>
+          <div className="absolute inset-x-0 bottom-0 flex min-h-[138px] flex-col justify-end gap-1.5 bg-gradient-to-b from-transparent via-[rgba(18,20,33,0.45)] to-[rgba(18,20,33,0.96)] px-4 pb-4 pt-16 text-white drop-shadow-[0_1px_12px_rgba(18,20,33,0.32)] sm:px-5 sm:pb-5">
+            <h3 className="max-w-[250px] line-clamp-2 font-brand text-[16px] font-bold leading-[1.15] text-white sm:text-card-title">
               {title}
             </h3>
+            <p className="line-clamp-2 text-[10px] leading-[1.45] text-white/75 sm:text-[11px]">
+              {reel.youtubeTitle && reel.youtubeTitle !== title
+                ? reel.youtubeTitle
+                : "A story from the people we support."}
+            </p>
           </div>
           <button
-            className="absolute left-1/2 top-1/2 z-10 grid size-[68px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-white/80 bg-white/95 text-[#071b3d] shadow-[0_10px_26px_rgba(18,20,33,0.22)] ring-4 ring-white/20 transition-transform duration-200 group-hover:scale-105 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/50 focus-visible:outline-offset-3"
+            className="absolute left-1/2 top-1/2 z-10 grid size-14 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-white/80 bg-white/95 text-[#071b3d] shadow-[0_10px_26px_rgba(18,20,33,0.22)] ring-4 ring-white/20 transition-transform duration-200 group-hover:scale-105 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/50 focus-visible:outline-offset-3 sm:size-[62px]"
             type="button"
             aria-label={`Play ${title}`}
             onClick={onPlay}
@@ -541,65 +549,67 @@ export function AboutReelsSection() {
 
   function moveReels(direction: "previous" | "next") {
     reelScrollerRef.current?.scrollBy({
-      left: (direction === "next" ? 1 : -1) * 322,
+      left: (direction === "next" ? 1 : -1) * 252,
       behavior: "smooth",
     });
   }
 
   return (
     <section
-      className="mt-[clamp(28px,3vw,44px)] rounded-panel border border-[#e0dcd4] bg-[#f7f4ef] p-card-pad-sm lg:p-card-pad"
+      className="mt-[clamp(40px,5vw,80px)] bg-page px-0 py-1"
       aria-labelledby="about-reels-title"
     >
-      <div className="flex flex-col gap-cluster-lg sm:flex-row sm:items-end sm:justify-between">
-        <SectionTitle
-          id="about-reels-title"
-          title="A closer look at how we work."
-          description="Short stories from our people, process and point of view."
-          className="max-w-[640px]"
-          size="compact"
-        />
-        {!loading && reels.length > 1 ? (
-          <div
-            className="flex shrink-0 items-center gap-2"
-            aria-label="Video reel controls"
-          >
-            <button
-              className="grid size-10 place-items-center rounded-full border border-[#d2cbc0] bg-white text-[#4f4b47] transition-all hover:-translate-y-0.5 hover:border-[#071b3d] hover:text-[#071b3d] disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/40 focus-visible:outline-offset-2"
-              type="button"
-              aria-label="Previous video reel"
-              disabled={!canScrollPrevious}
-              onClick={() => moveReels("previous")}
+      <div className="mx-auto max-w-[1120px]">
+        <div className="relative">
+          <SectionTitle
+            eyebrow="VIDEO STORIES"
+            id="about-reels-title"
+            title="Real stories. Clearer futures."
+            description="See the people, progress and partnerships behind the work."
+            className="mx-auto max-w-[700px] text-center"
+            size="large"
+          />
+          {!loading && reels.length > 1 ? (
+            <div
+              className="hidden shrink-0 items-center gap-2 lg:absolute lg:bottom-1 lg:right-0 lg:flex"
+              aria-label="Video reel controls"
             >
-              <ArrowIcon direction="left" />
-            </button>
-            <button
-              className="grid size-10 place-items-center rounded-full bg-[#071b3d] text-white transition-all hover:-translate-y-0.5 hover:bg-[#2a2933] disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/40 focus-visible:outline-offset-2"
-              type="button"
-              aria-label="Next video reel"
-              disabled={!canScrollNext}
-              onClick={() => moveReels("next")}
-            >
-              <ArrowIcon direction="right" />
-            </button>
-          </div>
-        ) : null}
-      </div>
+              <button
+                className="grid size-10 place-items-center rounded-full border border-[#d2cbc0] bg-white text-[#4f4b47] transition-all hover:-translate-y-0.5 hover:border-[#071b3d] hover:text-[#071b3d] disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/40 focus-visible:outline-offset-2"
+                type="button"
+                aria-label="Previous video reel"
+                disabled={!canScrollPrevious}
+                onClick={() => moveReels("previous")}
+              >
+                <ArrowIcon direction="left" />
+              </button>
+              <button
+                className="grid size-10 place-items-center rounded-full bg-[#071b3d] text-white transition-all hover:-translate-y-0.5 hover:bg-[#2a2933] disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/40 focus-visible:outline-offset-2"
+                type="button"
+                aria-label="Next video reel"
+                disabled={!canScrollNext}
+                onClick={() => moveReels("next")}
+              >
+                <ArrowIcon direction="right" />
+              </button>
+            </div>
+          ) : null}
+        </div>
 
       {loading ? (
         <div
-          className="mt-section-gap-lg flex min-h-0 gap-card-gap overflow-hidden"
+          className="mt-section-gap-lg flex min-h-0 justify-center gap-card-gap overflow-hidden"
           aria-label="Loading video reels"
         >
           {[0, 1, 2].map((index) => (
             <div
-              className="h-[420px] min-w-[min(306px,calc(100vw-72px))] animate-pulse rounded-[20px] border border-[#e0dcd4] bg-[#ebe7df] lg:h-[520px] lg:min-w-[306px]"
+              className="aspect-[9/16] min-w-[min(224px,calc(100vw-64px))] animate-pulse rounded-[20px] border border-[#e0dcd4] bg-[#ebe7df] lg:min-w-[232px]"
               key={index}
             />
           ))}
         </div>
       ) : loadError ? (
-        <div className="mt-section-gap-lg rounded-[18px] border border-dashed border-[#d4ccc1] bg-white/65 px-5 py-10 text-center">
+        <div className="mt-section-gap-lg rounded-[18px] border border-dashed border-[#d4ccc1] bg-[#fffdfa] px-5 py-10 text-center">
           <p className="font-brand text-subheading-mobile font-bold text-ink">
             Our stories are taking shape.
           </p>
@@ -610,7 +620,7 @@ export function AboutReelsSection() {
       ) : reels.length ? (
         <div
           ref={reelScrollerRef}
-          className="mt-section-gap-lg flex min-h-0 snap-x snap-proximity gap-card-gap overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="mt-section-gap-lg flex min-h-0 snap-x snap-proximity justify-start gap-4 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:justify-center lg:gap-5"
         >
           {reels.map((reel, index) => (
             <div
@@ -629,7 +639,7 @@ export function AboutReelsSection() {
           ))}
         </div>
       ) : (
-        <div className="mt-section-gap-lg rounded-[18px] border border-dashed border-[#d4ccc1] bg-white/65 px-5 py-10 text-center">
+        <div className="mt-section-gap-lg rounded-[18px] border border-dashed border-[#d4ccc1] bg-[#fffdfa] px-5 py-10 text-center">
           <p className="font-brand text-subheading-mobile font-bold text-ink">
             Our story is coming soon.
           </p>
@@ -638,6 +648,7 @@ export function AboutReelsSection() {
           </p>
         </div>
       )}
+      </div>
     </section>
   );
 }
