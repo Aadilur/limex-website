@@ -209,7 +209,7 @@ function Spotlight({
   const href = resolveLocalHref(item.spotlight.ctaHref, pathname);
 
   return (
-    <aside className="relative hidden h-fit min-h-[244px] self-start overflow-hidden rounded-card border border-white/10 bg-[#071b3d] p-4 text-white wide:flex">
+    <aside className="relative hidden h-fit min-h-[244px] self-start overflow-hidden rounded-card border border-white/10 bg-[#071b3d] p-4 text-white nav:flex">
       <div
         className={`absolute inset-x-0 top-0 h-1 ${palette.badge}`.trim()}
         aria-hidden="true"
@@ -287,7 +287,7 @@ export function MegaMenuPanel({
         </button>
       </div>
 
-      <div className="mt-cluster-lg grid min-h-0 flex-1 grid-cols-[minmax(136px,164px)_minmax(0,1fr)] gap-cluster wide:grid-cols-[152px_minmax(0,1fr)_224px] wide:gap-cluster">
+      <div className="mt-cluster-lg grid min-h-0 flex-1 grid-cols-[minmax(136px,164px)_minmax(0,1fr)] gap-cluster nav:grid-cols-[152px_minmax(0,1fr)_224px] nav:gap-cluster">
         <nav
           className="min-h-0 overflow-y-auto rounded-card border border-warm bg-cream p-2"
           aria-label="Browse menu categories"
@@ -323,7 +323,7 @@ export function MegaMenuPanel({
         </nav>
 
         <div className="min-h-0 overflow-y-auto pr-1 [scrollbar-width:thin]">
-          <div className="columns-1 gap-cluster md:columns-2 wide:columns-3">
+          <div className="columns-1 gap-cluster md:columns-2 nav:columns-3">
             {visibleItems.map((menuItem) => (
               <MegaMenuItemRow
                 item={menuItem}

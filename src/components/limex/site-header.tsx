@@ -136,7 +136,7 @@ function DesktopNavTrigger({
   return (
     <div className="relative">
       <button
-        className={`group relative inline-flex h-control items-center gap-cluster-xs rounded-control border-0 bg-transparent px-2 py-1 text-nav-compact whitespace-nowrap transition-colors duration-200 ease-out hover:text-pink xl:text-nav-medium wide:text-nav ${
+        className={`group relative inline-flex h-control items-center gap-cluster-xs rounded-control border-0 bg-transparent px-2 py-1 text-nav-compact whitespace-nowrap transition-colors duration-200 ease-out hover:text-pink xl:text-nav-medium nav:text-nav ${
           isActive ? "bg-pink/10 font-bold text-[#0055ff]" : "text-ink"
         }`.trim()}
         type="button"
@@ -401,7 +401,7 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
       ref={headerRef}
     >
       <div
-        className={`relative mx-mobile-gutter hidden min-h-[60px] grid-cols-[90px_minmax(0,1fr)_90px] items-center rounded-nav border border-[rgba(224,222,227,0.86)] bg-page px-cluster py-cluster wide:mx-page-gutter-lg wide:grid wide:min-h-[68px] wide:gap-x-cluster-xl wide:px-5 ${navMotionClassName}`.trim()}
+        className={`relative mx-mobile-gutter hidden min-h-[60px] grid-cols-[90px_minmax(0,1fr)_90px] items-center rounded-nav border border-[rgba(224,222,227,0.86)] bg-page px-cluster py-cluster nav:mx-page-gutter-lg nav:grid nav:min-h-[68px] nav:gap-x-cluster-xl nav:px-5 ${navMotionClassName}`.trim()}
         onBlur={(event) => {
           if (!event.currentTarget.contains(event.relatedTarget as Node | null))
             setOpenMenu(null);
@@ -409,10 +409,10 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
       >
         <LogoLockup
           href={homeHref}
-          className="w-[68px] min-w-[68px] xl:w-[80px] xl:min-w-[80px] wide:w-[90px] wide:min-w-[90px]"
+          className="w-[68px] min-w-[68px] xl:w-[80px] xl:min-w-[80px] nav:w-[90px] nav:min-w-[90px]"
         />
         <nav
-          className="min-w-0 flex items-center justify-center gap-0.5 xl:gap-1 wide:gap-3.5"
+          className="min-w-0 flex items-center justify-center gap-0.5 xl:gap-1 nav:gap-3.5"
           aria-label="Primary navigation"
         >
           {menuNavigation.map((item) =>
@@ -434,7 +434,7 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
                 const isInternal =
                   href.startsWith("/") && !href.startsWith("//");
                 const linkClasses =
-                  `group relative inline-flex h-control items-center rounded-control px-2 py-1 text-nav-compact whitespace-nowrap transition-colors duration-200 ease-out hover:text-pink xl:text-nav-medium wide:text-nav ${item.label === activeNavLabel ? "bg-pink/10 font-bold text-[#0055ff]" : "text-ink"}`.trim();
+                  `group relative inline-flex h-control items-center rounded-control px-2 py-1 text-nav-compact whitespace-nowrap transition-colors duration-200 ease-out hover:text-pink xl:text-nav-medium nav:text-nav ${item.label === activeNavLabel ? "bg-pink/10 font-bold text-[#0055ff]" : "text-ink"}`.trim();
                 const linkContent = (
                   <>
                     <span>{item.label}</span>
@@ -495,7 +495,7 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
       </div>
 
       <div
-        className={`relative mx-mobile-gutter flex min-h-[60px] items-center justify-between rounded-nav border border-[rgba(224,222,227,0.86)] bg-page px-4 py-cluster wide:hidden ${navMotionClassName}`.trim()}
+        className={`relative mx-mobile-gutter flex min-h-[60px] items-center justify-between rounded-nav border border-[rgba(224,222,227,0.86)] bg-page px-4 py-cluster nav:hidden ${navMotionClassName}`.trim()}
       >
         <LogoLockup
           href={homeHref}
@@ -524,7 +524,7 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
 
       {mobileOpen ? (
         <div
-          className="fixed inset-0 z-50 block wide:hidden"
+          className="fixed inset-0 z-50 block nav:hidden"
           id="mobile-navigation"
         >
           <button

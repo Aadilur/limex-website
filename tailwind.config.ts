@@ -17,6 +17,10 @@ const config: Config = {
       md: "768px",
       lg: "901px",
       xl: "1241px",
+      // The primary navigation can fit comfortably below the site's wider
+      // content breakpoint. Keep this breakpoint scoped to the header and
+      // mega menu so other wide layouts retain their existing behavior.
+      nav: "1181px",
       wide: "1321px",
       "2xl": "1441px",
     },
