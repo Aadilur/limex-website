@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title>Limex</title>
+  <defs>
+    <linearGradient id="limex-blue" x1="10" y1="8" x2="52" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#14dcff" />
+      <stop offset="0.52" stop-color="#008cff" />
+      <stop offset="1" stop-color="#0055ff" />
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="#071b3d" />
+  <path d="M17 10h20.5a4 4 0 0 1 3.43 6.06l-8.25 13.5A4 4 0 0 1 29.26 31H8.75a4 4 0 0 1-3.43-6.06l8.25-13.5A4 4 0 0 1 17 10Z" fill="#14dcff" />
+  <path d="M17 27h27.5a4 4 0 0 1 3.43 6.06l-8.25 13.5A4 4 0 0 1 36.26 49H8.75a4 4 0 0 1-3.43-6.06l8.25-13.5A4 4 0 0 1 17 27Z" fill="#008cff" />
+  <path d="M17 44h20.5a4 4 0 0 1 3.43 6.06l-2.9 4.74A4 4 0 0 1 34.6 57H8.75a4 4 0 0 1-3.43-6.06l3.02-4.94A4 4 0 0 1 11.77 44H17Z" fill="#0055ff" />
+</svg>

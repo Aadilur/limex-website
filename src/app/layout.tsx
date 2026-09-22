@@ -16,6 +16,12 @@ export const metadata: Metadata = {
   title: "Limex | Business, made clearer",
   description:
     "Company registration, tax, trademark and compliance support for ambitious businesses.",
+  applicationName: "Limex Consultancy Firm",
+  generator: "Next.js",
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    shortcut: ["/icon.svg"],
+  },
 };
 
 async function getServerBranding(): Promise<SiteBranding> {
