@@ -2,10 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
+import Color from "@tiptap/extension-color";
+import Highlight from "@tiptap/extension-highlight";
 import ImageExtension from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import StarterKit from "@tiptap/starter-kit";
+import TextAlign from "@tiptap/extension-text-align";
+import TextStyle from "@tiptap/extension-text-style";
 import Underline from "@tiptap/extension-underline";
 import { sanitizeBlogContent } from "@/lib/blog-content";
 import { blogRichTextClass } from "@/components/limex/blog-rich-text";
@@ -17,9 +21,16 @@ type EditorIconName =
   | "italic"
   | "underline"
   | "strike"
+  | "align-left"
+  | "align-center"
+  | "align-right"
+  | "align-justify"
   | "bullet-list"
   | "ordered-list"
   | "quote"
+  | "palette"
+  | "highlight"
+  | "clear"
   | "link"
   | "image"
   | "divider"
@@ -28,6 +39,7 @@ type EditorIconName =
   | "external";
 
 type BlockStyle = "paragraph" | "heading-2" | "heading-3" | "heading-4";
+type TextAlignment = "left" | "center" | "right" | "justify";
 type EditorMode = "visual" | "html" | "css" | "preview";
 
 type RichTextEditorProps = {
@@ -42,6 +54,28 @@ type RichTextEditorProps = {
 const inputClass =
   "min-h-10 w-full rounded-[10px] border border-[#ddd7ce] bg-[#fffdfa] px-3 text-[12px] text-[#071b3d] outline-none transition-colors placeholder:text-[#aaa49b] focus:border-[#0055ff] focus:ring-4 focus:ring-[#008cff]/10";
 
+const textColorPalette = [
+  { label: "Ink", value: "#071b3d" },
+  { label: "Brand blue", value: "#0055ff" },
+  { label: "Sky", value: "#008cff" },
+  { label: "Cyan", value: "#008a9a" },
+  { label: "Rose", value: "#d64769" },
+  { label: "Green", value: "#287a58" },
+  { label: "Warm grey", value: "#625a58" },
+  { label: "Muted", value: "#77736e" },
+];
+
+const highlightPalette = [
+  { label: "Soft blue", value: "#e8f0fe" },
+  { label: "Soft cyan", value: "#e8f8fb" },
+  { label: "Soft green", value: "#e8f4ec" },
+  { label: "Soft yellow", value: "#fff3c4" },
+  { label: "Soft rose", value: "#ffe8ee" },
+  { label: "Soft violet", value: "#f0eafe" },
+];
+
+type ColorPanelMode = "text" | "highlight";
+
 function editorSurfaceClass(compact: boolean) {
   return [
     compact ? "min-h-[220px]" : "min-h-[320px]",
@@ -52,6 +86,7 @@ function editorSurfaceClass(compact: boolean) {
     "[&_h4]:mb-2 [&_h4]:mt-5 [&_h4]:font-bold [&_h4]:text-[16px] [&_h4]:leading-[1.3] [&_h4]:text-[#071b3d]",
     "[&_ul]:my-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:my-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:my-1 [&_.list-none]:list-none",
     "[&_blockquote]:my-5 [&_blockquote]:border-l-4 [&_blockquote]:border-[#0055ff] [&_blockquote]:bg-[#eaf3ff] [&_blockquote]:px-4 [&_blockquote]:py-2 [&_blockquote]:italic [&_blockquote]:text-[#625a58]",
+    "[&_mark]:rounded-[3px] [&_mark]:px-0.5",
     "[&_a]:font-semibold [&_a]:text-[#0055ff] [&_a]:underline [&_a]:decoration-[#14dcff] [&_a]:underline-offset-2",
     "[&_hr]:my-7 [&_hr]:border-0 [&_hr]:border-t [&_hr]:border-[#e8e2da]",
     "[&_img]:my-5 [&_img]:max-h-[460px] [&_img]:max-w-full [&_img]:rounded-[12px] [&_img]:object-contain",
@@ -121,10 +156,48 @@ function countWords(value: string) {
  * source-first, with a faithful preview, so an admin never loses a design by
  * simply opening the editor.
  */
+function stripStandardEditorFormatting(html: string) {
+  let normalized = html.replace(
+    /<((?:p|h[1-6]|blockquote)\b)([^>]*)>/gi,
+    (_match, tagName: string, attributes: string) => {
+      const cleanedAttributes = attributes.replace(
+        /\sstyle=(['"])\s*text-align:\s*(?:left|center|right|justify)\s*;?\s*\1/i,
+        "",
+      );
+      return `<${tagName}${cleanedAttributes}>`;
+    },
+  );
+
+  normalized = normalized.replace(
+    /<span\b([^>]*)>/gi,
+    (_match, attributes: string) => {
+      const cleanedAttributes = attributes.replace(
+        /\sstyle=(['"])\s*color:\s*[^"']*;?\s*\1/i,
+        "",
+      );
+      return `<span${cleanedAttributes}>`;
+    },
+  );
+
+  return normalized.replace(
+    /<mark\b([^>]*)>/gi,
+    (_match, attributes: string) => {
+      const cleanedAttributes = attributes
+        .replace(/\sdata-color=(['"])[^"']*\1/i, "")
+        .replace(
+          /\sstyle=(['"])\s*background-color:\s*[^"']*;\s*color:\s*inherit\s*\1/i,
+          "",
+        );
+      return `<mark${cleanedAttributes}>`;
+    },
+  );
+}
+
 function hasCustomRichTextStructure(html: string, css = "") {
   if (css.trim().length > 0) return true;
-  return /<(?:style|article|header|footer|main|nav|aside|section|div|table|thead|tbody|tfoot|tr|th|td|colgroup|col|figure|figcaption|pre|code|kbd|samp|var|details|summary|picture|source|span)\b|\s(?:class|id|style|data-[\w-]+)\s*=/i.test(
-    html,
+  const normalizedHtml = stripStandardEditorFormatting(html);
+  return /<(?:style|article|header|footer|main|nav|aside|section|div|table|thead|tbody|tfoot|tr|th|td|colgroup|col|figure|figcaption|pre|code|kbd|samp|var|details|summary|picture|source)\b|\s(?:class|id|style|data-[\w-]+)\s*=/i.test(
+    normalizedHtml,
   );
 }
 
@@ -193,6 +266,10 @@ function EditorIcon({ name }: { name: EditorIconName }) {
     Exclude<EditorIconName, "bold" | "italic" | "underline" | "strike">,
     string[]
   > = {
+    "align-left": ["M4 6h11", "M4 12h16", "M4 18h13"],
+    "align-center": ["M4 6h16", "M7 12h10", "M5 18h14"],
+    "align-right": ["M9 6h11", "M4 12h16", "M7 18h13"],
+    "align-justify": ["M4 6h16", "M4 12h16", "M4 18h16"],
     "bullet-list": [
       "M6 7h.01",
       "M10 7h8",
@@ -210,6 +287,15 @@ function EditorIcon({ name }: { name: EditorIconName }) {
       "M9 17h9",
     ],
     quote: ["M7 8h4v4H8v4", "M15 8h4v4h-3v4"],
+    palette: [
+      "M12 4a8 8 0 1 0 0 16h1.5a2 2 0 0 0 0-4H12a2 2 0 0 1 0-4h4a4 4 0 0 0 4-4A8 8 0 0 0 12 4Z",
+      "M7.5 10h.01",
+      "M10 7.5h.01",
+      "M14 7.5h.01",
+      "M16.5 10h.01",
+    ],
+    highlight: ["m4 16 4 4L20 8l-4-4L4 16Z", "M3 21h18"],
+    clear: ["M5 5h14", "m7 5 1 15h8l1-15", "M10 9v7", "M14 9v7"],
     link: [
       "M10 13a5 5 0 0 0 7.07.07l1.41-1.41a5 5 0 0 0-7.07-7.07L10.6 5.4",
       "M14 11a5 5 0 0 0-7.07-.07l-1.41 1.41a5 5 0 0 0 7.07 7.07l.81-.81",
@@ -284,6 +370,92 @@ function ToolbarButton({
 
 function ToolbarDivider() {
   return <span className="mx-1 h-5 w-px bg-[#ded8cf]" aria-hidden="true" />;
+}
+
+function FormattingColorPanel({
+  editor,
+  mode,
+  activeColor,
+  onClose,
+}: {
+  editor: Editor;
+  mode: ColorPanelMode;
+  activeColor: string;
+  onClose: () => void;
+}) {
+  const isTextColor = mode === "text";
+  const palette = isTextColor ? textColorPalette : highlightPalette;
+  const customColor =
+    /^#[0-9a-f]{6}$/i.test(activeColor.trim())
+      ? activeColor.trim()
+      : isTextColor
+        ? "#0055ff"
+        : "#fff3c4";
+
+  function applyColor(color: string | null) {
+    if (isTextColor) {
+      if (color) editor.chain().focus().setColor(color).run();
+      else editor.chain().focus().unsetColor().run();
+    } else if (color) {
+      editor.chain().focus().setHighlight({ color }).run();
+    } else {
+      editor.chain().focus().unsetHighlight().run();
+    }
+    onClose();
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-3 border-b border-[#eee9e2] bg-[#fffdfa] px-3 py-2.5">
+      <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#77736e]">
+        {isTextColor ? "Text color" : "Highlight"}
+      </span>
+      <div className="flex flex-wrap items-center gap-1.5">
+        {palette.map((item) => (
+          <button
+            key={item.value}
+            type="button"
+            className={cn(
+              "size-6 rounded-full border-2 border-white shadow-[0_0_0_1px_rgba(50,45,40,0.16)] transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0055ff]",
+              activeColor === item.value &&
+                "scale-110 shadow-[0_0_0_2px_#0055ff]",
+            )}
+            style={{ backgroundColor: item.value }}
+            title={item.label}
+            aria-label={`${item.label} ${isTextColor ? "text color" : "highlight"}`}
+            aria-pressed={activeColor === item.value}
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => applyColor(item.value)}
+          />
+        ))}
+      </div>
+      <label className="flex items-center gap-2 text-[10px] font-semibold text-[#77736e]">
+        Custom
+        <input
+          className="size-7 cursor-pointer rounded-[6px] border-0 bg-transparent p-0"
+          type="color"
+          value={customColor}
+          aria-label={`Custom ${isTextColor ? "text color" : "highlight color"}`}
+          onChange={(event) => applyColor(event.target.value)}
+        />
+      </label>
+      <button
+        type="button"
+        className="rounded-[7px] px-2 py-1 text-[10px] font-bold text-[#77736e] transition-colors hover:bg-[#f3eee7] hover:text-[#071b3d]"
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={() => applyColor(null)}
+      >
+        Remove
+      </button>
+      <button
+        type="button"
+        className="ml-auto rounded-[7px] px-2 py-1 text-[10px] font-bold text-[#77736e] transition-colors hover:bg-[#f3eee7] hover:text-[#071b3d]"
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={onClose}
+      >
+        Close
+      </button>
+    </div>
+  );
 }
 
 function LinkPanel({
@@ -483,6 +655,8 @@ export function RichTextEditor({
     () => sanitizeBlogContent(value).html,
   );
   const [selectionVersion, setSelectionVersion] = useState(0);
+  const [colorPanelMode, setColorPanelMode] =
+    useState<ColorPanelMode | null>(null);
   const [linkPanelOpen, setLinkPanelOpen] = useState(false);
   const [imagePanelOpen, setImagePanelOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
@@ -517,6 +691,13 @@ export function RichTextEditor({
         code: false,
         codeBlock: false,
         heading: { levels: [2, 3, 4] },
+      }),
+      TextStyle,
+      Color,
+      Highlight.configure({ multicolor: true }),
+      TextAlign.configure({
+        types: ["heading", "paragraph", "blockquote"],
+        alignments: ["left", "center", "right", "justify"],
       }),
       Underline,
       Link.configure({
@@ -680,6 +861,17 @@ export function RichTextEditor({
     if (editor.isActive("heading", { level: 4 })) return "heading-4";
     return "paragraph";
   }, [editor, selectionVersion, value]);
+  const activeAlignment =
+    editor?.getAttributes("heading").textAlign ??
+    editor?.getAttributes("paragraph").textAlign ??
+    editor?.getAttributes("blockquote").textAlign ??
+    "left";
+  const activeTextColor = String(
+    editor?.getAttributes("textStyle").color ?? "",
+  );
+  const activeHighlightColor = String(
+    editor?.getAttributes("highlight").color ?? "",
+  );
 
   const bodyText =
     editorMode === "visual"
@@ -739,6 +931,7 @@ export function RichTextEditor({
     setPanelError("");
     setLinkPanelOpen(true);
     setImagePanelOpen(false);
+    setColorPanelMode(null);
   }
 
   function openImagePanel() {
@@ -747,6 +940,7 @@ export function RichTextEditor({
     setImageAlt("");
     setImagePanelOpen(true);
     setLinkPanelOpen(false);
+    setColorPanelMode(null);
   }
 
   function changeEditorMode(nextMode: EditorMode) {
@@ -770,6 +964,7 @@ export function RichTextEditor({
     setPanelError("");
     setLinkPanelOpen(false);
     setImagePanelOpen(false);
+    setColorPanelMode(null);
     setEditorMode(nextMode);
   }
 
@@ -781,6 +976,19 @@ export function RichTextEditor({
     }
     const level = Number(nextStyle.replace("heading-", "")) as 2 | 3 | 4;
     editor.chain().focus().toggleHeading({ level }).run();
+  }
+
+  function updateTextAlignment(alignment: TextAlignment) {
+    if (!editor) return;
+    if (alignment === "left") {
+      editor.chain().focus().unsetTextAlign().run();
+      return;
+    }
+    editor.chain().focus().setTextAlign(alignment).run();
+  }
+
+  function clearFormatting() {
+    editor?.chain().focus().unsetAllMarks().clearNodes().run();
   }
 
   return (
@@ -838,6 +1046,33 @@ export function RichTextEditor({
               active={editor?.isActive("strike") ?? false}
               onClick={() => editor?.chain().focus().toggleStrike().run()}
             />
+            <ToolbarButton
+              label="Text color"
+              icon="palette"
+              active={colorPanelMode === "text" || Boolean(activeTextColor)}
+              onClick={() => {
+                setColorPanelMode((current) =>
+                  current === "text" ? null : "text",
+                );
+                setLinkPanelOpen(false);
+                setImagePanelOpen(false);
+              }}
+            />
+            <ToolbarButton
+              label="Highlight color"
+              icon="highlight"
+              active={
+                colorPanelMode === "highlight" ||
+                (editor?.isActive("highlight") ?? false)
+              }
+              onClick={() => {
+                setColorPanelMode((current) =>
+                  current === "highlight" ? null : "highlight",
+                );
+                setLinkPanelOpen(false);
+                setImagePanelOpen(false);
+              }}
+            />
             <ToolbarDivider />
             <ToolbarButton
               label="Bulleted list"
@@ -864,6 +1099,31 @@ export function RichTextEditor({
             />
             <ToolbarDivider />
             <ToolbarButton
+              label="Align left"
+              icon="align-left"
+              active={activeAlignment === "left"}
+              onClick={() => updateTextAlignment("left")}
+            />
+            <ToolbarButton
+              label="Align center"
+              icon="align-center"
+              active={activeAlignment === "center"}
+              onClick={() => updateTextAlignment("center")}
+            />
+            <ToolbarButton
+              label="Align right"
+              icon="align-right"
+              active={activeAlignment === "right"}
+              onClick={() => updateTextAlignment("right")}
+            />
+            <ToolbarButton
+              label="Justify text"
+              icon="align-justify"
+              active={activeAlignment === "justify"}
+              onClick={() => updateTextAlignment("justify")}
+            />
+            <ToolbarDivider />
+            <ToolbarButton
               label="Add or edit link"
               icon="link"
               active={linkPanelOpen || (editor?.isActive("link") ?? false)}
@@ -874,6 +1134,11 @@ export function RichTextEditor({
               icon="image"
               active={imagePanelOpen}
               onClick={openImagePanel}
+            />
+            <ToolbarButton
+              label="Clear formatting"
+              icon="clear"
+              onClick={clearFormatting}
             />
             <ToolbarDivider />
             <ToolbarButton
@@ -1009,6 +1274,18 @@ export function RichTextEditor({
             that the public page receives.
           </span>
         </div>
+      ) : null}
+      {colorPanelMode && editor ? (
+        <FormattingColorPanel
+          editor={editor}
+          mode={colorPanelMode}
+          activeColor={
+            colorPanelMode === "text"
+              ? activeTextColor
+              : activeHighlightColor
+          }
+          onClose={() => setColorPanelMode(null)}
+        />
       ) : null}
       {linkPanelOpen && editor ? (
         <LinkPanel

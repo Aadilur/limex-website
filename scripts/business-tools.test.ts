@@ -1872,6 +1872,24 @@ test("rich text editor permanently preserves cursor focus and legal pages have f
   assert.match(richTextEditorTsx, /const cssSourceInputRef = useRef/);
   assert.match(richTextEditorTsx, /defaultValue=\{htmlSource\}/);
   assert.match(richTextEditorTsx, /defaultValue=\{customCss\}/);
+  assert.match(richTextEditorTsx, /import Color from "@tiptap\/extension-color"/);
+  assert.match(
+    richTextEditorTsx,
+    /import Highlight from "@tiptap\/extension-highlight"/,
+  );
+  assert.match(
+    richTextEditorTsx,
+    /import TextAlign from "@tiptap\/extension-text-align"/,
+  );
+  assert.match(richTextEditorTsx, /TextStyle,\s*Color,/);
+  assert.match(
+    richTextEditorTsx,
+    /Highlight\.configure\(\{ multicolor: true \}\)/,
+  );
+  assert.match(richTextEditorTsx, /TextAlign\.configure\(/);
+  assert.match(richTextEditorTsx, /setColor\(color\)/);
+  assert.match(richTextEditorTsx, /setTextAlign\(alignment\)/);
+  assert.match(richTextEditorTsx, /function clearFormatting/);
   assert.match(
     richTextEditorTsx,
     /if \(wasInternalUpdate \|\| nextHtml === lastEmittedHtml\.current\) \{\s*return;\s*\}/,
