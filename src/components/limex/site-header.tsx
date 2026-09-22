@@ -136,7 +136,7 @@ function DesktopNavTrigger({
   return (
     <div className="relative">
       <button
-        className={`group relative inline-flex h-control items-center gap-cluster-xs rounded-control border-0 bg-transparent px-2 py-1 text-nav-compact whitespace-nowrap transition-colors duration-200 ease-out hover:text-pink xl:text-nav-medium nav:text-nav ${
+        className={`group relative inline-flex h-control items-center gap-cluster-xs rounded-control border-0 bg-transparent px-1.5 py-1 text-nav-compact whitespace-nowrap transition-colors duration-200 ease-out hover:text-pink xl:px-2 xl:text-nav-medium ${
           isActive ? "bg-pink/10 font-bold text-[#0055ff]" : "text-ink"
         }`.trim()}
         type="button"
@@ -401,7 +401,7 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
       ref={headerRef}
     >
       <div
-        className={`relative mx-mobile-gutter hidden min-h-[60px] grid-cols-[90px_minmax(0,1fr)_90px] items-center rounded-nav border border-[rgba(224,222,227,0.86)] bg-page px-cluster py-cluster nav:mx-page-gutter-lg nav:grid nav:min-h-[68px] nav:gap-x-cluster-xl nav:px-5 ${navMotionClassName}`.trim()}
+        className={`relative mx-mobile-gutter hidden min-h-[60px] grid-cols-[90px_minmax(0,1fr)_90px] items-center rounded-nav border border-[rgba(224,222,227,0.86)] bg-page px-cluster py-cluster nav:mx-mobile-gutter nav:grid nav:min-h-[68px] nav:grid-cols-[76px_minmax(0,1fr)_76px] nav:gap-x-cluster nav:px-3 xl:grid-cols-[90px_minmax(0,1fr)_90px] xl:gap-x-cluster-xl xl:px-5 ${navMotionClassName}`.trim()}
         onBlur={(event) => {
           if (!event.currentTarget.contains(event.relatedTarget as Node | null))
             setOpenMenu(null);
@@ -409,10 +409,10 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
       >
         <LogoLockup
           href={homeHref}
-          className="w-[68px] min-w-[68px] xl:w-[80px] xl:min-w-[80px] nav:w-[90px] nav:min-w-[90px]"
+          className="w-[68px] min-w-[68px] nav:w-[76px] nav:min-w-[76px] xl:w-[80px] xl:min-w-[80px]"
         />
         <nav
-          className="min-w-0 flex items-center justify-center gap-0.5 xl:gap-1 nav:gap-3.5"
+          className="min-w-0 flex items-center justify-center gap-0.5 nav:gap-1 xl:gap-1"
           aria-label="Primary navigation"
         >
           {menuNavigation.map((item) =>
@@ -434,7 +434,7 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
                 const isInternal =
                   href.startsWith("/") && !href.startsWith("//");
                 const linkClasses =
-                  `group relative inline-flex h-control items-center rounded-control px-2 py-1 text-nav-compact whitespace-nowrap transition-colors duration-200 ease-out hover:text-pink xl:text-nav-medium nav:text-nav ${item.label === activeNavLabel ? "bg-pink/10 font-bold text-[#0055ff]" : "text-ink"}`.trim();
+                  `group relative inline-flex h-control items-center rounded-control px-1.5 py-1 text-nav-compact whitespace-nowrap transition-colors duration-200 ease-out hover:text-pink xl:px-2 xl:text-nav-medium ${item.label === activeNavLabel ? "bg-pink/10 font-bold text-[#0055ff]" : "text-ink"}`.trim();
                 const linkContent = (
                   <>
                     <span>{item.label}</span>
@@ -487,7 +487,7 @@ export function SiteHeader({ fullBleed = false }: { fullBleed?: boolean }) {
           </>
         ) : null}
         <a
-          className="group inline-flex h-10 w-[90px] items-center justify-center rounded-pill border border-brand-blue bg-brand-blue px-4 text-button font-bold text-white transition-all duration-200 hover:-translate-y-px hover:border-brand-deep hover:bg-brand-deep hover:shadow-[0_8px_18px_rgba(0,85,255,0.2)]"
+          className="group inline-flex h-10 w-[76px] items-center justify-center rounded-pill border border-brand-blue bg-brand-blue px-2 text-button font-bold text-white transition-all duration-200 hover:-translate-y-px hover:border-brand-deep hover:bg-brand-deep hover:shadow-[0_8px_18px_rgba(0,85,255,0.2)] xl:w-[90px] xl:px-4"
           href={contactHref}
         >
           <span>Contact</span>
