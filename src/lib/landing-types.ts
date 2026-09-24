@@ -108,6 +108,7 @@ export type TestimonialItem = {
 export type TestimonialsContent = {
   title: string;
   description: string;
+  showAboutReels: boolean;
   items: TestimonialItem[];
 };
 

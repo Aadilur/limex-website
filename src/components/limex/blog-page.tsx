@@ -24,9 +24,20 @@ export async function BlogIndexPage({ locale = "en" }: { locale?: BlogLocale } =
 
 export async function BlogDetailPage({ article, locale = "en" }: { article: BlogArticle; locale?: BlogLocale }) {
   const relatedIndex = await getPublicBlogIndexServer(locale);
+  const currentTags = new Set(
+    article.tags.map((tag) => tag.trim().toLocaleLowerCase()).filter(Boolean),
+  );
   const relatedArticles = [relatedIndex.featured, ...relatedIndex.items]
     .filter((item): item is BlogArticle => Boolean(item && item.slug !== article.slug))
-    .slice(0, 3);
+    .filter((item, index, articles) => articles.findIndex((candidate) => candidate.slug === item.slug) === index)
+    .map((item, index) => {
+      const sharedTags = item.tags.reduce((count, tag) => count + Number(currentTags.has(tag.trim().toLocaleLowerCase())), 0);
+      const sameCategory = item.category.trim().toLocaleLowerCase() === article.category.trim().toLocaleLowerCase();
+      return { item, index, relevance: sharedTags * 3 + Number(sameCategory) * 2 };
+    })
+    .sort((a, b) => b.relevance - a.relevance || a.index - b.index)
+    .slice(0, 3)
+    .map(({ item }) => item);
   const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? process.env.PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
   const localizedPath = locale === "bn" && article.contentLocale === "bn" ? "bn/blog" : "blog";
   const canonical = article.canonicalUrl || `${baseUrl}/${localizedPath}/${article.slug}`;

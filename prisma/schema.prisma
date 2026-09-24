@@ -45,6 +45,7 @@ model BlogPost {
   sidebarVideoUrl   String?                 @db.VarChar(500)
   sidebarVideoId    String?                 @db.VarChar(64)
   sidebarVideoTitle String?                 @db.VarChar(240)
+  reels             Json?
   status            String                  @default("DRAFT") @db.VarChar(16)
   isFeatured        Boolean                 @default(false)
   noIndex           Boolean                 @default(false)

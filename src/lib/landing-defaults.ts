@@ -219,6 +219,7 @@ export const defaultLandingContent: LandingContent = {
   testimonials: {
     title: "Stories from the businesses we support.",
     description: "Video stories that make the work feel human.",
+    showAboutReels: true,
     items: reels.map((reel, index) => ({
       id: `reel-${index + 1}`,
       isVisible: true,

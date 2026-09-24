@@ -1901,6 +1901,17 @@ function TestimonialsEditor({
       </FormGroupCard>
 
       <FormGroupCard
+        title="About page reels"
+        description="Reuse the reels managed in About → Video reels. Only reels marked visible there will appear."
+      >
+        <Toggle
+          label="Show About reels below homepage testimonials"
+          checked={content.showAboutReels}
+          onChange={(showAboutReels) => onChange({ showAboutReels })}
+        />
+      </FormGroupCard>
+
+      <FormGroupCard
         title="Customer Video Story Cards"
         description="Drag to reorder. When a YouTube URL is provided, customers can watch inline."
         badge={

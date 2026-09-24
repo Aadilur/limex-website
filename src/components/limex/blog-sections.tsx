@@ -10,6 +10,7 @@ import {
   getBlogCoverFallbackUrl,
   type BlogArticle,
   type BlogContentBlock,
+  type BlogVideoReel,
 } from "./blog-data";
 import { getBlogToneClasses } from "./styles";
 import { ContactModal } from "./contact-section";
@@ -282,32 +283,6 @@ export function BlogRelatedArticleCard({
           Read more <span aria-hidden="true">↗</span>
         </span>
       </div>
-    </a>
-  );
-}
-
-function BlogSidebarArticleItem({
-  article,
-  locale = "en",
-}: {
-  article: BlogArticle;
-  locale?: BlogLocale;
-}) {
-  return (
-    <a
-      className="group flex items-start gap-3.5 rounded-[14px] p-2 -mx-2 transition-colors duration-150 hover:bg-[#f7f5f0] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/35 focus-visible:outline-offset-3"
-      href={blogHref(article.slug, locale)}
-    >
-      <BlogCover article={article} variant="thumb" />
-      <span className="flex min-w-0 flex-col gap-1 overflow-hidden">
-        <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-pink">
-          {categoryLabel(article.category)} <span className="px-0.5">·</span>{" "}
-          {article.date}
-        </span>
-        <span className="text-[14px] font-semibold leading-[1.3] text-ink transition-colors group-hover:text-pink line-clamp-2">
-          {article.title}
-        </span>
-      </span>
     </a>
   );
 }
@@ -696,6 +671,95 @@ function BlogBody({ article }: { article: BlogArticle }) {
         />
       ))}
     </div>
+  );
+}
+
+function blogReelTitle(reel: BlogVideoReel) {
+  return reel.title.trim() || "Watch this video";
+}
+
+function BlogReelsSection({ reels }: { reels?: BlogVideoReel[] }) {
+  const [activeReelId, setActiveReelId] = useState<string | null>(null);
+
+  if (!reels?.length) return null;
+
+  return (
+    <section aria-labelledby="blog-reels-title" className="min-w-0">
+      <h3
+        className="mb-3 text-[11px] font-bold uppercase tracking-[0.1em] text-muted"
+        id="blog-reels-title"
+      >
+        From our reels
+      </h3>
+      <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {reels.map((reel) => {
+          const title = blogReelTitle(reel);
+          const reelKey = `${reel.videoId}-${reel.sortOrder}`;
+          const playing = activeReelId === reelKey;
+
+          return (
+            <article
+              className="relative aspect-[9/16] w-[min(146px,42vw)] shrink-0 snap-start overflow-hidden rounded-[16px] bg-[#14202b]"
+              key={reelKey}
+            >
+              {playing ? (
+                <>
+                  <iframe
+                    className="absolute inset-0 size-full"
+                    src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(reel.videoId)}?rel=0&playsinline=1&autoplay=1`}
+                    title={title}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    allowFullScreen
+                  />
+                  <button
+                    className="absolute right-2 top-2 grid size-8 place-items-center rounded-full bg-[#071b3d]/85 text-sm font-semibold text-white backdrop-blur transition-colors hover:bg-[#071b3d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+                    type="button"
+                    aria-label={`Close ${title}`}
+                    onClick={() => setActiveReelId(null)}
+                  >
+                    ×
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="absolute inset-0 grid place-items-center bg-gradient-to-br from-[#dce8ec] via-[#617883] to-[#102538]">
+                    <span className="font-brand text-[22px] font-bold tracking-[-0.08em] text-white/80">
+                      LIMEX
+                    </span>
+                  </div>
+                  <img
+                    className="absolute inset-0 size-full object-cover"
+                    src={`https://i.ytimg.com/vi/${encodeURIComponent(reel.videoId)}/hqdefault.jpg`}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    onError={(event) => {
+                      event.currentTarget.hidden = true;
+                    }}
+                  />
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent px-3 pb-3 pt-12">
+                    <p className="line-clamp-2 text-[12px] font-semibold leading-snug text-white">
+                      {title}
+                    </p>
+                  </div>
+                  <button
+                    className="absolute left-1/2 top-1/2 grid size-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white/95 text-[#071b3d] shadow-play transition-transform duration-200 hover:scale-105 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/60 focus-visible:outline-offset-2"
+                    type="button"
+                    aria-label={`Play ${title}`}
+                    onClick={() => setActiveReelId(reelKey)}
+                  >
+                    <svg className="ml-0.5 size-4 fill-current" viewBox="0 0 20 20" aria-hidden="true">
+                      <path d="M6.6 4.3a1 1 0 0 1 1.5-.86l6.5 4.7a1 1 0 0 1 0 1.62l-6.5 4.7a1 1 0 0 1-1.5-.86V4.3Z" />
+                    </svg>
+                  </button>
+                </>
+              )}
+            </article>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 
@@ -1097,7 +1161,7 @@ export function BlogDetailContent({
 
           <aside
             className="flex min-w-0 flex-col gap-6 lg:sticky lg:top-24 lg:h-fit"
-            aria-label="More from the journal"
+            aria-label="Article video and support"
           >
             {article.sidebarVideo?.videoId ? (
               <div className="rounded-[22px] border border-[#e5e0d6] bg-white p-5 shadow-[0_2px_12px_rgba(7,20,46,0.03)] lg:p-6">
@@ -1120,37 +1184,24 @@ export function BlogDetailContent({
                 </p>
               </div>
             ) : null}
-            {visibleRelatedArticles.length ? (
-              <div className="rounded-[22px] border border-[#e5e0d6] bg-white p-5 shadow-[0_2px_12px_rgba(7,20,46,0.03)] lg:p-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-[11px] font-bold uppercase tracking-[0.08em] text-pink">
-                    MORE FROM THE JOURNAL
-                  </h2>
-                  <span className="text-[11px] font-medium text-muted">
-                    {visibleRelatedArticles.length} guides
-                  </span>
-                </div>
-                <div className="mt-4 flex flex-col divide-y divide-[#eee9e0]">
-                  {visibleRelatedArticles.map((relatedArticle) => (
-                    <div
-                      key={relatedArticle.slug}
-                      className="py-3 first:pt-0 last:pb-0"
-                    >
-                      <BlogSidebarArticleItem
-                        article={relatedArticle}
-                        locale={locale}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
             <div className="relative overflow-hidden rounded-[22px] bg-gradient-to-br from-[#071b3d] via-[#09224d] to-[#041026] p-6 text-white shadow-[0_12px_36px_rgba(7,20,46,0.12)]">
               <div className="pointer-events-none absolute -right-8 -top-8 size-36 rounded-full bg-[#0055ff]/20 blur-2xl" />
               <div className="relative z-10">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-[#f5b8c7]/30 bg-[#f5b8c7]/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[#f5b8c7]">
-                  NEED A HAND?
-                </span>
+                <svg
+                  className="h-2 w-[76px] overflow-visible text-[#f5b8c7]"
+                  viewBox="0 0 76 10"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    className="motion-safe:animate-blog-wave"
+                    d="M1 5C6 1 11 1 16 5s10 4 15 0 10-4 15 0 10 4 15 0 10-4 14-1"
+                    stroke="currentColor"
+                    strokeDasharray="5 4"
+                    strokeLinecap="round"
+                    strokeWidth="2"
+                  />
+                </svg>
                 <h2 className="mt-3 font-brand text-[20px] font-bold leading-snug text-white">
                   Have a question about your next step?
                 </h2>
@@ -1160,7 +1211,7 @@ export function BlogDetailContent({
                 </p>
                 <ContactModal
                   articleSlug={article.slug}
-                  buttonClassName="mt-5 min-h-[46px] w-full justify-center !rounded-full shadow-md"
+                  buttonClassName="mt-5 min-h-[46px] w-full justify-center !rounded-full shadow-md motion-safe:animate-blog-cta motion-reduce:animate-none"
                   buttonLabel="Ask a question"
                   serviceKey={
                     primaryService?.label ?? primaryService?.serviceKey
@@ -1168,6 +1219,7 @@ export function BlogDetailContent({
                 />
               </div>
             </div>
+            <BlogReelsSection reels={article.reels} />
           </aside>
         </div>
       </section>

@@ -338,6 +338,13 @@ const config: Config = {
           "0%, 72%": { backgroundPosition: "0% 50%" },
           "100%": { backgroundPosition: "200% 50%" },
         },
+        "blog-wave": {
+          to: { "stroke-dashoffset": "-36" },
+        },
+        "blog-cta": {
+          "0%, 100%": { boxShadow: "0 8px 18px rgba(0, 85, 255, 0.16)" },
+          "50%": { boxShadow: "0 10px 25px rgba(0, 85, 255, 0.3)" },
+        },
       },
       animation: {
         "client-marquee": "client-marquee 24s linear infinite",
@@ -348,6 +355,8 @@ const config: Config = {
         "menu-in": "menu-in 220ms ease both",
         "menu-panel-in": "menu-panel-in 220ms ease both",
         "hero-sheen": "hero-sheen 7.5s ease-in-out infinite",
+        "blog-wave": "blog-wave 3s linear infinite",
+        "blog-cta": "blog-cta 2.6s ease-in-out infinite",
       },
     },
   },

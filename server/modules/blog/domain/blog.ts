@@ -26,6 +26,13 @@ export type BlogServiceLinkInput = {
   sortOrder?: number;
 };
 
+export type BlogPostReel = {
+  youtubeUrl: string;
+  videoId: string;
+  title: string;
+  sortOrder: number;
+};
+
 export type BlogPostInput = {
   slug: string;
   category: string;
@@ -38,6 +45,7 @@ export type BlogPostInput = {
   sidebarVideoUrl?: string | null;
   sidebarVideoId?: string | null;
   sidebarVideoTitle?: string | null;
+  reels: BlogPostReel[];
   isFeatured: boolean;
   noIndex: boolean;
   canonicalUrl?: string | null;

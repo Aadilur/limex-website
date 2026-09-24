@@ -155,6 +155,7 @@ const processSchema = z.object({
 const testimonialsSchema = z.object({
   title: nonEmptyText(160),
   description: nonEmptyText(500),
+  showAboutReels: z.boolean().optional(),
   items: z
     .array(
       z.object({
