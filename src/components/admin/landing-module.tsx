@@ -460,8 +460,11 @@ function SortableRows<T extends { id: string }>({
                 : "border-[#e5dfd5] hover:border-[#cfc7bc]"
             }`.trim()}
             key={item.id}
-            draggable
-            onDragStart={() => setDragId(item.id)}
+            onDragStart={(event) => {
+              event.dataTransfer.effectAllowed = "move";
+              event.dataTransfer.setData("text/plain", item.id);
+              setDragId(item.id);
+            }}
             onDragOver={(event) => event.preventDefault()}
             onDrop={() => drop(item.id)}
             onDragEnd={() => setDragId(null)}
@@ -471,6 +474,7 @@ function SortableRows<T extends { id: string }>({
                 <span
                   className="cursor-grab select-none text-[18px] leading-none text-[#b5ada2] hover:text-[#071b3d] transition-colors"
                   title="Drag to reorder"
+                  draggable
                   aria-hidden="true"
                 >
                   ⠿
@@ -1913,7 +1917,7 @@ function TestimonialsEditor({
 
       <FormGroupCard
         title="Customer Video Story Cards"
-        description="Drag to reorder. When a YouTube URL is provided, customers can watch inline."
+        description="Drag the grip to reorder, or use the arrows. Save this section to apply the new order."
         badge={
           <span className="text-[11px] font-semibold text-[#817a72]">
             {content.items.length} stories

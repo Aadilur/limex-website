@@ -70,6 +70,15 @@ export class InvalidYouTubeUrlError extends Error {
   }
 }
 
+export class InvalidAboutReelOrderError extends Error {
+  public readonly statusCode = 400;
+
+  public constructor() {
+    super("The reel order must include each existing reel exactly once.");
+    this.name = "InvalidAboutReelOrderError";
+  }
+}
+
 const youtubeTitleFallback = "Watch on YouTube";
 const youtubeTitleCache = new Map<string, { title: string; expiresAt: number }>();
 const youtubeTitleCacheTtl = 1000 * 60 * 60 * 24;
@@ -168,6 +177,23 @@ export class AboutService {
 
   public async getAdminReels(): Promise<AboutReelResponse[]> {
     return this.toReelResponses(await this.reels.findAllReels());
+  }
+
+  public async reorderReels(orderedIds: string[]): Promise<AboutReelResponse[]> {
+    const currentReels = await this.reels.findAllReels();
+    const requestedIds = new Set(orderedIds);
+    const existingIds = new Set(currentReels.map((reel) => reel.id));
+
+    if (
+      requestedIds.size !== orderedIds.length ||
+      requestedIds.size !== existingIds.size ||
+      orderedIds.some((id) => !existingIds.has(id))
+    ) {
+      throw new InvalidAboutReelOrderError();
+    }
+
+    await this.reels.reorderReels(orderedIds);
+    return this.getAdminReels();
   }
 
   public async createReel(input: Omit<CreateAboutReelRecordInput, "videoId" | "youtubeTitle">) {
