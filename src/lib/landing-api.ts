@@ -64,6 +64,11 @@ export function isLandingSafetyError(error: unknown) {
 export function withLandingFallback(
   content: Partial<LandingContent> | null | undefined,
 ): LandingContent {
+  const legacyAboutReelsVisibility = (
+    content?.testimonials as
+      | (LandingContent["testimonials"] & { showAboutReels?: boolean })
+      | undefined
+  )?.showAboutReels;
   const sourceArticles = content?.articles?.items ?? [];
   const savedArticles = sourceArticles.map((saved) => {
     const fallback = defaultLandingContent.articles.items.find(
@@ -126,6 +131,14 @@ export function withLandingFallback(
     testimonials: {
       ...defaultLandingContent.testimonials,
       ...(content?.testimonials ?? {}),
+    },
+    aboutReels: {
+      ...defaultLandingContent.aboutReels,
+      ...(content?.aboutReels ?? {}),
+      isVisible:
+        content?.aboutReels?.isVisible ??
+        legacyAboutReelsVisibility ??
+        defaultLandingContent.aboutReels.isVisible,
     },
     packages: {
       ...defaultLandingContent.packages,

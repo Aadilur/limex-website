@@ -5,6 +5,7 @@ export const landingSectionKeys = [
   "services",
   "process",
   "testimonials",
+  "aboutReels",
   "packages",
   "tools",
   "articles",

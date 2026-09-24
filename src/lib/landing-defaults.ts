@@ -219,7 +219,6 @@ export const defaultLandingContent: LandingContent = {
   testimonials: {
     title: "Stories from the businesses we support.",
     description: "Video stories that make the work feel human.",
-    showAboutReels: true,
     items: reels.map((reel, index) => ({
       id: `reel-${index + 1}`,
       isVisible: true,
@@ -228,6 +227,9 @@ export const defaultLandingContent: LandingContent = {
       subtitle: reel.meta,
       youtubeUrl: index === 0 ? landingTestVideoUrl : "",
     })),
+  },
+  aboutReels: {
+    isVisible: true,
   },
   packages: {
     title: "Choose a clear starting point.",

@@ -53,7 +53,7 @@ export function LandingPage() {
           <HowItWorksSection content={content.process} />
           <SectionSeparator label="VIDEO REELS" className={sectionSeparatorClass} />
           <VideoReelsSection content={content.testimonials} />
-          {content.testimonials.showAboutReels ? (
+          {content.aboutReels.isVisible ? (
             <AboutReelsSection hideWhenEmpty />
           ) : null}
           <SectionSeparator label="PACKAGES" className={sectionSeparatorClass} />

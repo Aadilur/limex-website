@@ -28,6 +28,7 @@ import { compressImageToWebp } from "@/lib/image-compression";
 import type {
   ArticleItem,
   ArticlesContent,
+  AboutReelsContent,
   ClientLogo,
   ContactContent,
   FaqContent,
@@ -85,6 +86,7 @@ export const sectionGroups: Array<{
     name: "Proof & Media",
     tabs: [
       { key: "testimonials", label: "Testimonials", hint: "Video stories" },
+      { key: "aboutReels", label: "About reels", hint: "About page videos" },
       { key: "articles", label: "Articles", hint: "Journal cards" },
       { key: "tools", label: "Tools", hint: "Business tools" },
     ],
@@ -912,6 +914,7 @@ export function LandingModule() {
   const services = content.services;
   const process = content.process;
   const testimonials = content.testimonials;
+  const aboutReels = content.aboutReels;
   const packages = content.packages;
   const tools = content.tools;
   const articles = content.articles;
@@ -963,6 +966,13 @@ export function LandingModule() {
           <TestimonialsEditor
             content={testimonials}
             onChange={(patch) => editSection("testimonials", patch)}
+          />
+        );
+      case "aboutReels":
+        return (
+          <AboutReelsLandingEditor
+            content={aboutReels}
+            onChange={(patch) => editSection("aboutReels", patch)}
           />
         );
       case "packages":
@@ -1905,17 +1915,6 @@ function TestimonialsEditor({
       </FormGroupCard>
 
       <FormGroupCard
-        title="About page reels"
-        description="Reuse the reels managed in About → Video reels. Only reels marked visible there will appear."
-      >
-        <Toggle
-          label="Show About reels below homepage testimonials"
-          checked={content.showAboutReels}
-          onChange={(showAboutReels) => onChange({ showAboutReels })}
-        />
-      </FormGroupCard>
-
-      <FormGroupCard
         title="Customer Video Story Cards"
         description="Drag the grip to reorder, or use the arrows. Save this section to apply the new order."
         badge={
@@ -2032,6 +2031,41 @@ function TestimonialsEditor({
               })
             }
           />
+        </div>
+      </FormGroupCard>
+    </div>
+  );
+}
+
+function AboutReelsLandingEditor({
+  content,
+  onChange,
+}: {
+  content: AboutReelsContent;
+  onChange: (patch: Partial<AboutReelsContent>) => void;
+}) {
+  return (
+    <div className="space-y-6">
+      <SectionHeader
+        title="About page video reels"
+        description="Show the same video reel section used on the About page, directly below homepage testimonials."
+      />
+      <FormGroupCard
+        title="Homepage placement"
+        description="The reel content and order are managed in About → Video reels. This setting only controls whether that section appears on the homepage."
+      >
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <Toggle
+            label="Show About reels on the homepage"
+            checked={content.isVisible}
+            onChange={(isVisible) => onChange({ isVisible })}
+          />
+          <a
+            className="inline-flex min-h-10 w-max items-center justify-center rounded-full border border-[#d8d2c8] bg-white px-4 text-[12px] font-bold text-[#071b3d] transition-colors hover:border-[#0055ff] hover:text-[#0055ff]"
+            href="/admin/about"
+          >
+            Manage About reels <span className="ml-2" aria-hidden="true">↗</span>
+          </a>
         </div>
       </FormGroupCard>
     </div>
