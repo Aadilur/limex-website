@@ -728,16 +728,24 @@ export function RichTextEditor({
         const clipboardText = event.clipboardData?.getData("text/plain") || "";
 
         let candidateMarkup = "";
-        if (
-          /<(?:style|article|header|footer|main|nav|aside|section|div|table|pre|code|figure)\b|<!doctype/i.test(
-            clipboardText,
-          )
-        ) {
+        const plainText = clipboardText.trim();
+        const startsWithHtmlSource =
+          /^(?:<!doctype\b|<\?xml\b|<(?:style|article|header|footer|main|nav|aside|section|div|table|thead|tbody|tfoot|tr|th|td|figure|pre|code)\b)/i.test(
+            plainText,
+          ) && /<\/?[a-z][^>]*>/i.test(plainText);
+        const containsStyleSource = /<style\b[\s\S]*?<\/style\s*>/i.test(
+          plainText,
+        );
+
+        // Browser clipboard HTML often contains site classes and inline CSS
+        // even when the user selected ordinary paragraphs. Let TipTap handle
+        // that formatted text. Switch to the protected custom-layout flow only
+        // when the plain-text clipboard actually contains HTML source.
+        if (startsWithHtmlSource || containsStyleSource) {
           candidateMarkup = clipboardText;
-        } else if (clipboardHtml && hasCustomRichTextStructure(clipboardHtml)) {
+        } else if (!plainText && /<style\b/i.test(clipboardHtml)) {
+          // Some code editors provide HTML but no plain-text clipboard flavor.
           candidateMarkup = clipboardHtml;
-        } else if (clipboardText && hasCustomRichTextStructure(clipboardText)) {
-          candidateMarkup = clipboardText;
         }
 
         if (
