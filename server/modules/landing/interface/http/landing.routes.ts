@@ -169,10 +169,6 @@ const testimonialsSchema = z.object({
     .max(20),
 });
 
-const aboutReelsSchema = z.object({
-  isVisible: z.boolean(),
-});
-
 const packagesSchema = z.object({
   title: nonEmptyText(160),
   description: nonEmptyText(500),
@@ -330,7 +326,6 @@ const sectionSchemas = {
   services: servicesSchema,
   process: processSchema,
   testimonials: testimonialsSchema,
-  aboutReels: aboutReelsSchema,
   packages: packagesSchema,
   tools: toolsSchema,
   articles: articlesSchema,

@@ -8,7 +8,6 @@ export const landingSectionKeys = [
   "services",
   "process",
   "testimonials",
-  "aboutReels",
   "packages",
   "tools",
   "articles",
@@ -110,10 +109,6 @@ export type TestimonialsContent = {
   title: string;
   description: string;
   items: TestimonialItem[];
-};
-
-export type AboutReelsContent = {
-  isVisible: boolean;
 };
 
 export type PackageItem = {
@@ -263,7 +258,6 @@ export type LandingContent = {
   services: ServicesContent;
   process: ProcessContent;
   testimonials: TestimonialsContent;
-  aboutReels: AboutReelsContent;
   packages: PackagesContent;
   tools: ToolsContent;
   articles: ArticlesContent;

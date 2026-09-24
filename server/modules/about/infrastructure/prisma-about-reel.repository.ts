@@ -38,14 +38,6 @@ export class PrismaAboutReelRepository implements AboutReelRepository {
     return this.client.aboutReel.update({ where: { id }, data: input });
   }
 
-  public async reorderReels(orderedIds: string[]): Promise<void> {
-    await this.client.$transaction(
-      orderedIds.map((id, sortOrder) =>
-        this.client.aboutReel.update({ where: { id }, data: { sortOrder } }),
-      ),
-    );
-  }
-
   public async deleteReel(id: string): Promise<void> {
     await this.client.aboutReel.delete({ where: { id } });
   }

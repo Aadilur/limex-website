@@ -228,9 +228,6 @@ export const defaultLandingContent: LandingContent = {
       youtubeUrl: index === 0 ? landingTestVideoUrl : "",
     })),
   },
-  aboutReels: {
-    isVisible: true,
-  },
   packages: {
     title: "Choose a clear starting point.",
     description:

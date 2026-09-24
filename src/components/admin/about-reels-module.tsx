@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useState, type DragEvent, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 
 import {
   createAboutReel,
   deleteAboutReel,
   getAdminAboutReels,
   isUnauthorizedAboutError,
-  reorderAboutReels,
   updateAboutReel,
   type AboutReel,
   type AboutReelInput,
@@ -28,12 +27,12 @@ type ReelDraft = {
   isVisible: boolean;
 };
 
-function emptyDraft(sortOrder = 0): ReelDraft {
-  return { youtubeUrl: "", title: "", sortOrder, isVisible: true };
+function emptyDraft(): ReelDraft {
+  return { youtubeUrl: "", title: "", sortOrder: 0, isVisible: true };
 }
 
-function reelDraft(reel: AboutReel | null, index: number): ReelDraft {
-  if (!reel) return emptyDraft(index);
+function reelDraft(reel: AboutReel | null): ReelDraft {
+  if (!reel) return emptyDraft();
 
   return {
     youtubeUrl: reel.youtubeUrl,
@@ -101,7 +100,7 @@ function AboutReelEditor({
   onCancel: () => void;
   onSave: (input: AboutReelInput) => void;
 }) {
-  const [draft, setDraft] = useState<ReelDraft>(() => reelDraft(reel, index));
+  const [draft, setDraft] = useState<ReelDraft>(() => reelDraft(reel));
   const [formError, setFormError] = useState("");
   const videoId = getYouTubeVideoId(draft.youtubeUrl);
 
@@ -160,7 +159,11 @@ function AboutReelEditor({
             <input className="mt-2 min-h-11 w-full rounded-[12px] border border-[#ddd7ce] bg-[#fffdfa] px-3.5 text-[13px] text-[#071b3d] outline-none transition-colors placeholder:text-[#aaa49b] focus:border-[#0055ff] focus:ring-4 focus:ring-[#008cff]/10" id="about-reel-title" value={draft.title} placeholder="Leave blank to use the YouTube title" maxLength={160} onChange={(event) => updateDraft("title", event.target.value)} />
             <span className="mt-1.5 block text-[10px] text-[#9b958c]">No custom title? We use the video title from YouTube automatically.</span>
           </label>
-          <label className="flex min-h-11 items-center gap-3 rounded-[12px] border border-[#e8e1d8] bg-[#faf9f6] px-3.5 text-[12px] font-semibold text-[#4f4b47] sm:col-span-2">
+          <label className="block min-w-0">
+            <FieldLabel htmlFor="about-reel-order">Display order</FieldLabel>
+            <input className="mt-2 min-h-11 w-full rounded-[12px] border border-[#ddd7ce] bg-[#fffdfa] px-3.5 text-[13px] text-[#071b3d] outline-none transition-colors focus:border-[#0055ff] focus:ring-4 focus:ring-[#008cff]/10" id="about-reel-order" type="number" min="0" max="999" value={draft.sortOrder} onChange={(event) => updateDraft("sortOrder", Number(event.target.value) || 0)} />
+          </label>
+          <label className="flex min-h-11 items-center gap-3 self-end rounded-[12px] border border-[#e8e1d8] bg-[#faf9f6] px-3.5 text-[12px] font-semibold text-[#4f4b47]">
             <input className="size-4 accent-[#0055ff]" type="checkbox" checked={draft.isVisible} onChange={(event) => updateDraft("isVisible", event.target.checked)} />
             Show this reel publicly
           </label>
@@ -176,41 +179,9 @@ function AboutReelEditor({
   );
 }
 
-function AboutReelCard({
-  reel,
-  index,
-  canMoveUp,
-  canMoveDown,
-  dragging,
-  disabled,
-  onEdit,
-  onDelete,
-  onMove,
-  onDragStart,
-  onDragEnd,
-  onDragOver,
-  onDrop,
-}: {
-  reel: AboutReel;
-  index: number;
-  canMoveUp: boolean;
-  canMoveDown: boolean;
-  dragging: boolean;
-  disabled: boolean;
-  onEdit: () => void;
-  onDelete: () => void;
-  onMove: (direction: -1 | 1) => void;
-  onDragStart: (event: DragEvent<HTMLButtonElement>) => void;
-  onDragEnd: () => void;
-  onDragOver: (event: DragEvent<HTMLElement>) => void;
-  onDrop: (event: DragEvent<HTMLElement>) => void;
-}) {
+function AboutReelCard({ reel, index, onEdit, onDelete }: { reel: AboutReel; index: number; onEdit: () => void; onDelete: () => void }) {
   return (
-    <article
-      className={`overflow-hidden rounded-[20px] border bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_32px_rgba(49,42,35,0.06)] ${dragging ? "border-[#0055ff] opacity-60 ring-2 ring-[#0055ff]/10" : "border-[#e1dcd4]"}`.trim()}
-      onDragOver={onDragOver}
-      onDrop={onDrop}
-    >
+    <article className="overflow-hidden rounded-[20px] border border-[#e1dcd4] bg-white transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_32px_rgba(49,42,35,0.06)]">
       <div className="flex gap-4 p-4 sm:p-5">
         <div className="relative aspect-video w-[126px] shrink-0 overflow-hidden rounded-[14px] border border-[#e8e1d8] bg-[#faf9f6] sm:w-[160px]">
           <ReelThumbnail src={reel.thumbnailUrl} index={index} alt="" />
@@ -218,23 +189,9 @@ function AboutReelCard({
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-2">
-            <div className="flex min-w-0 items-start gap-2.5">
-              <button
-                className="mt-0.5 grid size-8 shrink-0 cursor-grab place-items-center rounded-lg text-[18px] leading-none text-[#a49b90] transition-colors hover:bg-[#f3f1ec] hover:text-[#071b3d] active:cursor-grabbing disabled:cursor-not-allowed disabled:opacity-40"
-                type="button"
-                draggable={!disabled}
-                disabled={disabled}
-                aria-label={`Drag to reorder ${displayTitle(reel)}`}
-                title="Drag to reorder"
-                onDragStart={onDragStart}
-                onDragEnd={onDragEnd}
-              >
-                <span aria-hidden="true">⠿</span>
-              </button>
-              <div className="min-w-0">
-                <p className="truncate text-[10px] font-bold uppercase tracking-[0.12em] text-[#0055ff]">{reel.title ? "Custom title" : "YouTube title"}</p>
-                <h3 className="mt-1 line-clamp-2 font-brand text-[20px] font-bold leading-[1.08] tracking-[-0.04em] text-[#071b3d]">{displayTitle(reel)}</h3>
-              </div>
+            <div className="min-w-0">
+              <p className="truncate text-[10px] font-bold uppercase tracking-[0.12em] text-[#0055ff]">{reel.title ? "Custom title" : "YouTube title"}</p>
+              <h3 className="mt-1 line-clamp-2 font-brand text-[20px] font-bold leading-[1.08] tracking-[-0.04em] text-[#071b3d]">{displayTitle(reel)}</h3>
             </div>
             <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${reel.isVisible ? "bg-[#e9f4ed] text-[#29634d]" : "bg-[#f3f1ec] text-[#8b857e]"}`.trim()}>{reel.isVisible ? "Visible" : "Hidden"}</span>
           </div>
@@ -244,10 +201,8 @@ function AboutReelCard({
       <div className="flex items-center justify-between gap-3 border-t border-[#eee9e2] bg-[#faf9f6] px-4 py-3 sm:px-5">
         <span className="text-[11px] font-semibold text-[#9b958c]">Reel {String(reel.sortOrder + 1).padStart(2, "0")}</span>
         <div className="flex items-center gap-2">
-          <button className="grid size-9 place-items-center rounded-full border border-[#d8d2c8] bg-white text-[15px] text-[#4f4b47] transition-colors hover:border-[#0055ff] hover:text-[#0055ff] disabled:cursor-not-allowed disabled:opacity-35" type="button" aria-label={`Move ${displayTitle(reel)} up`} title="Move up" disabled={disabled || !canMoveUp} onClick={() => onMove(-1)}>↑</button>
-          <button className="grid size-9 place-items-center rounded-full border border-[#d8d2c8] bg-white text-[15px] text-[#4f4b47] transition-colors hover:border-[#0055ff] hover:text-[#0055ff] disabled:cursor-not-allowed disabled:opacity-35" type="button" aria-label={`Move ${displayTitle(reel)} down`} title="Move down" disabled={disabled || !canMoveDown} onClick={() => onMove(1)}>↓</button>
           <button className="inline-flex min-h-9 items-center rounded-full border border-[#d8d2c8] bg-white px-3.5 text-[11px] font-bold text-[#4f4b47] transition-colors hover:border-[#aaa197] hover:text-[#071b3d]" type="button" onClick={onEdit}>Edit</button>
-          <button className="grid size-9 place-items-center rounded-full border border-[#f1c6ce] text-[16px] text-[#c63c56] transition-colors hover:bg-[#fce0e3] disabled:opacity-40" type="button" aria-label={`Delete ${displayTitle(reel)}`} onClick={onDelete} disabled={disabled}>×</button>
+          <button className="grid size-9 place-items-center rounded-full border border-[#f1c6ce] text-[16px] text-[#c63c56] transition-colors hover:bg-[#fce0e3]" type="button" aria-label={`Delete ${displayTitle(reel)}`} onClick={onDelete}>×</button>
         </div>
       </div>
     </article>
@@ -256,7 +211,6 @@ function AboutReelCard({
 
 export function AboutReelsManager() {
   const [reels, setReels] = useState<AboutReel[]>([]);
-  const [draggingId, setDraggingId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | "new" | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -305,42 +259,6 @@ export function AboutReelsManager() {
     }
   }
 
-  async function saveReelOrder(nextReels: AboutReel[]) {
-    const ordered = nextReels.map((reel, sortOrder) => ({ ...reel, sortOrder }));
-    setReels(ordered);
-    setSaving(true);
-    setError("");
-    setNotice("");
-
-    try {
-      setReels(await reorderAboutReels(ordered.map((reel) => reel.id)));
-      setNotice("Video order saved.");
-    } catch (orderError) {
-      if (isUnauthorizedAboutError(orderError)) {
-        window.location.assign("/admin/login");
-        return;
-      }
-      setError(orderError instanceof Error ? orderError.message : "Unable to save the video order.");
-      try {
-        setReels(await getAdminAboutReels());
-      } catch {
-        // Keep the last known order visible if the recovery read also fails.
-      }
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  function moveReel(sourceId: string, targetIndex: number) {
-    if (saving) return;
-    const fromIndex = reels.findIndex((reel) => reel.id === sourceId);
-    if (fromIndex < 0 || targetIndex < 0 || targetIndex >= reels.length || fromIndex === targetIndex) return;
-    const nextReels = [...reels];
-    const [moved] = nextReels.splice(fromIndex, 1);
-    nextReels.splice(targetIndex, 0, moved);
-    void saveReelOrder(nextReels);
-  }
-
   async function deleteReel(reel: AboutReel) {
     if (!window.confirm(`Delete “${displayTitle(reel)}”?`)) return;
 
@@ -372,7 +290,7 @@ export function AboutReelsManager() {
             <h2 className="font-brand text-[27px] font-bold tracking-[-0.04em] text-[#071b3d]" id="about-reels-admin-title">Stories from Limex</h2>
             <span className="rounded-full bg-[#f3f1ec] px-2.5 py-1 text-[10px] font-bold text-[#77736e]">{reels.length}</span>
           </div>
-          <p className="mt-2 max-w-[580px] text-[13px] leading-[1.55] text-[#77736e]">Drag the grip or use the arrows to set the public video order. Titles are optional and fall back to YouTube.</p>
+          <p className="mt-2 max-w-[580px] text-[13px] leading-[1.55] text-[#77736e]">Add YouTube links for the public reel strip. Titles are optional and fall back to the video’s YouTube title.</p>
         </div>
         <button className="inline-flex min-h-10 items-center justify-center rounded-full bg-[#071b3d] px-4 text-[12px] font-bold text-white transition-transform hover:-translate-y-px disabled:opacity-60" type="button" disabled={loading || saving} onClick={() => { setError(""); setNotice(""); setEditingId("new"); }}>+ Add reel</button>
       </div>
@@ -388,36 +306,7 @@ export function AboutReelsManager() {
         <div className="mt-5 rounded-[20px] border border-[#f1c6ce] bg-[#fff8f8] px-5 py-8 text-center"><p className="text-[13px] text-[#ad3148]">{loadError}</p></div>
       ) : reels.length ? (
         <div className="mt-5 grid gap-3 lg:grid-cols-2">
-          {reels.map((reel, index) => (
-            <AboutReelCard
-              key={reel.id}
-              reel={reel}
-              index={index}
-              canMoveUp={index > 0}
-              canMoveDown={index < reels.length - 1}
-              dragging={draggingId === reel.id}
-              disabled={saving}
-              onEdit={() => { setError(""); setNotice(""); setEditingId(reel.id); }}
-              onDelete={() => void deleteReel(reel)}
-              onMove={(direction) => moveReel(reel.id, index + direction)}
-              onDragStart={(event) => {
-                event.dataTransfer.effectAllowed = "move";
-                event.dataTransfer.setData("text/plain", reel.id);
-                setDraggingId(reel.id);
-              }}
-              onDragEnd={() => setDraggingId(null)}
-              onDragOver={(event) => {
-                event.preventDefault();
-                event.dataTransfer.dropEffect = "move";
-              }}
-              onDrop={(event) => {
-                event.preventDefault();
-                const sourceId = draggingId || event.dataTransfer.getData("text/plain");
-                if (sourceId) moveReel(sourceId, index);
-                setDraggingId(null);
-              }}
-            />
-          ))}
+          {reels.map((reel, index) => <AboutReelCard key={reel.id} reel={reel} index={index} onEdit={() => { setError(""); setNotice(""); setEditingId(reel.id); }} onDelete={() => void deleteReel(reel)} />)}
         </div>
       ) : (
         <div className="mt-5 rounded-[20px] border border-dashed border-[#d8d1c7] bg-white px-5 py-12 text-center">

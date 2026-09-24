@@ -103,13 +103,6 @@ export function updateAboutReel(id: string, input: AboutReelInput) {
   });
 }
 
-export function reorderAboutReels(ids: string[]) {
-  return request<AboutReel[]>("/api/admin/about/reels/order", {
-    method: "PUT",
-    body: JSON.stringify({ ids }),
-  });
-}
-
 export function deleteAboutReel(id: string) {
   return request<AboutReel[]>(`/api/admin/about/reels/${id}`, { method: "DELETE" });
 }

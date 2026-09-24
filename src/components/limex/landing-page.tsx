@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-import { AboutReelsSection } from "./about-sections";
 import { ContactSection } from "./contact-section";
 import { FaqSection } from "./faq-section";
 import { HowItWorksSection, TrustedClientsSection, TrustMetricsSection } from "./foundations";
@@ -53,9 +52,6 @@ export function LandingPage() {
           <HowItWorksSection content={content.process} />
           <SectionSeparator label="VIDEO REELS" className={sectionSeparatorClass} />
           <VideoReelsSection content={content.testimonials} />
-          {content.aboutReels.isVisible ? (
-            <AboutReelsSection hideWhenEmpty />
-          ) : null}
           <SectionSeparator label="PACKAGES" className={sectionSeparatorClass} />
           <PackagesSection content={content.packages} />
           <SectionSeparator label="SMART TOOLS" className={sectionSeparatorClass} />

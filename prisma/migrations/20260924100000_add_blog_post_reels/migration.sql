@@ -1,2 +1,0 @@
-ALTER TABLE `BlogPost`
-    ADD COLUMN `reels` JSON NULL;

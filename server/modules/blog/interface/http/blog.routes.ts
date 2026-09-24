@@ -80,14 +80,6 @@ const serviceSchema = z
   })
   .strict();
 
-const blogReelSchema = z
-  .object({
-    youtubeUrl: httpUrl(500),
-    title: z.preprocess(blankToNull, text(160).nullable().optional()),
-    sortOrder: z.number().int().min(0).max(999).default(0),
-  })
-  .strict();
-
 const postSchema = z
   .object({
     slug: requiredText(180),
@@ -106,7 +98,6 @@ const postSchema = z
       blankToNull,
       text(240).nullable().optional(),
     ),
-    reels: z.array(blogReelSchema).max(8).optional(),
     isFeatured: z.boolean().default(false),
     noIndex: z.boolean().default(false),
     canonicalUrl: z.preprocess(blankToNull, httpUrl(500).nullable().optional()),
@@ -180,17 +171,6 @@ function normalizeInput(input: z.infer<typeof postSchema>): BlogPostInput {
     throw new Error(
       "Paste a valid YouTube video link for the sidebar tutorial.",
     );
-  const reels = (input.reels ?? []).map((reel, index) => {
-    const videoId = getYouTubeVideoId(reel.youtubeUrl);
-    if (!videoId)
-      throw new BlogInputError("Paste a valid YouTube video link for each blog reel.");
-    return {
-      youtubeUrl: reel.youtubeUrl.trim(),
-      videoId,
-      title: reel.title?.trim() ?? "",
-      sortOrder: reel.sortOrder ?? index,
-    };
-  });
   return {
     slug: normalizeBlogSlug(input.slug),
     category: input.category.trim(),
@@ -204,7 +184,6 @@ function normalizeInput(input: z.infer<typeof postSchema>): BlogPostInput {
     sidebarVideoUrl: input.sidebarVideoUrl ?? null,
     sidebarVideoId: videoId,
     sidebarVideoTitle: input.sidebarVideoTitle ?? null,
-    reels,
     isFeatured: input.isFeatured,
     noIndex: input.noIndex,
     canonicalUrl: input.canonicalUrl ?? null,
@@ -449,27 +428,10 @@ export function createBlogRoutes(
       try {
         const { id } = idSchema.parse(request.params);
         const input = updateSchema.parse(request.body);
-        let reels = input.post.reels;
-        if (!reels) {
-          const currentPost = (await blogService.getAdminPost(id)) as {
-            reels?: Array<{
-              youtubeUrl: string;
-              title: string;
-              sortOrder: number;
-            }>;
-          };
-          reels = (currentPost.reels ?? []).map(
-            ({ youtubeUrl, title, sortOrder }) => ({
-              youtubeUrl,
-              title,
-              sortOrder,
-            }),
-          );
-        }
         return {
           data: await blogService.updatePost(
             id,
-            normalizeInput({ ...input.post, reels }),
+            normalizeInput(input.post),
             input.expectedRevision,
             session.username,
           ),

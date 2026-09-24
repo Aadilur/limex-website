@@ -10,8 +10,8 @@ import {
   getBlogCoverFallbackUrl,
   type BlogArticle,
   type BlogContentBlock,
-  type BlogVideoReel,
 } from "./blog-data";
+import { getPublicAboutReels, type AboutReel } from "@/lib/about-api";
 import { getBlogToneClasses } from "./styles";
 import { ContactModal } from "./contact-section";
 import { ActionButton, Breadcrumbs, SearchIcon } from "./ui";
@@ -674,12 +674,28 @@ function BlogBody({ article }: { article: BlogArticle }) {
   );
 }
 
-function blogReelTitle(reel: BlogVideoReel) {
-  return reel.title.trim() || "Watch this video";
+function blogReelTitle(reel: AboutReel) {
+  return reel.title?.trim() || reel.youtubeTitle || "Limex video story";
 }
 
-function BlogReelsSection({ reels }: { reels?: BlogVideoReel[] }) {
+function BlogReelsSection() {
+  const [reels, setReels] = useState<AboutReel[] | null>(null);
   const [activeReelId, setActiveReelId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void getPublicAboutReels()
+      .then((items) => {
+        if (!cancelled) setReels(items.filter((item) => item.isVisible));
+      })
+      .catch(() => {
+        if (!cancelled) setReels([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   if (!reels?.length) return null;
 
@@ -694,19 +710,18 @@ function BlogReelsSection({ reels }: { reels?: BlogVideoReel[] }) {
       <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {reels.map((reel) => {
           const title = blogReelTitle(reel);
-          const reelKey = `${reel.videoId}-${reel.sortOrder}`;
-          const playing = activeReelId === reelKey;
+          const playing = activeReelId === reel.id;
 
           return (
             <article
               className="relative aspect-[9/16] w-[min(146px,42vw)] shrink-0 snap-start overflow-hidden rounded-[16px] bg-[#14202b]"
-              key={reelKey}
+              key={reel.id}
             >
               {playing ? (
                 <>
                   <iframe
                     className="absolute inset-0 size-full"
-                    src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(reel.videoId)}?rel=0&playsinline=1&autoplay=1`}
+                    src={`${reel.embedUrl}${reel.embedUrl.includes("?") ? "&" : "?"}autoplay=1&playsinline=1`}
                     title={title}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     referrerPolicy="strict-origin-when-cross-origin"
@@ -728,16 +743,18 @@ function BlogReelsSection({ reels }: { reels?: BlogVideoReel[] }) {
                       LIMEX
                     </span>
                   </div>
-                  <img
-                    className="absolute inset-0 size-full object-cover"
-                    src={`https://i.ytimg.com/vi/${encodeURIComponent(reel.videoId)}/hqdefault.jpg`}
-                    alt=""
-                    loading="lazy"
-                    decoding="async"
-                    onError={(event) => {
-                      event.currentTarget.hidden = true;
-                    }}
-                  />
+                  {reel.thumbnailUrl ? (
+                    <img
+                      className="absolute inset-0 size-full object-cover"
+                      src={reel.thumbnailUrl}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      onError={(event) => {
+                        event.currentTarget.hidden = true;
+                      }}
+                    />
+                  ) : null}
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent px-3 pb-3 pt-12">
                     <p className="line-clamp-2 text-[12px] font-semibold leading-snug text-white">
                       {title}
@@ -747,7 +764,7 @@ function BlogReelsSection({ reels }: { reels?: BlogVideoReel[] }) {
                     className="absolute left-1/2 top-1/2 grid size-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white/95 text-[#071b3d] shadow-play transition-transform duration-200 hover:scale-105 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-pink/60 focus-visible:outline-offset-2"
                     type="button"
                     aria-label={`Play ${title}`}
-                    onClick={() => setActiveReelId(reelKey)}
+                    onClick={() => setActiveReelId(reel.id)}
                   >
                     <svg className="ml-0.5 size-4 fill-current" viewBox="0 0 20 20" aria-hidden="true">
                       <path d="M6.6 4.3a1 1 0 0 1 1.5-.86l6.5 4.7a1 1 0 0 1 0 1.62l-6.5 4.7a1 1 0 0 1-1.5-.86V4.3Z" />
@@ -1219,7 +1236,7 @@ export function BlogDetailContent({
                 />
               </div>
             </div>
-            <BlogReelsSection reels={article.reels} />
+            <BlogReelsSection />
           </aside>
         </div>
       </section>

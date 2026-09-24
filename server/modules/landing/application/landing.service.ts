@@ -67,16 +67,7 @@ export class LandingService {
     const current = isRecord(record.content) ? record.content as LandingContent : {} as LandingContent;
     if (hasAccidentalEmptyList(current[section], content)) throw new LandingSafetyError();
 
-    const next = { ...current, [section]: content } as LandingContent & Record<string, unknown>;
-    const legacyAboutReelsVisibility = isRecord(current.testimonials)
-      ? current.testimonials.showAboutReels
-      : undefined;
-    if (
-      !isRecord(next.aboutReels) &&
-      typeof legacyAboutReelsVisibility === "boolean"
-    ) {
-      next.aboutReels = { isVisible: legacyAboutReelsVisibility };
-    }
+    const next = { ...current, [section]: content } as LandingContent;
     const saved = await this.landing.updateIfUnchanged(expectedUpdatedAt, next);
     if (!saved) throw new LandingConflictError();
 

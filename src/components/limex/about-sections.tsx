@@ -485,11 +485,7 @@ function AboutReelCard({
   );
 }
 
-export function AboutReelsSection({
-  hideWhenEmpty = false,
-}: {
-  hideWhenEmpty?: boolean;
-}) {
+export function AboutReelsSection() {
   const [reels, setReels] = useState<AboutReel[]>([]);
   const [activeReelId, setActiveReelId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -550,10 +546,6 @@ export function AboutReelsSection({
         inline: "center",
       });
   }, [activeReelId]);
-
-  if (hideWhenEmpty && !loading && (loadError || reels.length === 0)) {
-    return null;
-  }
 
   function moveReels(direction: "previous" | "next") {
     reelScrollerRef.current?.scrollBy({

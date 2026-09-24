@@ -1,5 +1,5 @@
 import { ApiError, request } from "./menu-api";
-import type { BlogArticle, BlogVideoReel } from "@/components/limex/blog-data";
+import type { BlogArticle } from "@/components/limex/blog-data";
 export type { BlogArticle } from "@/components/limex/blog-data";
 
 export type BlogLocale = "en" | "bn";
@@ -10,12 +10,6 @@ export type BlogServiceLink = {
   label: string;
   href: string;
   isPrimary: boolean;
-  sortOrder: number;
-};
-
-export type BlogReelInput = {
-  youtubeUrl: string;
-  title: string;
   sortOrder: number;
 };
 
@@ -100,7 +94,6 @@ export type AdminBlogPost = {
   updatedAt: string;
   translations: Partial<Record<BlogLocale, BlogTranslation>>;
   media: BlogMedia[];
-  reels: BlogVideoReel[];
   services: BlogServiceLink[];
 };
 
@@ -123,7 +116,6 @@ export type BlogPostInput = {
   coverMediaId: string | null;
   sidebarVideoUrl: string;
   sidebarVideoTitle: string;
-  reels: BlogReelInput[];
   isFeatured: boolean;
   noIndex: boolean;
   canonicalUrl: string;

@@ -4,7 +4,6 @@ import { z } from "zod";
 
 import {
   AboutService,
-  InvalidAboutReelOrderError,
   AboutReelNotFoundError,
   AboutTeamMemberNotFoundError,
   InvalidYouTubeUrlError,
@@ -56,12 +55,6 @@ const createReelSchema = reelFields;
 const updateReelSchema = reelFields
   .partial()
   .refine((value) => Object.keys(value).length > 0, "At least one field is required.");
-const reelOrderSchema = z.object({
-  ids: z.array(z.string().trim().min(1)).max(100).refine(
-    (ids) => new Set(ids).size === ids.length,
-    "Reel IDs must be unique.",
-  ),
-});
 
 class InvalidTeamImageError extends Error {
   public readonly statusCode = 400;
@@ -114,10 +107,6 @@ type AboutRoutesOptions = {
 
 function sendKnownAboutError(error: unknown, reply: FastifyReply) {
   if (error instanceof InvalidYouTubeUrlError) {
-    return reply.code(400).send({ error: error.message });
-  }
-
-  if (error instanceof InvalidAboutReelOrderError) {
     return reply.code(400).send({ error: error.message });
   }
 
@@ -228,18 +217,6 @@ export async function aboutRoutes(app: FastifyInstance, options: AboutRoutesOpti
       await options.service.createReel(createReelSchema.parse(request.body));
       reply.header("Cache-Control", "no-store");
       return reply.code(201).send({ data: await options.service.getAdminReels() });
-    } catch (error) {
-      return sendKnownAboutError(error, reply);
-    }
-  });
-
-  app.put("/api/admin/about/reels/order", async (request, reply) => {
-    if (!(await ensureAdmin(request, reply))) return;
-
-    try {
-      const { ids } = reelOrderSchema.parse(request.body);
-      reply.header("Cache-Control", "no-store");
-      return { data: await options.service.reorderReels(ids) };
     } catch (error) {
       return sendKnownAboutError(error, reply);
     }

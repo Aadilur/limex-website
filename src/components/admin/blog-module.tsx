@@ -37,7 +37,6 @@ import {
   type AdminBlogSummary,
   type BlogLocale,
   type BlogMedia,
-  type BlogReelInput,
   type BlogPostInput,
   type BlogRevision,
   type BlogServiceLink,
@@ -233,11 +232,6 @@ function draftFromPost(post: AdminBlogPost): BlogEditorDraft {
       en: post.translations.en ?? blankTranslation("en"),
       bn: post.translations.bn ?? blankTranslation("bn"),
     },
-    reels: (post.reels ?? []).map(({ youtubeUrl, title, sortOrder }) => ({
-      youtubeUrl,
-      title,
-      sortOrder,
-    })),
     services: post.services,
   };
 }
@@ -245,14 +239,6 @@ function draftFromPost(post: AdminBlogPost): BlogEditorDraft {
 function payloadFromDraft(draft: BlogEditorDraft): BlogPostInput {
   return {
     ...draft,
-    reels: draft.reels
-      .filter((reel) => reel.youtubeUrl.trim() || reel.title.trim())
-      .map((reel, sortOrder) => ({
-        ...reel,
-        youtubeUrl: reel.youtubeUrl.trim(),
-        title: reel.title.trim(),
-        sortOrder,
-      })),
     translations: [draft.translations.en, draft.translations.bn].map(
       (translation) => {
         const bodyHtml = sanitizeBlogHtml(translation.bodyHtml);
@@ -307,12 +293,6 @@ function previewArticle(
     noIndex: true,
     canonicalUrl: null,
     tags: normalizeBlogKeywords(translation.keywords),
-    reels: draft.reels
-      .map((reel) => ({
-        ...reel,
-        videoId: getPreviewYouTubeVideoId(reel.youtubeUrl),
-      }))
-      .filter((reel) => Boolean(reel.videoId)),
     sidebarVideo: draft.sidebarVideoUrl
       ? {
           url: draft.sidebarVideoUrl,
@@ -657,7 +637,6 @@ export function BlogListModule() {
         coverMediaId: null,
         sidebarVideoUrl: "",
         sidebarVideoTitle: "",
-        reels: [],
         isFeatured: false,
         noIndex: true,
         canonicalUrl: "",
@@ -1502,45 +1481,6 @@ export function BlogEditorModule({ id }: { id: string }) {
     setError("");
   }
 
-  function updateBlogReel(index: number, patch: Partial<BlogReelInput>) {
-    if (!draft) return;
-    updateDraft({
-      reels: draft.reels.map((reel, reelIndex) =>
-        reelIndex === index ? { ...reel, ...patch } : reel,
-      ),
-    });
-  }
-
-  function addBlogReel() {
-    if (!draft || draft.reels.length >= 8) return;
-    updateDraft({
-      reels: [
-        ...draft.reels,
-        { youtubeUrl: "", title: "", sortOrder: draft.reels.length },
-      ],
-    });
-  }
-
-  function removeBlogReel(index: number) {
-    if (!draft) return;
-    updateDraft({
-      reels: draft.reels
-        .filter((_, reelIndex) => reelIndex !== index)
-        .map((reel, sortOrder) => ({ ...reel, sortOrder })),
-    });
-  }
-
-  function moveBlogReel(index: number, direction: -1 | 1) {
-    if (!draft) return;
-    const targetIndex = index + direction;
-    if (targetIndex < 0 || targetIndex >= draft.reels.length) return;
-    const reels = [...draft.reels];
-    [reels[index], reels[targetIndex]] = [reels[targetIndex]!, reels[index]!];
-    updateDraft({
-      reels: reels.map((reel, sortOrder) => ({ ...reel, sortOrder })),
-    });
-  }
-
   function updateTranslation(patch: Partial<BlogTranslation>) {
     setDraft((current) =>
       current
@@ -2179,115 +2119,6 @@ export function BlogEditorModule({ id }: { id: string }) {
               Only valid YouTube links are accepted when you save.
             </p>
           </EditorPanel>
-          <div className="lg:col-span-2">
-            <EditorPanel
-              title="Reels for this blog"
-              description="These YouTube videos belong to this article only and appear beneath its question card."
-            >
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="text-[11px] text-[#817a72]">
-                  {draft.reels.length} of 8 attached
-                </p>
-                <button
-                  className="inline-flex min-h-9 items-center justify-center rounded-full bg-[#071b3d] px-4 text-[11px] font-bold text-white transition-colors hover:bg-[#0055ff] disabled:cursor-not-allowed disabled:opacity-50"
-                  type="button"
-                  onClick={addBlogReel}
-                  disabled={draft.reels.length >= 8}
-                >
-                  + Add reel
-                </button>
-              </div>
-              {draft.reels.length ? (
-                <div className="mt-3 divide-y divide-[#eee9e2]">
-                  {draft.reels.map((reel, index) => {
-                    const videoId = getPreviewYouTubeVideoId(reel.youtubeUrl);
-                    return (
-                      <div
-                        className="grid gap-3 py-4 first:pt-1 sm:grid-cols-[76px_minmax(0,1fr)]"
-                        key={`blog-reel-${index}`}
-                      >
-                        <div className="relative aspect-[9/16] w-[76px] overflow-hidden rounded-[11px] bg-gradient-to-br from-[#dce8ec] to-[#102538]">
-                          {videoId ? (
-                            <img
-                              className="size-full object-cover"
-                              src={`https://i.ytimg.com/vi/${encodeURIComponent(videoId)}/hqdefault.jpg`}
-                              alt=""
-                              loading="lazy"
-                            />
-                          ) : (
-                            <span className="grid size-full place-items-center text-[10px] font-bold text-white/85">
-                              Reel {index + 1}
-                            </span>
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <div className="mb-2 flex items-center justify-between gap-3">
-                            <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-[#77736e]">
-                              Reel {index + 1}
-                            </p>
-                            <div className="flex items-center gap-1">
-                              <button
-                                className="grid size-8 place-items-center rounded-full text-sm text-[#6e685f] transition-colors hover:bg-[#f3f1ec] disabled:opacity-30"
-                                type="button"
-                                aria-label={`Move reel ${index + 1} up`}
-                                onClick={() => moveBlogReel(index, -1)}
-                                disabled={index === 0}
-                              >
-                                ↑
-                              </button>
-                              <button
-                                className="grid size-8 place-items-center rounded-full text-sm text-[#6e685f] transition-colors hover:bg-[#f3f1ec] disabled:opacity-30"
-                                type="button"
-                                aria-label={`Move reel ${index + 1} down`}
-                                onClick={() => moveBlogReel(index, 1)}
-                                disabled={index === draft.reels.length - 1}
-                              >
-                                ↓
-                              </button>
-                              <button
-                                className="grid size-8 place-items-center rounded-full text-sm text-[#ad3148] transition-colors hover:bg-[#fff1f2]"
-                                type="button"
-                                aria-label={`Remove reel ${index + 1}`}
-                                onClick={() => removeBlogReel(index)}
-                              >
-                                ×
-                              </button>
-                            </div>
-                          </div>
-                          <div className="grid gap-3 sm:grid-cols-2">
-                            <Field
-                              label="YouTube URL"
-                              value={reel.youtubeUrl}
-                              placeholder="https://youtube.com/shorts/..."
-                              onChange={(event) =>
-                                updateBlogReel(index, {
-                                  youtubeUrl: event.target.value,
-                                })
-                              }
-                            />
-                            <Field
-                              label="Title · optional"
-                              value={reel.title}
-                              placeholder="A short video title"
-                              onChange={(event) =>
-                                updateBlogReel(index, {
-                                  title: event.target.value,
-                                })
-                              }
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="mt-3 rounded-[12px] bg-[#faf9f6] px-4 py-5 text-center text-[12px] text-[#8b857e]">
-                  No reels attached. Add a YouTube video or Short for this blog.
-                </p>
-              )}
-            </EditorPanel>
-          </div>
         </div>
       ) : null}
 

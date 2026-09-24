@@ -13,13 +13,6 @@ export type BlogRelatedService = {
   sortOrder: number;
 };
 
-export type BlogVideoReel = {
-  youtubeUrl: string;
-  videoId: string;
-  title: string;
-  sortOrder: number;
-};
-
 export type BlogArticle = {
   id?: string;
   contentLocale?: "en" | "bn";
@@ -48,7 +41,6 @@ export type BlogArticle = {
   noIndex?: boolean;
   canonicalUrl?: string | null;
   sidebarVideo?: { url: string; videoId: string; title: string } | null;
-  reels?: BlogVideoReel[];
   relatedServices?: BlogRelatedService[];
   seoTitle?: string;
   seoDescription?: string;

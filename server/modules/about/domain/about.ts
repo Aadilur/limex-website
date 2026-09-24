@@ -57,6 +57,5 @@ export interface AboutReelRepository {
   findReelById(id: string): Promise<AboutReel | null>;
   createReel(input: CreateAboutReelRecordInput): Promise<AboutReel>;
   updateReel(id: string, input: UpdateAboutReelRecordInput): Promise<AboutReel>;
-  reorderReels(orderedIds: string[]): Promise<void>;
   deleteReel(id: string): Promise<void>;
 }
