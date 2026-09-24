@@ -44,6 +44,18 @@ const PRESET_INKS = [
   { name: "Midnight Navy", hex: "#071b3d" },
 ];
 
+function colorPickerValue(value: string) {
+  if (/^#[0-9a-f]{6}$/i.test(value)) return value;
+  if (/^#[0-9a-f]{3}$/i.test(value)) {
+    return `#${value
+      .slice(1)
+      .split("")
+      .map((channel) => channel + channel)
+      .join("")}`;
+  }
+  return "#000000";
+}
+
 function ColorField({
   label,
   description,
@@ -81,9 +93,7 @@ function ColorField({
           <input
             ref={colorInputRef}
             type="color"
-            value={
-              value.startsWith("#") && value.length === 7 ? value : "#000000"
-            }
+            value={colorPickerValue(value)}
             onChange={(e) => onChange(e.target.value)}
             className="sr-only"
           />
@@ -239,6 +249,8 @@ export function BrandingModule() {
   const [draft, setDraft] = useState<SiteBranding>(defaultBranding);
   const [initial, setInitial] = useState<SiteBranding>(defaultBranding);
   const [loading, setLoading] = useState(true);
+  const [brandingLoaded, setBrandingLoaded] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [saving, setSaving] = useState(false);
   const [uploadingDark, setUploadingDark] = useState(false);
   const [uploadingLight, setUploadingLight] = useState(false);
@@ -247,30 +259,38 @@ export function BrandingModule() {
 
   useEffect(() => {
     let active = true;
+    setLoading(true);
+    setError("");
+
     void getAdminBranding()
       .then((data) => {
         if (!active) return;
-        const safeData = data || defaultBranding;
-        setDraft(safeData);
-        setInitial(safeData);
-        setLoading(false);
+        setDraft(data);
+        setInitial(data);
+        setBrandingLoaded(true);
       })
       .catch((err) => {
         if (!active) return;
+        setBrandingLoaded(false);
         setError(
           err instanceof Error ? err.message : "Failed to load branding.",
         );
-        setDraft(defaultBranding);
-        setInitial(defaultBranding);
-        setLoading(false);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
       });
 
     return () => {
       active = false;
     };
-  }, []);
+  }, [loadAttempt]);
 
   async function handleSave() {
+    if (!brandingLoaded) {
+      setError("Load the saved branding before making changes.");
+      return;
+    }
+
     try {
       setSaving(true);
       setError("");
@@ -353,8 +373,43 @@ export function BrandingModule() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[300px] items-center justify-center">
+      <div
+        className="flex min-h-[300px] items-center justify-center gap-3 text-[13px] font-semibold text-[#706a62]"
+        role="status"
+      >
         <div className="size-8 animate-spin rounded-full border-3 border-[#0055ff] border-t-transparent" />
+        Loading saved branding…
+      </div>
+    );
+  }
+
+  if (!brandingLoaded) {
+    return (
+      <div className="mx-auto max-w-[620px] space-y-5 py-8">
+        <div>
+          <h1 className="font-brand text-[28px] font-bold text-[#071b3d] sm:text-[34px]">
+            Branding &amp; Theme
+          </h1>
+          <p className="mt-1 text-[14px] text-[#605a52]">
+            Saved colors could not be confirmed, so editing is paused to protect
+            the current brand settings.
+          </p>
+        </div>
+        <div
+          className="rounded-[16px] border border-[#f5c2c7] bg-[#fdf2f2] px-4 py-4"
+          role="alert"
+        >
+          <p className="text-[13px] font-semibold text-[#c5221f]">
+            {error || "Branding could not be loaded."}
+          </p>
+          <button
+            type="button"
+            onClick={() => setLoadAttempt((attempt) => attempt + 1)}
+            className="mt-3 inline-flex min-h-10 items-center justify-center rounded-full bg-[#071b3d] px-4 text-[12px] font-bold text-white transition-colors hover:bg-[#0055ff]"
+          >
+            Retry loading
+          </button>
+        </div>
       </div>
     );
   }

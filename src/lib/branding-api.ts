@@ -21,6 +21,37 @@ export const defaultBranding: SiteBranding = {
   logoLightUrl: null,
 };
 
+const hexColorPattern = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
+
+function isSiteBranding(value: unknown): value is SiteBranding {
+  if (!value || typeof value !== "object") return false;
+  const branding = value as Partial<SiteBranding>;
+  return (
+    typeof branding.id === "string" &&
+    typeof branding.backgroundColor === "string" &&
+    hexColorPattern.test(branding.backgroundColor) &&
+    typeof branding.primaryColor === "string" &&
+    hexColorPattern.test(branding.primaryColor) &&
+    typeof branding.accentColor === "string" &&
+    hexColorPattern.test(branding.accentColor) &&
+    typeof branding.inkColor === "string" &&
+    hexColorPattern.test(branding.inkColor) &&
+    (branding.logoUrl === null || typeof branding.logoUrl === "string") &&
+    (branding.logoLightUrl === null ||
+      typeof branding.logoLightUrl === "string")
+  );
+}
+
+function requireSiteBranding(value: unknown): SiteBranding {
+  if (!isSiteBranding(value)) {
+    throw new ApiError(
+      502,
+      "The API returned incomplete branding data. Current values could not be confirmed.",
+    );
+  }
+  return value;
+}
+
 export function hexToRgb(hex: string, fallback = "0, 0, 0"): string {
   if (!hex || typeof hex !== "string") return fallback;
   const cleaned = hex.trim().replace(/^#/, "");
@@ -65,27 +96,27 @@ export async function getPublicBranding(): Promise<SiteBranding> {
     const res = await request<SiteBranding>("/api/branding", {
       cache: "no-store",
     });
-    return res || defaultBranding;
+    return isSiteBranding(res) ? res : defaultBranding;
   } catch {
     return defaultBranding;
   }
 }
 
 export async function getAdminBranding(): Promise<SiteBranding> {
-  const res = await request<SiteBranding>("/api/admin/branding", {
+  const res = await request<unknown>("/api/admin/branding", {
     cache: "no-store",
   });
-  return res || defaultBranding;
+  return requireSiteBranding(res);
 }
 
 export async function updateAdminBranding(
   input: Partial<Omit<SiteBranding, "id" | "updatedAt">>,
 ): Promise<SiteBranding> {
-  const res = await request<SiteBranding>("/api/admin/branding", {
+  const res = await request<unknown>("/api/admin/branding", {
     method: "PUT",
     body: JSON.stringify(input),
   });
-  return res || defaultBranding;
+  return requireSiteBranding(res);
 }
 
 export async function uploadBrandLogo(file: File): Promise<{
