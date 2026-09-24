@@ -49,8 +49,8 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         </span>
       </div>
 
-      <div className="pt-7">
-        <nav className="mt-3 space-y-1" aria-label="Admin navigation">
+      <div className="pt-4">
+        <nav className="mt-2 space-y-1" aria-label="Admin navigation">
           {adminNavigation.map((item) => {
             const active =
               item.href === "/admin"
@@ -152,16 +152,18 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-[#f3f1ec] text-[#071b3d]">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[276px] flex-col bg-[#071b3d] px-5 py-6 lg:flex">
-        <SidebarContent />
-        <button
-          className="mt-5 flex min-h-11 items-center justify-center rounded-full border border-white/15 px-4 text-[13px] font-semibold text-white/70 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50"
-          type="button"
-          onClick={() => void handleLogout()}
-          disabled={signingOut}
-        >
-          {signingOut ? "Signing out…" : "Sign out"}
-        </button>
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[276px] flex-col overflow-y-auto overscroll-y-contain bg-[#071b3d] [scrollbar-color:rgba(255,255,255,0.24)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-[5px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb:hover]:bg-white/40 lg:flex">
+        <div className="flex min-h-[100dvh] flex-col px-5 py-6">
+          <SidebarContent />
+          <button
+            className="mt-5 flex min-h-11 items-center justify-center rounded-full border border-white/15 px-4 text-[13px] font-semibold text-white/70 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50"
+            type="button"
+            onClick={() => void handleLogout()}
+            disabled={signingOut}
+          >
+            {signingOut ? "Signing out…" : "Sign out"}
+          </button>
+        </div>
       </aside>
 
       <div className="lg:pl-[276px]">
@@ -219,26 +221,28 @@ export function AdminShell({ children }: { children: ReactNode }) {
             aria-label="Close admin navigation"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="absolute bottom-3 left-3 top-3 flex w-[min(330px,calc(100%-24px))] flex-col rounded-[24px] bg-[#071b3d] p-5 shadow-[0_20px_60px_rgba(20,20,28,0.28)]">
-            <div className="mb-4 flex justify-end">
+          <aside className="absolute bottom-3 left-3 top-3 flex w-[min(330px,calc(100%-24px))] flex-col overflow-y-auto overscroll-y-contain rounded-[24px] bg-[#071b3d] [scrollbar-color:rgba(255,255,255,0.24)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-[5px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb:hover]:bg-white/40 shadow-[0_20px_60px_rgba(20,20,28,0.28)]">
+            <div className="flex min-h-full flex-col p-5">
+              <div className="mb-4 flex justify-end">
+                <button
+                  className="grid size-9 place-items-center rounded-full bg-white/10 text-[22px] leading-none text-white"
+                  type="button"
+                  aria-label="Close admin navigation"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  ×
+                </button>
+              </div>
+              <SidebarContent onNavigate={() => setMobileOpen(false)} />
               <button
-                className="grid size-9 place-items-center rounded-full bg-white/10 text-[22px] leading-none text-white"
+                className="mt-5 flex min-h-11 items-center justify-center rounded-full border border-white/15 px-4 text-[13px] font-semibold text-white/70 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50"
                 type="button"
-                aria-label="Close admin navigation"
-                onClick={() => setMobileOpen(false)}
+                onClick={() => void handleLogout()}
+                disabled={signingOut}
               >
-                ×
+                {signingOut ? "Signing out…" : "Sign out"}
               </button>
             </div>
-            <SidebarContent onNavigate={() => setMobileOpen(false)} />
-            <button
-              className="mt-5 flex min-h-11 items-center justify-center rounded-full border border-white/15 px-4 text-[13px] font-semibold text-white/70 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50"
-              type="button"
-              onClick={() => void handleLogout()}
-              disabled={signingOut}
-            >
-              {signingOut ? "Signing out…" : "Sign out"}
-            </button>
           </aside>
         </div>
       ) : null}
