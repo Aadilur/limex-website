@@ -81,6 +81,7 @@ function snapshotOrCurrent(row: any) {
     sidebarVideoUrl: row.sidebarVideoUrl,
     sidebarVideoId: row.sidebarVideoId,
     sidebarVideoTitle: row.sidebarVideoTitle,
+    reels: Array.isArray(row.reels) ? row.reels : [],
     isFeatured: row.isFeatured,
     noIndex: row.noIndex,
     canonicalUrl: row.canonicalUrl,
@@ -131,6 +132,11 @@ function toPublic(row: any, locale: BlogLocale) {
       videoId: String(snapshot.sidebarVideoId ?? ""),
       title: String(snapshot.sidebarVideoTitle ?? "Tutorial video"),
     } : null,
+    reels: Array.isArray(snapshot.reels)
+      ? snapshot.reels
+          .filter((reel: any) => reel && typeof reel.videoId === "string")
+          .sort((a: any, b: any) => Number(a.sortOrder) - Number(b.sortOrder))
+      : [],
     relatedServices: services.map((service: any) => ({ serviceKey: String(service.serviceKey), label: String(service.label), href: isSafeBlogNavigationUrl(service.href) ? String(service.href).trim() : "#contact", isPrimary: Boolean(service.isPrimary), sortOrder: Number(service.sortOrder) || 0 })),
     seoTitle: translation.seoTitle ?? translation.title,
     seoDescription: translation.seoDescription ?? translation.subtitle,
@@ -168,6 +174,7 @@ function toAdmin(row: any) {
     sidebarVideoUrl: row.sidebarVideoUrl ?? "",
     sidebarVideoId: row.sidebarVideoId ?? "",
     sidebarVideoTitle: row.sidebarVideoTitle ?? "",
+    reels: Array.isArray(row.reels) ? row.reels : [],
     status: row.status,
     isFeatured: row.isFeatured,
     noIndex: row.noIndex,
